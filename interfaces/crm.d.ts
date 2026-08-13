@@ -1,5 +1,7 @@
-type CompanyStatus = 'active' | 'archived'
+// Shared by Company and Contact — both are simply active or archived.
+type ActiveArchivedStatus = 'active' | 'archived'
 type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Disqualified'
+// Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
 type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost'
 type DealStatus = 'open' | 'won' | 'lost'
@@ -8,7 +10,6 @@ type ActivityRelatedType = 'contact' | 'company' | 'deal'
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
-type SalesChannel = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
 type BusinessUnit = 'Project' | 'Product'
 
 interface Company {
@@ -19,7 +20,7 @@ interface Company {
   website: string
   tags: string[]
   notes: string
-  status: CompanyStatus
+  status: ActiveArchivedStatus
   created_at: Date
   updated_at: Date
 }
@@ -32,7 +33,7 @@ interface Contact {
   phone: string
   role_title: string
   tags: string[]
-  status: CompanyStatus
+  status: ActiveArchivedStatus
   created_at: Date
 }
 
@@ -65,7 +66,7 @@ interface Deal {
   status: DealStatus
   expected_close_date: Date | null
   assigned_to: number | null
-  channel: SalesChannel
+  channel: LeadSource
   business_unit: BusinessUnit | null
   business_unit_item: string | null
   created_at: Date

@@ -139,7 +139,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat } = useFormatter()
+const { priceFormat, parseTags } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success } = useNotify()
 const companiesStore = useCompaniesStore()
@@ -179,8 +179,8 @@ const onSave = () => {
     company.value.industry = form.industry
     company.value.size = form.size
     company.value.website = form.website
-    company.value.tags = form.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-    company.value.status = form.status as CompanyStatus
+    company.value.tags = parseTags(form.tags)
+    company.value.status = form.status as ActiveArchivedStatus
     company.value.notes = form.notes
     company.value.updated_at = new Date()
   }

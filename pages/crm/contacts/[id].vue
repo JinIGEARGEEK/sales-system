@@ -73,6 +73,7 @@ useHead({ title: t('crm.contacts.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
@@ -101,7 +102,7 @@ const onSave = () => {
     contact.value.role_title = form.role_title
     contact.value.email = form.email
     contact.value.phone = form.phone
-    contact.value.tags = form.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+    contact.value.tags = parseTags(form.tags)
   }
   success(t('crm.contacts.detail.updateSuccess'))
 }

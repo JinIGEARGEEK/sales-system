@@ -2,7 +2,7 @@
 // `dateRange` value. Presets are computed on demand from `presetRange()` rather than stored,
 // so `activePreset` can be derived by comparing it to the current `dateRange` — there is no
 // separate "selected preset" state to fall out of sync when the range is edited manually.
-export default (getDeals: () => Deal[], presetValues: string[]) => {
+export const useDatePeriodFilter = (getDeals: () => Deal[], presetValues: string[]) => {
   const dateRange = ref<{ start: string; end: string } | null>(null)
 
   // Anchoring to the real current date would make every preset empty once the underlying

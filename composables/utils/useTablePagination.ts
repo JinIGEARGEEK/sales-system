@@ -1,4 +1,4 @@
-export default (getTotal: () => number, initialPerPage = 10) => {
+export const useTablePagination = (getTotal: () => number, initialPerPage = 10) => {
   const page = ref(1)
   const perPage = ref(initialPerPage)
 

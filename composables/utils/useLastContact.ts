@@ -15,7 +15,7 @@ const TIER_COLOR: Record<ContactTier, string> = {
   tier3: 'error',
 }
 
-export default () => {
+export const useLastContact = () => {
   const { t } = useI18n()
 
   const daysSinceContact = (date: Date | null): number | null => {

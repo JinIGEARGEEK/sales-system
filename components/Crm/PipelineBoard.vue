@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { DEAL_STAGE_COLORS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -50,21 +51,9 @@ const props = defineProps<{
   items: Deal[]
 }>()
 
-// Per-stage colors so each pipeline lane reads as visually distinct at a glance.
-// Keys must match constants/mockData.ts's DEAL_STAGE_OPTIONS values exactly — there's
-// no shared source of truth, so a renamed/added stage there silently falls back to
-// FALLBACK_COLOR here instead of erroring. Keep both lists in sync by hand.
-const STAGE_COLORS: Record<string, string> = {
-  Lead: '#5B5FE9',
-  Qualified: '#4A9FE8',
-  'Proposal Sent': '#00C2B8',
-  Negotiation: '#F5A623',
-  Won: '#00C875',
-  Lost: '#E2445C',
-}
 const FALLBACK_COLOR = 'var(--color-primary)'
 
-const getColumnColor = (value: string) => STAGE_COLORS[value] || FALLBACK_COLOR
+const getColumnColor = (value: string) => DEAL_STAGE_COLORS[value as DealStage] || FALLBACK_COLOR
 
 const getColumnTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 8%, white)`
 

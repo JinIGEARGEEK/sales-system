@@ -134,6 +134,18 @@ export const DEAL_STAGE_OPTIONS: Select[] = [
   { label: 'Lost', value: 'Lost' },
 ]
 
+// Per-stage colors for the Kanban board, co-located with DEAL_STAGE_OPTIONS so the two
+// lists are kept in sync in one place instead of two — see CrmPipelineBoard's fallback
+// color for what happens if a stage here is missing a color.
+export const DEAL_STAGE_COLORS: Record<DealStage, string> = {
+  Lead: '#5B5FE9',
+  Qualified: '#4A9FE8',
+  'Proposal Sent': '#00C2B8',
+  Negotiation: '#F5A623',
+  Won: '#00C875',
+  Lost: '#E2445C',
+}
+
 export const dealStatusForStage = (stage: DealStage): DealStatus => {
   if (stage === 'Won') return 'won'
   if (stage === 'Lost') return 'lost'

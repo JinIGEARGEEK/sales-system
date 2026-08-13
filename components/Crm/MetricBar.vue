@@ -20,7 +20,7 @@ defineProps({
   },
   barClass: {
     type: String,
-    default: 'bg-sky-400',
+    default: 'bg-[var(--color-primary)]',
   },
 })
 </script>

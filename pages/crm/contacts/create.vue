@@ -68,6 +68,7 @@ useHead({ title: t('crm.contacts.create.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
@@ -89,7 +90,7 @@ const onSubmit = () => {
     role_title: form.role_title,
     email: form.email,
     phone: form.phone,
-    tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+    tags: parseTags(form.tags),
     status: 'active',
     created_at: new Date(),
   })

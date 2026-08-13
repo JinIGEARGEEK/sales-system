@@ -125,7 +125,7 @@
             <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-[var(--color-light-gray-2)]">
               <div
                 class="w-full rounded-t-md"
-                :class="bucket.value > 0 ? 'bg-sky-400' : 'bg-[var(--color-gray)]/40'"
+                :class="bucket.value > 0 ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-gray)]/40'"
                 :style="`height: ${Math.max(bucket.percent, 4)}%`"
               />
             </div>

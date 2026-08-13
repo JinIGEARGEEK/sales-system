@@ -77,6 +77,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.create.pageTitle') })
 
 const { success } = useNotify()
+const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 
 const form = reactive({
@@ -95,9 +96,9 @@ const onSubmit = () => {
     industry: form.industry,
     size: form.size,
     website: form.website,
-    tags: form.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+    tags: parseTags(form.tags),
     notes: form.notes,
-    status: form.status as CompanyStatus,
+    status: form.status as ActiveArchivedStatus,
     created_at: new Date(),
     updated_at: new Date(),
   })

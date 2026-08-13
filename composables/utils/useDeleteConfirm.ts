@@ -1,4 +1,4 @@
-export default <T>() => {
+export const useDeleteConfirm = <T>() => {
   const open = ref(false)
   const target = ref<T | null>(null) as Ref<T | null>
 

@@ -7,7 +7,7 @@ import 'dayjs/locale/th'
 extend(buddhistEra)
 extend(utc)
 
-export default () => {
+export const useFormatter = () => {
   const dateFormat = (value: Date | string) => dayjs(value).format('DD/MM/BBBB')
   const timeFormat = (value: Date | string) => dayjs(value).format('HH:mm')
   const dateTimeFormat = (value: Date | string) => dayjs(value).format('DD/MM/YY HH:mm')
@@ -23,6 +23,10 @@ export default () => {
 
   const toBadge = (title: string, color = 'neutral') => ({ title, color, isNoData: false })
 
+  // Splits a comma-separated tags input (e.g. "Tier 1, Priority") into a clean string[],
+  // trimming whitespace and dropping empty entries from trailing/double commas.
+  const parseTags = (value: string) => value.split(',').map(tag => tag.trim()).filter(Boolean)
+
   return {
     dateFormat,
     timeFormat,
@@ -34,5 +38,6 @@ export default () => {
     priceFormat,
     mbToBytes,
     toBadge,
+    parseTags,
   }
 }

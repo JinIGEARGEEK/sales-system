@@ -1,5 +1,6 @@
 <template>
   <InputFormField
+    v-slot="{ field }"
     :model-value="props.modelValue?.start"
     :name="props.name"
     :rules="props.rules"
@@ -9,6 +10,7 @@
     <UPopover>
       <UInput
         readonly
+        v-bind="field"
         :data-cy="dataCy"
         :placeholder="placeholder"
         :model-value="rangeLabel"

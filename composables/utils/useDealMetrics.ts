@@ -1,4 +1,4 @@
-export default (getDeals: () => Deal[]) => {
+export const useDealMetrics = (getDeals: () => Deal[]) => {
   const openDeals = computed(() => getDeals().filter(d => d.status === 'open'))
   const wonDeals = computed(() => getDeals().filter(d => d.status === 'won'))
   const lostDeals = computed(() => getDeals().filter(d => d.status === 'lost'))
