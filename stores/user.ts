@@ -1,0 +1,38 @@
+export const useUserStore = defineStore('user', {
+  state: (): User => {
+    return {
+      first_name: '',
+      last_name: '',
+      username: '',
+      tel: '',
+      email: '',
+      accepted_consent_id: null,
+      latest_login: null,
+      is_active: false,
+      created_at: null,
+      updated_at: null,
+      deleted_at: null,
+      created_by: 0,
+      updated_by: 0,
+      deleted_by: 0,
+    }
+  },
+  actions: {
+    setUser (user: User) {
+      this.first_name = user.first_name
+      this.last_name = user.last_name
+      this.username = user.username
+      this.tel = user.tel
+      this.email = user.email
+      this.accepted_consent_id = user.accepted_consent_id
+      this.latest_login = user.latest_login
+      this.is_active = user.is_active
+      this.created_at = user.created_at
+      this.updated_at = user.updated_at
+      this.deleted_at = user.deleted_at
+      this.created_by = user.created_by
+      this.updated_by = user.updated_by
+      this.deleted_by = user.deleted_by
+    },
+  },
+})

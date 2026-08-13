@@ -1,0 +1,274 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+* {
+  font-family: "Prompt", sans-serif;
+  font-weight: 300;
+}
+
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+summary {
+  cursor: pointer;
+}
+
+@theme {
+  --font-family-prompt: "Prompt", sans-serif;
+
+  --color-primary-bg: color-mix(in srgb, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 10%, transparent);
+  --color-secondary-bg: color-mix(in srgb, #1F9D6B 10%, transparent);
+  --color-success-bg: #E6F8EB;
+  --color-info-bg: #EAF1F6;
+  --color-warning-bg: #FEF9E7;
+  --color-error-bg: #FAEEEF;
+
+  --shadow-1: 0px 0px 4px 0px rgba(40, 40, 40, 0.04);
+  --shadow-2: 0px 0px 16px 0px rgba(40, 40, 40, 0.12);
+}
+
+:root {
+  /** COLOR SECTION **/
+  /* Primary Color Kit */
+  --color-primary: color-mix(in oklab, #1B2233 93%, #A9B9EE 7%);
+  --color-secondary: #E8EBEF;
+
+  /*
+   * Nuxt UI's runtime color plugin reads app.config's `ui.colors.primary`/
+   * `secondary` ('primary'/'secondary' — self-referencing, since these are
+   * custom brand colors, not one of Tailwind's built-in palette names) and
+   * generates `--ui-color-primary-{shade}: var(--color-primary-{shade})` /
+   * `--ui-secondary-{shade}` for each shade at runtime. That lookup needs
+   * these as plain CSS custom properties — declaring them inside `@theme`
+   * instead makes Tailwind treat "primary"/"secondary" as inline-sourced
+   * theme keys owned by Nuxt UI, and it silently drops this scale rather
+   * than emitting it, leaving every `--ui-primary`/`--ui-secondary`-backed
+   * utility (bg-primary, text-primary, ring-primary, bg-secondary, …)
+   * with no value app-wide. Keep the scale here, not in `@theme`.
+   */
+  --color-primary-50: color-mix(in oklab, white 95%, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 5%);
+  --color-primary-100: color-mix(in oklab, white 90%, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 10%);
+  --color-primary-200: color-mix(in oklab, white 75%, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 25%);
+  --color-primary-300: color-mix(in oklab, white 60%, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 40%);
+  --color-primary-400: color-mix(in oklab, white 30%, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 70%);
+  --color-primary-500: color-mix(in oklab, #1B2233 93%, #A9B9EE 7%);
+  --color-primary-600: color-mix(in oklab, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 85%, black 15%);
+  --color-primary-700: color-mix(in oklab, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 70%, black 30%);
+  --color-primary-800: color-mix(in oklab, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 55%, black 45%);
+  --color-primary-900: color-mix(in oklab, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 40%, black 60%);
+  --color-primary-950: color-mix(in oklab, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 25%, black 75%);
+
+  --color-secondary-50: #FFFFFF;
+  --color-secondary-100: color-mix(in oklab, white 95%, #E8EBEF 5%);
+  --color-secondary-200: color-mix(in oklab, white 90%, #E8EBEF 10%);
+  --color-secondary-300: color-mix(in oklab, white 80%, #E8EBEF 20%);
+  --color-secondary-400: color-mix(in oklab, white 60%, #E8EBEF 40%);
+  --color-secondary-500: #E8EBEF;
+  --color-secondary-600: color-mix(in oklab, #E8EBEF 80%, #1F9D6B 20%);
+  --color-secondary-700: color-mix(in oklab, #E8EBEF 60%, #1F9D6B 40%);
+  --color-secondary-800: color-mix(in oklab, #E8EBEF 40%, #1F9D6B 60%);
+  --color-secondary-900: color-mix(in oklab, #E8EBEF 20%, #1F9D6B 80%);
+  --color-secondary-950: color-mix(in oklab, #1F9D6B 90%, black 10%);
+
+  /* Accent green — used for "other" non-semantic hover/shadow/gradient tones */
+  --color-accent-green: #1F9D6B;
+
+  /* Computed Primary Color Kit - True Inversion */
+  --color-inverted-primary: #FFFFFF;
+  --color-inverted-secondary: color-mix(in oklab, #1B2233 93%, #A9B9EE 7%);
+
+  /* Secondary Color Kit — neutrals carry a blue undertone to match the brand */
+  --color-white: #FFFFFF;
+  --color-light-gray-1: #F4F7FD;
+  --color-light-gray-2: #D7DEF0;
+  --color-gray: #7C89A8;
+  --color-dark-gray: #4B5875;
+  --color-black: #1B2233;
+
+  /* Sidebar Color Kit — lighter than --color-black but keeps a dark blue/purple tone (tints with primary, not white) */
+  --color-sidebar-bg: color-mix(in oklab, var(--color-black) 93%, var(--color-primary) 7%);
+
+  /*
+   * Authenticated-app content background (layouts/default.vue's <main>). Kept as
+   * its own token — not --color-light-gray-1 — because it's been hand-tuned
+   * lighter/darker several times on request and shouldn't drag that shared
+   * token (used for hover states and progress-bar tracks elsewhere) along with it.
+   */
+  --color-content-bg: #F0F3FC;
+
+  /*
+   * Card/panel border color used wherever a UCard or hand-built card-like
+   * container (Kanban columns/cards, stat tiles) needs a clearly visible edge
+   * against the light content background above. Centralized here instead of
+   * repeating `var(--color-gray)/35` inline across every card usage.
+   */
+  --color-card-border: color-mix(in srgb, var(--color-gray) 35%, transparent);
+
+  /* Background Color Kit */
+  --color-primary-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-secondary-bg: color-mix(in srgb, var(--color-accent-green) 10%, transparent);
+  --color-success-bg: #E6F8EB;
+  --color-info-bg: #EAF1F6;
+  --color-warning-bg: #FEF9E7;
+  --color-error-bg: #FAEEEF;
+
+  /* Gradient Color Kit */
+  --color-primary-gradient: var(--color-primary);
+  --color-secondary-gradient: var(--color-accent-green);
+
+  /*
+   * App-shell background gradient (layouts/default.vue's outer flex wrapper).
+   * Mostly hidden behind the opaque <main>/sidebar — only shows through the
+   * sidebar's backdrop-blur — so treat changes here as subtle by design.
+   */
+  --color-app-shell-gradient-from: #DDE6F7;
+  --color-app-shell-gradient-via: #D0DDF5;
+  --color-app-shell-gradient-to: #BFD0F0;
+
+  /* Opacity Color Kit */
+  --color-primary-opacity: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-secondary-opacity: color-mix(in srgb, var(--color-accent-green) 10%, transparent);
+
+  /* Button Hover Color Kit */
+  --color-primary-hover: color-mix(in oklab, var(--color-primary) 85%, black 15%);
+  --color-secondary-hover: #177D54;
+  --color-success-hover: #6E9358;
+  --color-info-hover: #587393;
+  --color-warning-hover: #C69E52;
+  --color-danger-hover: #B87373;
+
+  /* Shadow Color Kit */
+  --color-shadow-1: var(--color-primary);
+  --color-shadow-2: var(--color-accent-green);
+
+  /*
+   * Nuxt UI defaults body text to `--ui-text` (neutral-700, a gray) and
+   * headings/emphasized text to `--ui-text-highlighted` (neutral-900, near
+   * but not true black). Nothing in this app overrides those, so unstyled
+   * text — including the top bar and page titles, which set no color
+   * class of their own — renders gray instead of black. Force both to the
+   * app's true black on this light-only (no dark mode) design system.
+   */
+  --ui-text: var(--color-black);
+  --ui-text-highlighted: var(--color-black);
+
+  /* Toast Color Kit */
+  --color-success-toast: #07B53B;
+  --color-info-toast: #2D72A7;
+  --color-warning-toast: #F8C40E;
+  --color-danger-toast: #F17575;
+  --color-success-toast-bg: #E6F8EB;
+  --color-info-toast-bg: #EAF1F6;
+  --color-warning-toast-bg: #FEF9E7;
+  --color-danger-toast-bg: #FAEEEF;
+
+  /** FONT SECTION **/
+  /* Desktop Font Style */
+  --font-text-dt-title-1-size: 34px;
+  --font-text-dt-title-1-line-height: 50px;
+  --font-text-dt-title-1-weight: 500;
+  --font-text-dt-title-2-size: 26px;
+  --font-text-dt-title-2-line-height: 40px;
+  --font-text-dt-title-2-weight: 500;
+  --font-text-dt-title-3-size: 22px;
+  --font-text-dt-title-3-line-height: 32px;
+  --font-text-dt-title-3-weight: 500;
+  --font-text-dt-title-4-size: 20px;
+  --font-text-dt-title-4-line-height: 30px;
+  --font-text-dt-title-4-weight: 500;
+  --font-text-dt-title-5-size: 18px;
+  --font-text-dt-title-5-line-height: 28px;
+  --font-text-dt-title-5-weight: 500;
+  --font-text-dt-title-6-size: 16px;
+  --font-text-dt-title-6-line-height: 24px;
+  --font-text-dt-title-6-weight: 500;
+
+  /* Mobile Font Style */
+  --font-text-mb-title-1-size: 26px;
+  --font-text-mb-title-1-line-height: 40px;
+  --font-text-mb-title-1-weight: 500;
+  --font-text-mb-title-2-size: 24px;
+  --font-text-mb-title-2-line-height: 36px;
+  --font-text-mb-title-2-weight: 500;
+  --font-text-mb-title-3-size: 20px;
+  --font-text-mb-title-3-line-height: 30px;
+  --font-text-mb-title-3-weight: 500;
+  --font-text-mb-title-4-size: 18px;
+  --font-text-mb-title-4-line-height: 28px;
+  --font-text-mb-title-4-weight: 500;
+  --font-text-mb-title-5-size: 16px;
+  --font-text-mb-title-5-line-height: 24px;
+  --font-text-mb-title-5-weight: 500;
+  --font-text-mb-title-6-size: 14px;
+  --font-text-mb-title-6-line-height: 20px;
+  --font-text-mb-title-6-weight: 500;
+
+  /* Static Font Style */
+  --font-text-static-body-size: 16px;
+  --font-text-static-body-line-height: 24px;
+  --font-text-static-body-weight: 400;
+  --font-text-static-body-sm-size: 14px;
+  --font-text-static-body-sm-line-height: 20px;
+  --font-text-static-body-sm-weight: 400;
+  --font-text-static-body-xs-size: 12px;
+  --font-text-static-body-xs-line-height: 18px;
+  --font-text-static-body-xs-weight: 400;
+  --font-text-static-body-2xs-size: 10px;
+  --font-text-static-body-2xs-line-height: 16px;
+  --font-text-static-body-2xs-weight: 400;
+  --font-text-static-link-size: 16px;
+  --font-text-static-link-line-height: 24px;
+  --font-text-static-link-weight: 500;
+  --font-text-static-link-sm-size: 14px;
+  --font-text-static-link-sm-line-height: 20px;
+  --font-text-static-link-sm-weight: 500;
+  --font-text-static-button-size: 16px;
+  --font-text-static-button-line-height: 24px;
+  --font-text-static-button-weight: 400;
+  --font-text-static-button-sm-size: 16px;
+  --font-text-static-button-sm-line-height: 24px;
+  --font-text-static-button-sm-weight: 400;
+}
+
+/*
+ * Nuxt UI always pairs "secondary" surfaces with light text: `text-inverted`
+ * (white) on the "solid" variant, and `text-secondary` itself on "soft"/
+ * "subtle"/"outline" variants. Since brand secondary (#E8EBEF) is near-white,
+ * both patterns render illegible light-on-light text. Force dark text
+ * wherever a secondary-colored surface appears. This app has no dark mode,
+ * so this override is safe globally.
+ */
+[class*="bg-secondary"],
+.text-secondary {
+  color: var(--color-black) !important;
+}
+
+/*
+ * Safety net for the inverse case: wherever a solid dark/primary-toned
+ * background is used for a card, section, or area (not the light 10%/15%
+ * tint variants used for soft badges/active nav states), text must be
+ * white for contrast. Nuxt UI's own solid-variant buttons/badges already
+ * get white text via `text-inverted`, untouched by the black overrides
+ * above — this only covers hand-written dark backgrounds in this app's
+ * own templates (current and future).
+ */
+/*
+ * :not([data-reka-calendar-cell-trigger]) — Reka UI's Calendar day cells carry
+ * conditional (variant-prefixed) utilities like `data-[selected]:bg-primary` and
+ * `hover:not-data-[selected]:bg-primary/20`. Those only paint a solid background
+ * when their condition is active, but this selector matches on the raw class
+ * *string*, so it can't tell an active utility from an inactive variant — every
+ * day cell was getting forced white text, even unselected ones. Exclude calendar
+ * cells and let Nuxt UI's own conditional text classes (already correct) apply.
+ */
+[class*="bg-primary"]:not([class*="bg-primary/10"]):not([class*="bg-primary/15"]):not([data-reka-calendar-cell-trigger]),
+[class*="bg-[var(--color-primary)]"],
+[class*="bg-[var(--color-black)]"],
+[class*="bg-[var(--color-dark-gray)]"],
+[class*="bg-[var(--color-accent-green)]"] {
+  color: var(--color-white) !important;
+}

@@ -1,0 +1,77 @@
+options:
+  max-time: 20
+definitions:
+  steps:
+    - step: &package-install
+        name: Install Modules
+        image: node:22.12.0
+        script:
+          - yarn install --production=false
+        artifacts:
+          - node_modules/**
+    - step: &nuxt-build
+        name: Build Nuxt
+        image: node:22.12.0
+        script:
+          - yarn generate
+        artifacts:
+          - .output/**
+    - step: &deploy-s3
+        name: Deploy S3 Bucket
+        oidc: true
+        script:
+          - pipe: atlassian/aws-s3-deploy:1.1.0
+            variables:
+              AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              S3_BUCKET: $STATIC_SITE_URL
+              ACL: "public-read"
+              LOCAL_PATH: ".output/public"
+    - step: &invalidate-cloudfront
+        name: Invalidate CloudFront CDN
+        oidc: true
+        script:
+          - pipe: atlassian/aws-cloudfront-invalidate:0.6.0
+            variables:
+              AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              DISTRIBUTION_ID: $CLOUDFRONT_DISTRIBUTION_ID
+              PATHS: "/*"
+  stages:
+    - stage: &deploy-by-branch
+        name: Build, Push (Branch)
+        steps:
+          - step:
+              <<: *package-install
+          - step:
+              <<: *nuxt-build
+          - step:
+              <<: *deploy-s3
+          - step:
+              <<: *invalidate-cloudfront
+    - stage: &deploy-by-tags
+        name: Build, Push (TAGS)
+        steps:
+          - step:
+              <<: *package-install
+          - step:
+              <<: *nuxt-build
+          - step:
+              <<: *deploy-s3
+          - step:
+              <<: *invalidate-cloudfront
+pipelines:
+  branches:
+    develop:
+      - stage:
+          <<: *deploy-by-branch
+          deployment: develop
+    release/*:
+      - stage:
+          <<: *deploy-by-branch
+          deployment: stage
+  tags:
+    prod-*:
+      - stage:
+          <<: *deploy-by-tags
+          deployment: production

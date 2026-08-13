@@ -1,0 +1,118 @@
+@font-face {
+  font-family: 'Prompt';
+  src: url('/fonts/Prompt-Light.ttf') format('truetype');
+  font-weight: 300;
+}
+@font-face {
+  font-family: 'Prompt';
+  src: url('/fonts/Prompt-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Prompt';
+  src: url('/fonts/Prompt-Medium.ttf') format('truetype');
+  font-weight: 500;
+}
+
+/* Responsive Title Utilities (mobile-first, desktop at md breakpoint) */
+.title-1 {
+  font-size: var(--font-text-mb-title-1-size);
+  line-height: var(--font-text-mb-title-1-line-height);
+  font-weight: var(--font-text-mb-title-1-weight);
+}
+.title-2 {
+  font-size: var(--font-text-mb-title-2-size);
+  line-height: var(--font-text-mb-title-2-line-height);
+  font-weight: var(--font-text-mb-title-2-weight);
+}
+.title-3 {
+  font-size: var(--font-text-mb-title-3-size);
+  line-height: var(--font-text-mb-title-3-line-height);
+  font-weight: var(--font-text-mb-title-3-weight);
+}
+.title-4 {
+  font-size: var(--font-text-mb-title-4-size);
+  line-height: var(--font-text-mb-title-4-line-height);
+  font-weight: var(--font-text-mb-title-4-weight);
+}
+.title-5 {
+  font-size: var(--font-text-mb-title-5-size);
+  line-height: var(--font-text-mb-title-5-line-height);
+  font-weight: var(--font-text-mb-title-5-weight);
+}
+.title-6 {
+  font-size: var(--font-text-mb-title-6-size);
+  line-height: var(--font-text-mb-title-6-line-height);
+  font-weight: var(--font-text-mb-title-6-weight);
+}
+
+@media (min-width: 768px) {
+  .title-1 {
+    font-size: var(--font-text-dt-title-1-size);
+    line-height: var(--font-text-dt-title-1-line-height);
+  }
+  .title-2 {
+    font-size: var(--font-text-dt-title-2-size);
+    line-height: var(--font-text-dt-title-2-line-height);
+  }
+  .title-3 {
+    font-size: var(--font-text-dt-title-3-size);
+    line-height: var(--font-text-dt-title-3-line-height);
+  }
+  .title-4 {
+    font-size: var(--font-text-dt-title-4-size);
+    line-height: var(--font-text-dt-title-4-line-height);
+  }
+  .title-5 {
+    font-size: var(--font-text-dt-title-5-size);
+    line-height: var(--font-text-dt-title-5-line-height);
+  }
+  .title-6 {
+    font-size: var(--font-text-dt-title-6-size);
+    line-height: var(--font-text-dt-title-6-line-height);
+  }
+}
+
+/* Static Typography Utilities (no responsive change) */
+.static-body {
+  font-size: var(--font-text-static-body-size);
+  line-height: var(--font-text-static-body-line-height);
+  font-weight: var(--font-text-static-body-weight);
+}
+.static-body-sm {
+  font-size: var(--font-text-static-body-sm-size);
+  line-height: var(--font-text-static-body-sm-line-height);
+  font-weight: var(--font-text-static-body-sm-weight);
+}
+.static-body-xs {
+  font-size: var(--font-text-static-body-xs-size);
+  line-height: var(--font-text-static-body-xs-line-height);
+  font-weight: var(--font-text-static-body-xs-weight);
+}
+.static-body-2xs {
+  font-size: var(--font-text-static-body-2xs-size);
+  line-height: var(--font-text-static-body-2xs-line-height);
+  font-weight: var(--font-text-static-body-2xs-weight);
+}
+.static-link {
+  font-size: var(--font-text-static-link-size);
+  line-height: var(--font-text-static-link-line-height);
+  font-weight: var(--font-text-static-link-weight);
+  text-decoration: underline;
+}
+.static-link-sm {
+  font-size: var(--font-text-static-link-sm-size);
+  line-height: var(--font-text-static-link-sm-line-height);
+  font-weight: var(--font-text-static-link-sm-weight);
+  text-decoration: underline;
+}
+.static-button {
+  font-size: var(--font-text-static-button-size);
+  line-height: var(--font-text-static-button-line-height);
+  font-weight: var(--font-text-static-button-weight);
+}
+.static-button-sm {
+  font-size: var(--font-text-static-button-sm-size);
+  line-height: var(--font-text-static-button-sm-line-height);
+  font-weight: var(--font-text-static-button-sm-weight);
+}

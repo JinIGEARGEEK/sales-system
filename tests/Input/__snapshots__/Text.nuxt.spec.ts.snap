@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InputText Component Test > should match with snapshot 1`] = `
+<div>
+  <div class="custom-input">
+    <!--v-if--><label class="q-field row no-wrap items-start q-field--outlined q-input" for="[NORMALIZED-FOR]">
+      <!---->
+      <div class="q-field__inner relative-position col self-stretch">
+        <div class="q-field__control relative-position row no-wrap" tabindex="-1">
+          <div class="q-field__control-container col relative-position row no-wrap q-anchor--skip"><input class="q-field__native q-placeholder" tabindex="0" data-cy="" placeholder="" autocomplete="off" id="[NORMALIZED-ID]" maxlength="" type="text" value=""></div>
+        </div>
+        <!---->
+      </div>
+      <!---->
+    </label>
+    <!--v-if-->
+  </div>
+</div>
+`;
