@@ -1,6 +1,6 @@
 import global from './global/en'
 import layout from './layout/en'
-import adminDashboard from './admin/dashboard/en'
+import adminActivityLog from './admin/activity-log/en'
 import adminUsers from './admin/users/en'
 import crmDashboard from './crm/dashboard/en'
 import crmLeads from './crm/leads/en'
@@ -18,7 +18,7 @@ export default {
   components,
   layout,
   admin: {
-    dashboard: adminDashboard,
+    activityLog: adminActivityLog,
     users: adminUsers,
   },
   crm: {

@@ -2,7 +2,7 @@ export default {
   index: {
     pageTitle: 'จัดการพนักงาน',
     heading: 'จัดการพนักงาน',
-    addCustomer: 'เพิ่มพนักงาน',
+    addStaff: 'เพิ่มพนักงาน',
     searchPlaceholder: 'ค้นหาด้วยชื่อหรืออีเมล...',
     rolePlaceholder: 'บทบาท',
     statusPlaceholder: 'สถานะ',
@@ -52,16 +52,16 @@ export default {
     pageTitle: 'สร้างพนักงาน',
     heading: 'สร้างพนักงานใหม่',
     subheading: 'กรอกรายละเอียดเพื่อสร้างบัญชีพนักงานใหม่',
-    createCustomer: 'สร้างพนักงาน',
+    createStaff: 'สร้างพนักงาน',
     createSuccess: 'สร้างพนักงานสำเร็จ',
   },
   detail: {
     pageTitle: 'แก้ไขพนักงาน',
     heading: 'แก้ไขพนักงาน',
-    breadcrumbCustomers: 'พนักงาน',
+    breadcrumbStaff: 'พนักงาน',
     breadcrumbEdit: 'แก้ไข',
     saveChanges: 'บันทึกการเปลี่ยนแปลง',
-    customerNotFound: 'ไม่พบพนักงาน',
+    staffNotFound: 'ไม่พบพนักงาน',
     updateSuccess: 'แก้ไขพนักงานสำเร็จ',
   },
 }

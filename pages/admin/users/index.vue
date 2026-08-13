@@ -3,7 +3,7 @@
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.users.index.heading') }}</h2>
       <ButtonPrimary
-        :label="t('admin.users.index.addCustomer')"
+        :label="t('admin.users.index.addStaff')"
         icon="material-symbols:add"
         @click="navigateTo('/admin/users/create')"
       />
@@ -39,21 +39,21 @@
 
     <TableData
       v-model:page="page"
-      v-model:per-page="perPage"
       :columns="columns"
       :rows="filteredUsers"
       :total="filteredUsers.length"
-      :total-page="Math.ceil(filteredUsers.length / perPage)"
-      @change-page="(v: number) => page = v"
-      @change-per-page="(v: number) => { page = 1; perPage = v }"
+      :total-page="totalPage"
+      :per-page="perPage"
+      @change-page="onChangePage"
+      @change-per-page="onChangePerPage"
       @view-detail="onViewDetail"
       @edit="onEdit"
-      @delete="onDelete"
+      @delete="requestDelete"
     />
 
     <CrmConfirmDeleteModal
-      v-model:open="deleteModal"
-      :name="userToDelete ? `${userToDelete.first_name} ${userToDelete.last_name}` : ''"
+      v-model:open="open"
+      :name="target ? `${target.first_name} ${target.last_name}` : ''"
       @confirm="confirmDelete"
     />
   </div>
@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { MOCK_USERS, ROLE_OPTIONS, STATUS_OPTIONS } from '~/constants/mockData'
+import { ROLE_OPTIONS, STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -70,19 +70,14 @@ useHead({ title: t('admin.users.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
+const usersStore = useUsersStore()
 
 const search = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
-const page = ref(1)
-const perPage = ref(10)
-const deleteModal = ref(false)
-const userToDelete = ref<AdminUser | null>(null)
-
-const users = ref<AdminUser[]>([...MOCK_USERS])
 
 const filteredUsers = computed(() => {
-  return users.value.filter((user) => {
+  return usersStore.items.filter((user) => {
     const matchSearch = !search.value
       || `${user.first_name} ${user.last_name}`.toLowerCase().includes(search.value.toLowerCase())
       || user.email.toLowerCase().includes(search.value.toLowerCase())
@@ -92,7 +87,7 @@ const filteredUsers = computed(() => {
       || (statusFilter.value === 'inactive' && !user.is_active)
     return matchSearch && matchRole && matchStatus
   }).map((user) => {
-    const updater = MOCK_USERS.find(u => u.id === user.updated_by)
+    const updater = usersStore.items.find(u => u.id === user.updated_by)
     return {
       ...user,
       name: `${user.first_name} ${user.last_name}`,
@@ -138,17 +133,14 @@ const onEdit = (row: AdminUser) => {
   navigateTo(`/admin/users/${row.id}`)
 }
 
-const onDelete = (row: AdminUser) => {
-  userToDelete.value = row
-  deleteModal.value = true
-}
+const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredUsers.value.length)
+const { open, target, requestDelete, closeDelete } = useDeleteConfirm<AdminUser>()
 
 const confirmDelete = () => {
-  if (userToDelete.value) {
-    users.value = users.value.filter(u => u.id !== userToDelete.value!.id)
+  if (target.value) {
+    usersStore.remove(target.value.id)
     success(t('admin.users.index.deleteSuccess'))
-    deleteModal.value = false
-    userToDelete.value = null
   }
+  closeDelete()
 }
 </script>

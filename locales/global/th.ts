@@ -1,5 +1,4 @@
 export default {
-  total: 'ทั้งหมด',
   noData: 'ไม่มีข้อมูล',
   loading: 'Loading...',
   previous: 'ก่อนหน้า',
@@ -9,7 +8,6 @@ export default {
     updatedBy: 'แก้ไขโดย',
   },
   auth: {
-    login: 'เข้าสู่ระบบ',
     signIn: 'เข้าสู่ระบบ',
     forgotPassword: 'ลืมรหัสผ่าน?',
     loginSuccess: 'เข้าสู่ระบบสำเร็จ',

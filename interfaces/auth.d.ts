@@ -1,12 +1,3 @@
-interface LoginPayload {
-  username: string
-  password: string
-}
-
-interface LoginResponse {
-  token: string
-}
-
 interface User {
   first_name: string
   last_name: string

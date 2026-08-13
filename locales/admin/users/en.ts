@@ -2,7 +2,7 @@ export default {
   index: {
     pageTitle: 'Staff Management',
     heading: 'Staff Management',
-    addCustomer: 'Add Staff',
+    addStaff: 'Add Staff',
     searchPlaceholder: 'Search by name or email...',
     rolePlaceholder: 'Role',
     statusPlaceholder: 'Status',
@@ -52,16 +52,16 @@ export default {
     pageTitle: 'Create Staff',
     heading: 'Create New Staff',
     subheading: 'Fill in the details to create a new staff account.',
-    createCustomer: 'Create Staff',
+    createStaff: 'Create Staff',
     createSuccess: 'Staff created successfully',
   },
   detail: {
     pageTitle: 'Edit Staff',
     heading: 'Edit Staff',
-    breadcrumbCustomers: 'Staff',
+    breadcrumbStaff: 'Staff',
     breadcrumbEdit: 'Edit',
     saveChanges: 'Save Changes',
-    customerNotFound: 'Staff not found.',
+    staffNotFound: 'Staff not found.',
     updateSuccess: 'Staff updated successfully',
   },
 }

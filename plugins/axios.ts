@@ -14,9 +14,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     await sleep(100)
     loading -= 1
     if (loading === 0) {
-      if (!loadingStore.$state.isDisable) {
-        loadingStore.$state.isDisable = false
-      }
+      loadingStore.enable()
     }
   }
 
@@ -29,9 +27,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const { getAccessToken } = useAuth()
   api.interceptors.request.use((config) => {
-    if (!loadingStore.$state.isDisable) {
-      loadingStore.$state.isDisable = true
-    }
+    loadingStore.disable()
     loading += 1
     const accessToken = getAccessToken()
 

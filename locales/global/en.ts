@@ -1,5 +1,4 @@
 const lang = {
-  total: 'All',
   noData: 'No Data',
   loading: 'Loading...',
   previous: 'Previous',
@@ -9,7 +8,6 @@ const lang = {
     updatedBy: 'Updated by',
   },
   auth: {
-    login: 'Login',
     signIn: 'Sign in',
     forgotPassword: 'Forgot Password?',
     loginSuccess: 'Logged in successfully',

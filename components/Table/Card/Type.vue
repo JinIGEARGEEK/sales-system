@@ -15,6 +15,11 @@
         :items="prop.item"
       />
     </div>
+    <div v-else-if="prop.type === TABLE_CARD_TYPE.LINK">
+      <TableCardLink
+        :items="prop.item"
+      />
+    </div>
     <div v-else class="whitespace-pre-wrap static-body-sm text-[var(--color-black)]">
       {{ prop.item }}
     </div>

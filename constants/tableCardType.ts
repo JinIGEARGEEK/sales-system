@@ -7,4 +7,5 @@ export default {
   STATUS: 'STATUS',
   INPUT: 'INPUT',
   UPDATED_AT: 'UPDATED_AT',
+  LINK: 'LINK',
 }

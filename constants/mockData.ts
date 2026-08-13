@@ -221,8 +221,6 @@ export const MOCK_COMPANIES: Company[] = [
   { id: 5, name: 'Soylent Finance', industry: 'Finance', size: '51-200', website: 'https://soylent.example.com', tags: ['Tier 2', 'Priority'], notes: '', status: 'active', created_at: new Date('2025-01-05'), updated_at: new Date('2025-07-20') },
 ]
 
-export const companyNameById = (companyId: number) => MOCK_COMPANIES.find(c => c.id === companyId)?.name || '-'
-
 export const MOCK_CONTACTS: Contact[] = [
   { id: 1, company_id: 1, name: 'Somchai Prasert', email: 'somchai@acme.example.com', phone: '0812345678', role_title: 'CTO', tags: ['Decision Maker'], status: 'active', created_at: new Date('2024-02-12') },
   { id: 2, company_id: 1, name: 'Nattaya Wong', email: 'nattaya@acme.example.com', phone: '0823456789', role_title: 'Product Owner', tags: [], status: 'active', created_at: new Date('2024-03-01') },
@@ -307,10 +305,4 @@ export const MOCK_QUOTES: Quote[] = [
   { id: 1, deal_id: 1, items: [{ description: 'Platform license (annual)', qty: 1, price: 600000 }, { description: 'Implementation services', qty: 1, price: 250000 }], validity_date: new Date('2025-08-01'), status: 'sent' },
   { id: 2, deal_id: 2, items: [{ description: 'POS Integration package', qty: 1, price: 320000 }], validity_date: new Date('2025-08-15'), status: 'sent' },
   { id: 3, deal_id: 4, items: [{ description: 'Finance Reporting Suite', qty: 1, price: 540000 }], validity_date: new Date('2025-06-20'), status: 'accepted' },
-]
-
-export const TESTIMONIALS = [
-  { name: 'Sarah Chen', company: 'TechCorp', quote: 'This platform has transformed how our team works. The intuitive interface and powerful features have boosted our productivity by 40%.', avatar: 'SC' },
-  { name: 'James Wilson', company: 'StartupHub', quote: 'We switched from our old solution and never looked back. The support team is incredibly responsive and the product keeps getting better.', avatar: 'JW' },
-  { name: 'Maria Garcia', company: 'DesignStudio', quote: 'As a designer, I appreciate the attention to detail. Everything is beautifully crafted and works exactly as expected.', avatar: 'MG' },
 ]

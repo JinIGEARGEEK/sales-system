@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.dashboard.title') }}</h2>
+        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.activityLog.title') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ dateFormat(new Date().toISOString()) }}</p>
       </div>
     </div>
@@ -12,7 +12,7 @@
         <div class="flex-1">
           <InputText
             v-model="search"
-            :placeholder="t('admin.dashboard.searchPlaceholder')"
+            :placeholder="t('admin.activityLog.searchPlaceholder')"
             name="search"
           />
         </div>
@@ -20,7 +20,7 @@
           <InputSelect
             v-model="typeFilter"
             :options="ACTIVITY_TYPE_OPTIONS"
-            :placeholder="t('admin.dashboard.typePlaceholder')"
+            :placeholder="t('admin.activityLog.typePlaceholder')"
             name="typeFilter"
           />
         </div>
@@ -47,7 +47,7 @@ import { RECENT_ACTIVITY, ACTIVITY_TYPE_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
-useHead({ title: t('admin.dashboard.title') })
+useHead({ title: t('admin.activityLog.title') })
 
 const { dateFormat, dateTimeFormat, toBadge } = useFormatter()
 
@@ -78,9 +78,9 @@ const filteredActivity = computed(() => {
 })
 
 const columns: TableDataColumn[] = [
-  { label: t('admin.dashboard.columns.activity'), align: 'left', field: 'activityCell', type: TABLE_CARD_TYPE.MULTI_LINE },
-  { label: t('admin.dashboard.columns.type'), align: 'left', field: 'typeBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('admin.dashboard.columns.datetime'), align: 'left', field: 'datetimeDisplay' },
+  { label: t('admin.activityLog.columns.activity'), align: 'left', field: 'activityCell', type: TABLE_CARD_TYPE.MULTI_LINE },
+  { label: t('admin.activityLog.columns.type'), align: 'left', field: 'typeBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('admin.activityLog.columns.datetime'), align: 'left', field: 'datetimeDisplay' },
 ]
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredActivity.value.length)

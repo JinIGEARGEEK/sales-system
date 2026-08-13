@@ -7,7 +7,3 @@ interface ApiResponse<T> {
   next: number
   prev: number
 }
-
-interface ErrorResponse {
-  message: string
-}

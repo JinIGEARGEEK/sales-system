@@ -17,14 +17,13 @@
     </ContainerTemplate>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
-      {{ t('admin.users.detail.customerNotFound') }}
+      {{ t('admin.users.detail.staffNotFound') }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_USERS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -32,27 +31,37 @@ useHead({ title: t('admin.users.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const usersStore = useUsersStore()
 
 const userId = Number(route.params.id)
-const user = MOCK_USERS.find(u => u.id === userId)
+const user = computed(() => usersStore.items.find(u => u.id === userId))
 
 const breadcrumbs = [
-  { label: t('admin.users.detail.breadcrumbCustomers'), to: '/admin/users' },
-  { label: user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.breadcrumbEdit') },
+  { label: t('admin.users.detail.breadcrumbStaff'), to: '/admin/users' },
+  { label: user.value ? `${user.value.first_name} ${user.value.last_name}` : t('admin.users.detail.breadcrumbEdit') },
 ]
 
 const form = reactive({
-  first_name: user?.first_name || '',
-  last_name: user?.last_name || '',
-  email: user?.email || '',
-  tel: user?.tel || '',
-  role: user?.role || '',
-  status: user?.is_active ? 'active' : 'inactive',
+  first_name: user.value?.first_name || '',
+  last_name: user.value?.last_name || '',
+  email: user.value?.email || '',
+  tel: user.value?.tel || '',
+  role: user.value?.role || '',
+  status: user.value?.is_active ? 'active' : 'inactive',
   notes: '',
   birthDate: '',
 })
 
 const onSubmit = () => {
+  if (user.value) {
+    user.value.first_name = form.first_name
+    user.value.last_name = form.last_name
+    user.value.email = form.email
+    user.value.tel = form.tel
+    user.value.role = form.role as AdminUser['role']
+    user.value.is_active = form.status === 'active'
+    user.value.updated_at = new Date()
+  }
   success(t('admin.users.detail.updateSuccess'))
   navigateTo('/admin/users')
 }
