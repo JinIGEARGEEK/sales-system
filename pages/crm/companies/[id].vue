@@ -132,7 +132,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_DEALS, companyActivities, lastContactDate, INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { companyActivities, lastContactDate, INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -144,6 +144,7 @@ const { lastContactInfo } = useLastContact()
 const { success } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const dealsStore = useDealsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -157,7 +158,7 @@ const tabItems = [
 ]
 
 const companyContacts = computed(() => contactsStore.items.filter(c => c.company_id === companyId))
-const companyDeals = computed(() => MOCK_DEALS.filter(d => d.company_id === companyId))
+const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
 const companyActivity = computed(() => companyActivities(companyId))
 const lastContact = computed(() => lastContactInfo(lastContactDate(companyId)))

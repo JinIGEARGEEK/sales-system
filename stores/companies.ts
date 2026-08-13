@@ -1,4 +1,5 @@
 import { MOCK_COMPANIES } from '~/constants/mockData'
+import { nextId } from './helpers'
 
 export const useCompaniesStore = defineStore('companies', {
   state: () => ({
@@ -10,7 +11,7 @@ export const useCompaniesStore = defineStore('companies', {
   },
   actions: {
     add (company: Omit<Company, 'id'>): number {
-      const id = Math.max(0, ...this.items.map(c => c.id)) + 1
+      const id = nextId(this.items)
       this.items.push({ ...company, id })
       return id
     },

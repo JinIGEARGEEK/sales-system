@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_LEADS, LEAD_SOURCE_OPTIONS, LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -64,22 +64,33 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const leadsStore = useLeadsStore()
 
 const leadId = Number(route.params.id)
-const lead = MOCK_LEADS.find(l => l.id === leadId)
+const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 const form = reactive({
-  name: lead?.name || '',
-  company_name: lead?.company_name || '',
-  email: lead?.email || '',
-  phone: lead?.phone || '',
-  source: lead?.source || '',
-  status: lead?.status || 'New',
-  assigned_to: lead?.assigned_to ? String(lead.assigned_to) : '',
-  notes: lead?.notes || '',
+  name: lead.value?.name || '',
+  company_name: lead.value?.company_name || '',
+  email: lead.value?.email || '',
+  phone: lead.value?.phone || '',
+  source: lead.value?.source || '',
+  status: lead.value?.status || 'New',
+  assigned_to: lead.value?.assigned_to ? String(lead.value.assigned_to) : '',
+  notes: lead.value?.notes || '',
 })
 
 const onSave = () => {
+  if (lead.value) {
+    lead.value.name = form.name
+    lead.value.company_name = form.company_name
+    lead.value.email = form.email
+    lead.value.phone = form.phone
+    lead.value.source = form.source as LeadSource
+    lead.value.status = form.status as LeadStatus
+    lead.value.assigned_to = form.assigned_to ? Number(form.assigned_to) : null
+    lead.value.notes = form.notes
+  }
   success(t('crm.leads.detail.updateSuccess'))
 }
 </script>

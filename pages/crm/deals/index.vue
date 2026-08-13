@@ -55,7 +55,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import {
-  MOCK_DEALS,
   DEAL_STAGE_OPTIONS,
   TEAM_MEMBER_FILTER_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
@@ -74,6 +73,7 @@ useHead({ title: t('crm.deals.index.pageTitle') })
 const { priceFormat } = useFormatter()
 const { success } = useNotify()
 const companiesStore = useCompaniesStore()
+const dealsStore = useDealsStore()
 
 const search = ref('')
 const assigneeFilter = ref('all')
@@ -82,10 +82,8 @@ const projectFilter = ref('all')
 const productFilter = ref('all')
 const channelFilter = ref('all')
 
-const deals = ref<Deal[]>([...MOCK_DEALS])
-
 const filteredDeals = computed(() => {
-  return deals.value.filter((deal) => {
+  return dealsStore.items.filter((deal) => {
     const matchSearch = !search.value
       || deal.title.toLowerCase().includes(search.value.toLowerCase())
       || companiesStore.nameById(deal.company_id).toLowerCase().includes(search.value.toLowerCase())
@@ -99,7 +97,7 @@ const filteredDeals = computed(() => {
 })
 
 const onMove = (item: Deal, newStage: string) => {
-  const deal = deals.value.find(d => d.id === item.id)
+  const deal = dealsStore.items.find(d => d.id === item.id)
   if (deal && deal.stage !== newStage) {
     deal.stage = newStage as DealStage
     deal.status = dealStatusForStage(deal.stage)

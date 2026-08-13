@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_LEADS, DEAL_STAGE_OPTIONS, findDuplicateDeals } from '~/constants/mockData'
+import { DEAL_STAGE_OPTIONS, findDuplicateDeals, dealStatusForStage } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -57,8 +57,10 @@ const route = useRoute()
 const { success } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const leadsStore = useLeadsStore()
+const dealsStore = useDealsStore()
 
-const originatingLead = route.query.lead_id ? MOCK_LEADS.find(l => l.id === Number(route.query.lead_id)) : null
+const originatingLead = route.query.lead_id ? leadsStore.items.find(l => l.id === Number(route.query.lead_id)) : null
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 const contactOptions = computed(() => contactsStore.items.map(c => ({ label: c.name, value: String(c.id) })))
@@ -73,9 +75,23 @@ const form = reactive({
   assigned_to: '',
 })
 
-const duplicateDeals = computed(() => findDuplicateDeals(form.company_id, form.contact_id))
+const duplicateDeals = computed(() => findDuplicateDeals(dealsStore.items, form.company_id, form.contact_id))
 
 const onSubmit = () => {
+  dealsStore.add({
+    company_id: Number(form.company_id),
+    contact_id: Number(form.contact_id) || 0,
+    title: form.title,
+    value: form.value,
+    stage: form.stage as DealStage,
+    status: dealStatusForStage(form.stage as DealStage),
+    expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
+    assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+    channel: 'Other',
+    business_unit: null,
+    business_unit_item: null,
+    created_at: new Date(),
+  })
   success(t('crm.deals.create.createSuccess'))
   navigateTo('/crm/deals')
 }

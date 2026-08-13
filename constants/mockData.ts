@@ -250,12 +250,12 @@ export const MOCK_DEALS: Deal[] = [
 
 // ── Duplicate detection (simple lead/deal dedup) ────────────────────
 
-export const findDuplicateLeads = (email: string, phone: string, excludeId?: number): Lead[] => {
+export const findDuplicateLeads = (leads: Lead[], email: string, phone: string, excludeId?: number): Lead[] => {
   const normalizedEmail = email.trim().toLowerCase()
   const normalizedPhone = phone.trim()
   if (!normalizedEmail && !normalizedPhone) return []
 
-  return MOCK_LEADS.filter((lead) => {
+  return leads.filter((lead) => {
     if (lead.id === excludeId) return false
     const emailMatch = !!normalizedEmail && lead.email.trim().toLowerCase() === normalizedEmail
     const phoneMatch = !!normalizedPhone && lead.phone.trim() === normalizedPhone
@@ -263,10 +263,10 @@ export const findDuplicateLeads = (email: string, phone: string, excludeId?: num
   })
 }
 
-export const findDuplicateDeals = (companyId: string, contactId: string, excludeId?: number): Deal[] => {
+export const findDuplicateDeals = (deals: Deal[], companyId: string, contactId: string, excludeId?: number): Deal[] => {
   if (!companyId) return []
 
-  return MOCK_DEALS.filter((deal) => {
+  return deals.filter((deal) => {
     if (deal.id === excludeId) return false
     if (deal.status !== 'open') return false
     const companyMatch = String(deal.company_id) === companyId

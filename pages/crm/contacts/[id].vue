@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_DEALS, MOCK_ACTIVITIES } from '~/constants/mockData'
+import { MOCK_ACTIVITIES } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -75,13 +75,14 @@ const route = useRoute()
 const { success } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const dealsStore = useDealsStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
-const linkedDeals = computed(() => MOCK_DEALS.filter(d => d.contact_id === contactId))
+const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
 const contactActivity = computed(() => MOCK_ACTIVITIES.filter(a => a.related_type === 'contact' && a.related_id === contactId))
 
 const form = reactive({

@@ -63,7 +63,7 @@
           :aria-label="t('crm.dashboard.clearFilters')"
           @click="clearFilters"
         />
-        <span class="ml-auto text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.showingDeals', { count: filteredDeals.length, total: MOCK_DEALS.length }) }}</span>
+        <span class="ml-auto text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.showingDeals', { count: filteredDeals.length, total: dealsStore.items.length }) }}</span>
       </div>
     </UCard>
 
@@ -160,7 +160,7 @@
             {{ t('crm.dashboard.noUpsellCandidates') }}
           </div>
           <div v-else class="flex flex-col gap-4">
-            <div v-for="group in upsellGroups" :key="group.tier" v-show="group.candidates.length > 0">
+            <div v-for="group in upsellGroups" v-show="group.candidates.length > 0" :key="group.tier">
               <p class="mb-2 text-xs font-medium text-[var(--color-gray)]">{{ group.label }}</p>
               <div class="flex flex-col gap-2">
                 <NuxtLink
@@ -238,7 +238,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import {
-  MOCK_DEALS,
   MOCK_TEAM_MEMBERS,
   DEAL_STAGE_OPTIONS,
   QUARTERLY_SALES_TARGET,
@@ -256,10 +255,11 @@ useHead({ title: t('crm.dashboard.pageTitle') })
 const { priceFormat } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
+const dealsStore = useDealsStore()
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
-const { dateRange, activePreset, applyPeriodPreset, isDealInRange, anchorDate } = useDatePeriodFilter(() => MOCK_DEALS, PERIOD_PRESET_VALUES)
+const { dateRange, activePreset, applyPeriodPreset, isDealInRange, anchorDate } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)
 
 const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodAll'), value: 'all' },
@@ -288,7 +288,7 @@ const clearFilters = () => {
 }
 
 const filteredDeals = computed(() => {
-  return MOCK_DEALS.filter((deal) => {
+  return dealsStore.items.filter((deal) => {
     if (!isDealInRange(deal)) return false
     if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
     if (businessUnitFilter.value === 'Project' && projectFilter.value !== 'all' && deal.business_unit_item !== projectFilter.value) return false

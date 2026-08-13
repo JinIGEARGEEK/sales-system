@@ -171,7 +171,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_DEALS, MOCK_QUOTES, MOCK_ACTIVITIES, DEAL_STAGE_OPTIONS, dealStatusForStage } from '~/constants/mockData'
+import { MOCK_QUOTES, MOCK_ACTIVITIES, DEAL_STAGE_OPTIONS, dealStatusForStage } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -182,9 +182,10 @@ const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const dealsStore = useDealsStore()
 
 const dealId = Number(route.params.id)
-const deal = ref(MOCK_DEALS.find(d => d.id === dealId) ?? null)
+const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
 
 const activeTab = ref('overview')
 const tabItems = [
@@ -266,6 +267,14 @@ const form = reactive({
 })
 
 const onSave = () => {
+  if (deal.value) {
+    deal.value.title = form.title
+    deal.value.value = form.value
+    deal.value.stage = form.stage as DealStage
+    deal.value.status = dealStatusForStage(deal.value.stage)
+    deal.value.expected_close_date = form.expected_close_date ? new Date(form.expected_close_date) : null
+    deal.value.assigned_to = form.assigned_to ? Number(form.assigned_to) : null
+  }
   success(t('crm.deals.detail.updateSuccess'))
 }
 

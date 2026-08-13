@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_TAGS, TAG_CATEGORY_OPTIONS, TAG_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { TAG_CATEGORY_OPTIONS, TAG_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -52,18 +52,25 @@ useHead({ title: t('crm.tags.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const tagsStore = useTagsStore()
 
 const tagId = Number(route.params.id)
-const tag = MOCK_TAGS.find(tg => tg.id === tagId)
+const tag = computed(() => tagsStore.items.find(tg => tg.id === tagId))
 
 const form = reactive({
-  name: tag?.name || '',
-  category: tag?.category || '',
-  status: tag?.status || 'active',
-  description: tag?.description || '',
+  name: tag.value?.name || '',
+  category: tag.value?.category || '',
+  status: tag.value?.status || 'active',
+  description: tag.value?.description || '',
 })
 
 const onSave = () => {
+  if (tag.value) {
+    tag.value.name = form.name
+    tag.value.category = form.category as TagCategory
+    tag.value.status = form.status as TagStatus
+    tag.value.description = form.description
+  }
   success(t('crm.tags.detail.updateSuccess'))
   navigateTo('/crm/tags')
 }

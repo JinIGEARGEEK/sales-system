@@ -65,18 +65,16 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-defineProps<{
-  form: {
-    first_name: string
-    last_name: string
-    email: string
-    tel: string
-    role: string
-    status: string
-    notes: string
-    birthDate: string
-  }
-}>()
+const form = defineModel<{
+  first_name: string
+  last_name: string
+  email: string
+  tel: string
+  role: string
+  status: string
+  notes: string
+  birthDate: string
+}>('form', { required: true })
 
 const roleOptions = [
   { label: t('admin.users.form.roleAdmin'), value: 'Admin' },

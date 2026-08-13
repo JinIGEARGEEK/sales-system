@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { MOCK_TAGS, TAG_CATEGORY_OPTIONS, TAG_STATUS_OPTIONS } from '~/constants/mockData'
+import { TAG_CATEGORY_OPTIONS, TAG_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -70,15 +70,14 @@ useHead({ title: t('crm.tags.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
+const tagsStore = useTagsStore()
 
 const search = ref('')
 const categoryFilter = ref('all')
 const statusFilter = ref('all')
 
-const tags = ref<Tag[]>([...MOCK_TAGS])
-
 const filteredTags = computed(() => {
-  return tags.value.filter((tag) => {
+  return tagsStore.items.filter((tag) => {
     const matchSearch = !search.value || tag.name.toLowerCase().includes(search.value.toLowerCase())
     const matchCategory = categoryFilter.value === 'all' || tag.category === categoryFilter.value
     const matchStatus = statusFilter.value === 'all' || tag.status === statusFilter.value
@@ -126,7 +125,7 @@ const onEdit = (row: Tag) => {
 
 const confirmDelete = () => {
   if (target.value) {
-    tags.value = tags.value.filter(tag => tag.id !== target.value!.id)
+    tagsStore.remove(target.value.id)
     success(t('crm.tags.index.deleteSuccess'))
   }
   closeDelete()

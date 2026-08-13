@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // CREATE / UPDATE / DELETE transactions
 export const useMutateApi = <T, D>(path: string) => {

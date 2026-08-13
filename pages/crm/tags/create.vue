@@ -60,6 +60,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.tags.create.pageTitle') })
 
 const { success } = useNotify()
+const tagsStore = useTagsStore()
 
 const form = reactive({
   name: '',
@@ -69,6 +70,13 @@ const form = reactive({
 })
 
 const onSubmit = () => {
+  tagsStore.add({
+    name: form.name,
+    category: form.category as TagCategory,
+    status: form.status as TagStatus,
+    description: form.description,
+    created_at: new Date(),
+  })
   success(t('crm.tags.create.createSuccess'))
   navigateTo('/crm/tags')
 }

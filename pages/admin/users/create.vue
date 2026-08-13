@@ -7,7 +7,7 @@
 
     <ContainerTemplate>
       <Form @submit="onSubmit">
-        <AdminUserForm :form="form" />
+        <AdminUserForm v-model:form="form" />
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('admin.users.create.createCustomer')" type="submit" />

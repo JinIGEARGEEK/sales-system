@@ -1,4 +1,5 @@
 import { MOCK_CONTACTS } from '~/constants/mockData'
+import { nextId } from './helpers'
 
 export const useContactsStore = defineStore('contacts', {
   state: () => ({
@@ -6,7 +7,7 @@ export const useContactsStore = defineStore('contacts', {
   }),
   actions: {
     add (contact: Omit<Contact, 'id'>): number {
-      const id = Math.max(0, ...this.items.map(c => c.id)) + 1
+      const id = nextId(this.items)
       this.items.push({ ...contact, id })
       return id
     },

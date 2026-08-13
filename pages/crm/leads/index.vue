@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { MOCK_LEADS, LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, TEAM_MEMBER_FILTER_OPTIONS, teamMemberNameById, matchesAssigneeFilter } from '~/constants/mockData'
+import { LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, TEAM_MEMBER_FILTER_OPTIONS, teamMemberNameById, matchesAssigneeFilter } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -60,16 +60,15 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
+const leadsStore = useLeadsStore()
 
 const search = ref('')
 const statusFilter = ref('all')
 const sourceFilter = ref('all')
 const assigneeFilter = ref('all')
 
-const leads = ref<Lead[]>([...MOCK_LEADS])
-
 const filteredLeads = computed(() => {
-  return leads.value.filter((lead) => {
+  return leadsStore.items.filter((lead) => {
     const matchSearch = !search.value
       || lead.name.toLowerCase().includes(search.value.toLowerCase())
       || lead.company_name.toLowerCase().includes(search.value.toLowerCase())
@@ -132,7 +131,7 @@ const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Lead>()
 
 const confirmDelete = () => {
   if (target.value) {
-    leads.value = leads.value.filter(l => l.id !== target.value!.id)
+    leadsStore.remove(target.value.id)
     success(t('crm.leads.index.deleteSuccess'))
   }
   closeDelete()
