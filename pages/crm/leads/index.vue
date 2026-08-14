@@ -9,7 +9,7 @@
       />
     </div>
 
-    <UCard class="mb-4">
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3">
         <CrmStatusPill v-model="statusFilter" :options="LEAD_STATUS_OPTIONS" />
         <div class="flex flex-col gap-3 sm:flex-row">
@@ -53,6 +53,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, TEAM_MEMBER_FILTER_OPTIONS, teamMemberNameById, matchesAssigneeFilter } from '~/constants/mockData'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 

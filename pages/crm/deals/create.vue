@@ -38,7 +38,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.deals.create.createDeal')" type="submit" />
-          <ButtonPrimary :label="t('crm.deals.create.cancel')" outline @click="navigateTo('/crm/deals')" />
+          <ButtonPrimary :label="t('crm.deals.create.cancel')" cancel @click="navigateTo('/crm/deals')" />
         </div>
       </Form>
     </ContainerTemplate>

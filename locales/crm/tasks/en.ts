@@ -1,0 +1,19 @@
+export default {
+  index: {
+    pageTitle: 'Tasks',
+    heading: 'Tasks',
+    subheading: 'Follow-ups across all deals, contacts, and companies.',
+    searchPlaceholder: 'Search by task or record name...',
+    noTasksMatch: 'No tasks match your filters.',
+    editTaskSuccess: 'Task updated successfully',
+    enterSelectMode: 'Select',
+    cancelSelectMode: 'Cancel selection',
+    selectedCount: '{count} selected',
+    bulkMarkDone: 'Mark Done',
+    reassignPlaceholder: 'Reassign to...',
+    bulkReassign: 'Reassign',
+    clearSelection: 'Clear',
+    bulkMarkDoneSuccess: '{count} tasks marked done',
+    bulkReassignSuccess: '{count} tasks reassigned',
+  },
+}

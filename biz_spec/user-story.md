@@ -1,12 +1,40 @@
 # User Stories & Use Cases — CRM for Sales Team
 
-**Companion document to:** `feature-spec.md`
-**Version:** 2.1 (CRM-only scope, with customer portfolio tracking)
-**Date:** 2026-08-12
+**Companion document to:** `feature-spec.md`, `api-system-spec.md` (backend API contract derived from these stories' requirements)
+**Version:** 2.3 (adds Thai role/use-case summary; reflects Tasks/Follow-ups now built)
+**Date:** 2026-08-14
 
 Each story references the Feature Requirement ID(s) it satisfies from `feature-spec.md`, for traceability. Format: *As a [role], I want to [action], so that [benefit].*
 
-> **Implementation status (as of 2026-08-13):** Each story now carries a **Status** column derived from `feature-spec.md` §9's gap summary. Legend: ✅ Built · 🚧 Partial · ⬜ Not built. Section 2.5 (Real Products & Projects Tracking) and all of §2.4's Quote/Contract stories are the biggest gaps — see `feature-spec.md` §9 for the full picture.
+> **Implementation status (as of 2026-08-14):** Each story now carries a **Status** column derived from `feature-spec.md` §9's gap summary. Legend: ✅ Built · 🚧 Partial · ⬜ Not built. Section 2.5 (Real Products & Projects Tracking) and all of §2.4's Quote/Contract stories are the biggest gaps — see `feature-spec.md` §9 for the full picture.
+
+---
+
+## บทบาทผู้ใช้และกรณีการใช้งาน (สรุปภาษาไทย)
+
+> สรุปบทบาทผู้ใช้และตัวอย่างการใช้งานจริงเป็นภาษาไทยก่อนเข้าสู่รายการ User Story แบบละเอียดด้านล่าง (เป็นภาษาอังกฤษ)
+
+### บทบาทผู้ใช้ (User Roles)
+
+| บทบาท | หน้าที่หลัก |
+|---|---|
+| **แอดมิน (Admin)** | จัดการบัญชีผู้ใช้งาน กำหนดสิทธิ์การเข้าถึง และตั้งค่าระบบ (§1 ด้านล่าง) |
+| **เซลล์ / ผู้ดูแลลูกค้า (Sales Rep / Account Manager)** | ดูแล Lead, Deal, ผู้ติดต่อ, บริษัท บันทึกการชำระเงิน และสร้าง/ติดตามงาน (Tasks) ของตนเอง (§2 ด้านล่าง) |
+| **หัวหน้าทีมขาย (Sales Manager)** | ดู Dashboard ภาพรวมทีม, รายงานยอดขาย, มอบหมาย/โยกย้าย Deal (§3 ด้านล่าง) |
+| **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะ Project ที่เชื่อมกับ Deal เท่านั้น เมื่อฟีเจอร์นี้ถูกสร้างขึ้น (§4 ด้านล่าง — ยังไม่ได้พัฒนา) |
+
+### กรณีการใช้งานจริง (Use Cases) — จากฟีเจอร์ที่สร้างเสร็จแล้ว
+
+**กรณีที่ 1 — เซลล์ปิด Deal สำเร็จ พร้อมงานติดตามที่เกิดขึ้นอัตโนมัติ**
+เซลล์แปลง Lead เป็น Deal, ลากผ่านขั้นตอนต่าง ๆ บนบอร์ด Kanban, บันทึกการชำระเงินแต่ละงวด แล้วกดปิด Deal สำเร็จ ("Won") — ระบบสร้างงานติดตาม "นัดหมาย Kickoff Call" ให้อัตโนมัติ กำหนดส่งใน 3 วัน มอบหมายให้เจ้าของ Deal ทันที ไม่ต้องมาสร้างเองด้วยมือ. (สอดคล้องกับ S-2, S-3, S-13c, S-13d ด้านล่าง)
+
+**กรณีที่ 2 — การบริหารงานติดตามของทั้งทีม**
+เซลล์เปิดหน้า "งานติดตาม" (`/crm/tasks`) เพื่อดูงานทั้งหมดของตนในที่เดียว กรองตามสถานะ/ผู้รับผิดชอบ, เปิดโหมด "เลือกรายการ" เพื่อทำเครื่องหมายว่าเสร็จหรือมอบหมายใหม่หลายรายการพร้อมกัน ส่วนหัวหน้าทีมเห็นงานเกินกำหนดของทั้งทีมผ่านวิดเจ็ต "Upcoming Follow-ups" บน Dashboard โดยไม่ต้องเปิดเข้าไปทีละ Deal. (สอดคล้องกับ S-12 ด้านล่าง)
+
+**กรณีที่ 3 — หัวหน้าทีมตรวจสอบผลงานทีมและโอกาส Upsell**
+หัวหน้าทีมเปิด Dashboard กรองตามช่วงเวลา ดู Win Rate, มูลค่า Pipeline, และ Leaderboard รายบุคคล พร้อมรายชื่อบัญชีลูกค้าที่ไม่ได้ติดต่อมานานเพื่อตามหาโอกาส Upsell. (สอดคล้องกับ M-1, M-2, M-4, M-9, M-10 ด้านล่าง)
+
+> หมายเหตุ: กรณีการใช้งานที่เกี่ยวกับ Quote/Contract และ Product/Project Tracking (§2.4, §2.5 ด้านล่าง) ยังใช้งานจริงไม่ได้ เนื่องจากยังไม่ได้พัฒนา
 
 ---
 
@@ -51,14 +79,16 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | # | User Story | Refs | Status |
 |---|---|---|---|
 | S-11 | As a Sales rep, I want to log calls/emails/meeting notes against a Contact or Deal, so that my team has full context on every interaction. | FR-CRM-030, FR-CRM-031 | 🚧 timeline display built; manual entry form unconfirmed |
-| S-12 | As a Sales rep, I want to set follow-up reminders on a Deal, so that I never miss a next step. | FR-CRM-032 | ⬜ |
+| S-12 | As a Sales rep, I want to set follow-up reminders on a Deal (or a Contact/Company), so that I never miss a next step. | FR-CRM-032 | 🚧 Tasks tab on Deal/Contact/Company detail pages, a dedicated all-tasks page (`/crm/tasks`) with filters and bulk mark-done/reassign, confirm-before-done dialog, and an auto-created follow-up task on Deal Won (`stores/tasks.ts`); email/push notification-on-due not built |
 | S-13 | As a Sales rep, I want to @mention a teammate in a note, so that they're notified and can jump in. | FR-CRM-034 | ⬜ |
 | S-13b | As a Sales rep, I want emails I send/receive with a client to be auto-logged against their Contact (via BCC-to-log or inbox sync), so that I don't have to manually copy-paste every thread. | FR-CRM-033 | ⬜ |
 
-### 2.4 Quotes & Contracts
+### 2.4 Quotes, Contracts & Payments
 
 | # | User Story | Refs | Status |
 |---|---|---|---|
+| S-13c | As a Sales rep, I want to record a payment received against a Deal (amount, date, method, note), so that I can track installments collected over the life of a project or product sale. | FR-CRM-027 | ✅ `components/Crm/AddPaymentModal.vue` / `stores/payments.ts` |
+| S-13d | As a Sales rep, I want the Deal detail page to show total paid and remaining balance at a glance, so that I know how much of the contract value is still outstanding without doing the math myself. | FR-CRM-028 | ✅ |
 | S-14 | As a Sales rep, I want to build a Quote from Products in our catalog, so that pricing stays consistent and line items are never free-text guesses. | FR-CRM-040, FR-CRM-062 | ⬜ no Product Catalog; Quotes are inline mock data, no dedicated create flow |
 | S-15 | As a Sales rep, I want to send a Quote and track its status (Sent/Accepted/Rejected/Expired), so that I know exactly where a proposal stands. | FR-CRM-041 | 🚧 status field exists in mock data only |
 | S-16 | As a Sales rep, I want to export a Quote as a branded PDF, so that I can send something professional to the client. | FR-CRM-042 | ⬜ |

@@ -5,7 +5,7 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
-    <UCard class="mb-4 bg-[var(--color-light-gray-1)] shadow-none ring-[var(--color-card-border)]">
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-wrap items-center gap-2">
         <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
         <UButton
@@ -182,6 +182,34 @@
       </div>
     </div>
 
+    <div class="mb-8">
+      <UCard class="ring-[var(--color-card-border)]">
+        <template #header>
+          <h3 class="text-lg font-medium">{{ t('crm.dashboard.upcomingFollowUps') }}</h3>
+          <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.upcomingFollowUpsHint') }}</p>
+        </template>
+        <div v-if="upcomingTasks.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          {{ t('crm.dashboard.noUpcomingTasks') }}
+        </div>
+        <div v-else class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <NuxtLink
+            v-for="task in upcomingTasks"
+            :key="task.id"
+            :to="task.path"
+            class="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+          >
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium">{{ task.title }}</p>
+              <p class="truncate text-xs text-[var(--color-gray)]">{{ task.relatedLabel }} · {{ teamMemberNameById(task.assigned_to) }}</p>
+            </div>
+            <UBadge :color="task.isOverdue ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
+              {{ dateFormat(task.due_date) }}
+            </UBadge>
+          </NuxtLink>
+        </div>
+      </UCard>
+    </div>
+
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
         <UCard class="ring-[var(--color-card-border)]">
@@ -246,16 +274,20 @@ import {
   PRODUCT_FILTER_OPTIONS,
   CHANNEL_FILTER_OPTIONS,
   lastContactDate,
+  teamMemberNameById,
+  isTaskOverdue,
 } from '~/constants/mockData'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.dashboard.pageTitle') })
 
-const { priceFormat } = useFormatter()
+const { priceFormat, dateFormat } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
+const tasksStore = useTasksStore()
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
@@ -302,6 +334,17 @@ const { openDeals, openValue: openPipelineValue, wonValue, winRate, avgDealSize,
 
 const pipelineCoverageRatio = computed(() => openPipelineValue.value / QUARTERLY_SALES_TARGET)
 const isPipelineHealthy = computed(() => pipelineCoverageRatio.value >= 1)
+
+const UPCOMING_TASKS_LIMIT = 6
+const { resolveRelated } = useRelatedRecord()
+
+const upcomingTasks = computed(() => {
+  const now = Date.now()
+  return tasksStore.pending
+    .map(task => ({ ...task, ...resolveRelated(task.related_type, task.related_id), isOverdue: isTaskOverdue(task, now) }))
+    .sort((a, b) => a.due_date.getTime() - b.due_date.getTime())
+    .slice(0, UPCOMING_TASKS_LIMIT)
+})
 
 // Shared win-rate calc for any won/lost tally (industry breakdown, team leaderboard, ...).
 const winRateOf = (wonCount: number, lostCount: number) => {

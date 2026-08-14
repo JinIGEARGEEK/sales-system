@@ -36,7 +36,7 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.importModal.cancel')" outline @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.importModal.cancel')" cancel @click="onUpdateOpen(false)" />
         <ButtonPrimary
           :label="t('crm.components.importModal.confirmImport')"
           :disabled="!preview || preview.newCompanies + preview.newContacts === 0"

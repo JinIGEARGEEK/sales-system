@@ -4,6 +4,7 @@
       v-slot="{ field, errors }"
       :model-value="modelValue"
       :name="name"
+      :label="label || undefined"
       :rules="rules"
       @update:model-value="emit('update:model-value', $event)"
     >

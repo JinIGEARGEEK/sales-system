@@ -122,12 +122,13 @@ summary {
 
   /*
    * App-shell background gradient (layouts/default.vue's outer flex wrapper).
-   * Mostly hidden behind the opaque <main>/sidebar — only shows through the
-   * sidebar's backdrop-blur — so treat changes here as subtle by design.
+   * <main> is translucent so this shows through everywhere — it's the backdrop
+   * the glass panels (filters, tabs, pipeline lanes) blur/tint against, so it
+   * needs real color variation, not just a near-white tint.
    */
-  --color-app-shell-gradient-from: #DDE6F7;
-  --color-app-shell-gradient-via: #D0DDF5;
-  --color-app-shell-gradient-to: #BFD0F0;
+  --color-app-shell-gradient-from: #C3D3F2;
+  --color-app-shell-gradient-via: #A9C0EC;
+  --color-app-shell-gradient-to: #8FADE3;
 
   /* Opacity Color Kit */
   --color-primary-opacity: color-mix(in srgb, var(--color-primary) 10%, transparent);

@@ -9,7 +9,7 @@
       />
     </div>
 
-    <UCard class="mb-4">
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <div class="flex-1 sm:min-w-48">
           <InputText v-model="search" :placeholder="t('crm.deals.index.searchPlaceholder')" name="search" />
@@ -65,6 +65,7 @@ import {
   matchesAssigneeFilter,
   dealStatusForStage,
 } from '~/constants/mockData'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 

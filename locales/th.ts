@@ -8,6 +8,7 @@ import crmDeals from './crm/deals/th'
 import crmContacts from './crm/contacts/th'
 import crmCompanies from './crm/companies/th'
 import crmTags from './crm/tags/th'
+import crmTasks from './crm/tasks/th'
 import crmComponents from './crm/components/th'
 
 const components = {
@@ -29,6 +30,7 @@ export default {
     contacts: crmContacts,
     companies: crmCompanies,
     tags: crmTags,
+    tasks: crmTasks,
     components: crmComponents,
   },
 }

@@ -7,7 +7,7 @@
       </div>
     </div>
 
-    <UCard class="mb-4">
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3 sm:flex-row">
         <div class="flex-1">
           <InputText
@@ -44,6 +44,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { RECENT_ACTIVITY, ACTIVITY_TYPE_OPTIONS } from '~/constants/mockData'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 

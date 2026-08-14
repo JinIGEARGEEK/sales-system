@@ -4,7 +4,7 @@
     :data-cy="props.dataCy"
     :label="props.label"
     :disabled="disabled"
-    :color="props.color"
+    :color="buttonColor"
     :variant="buttonVariant"
     :class="[
       'min-w-24 justify-center rounded-full px-6',
@@ -47,6 +47,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Shorthand for the app's standard "Cancel" button: red outline, regardless of `color`/`outline`.
+  cancel: {
+    type: Boolean,
+    default: false,
+  },
   fitContent: {
     type: Boolean,
     default: false,
@@ -58,8 +63,11 @@ const props = defineProps({
 })
 
 const buttonVariant = computed(() => {
+  if (props.cancel) return 'outline'
   if (props.flat) return 'ghost'
   if (props.outline) return 'outline'
   return 'solid'
 })
+
+const buttonColor = computed(() => props.cancel ? 'error' : props.color)
 </script>

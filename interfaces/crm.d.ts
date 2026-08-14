@@ -8,6 +8,11 @@ type DealStatus = 'open' | 'won' | 'lost'
 type ActivityType = 'call' | 'email' | 'meeting'
 type ActivityRelatedType = 'contact' | 'company' | 'deal'
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other'
+type TaskStatus = 'pending' | 'done'
+// Shared by Task.related_type and Activity.related_type — both point at whichever
+// record (deal, contact, or company) the follow-up/activity is attached to.
+type TaskRelatedType = ActivityRelatedType
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type BusinessUnit = 'Project' | 'Product'
@@ -110,4 +115,30 @@ interface Quote {
   file_url?: string
   file_size?: number
   uploaded_at?: Date
+}
+
+// A single installment paid against a Deal. A Deal's `value` is the total contract
+// value — revenue actually collected is the sum of its Payments, which can span
+// multiple partial payments over the life of a project or product sale.
+interface Payment {
+  id: number
+  deal_id: number
+  amount: number
+  paid_at: Date
+  method: PaymentMethod
+  note: string
+}
+
+// A follow-up/reminder attached to a Deal, Contact, or Company — e.g. "call back
+// Thursday" or "send renewal quote". Kept separate from Activity: Activity is a log
+// of things already done, Task is a to-do with a due date that hasn't happened yet.
+interface Task {
+  id: number
+  related_type: TaskRelatedType
+  related_id: number
+  title: string
+  due_date: Date
+  status: TaskStatus
+  assigned_to: number | null
+  created_at: Date
 }

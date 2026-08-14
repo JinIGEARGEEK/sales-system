@@ -47,11 +47,30 @@
               />
             </div>
           </UCard>
-          <UCard>
+          <UCard class="mb-4">
             <template #header>
               <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
             </template>
             <CrmActivityTimeline :items="contactActivity" />
+          </UCard>
+          <UCard>
+            <template #header>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.tasksTitle') }}</h3>
+                  <UBadge v-if="contactOverdueTaskCount > 0" color="error" variant="subtle">
+                    {{ t('crm.contacts.detail.overdueCount', { count: contactOverdueTaskCount }) }}
+                  </UBadge>
+                </div>
+                <ButtonPrimary
+                  :label="t('crm.contacts.detail.addTask')"
+                  icon="material-symbols:add"
+                  small
+                  @click="openAddTask"
+                />
+              </div>
+            </template>
+            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
           </UCard>
         </div>
       </div>
@@ -60,12 +79,18 @@
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
       {{ t('crm.contacts.detail.contactNotFound') }}
     </div>
+
+    <CrmAddTaskModal
+      v-model:open="addTaskOpen"
+      :task="editingTask"
+      @submit="onSubmitTask"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_ACTIVITIES } from '~/constants/mockData'
+import { MOCK_ACTIVITIES, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -85,6 +110,9 @@ const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.
 
 const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
 const contactActivity = computed(() => MOCK_ACTIVITIES.filter(a => a.related_type === 'contact' && a.related_id === contactId))
+
+const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 
 const form = reactive({
   name: contact.value?.name || '',

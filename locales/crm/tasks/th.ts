@@ -1,0 +1,19 @@
+export default {
+  index: {
+    pageTitle: 'งานติดตาม',
+    heading: 'งานติดตาม',
+    subheading: 'งานติดตามทั้งหมดจาก Deal ผู้ติดต่อ และบริษัท',
+    searchPlaceholder: 'ค้นหาด้วยชื่องานหรือชื่อรายการที่เกี่ยวข้อง...',
+    noTasksMatch: 'ไม่พบงานติดตามที่ตรงกับตัวกรอง',
+    editTaskSuccess: 'แก้ไขงานติดตามสำเร็จ',
+    enterSelectMode: 'เลือกรายการ',
+    cancelSelectMode: 'ยกเลิกการเลือก',
+    selectedCount: 'เลือกแล้ว {count} รายการ',
+    bulkMarkDone: 'ทำเสร็จแล้ว',
+    reassignPlaceholder: 'มอบหมายให้...',
+    bulkReassign: 'มอบหมาย',
+    clearSelection: 'ล้างการเลือก',
+    bulkMarkDoneSuccess: 'ทำเครื่องหมายเสร็จแล้ว {count} รายการ',
+    bulkReassignSuccess: 'มอบหมายงานใหม่ {count} รายการ',
+  },
+}

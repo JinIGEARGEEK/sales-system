@@ -45,4 +45,7 @@ export default {
   upsellTier90: '90-119 Days',
   upsellTier120: '120+ Days',
   noUpsellCandidates: 'All active accounts have been contacted recently. Nice work!',
+  upcomingFollowUps: 'Upcoming Follow-ups',
+  upcomingFollowUpsHint: 'Pending tasks across deals, contacts, and companies, soonest due first.',
+  noUpcomingTasks: 'No pending follow-ups. All caught up!',
 }

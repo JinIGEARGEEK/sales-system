@@ -11,7 +11,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('admin.users.create.createStaff')" type="submit" />
-          <ButtonPrimary :label="t('admin.users.form.cancel')" outline @click="navigateTo('/admin/users')" />
+          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="navigateTo('/admin/users')" />
         </div>
       </Form>
     </ContainerTemplate>

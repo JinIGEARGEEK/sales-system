@@ -94,7 +94,12 @@
       </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]">
+    <main class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
+      <div class="sticky top-0 z-10 hidden border-b border-white/40 bg-white/20 px-5 py-2.5 backdrop-blur-xl md:block">
+        <div class="max-w-sm">
+          <CrmGlobalSearch />
+        </div>
+      </div>
       <slot />
     </main>
   </div>
@@ -119,6 +124,7 @@ const menuList = computed(() => [
   { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
   { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false },
   { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false },
+  { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: true },
   { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false },
   { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false },
   { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true },

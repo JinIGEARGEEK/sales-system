@@ -3,13 +3,13 @@
     <div
       v-for="column in columns"
       :key="column.value"
-      class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border border-[var(--color-card-border)]"
+      class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border border-white/70 shadow-xl"
       @dragover.prevent
       @drop="onDrop(column.value)"
     >
       <div
-        class="flex items-center justify-between px-3 py-2"
-        :style="{ backgroundColor: getColumnColor(column.value) }"
+        class="flex items-center justify-between border-b border-white/40 px-3 py-2 backdrop-blur-2xl"
+        :style="{ backgroundColor: getColumnHeaderTint(column.value) }"
       >
         <span class="text-sm font-medium text-white">{{ column.label }}</span>
         <span class="rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
@@ -18,7 +18,7 @@
       </div>
 
       <div
-        class="flex flex-1 flex-col gap-2 p-3"
+        class="flex flex-1 flex-col gap-2 p-3 backdrop-blur-xl"
         :style="{ backgroundColor: getColumnTint(column.value) }"
       >
         <div
@@ -55,7 +55,12 @@ const FALLBACK_COLOR = 'var(--color-primary)'
 
 const getColumnColor = (value: string) => DEAL_STAGE_COLORS[value as DealStage] || FALLBACK_COLOR
 
-const getColumnTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 8%, white)`
+const getColumnHeaderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 80%, transparent)`
+
+const getColumnTint = (value: string) => {
+  const solidTint = `color-mix(in srgb, ${getColumnColor(value)} 14%, white)`
+  return `color-mix(in srgb, ${solidTint} 92%, transparent)`
+}
 
 const emit = defineEmits<{
   move: [item: Deal, newValue: string]

@@ -122,6 +122,27 @@
           <CrmActivityTimeline :items="companyActivity" />
         </ContainerTemplate>
       </div>
+
+      <div v-else-if="activeTab === 'tasks'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.tasksTitle') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.companies.detail.addTask')"
+              icon="material-symbols:add"
+              small
+              @click="openAddTask"
+            />
+          </div>
+          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
+        </ContainerTemplate>
+
+        <CrmAddTaskModal
+          v-model:open="addTaskOpen"
+          :task="editingTask"
+          @submit="onSubmitTask"
+        />
+      </div>
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -132,7 +153,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { companyActivities, lastContactDate, INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { companyActivities, lastContactDate, INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -150,18 +171,22 @@ const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
 
 const activeTab = ref('overview')
-const tabItems = [
+const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
+const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.companies.detail.tabs.contacts'), value: 'contacts' },
   { label: t('crm.companies.detail.tabs.deals'), value: 'deals' },
   { label: t('crm.companies.detail.tabs.activity'), value: 'activity' },
-]
+  { label: companyOverdueTaskCount.value > 0 ? `${t('crm.companies.detail.tabs.tasks')} (${companyOverdueTaskCount.value})` : t('crm.companies.detail.tabs.tasks'), value: 'tasks' },
+])
 
 const companyContacts = computed(() => contactsStore.items.filter(c => c.company_id === companyId))
 const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
 const companyActivity = computed(() => companyActivities(companyId))
 const lastContact = computed(() => lastContactInfo(lastContactDate(companyId)))
+
+const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 
 const form = reactive({
   name: company.value?.name || '',

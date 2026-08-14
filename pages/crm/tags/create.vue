@@ -44,7 +44,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" />
-          <ButtonPrimary :label="t('crm.tags.create.cancel')" outline @click="navigateTo('/crm/tags')" />
+          <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="navigateTo('/crm/tags')" />
         </div>
       </Form>
     </ContainerTemplate>

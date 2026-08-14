@@ -138,6 +138,92 @@
         </ContainerTemplate>
       </div>
 
+      <div v-else-if="activeTab === 'payments'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentsTitle') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.deals.detail.addPayment')"
+              icon="material-symbols:add"
+              small
+              @click="addPaymentOpen = true"
+            />
+          </div>
+
+          <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
+              <p class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.totalPaid') }}</p>
+              <p class="text-lg font-semibold">{{ priceFormat(totalPaid) }}</p>
+            </div>
+            <div class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
+              <p class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.remainingBalance') }}</p>
+              <p class="text-lg font-semibold">
+                {{ remainingBalance > 0 ? priceFormat(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
+              </p>
+            </div>
+          </div>
+
+          <div v-if="dealPayments.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.deals.detail.noPayments') }}
+          </div>
+          <table v-else class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-[var(--color-light-gray-2)] text-left text-xs text-[var(--color-gray)]">
+                <th class="py-2 font-normal">{{ t('crm.deals.detail.columnDate') }}</th>
+                <th class="py-2 font-normal">{{ t('crm.deals.detail.columnAmount') }}</th>
+                <th class="py-2 font-normal">{{ t('crm.deals.detail.columnMethod') }}</th>
+                <th class="py-2 font-normal">{{ t('crm.deals.detail.columnNote') }}</th>
+                <th class="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="payment in dealPayments" :key="payment.id" class="border-b border-[var(--color-light-gray-2)]">
+                <td class="py-2">{{ dateFormat(payment.paid_at) }}</td>
+                <td class="py-2">{{ priceFormat(payment.amount) }}</td>
+                <td class="py-2 capitalize">{{ payment.method }}</td>
+                <td class="py-2 text-[var(--color-gray)]">{{ payment.note || '-' }}</td>
+                <td class="py-2 text-right">
+                  <UButton
+                    icon="material-symbols:delete-outline"
+                    variant="ghost"
+                    color="error"
+                    size="xs"
+                    :aria-label="t('crm.deals.detail.removePayment')"
+                    @click="onRemovePayment(payment.id)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </ContainerTemplate>
+
+        <CrmAddPaymentModal
+          v-model:open="addPaymentOpen"
+          @submit="onAddPayment"
+        />
+      </div>
+
+      <div v-else-if="activeTab === 'tasks'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.deals.detail.tasksTitle') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.deals.detail.addTask')"
+              icon="material-symbols:add"
+              small
+              @click="openAddTask"
+            />
+          </div>
+          <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
+        </ContainerTemplate>
+
+        <CrmAddTaskModal
+          v-model:open="addTaskOpen"
+          :task="editingTask"
+          @submit="onSubmitTask"
+        />
+      </div>
+
       <div v-else-if="activeTab === 'activity'">
         <ContainerTemplate>
           <h3 class="mb-4 text-base font-semibold">{{ t('crm.deals.detail.activityTitle') }}</h3>
@@ -171,7 +257,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_QUOTES, MOCK_ACTIVITIES, DEAL_STAGE_OPTIONS, dealStatusForStage } from '~/constants/mockData'
+import { MOCK_QUOTES, MOCK_ACTIVITIES, DEAL_STAGE_OPTIONS, dealStatusForStage, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -179,20 +265,25 @@ useHead({ title: t('crm.deals.detail.pageTitle') })
 
 const route = useRoute()
 const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
-const { success, error } = useNotify()
+const { success, error, info } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
+const paymentsStore = usePaymentsStore()
+const tasksStore = useTasksStore()
 
 const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
 
 const activeTab = ref('overview')
-const tabItems = [
+const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
+const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.deals.detail.tabs.quotes'), value: 'quotes' },
+  { label: t('crm.deals.detail.tabs.payments'), value: 'payments' },
+  { label: dealOverdueTaskCount.value > 0 ? `${t('crm.deals.detail.tabs.tasks')} (${dealOverdueTaskCount.value})` : t('crm.deals.detail.tabs.tasks'), value: 'tasks' },
   { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
-]
+])
 
 const wonModal = ref(false)
 
@@ -248,6 +339,23 @@ const onRemoveQuote = (quote: Quote) => {
   quotes.value = quotes.value.filter(q => q.id !== quote.id)
 }
 
+const addPaymentOpen = ref(false)
+const dealPayments = computed(() => paymentsStore.forDeal(dealId))
+const totalPaid = computed(() => paymentsStore.totalForDeal(dealId))
+const remainingBalance = computed(() => (deal.value ? deal.value.value - totalPaid.value : 0))
+
+const onAddPayment = (payment: { amount: number, paid_at: Date, method: PaymentMethod, note: string }) => {
+  paymentsStore.add({ deal_id: dealId, ...payment })
+  success(t('crm.deals.detail.addPaymentSuccess'))
+}
+
+const onRemovePayment = (id: number) => {
+  paymentsStore.remove(id)
+  success(t('crm.deals.detail.removePaymentSuccess'))
+}
+
+const { tasks: dealTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
+
 onUnmounted(() => {
   quotes.value.forEach(q => q.file_url && URL.revokeObjectURL(q.file_url))
 })
@@ -266,23 +374,45 @@ const form = reactive({
   assigned_to: deal.value?.assigned_to ? String(deal.value.assigned_to) : '',
 })
 
+// Nudges a rep to take the next concrete step right after a deal closes, instead
+// of a won deal silently sitting with no follow-up assigned to anyone.
+const WON_FOLLOWUP_DUE_DAYS = 3
+
+const createWonFollowUpTask = () => {
+  if (!deal.value) return
+  const dueDate = new Date()
+  dueDate.setDate(dueDate.getDate() + WON_FOLLOWUP_DUE_DAYS)
+  tasksStore.add({
+    related_type: 'deal',
+    related_id: dealId,
+    title: t('crm.deals.detail.wonFollowUpTaskTitle'),
+    due_date: dueDate,
+    assigned_to: deal.value.assigned_to,
+  })
+  info(t('crm.deals.detail.wonFollowUpTaskCreated'))
+}
+
 const onSave = () => {
   if (deal.value) {
+    const wasWon = deal.value.status === 'won'
     deal.value.title = form.title
     deal.value.value = form.value
     deal.value.stage = form.stage as DealStage
     deal.value.status = dealStatusForStage(deal.value.stage)
     deal.value.expected_close_date = form.expected_close_date ? new Date(form.expected_close_date) : null
     deal.value.assigned_to = form.assigned_to ? Number(form.assigned_to) : null
+    if (!wasWon && deal.value.status === 'won') createWonFollowUpTask()
   }
   success(t('crm.deals.detail.updateSuccess'))
 }
 
 const onMarkWon = () => {
   if (deal.value) {
+    const wasWon = deal.value.status === 'won'
     deal.value.stage = 'Won'
     deal.value.status = dealStatusForStage(deal.value.stage)
     form.stage = 'Won'
+    if (!wasWon) createWonFollowUpTask()
     success(t('crm.deals.detail.markWonSuccess'))
     wonModal.value = true
   }
