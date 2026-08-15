@@ -13,6 +13,7 @@ export const MOCK_DEV_USER: User = {
   notes: '',
   accepted_consent_id: null,
   is_active: true,
+  must_change_password: false,
   latest_login: null,
   created_at: null,
   updated_at: null,

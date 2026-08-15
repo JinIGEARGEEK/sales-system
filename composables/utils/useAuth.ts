@@ -26,10 +26,24 @@ export const useAuth = () => {
     return !!getAccessToken()
   }
 
+  const logout = async (): Promise<void> => {
+    try {
+      const { $api } = useNuxtApp()
+      await $api.post('/auth/logout')
+    } catch {
+      // Best-effort: clear local session regardless of backend result.
+    } finally {
+      removeAccessToken()
+      useUserStore().$reset()
+      await navigateTo('/login')
+    }
+  }
+
   return {
     getAccessToken,
     setAccessToken,
     removeAccessToken,
     isAuthenticated,
+    logout,
   }
 }

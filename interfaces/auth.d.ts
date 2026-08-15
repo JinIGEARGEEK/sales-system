@@ -6,6 +6,7 @@ interface User {
   notes: string
   accepted_consent_id: number | null
   is_active: boolean
+  must_change_password: boolean
   latest_login: Date | null
   created_at: Date | null
   updated_at: Date | null
