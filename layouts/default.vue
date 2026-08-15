@@ -73,10 +73,10 @@
 
       <div class="relative z-10 border-t border-white/10 p-2.5">
         <div class="flex items-center gap-2">
-          <UAvatar text="AD" size="xs" />
+          <UAvatar :text="userInitials" size="xs" />
           <div class="flex-1 min-w-0">
-            <div class="text-xs font-medium text-white truncate">{{ t('layout.user.defaultName') }}</div>
-            <div class="text-[11px] text-white/60 truncate">admin@example.com</div>
+            <div class="text-xs font-medium text-white truncate">{{ userDisplayName }}</div>
+            <div class="text-[11px] text-white/60 truncate">{{ email }}</div>
           </div>
         </div>
         <div class="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5 text-white">
@@ -94,11 +94,22 @@
       </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
-      <div class="sticky top-0 z-10 hidden border-b border-white/40 bg-white/20 px-5 py-2.5 backdrop-blur-xl md:block">
-        <div class="max-w-sm">
+    <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
+      <div ref="headerRef" class="sticky top-0 z-10 hidden items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 py-2.5 backdrop-blur-2xl md:flex">
+        <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
+        <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
         </div>
+        <Transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="opacity-0 translate-x-2"
+          leave-active-class="transition duration-150 ease-in"
+          leave-to-class="opacity-0 translate-x-2"
+        >
+          <p v-if="showTitleInHeader" class="truncate text-sm font-bold text-white">
+            {{ currentPageTitle }}
+          </p>
+        </Transition>
       </div>
       <slot />
     </main>
@@ -112,6 +123,10 @@ const { t } = useI18n()
 const route = useRoute()
 const drawer = ref(false)
 const { logout } = useAuth()
+const { first_name, last_name, email } = storeToRefs(useUserStore())
+
+const userDisplayName = computed(() => `${first_name.value} ${last_name.value}`.trim() || t('layout.user.defaultName'))
+const userInitials = computed(() => `${first_name.value[0] || ''}${last_name.value[0] || ''}`.toUpperCase() || 'AD')
 
 const menuList = computed(() => [
   { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
@@ -124,6 +139,41 @@ const menuList = computed(() => [
   { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false },
   { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false },
 ])
+
+// Shows the current page's <h2> title in the header once it scrolls up
+// behind the sticky search bar, so the page context isn't lost while scrolling.
+const mainRef = ref<HTMLElement | null>(null)
+const headerRef = ref<HTMLElement | null>(null)
+const currentPageTitle = ref('')
+const showTitleInHeader = ref(false)
+let titleObserver: IntersectionObserver | null = null
+
+const observePageTitle = () => {
+  titleObserver?.disconnect()
+  showTitleInHeader.value = false
+
+  nextTick(() => {
+    const mainEl = mainRef.value
+    const headerEl = headerRef.value
+    const titleEl = mainEl?.querySelector('h2')
+    if (!mainEl || !headerEl || !titleEl) {
+      currentPageTitle.value = ''
+      return
+    }
+
+    currentPageTitle.value = titleEl.textContent?.trim() ?? ''
+
+    titleObserver = new IntersectionObserver(
+      ([entry]) => { showTitleInHeader.value = !entry.isIntersecting },
+      { root: mainEl, rootMargin: `-${headerEl.offsetHeight}px 0px 0px 0px`, threshold: 0 },
+    )
+    titleObserver.observe(titleEl)
+  })
+}
+
+onMounted(observePageTitle)
+watch(() => route.fullPath, observePageTitle)
+onUnmounted(() => titleObserver?.disconnect())
 
 const isActive = (path: string) => {
   if (path === '/admin/activity-log' || path === '/') return route.path === path

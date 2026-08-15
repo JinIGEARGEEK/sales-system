@@ -1,20 +1,24 @@
 <template>
   <div ref="rootRef" class="relative">
-    <UInput
-      v-model="query"
-      icon="material-symbols:search"
-      :placeholder="t('crm.components.globalSearch.placeholder')"
-      class="w-full"
-      :ui="{
-        base: 'bg-white/70 backdrop-blur-xl ring-1 ring-white/80 border-0 shadow-sm placeholder:text-[var(--color-gray)] focus-visible:ring-2 focus-visible:ring-primary/70',
-        leadingIcon: 'text-[var(--color-gray)]',
-      }"
-      @focus="open = true"
-      @keydown.escape="open = false"
-    />
+    <div class="relative overflow-hidden rounded-full">
+      <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/20 via-white/5 to-transparent" />
+      <UInput
+        v-model="query"
+        size="lg"
+        icon="material-symbols:search"
+        :placeholder="t('crm.components.globalSearch.placeholder')"
+        class="w-full"
+        :ui="{
+          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15',
+          leadingIcon: 'text-white/70',
+        }"
+        @focus="open = true"
+        @keydown.escape="open = false"
+      />
+    </div>
 
     <div
-      v-if="open && query.trim().length >= 2"
+      v-if="open && query.trim().length >= MIN_QUERY_LENGTH"
       class="absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border border-white/60 bg-white/95 shadow-xl backdrop-blur-2xl"
     >
       <div v-if="totalResults === 0" class="px-4 py-6 text-center text-sm text-[var(--color-gray)]">
@@ -59,6 +63,7 @@ onMounted(() => {
 })
 
 const RESULT_LIMIT = 5
+const MIN_QUERY_LENGTH = 2
 
 const query = ref('')
 const open = ref(false)
@@ -69,32 +74,36 @@ const matches = (...values: string[]) => {
   return values.some(value => value.toLowerCase().includes(needle))
 }
 
-const resultGroups = computed(() => [
-  {
-    key: 'deals',
-    label: t('crm.components.globalSearch.deals'),
-    items: dealsStore.items.filter(deal => matches(deal.title)).slice(0, RESULT_LIMIT)
-      .map(deal => ({ path: `/crm/deals/${deal.id}`, label: deal.title, sublabel: deal.stage })),
-  },
-  {
-    key: 'companies',
-    label: t('crm.components.globalSearch.companies'),
-    items: companiesStore.items.filter(company => matches(company.name)).slice(0, RESULT_LIMIT)
-      .map(company => ({ path: `/crm/companies/${company.id}`, label: company.name, sublabel: company.industry })),
-  },
-  {
-    key: 'contacts',
-    label: t('crm.components.globalSearch.contacts'),
-    items: contactsStore.items.filter(contact => matches(contact.name)).slice(0, RESULT_LIMIT)
-      .map(contact => ({ path: `/crm/contacts/${contact.id}`, label: contact.name, sublabel: contact.role_title })),
-  },
-  {
-    key: 'leads',
-    label: t('crm.components.globalSearch.leads'),
-    items: leadsStore.items.filter(lead => matches(lead.name, lead.company_name)).slice(0, RESULT_LIMIT)
-      .map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: lead.company_name })),
-  },
-])
+const resultGroups = computed(() => {
+  if (query.value.trim().length < MIN_QUERY_LENGTH) return []
+
+  return [
+    {
+      key: 'deals',
+      label: t('crm.components.globalSearch.deals'),
+      items: dealsStore.items.filter(deal => matches(deal.title)).slice(0, RESULT_LIMIT)
+        .map(deal => ({ path: `/crm/deals/${deal.id}`, label: deal.title, sublabel: deal.stage })),
+    },
+    {
+      key: 'companies',
+      label: t('crm.components.globalSearch.companies'),
+      items: companiesStore.items.filter(company => matches(company.name)).slice(0, RESULT_LIMIT)
+        .map(company => ({ path: `/crm/companies/${company.id}`, label: company.name, sublabel: company.industry })),
+    },
+    {
+      key: 'contacts',
+      label: t('crm.components.globalSearch.contacts'),
+      items: contactsStore.items.filter(contact => matches(contact.name)).slice(0, RESULT_LIMIT)
+        .map(contact => ({ path: `/crm/contacts/${contact.id}`, label: contact.name, sublabel: contact.role_title })),
+    },
+    {
+      key: 'leads',
+      label: t('crm.components.globalSearch.leads'),
+      items: leadsStore.items.filter(lead => matches(lead.name, lead.company_name)).slice(0, RESULT_LIMIT)
+        .map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: lead.company_name })),
+    },
+  ]
+})
 
 const totalResults = computed(() => resultGroups.value.reduce((sum, group) => sum + group.items.length, 0))
 
