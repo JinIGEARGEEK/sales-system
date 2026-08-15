@@ -3,7 +3,6 @@ export const useUserStore = defineStore('user', {
     return {
       first_name: '',
       last_name: '',
-      username: '',
       tel: '',
       email: '',
       accepted_consent_id: null,
@@ -21,7 +20,6 @@ export const useUserStore = defineStore('user', {
     setUser (user: User) {
       this.first_name = user.first_name
       this.last_name = user.last_name
-      this.username = user.username
       this.tel = user.tel
       this.email = user.email
       this.accepted_consent_id = user.accepted_consent_id

@@ -60,7 +60,7 @@ These apply to every endpoint below unless a section says otherwise.
 
 | Method | Path | Auth | Status | Description |
 |---|---|---|---|---|
-| `POST` | `/auth/login` | none | 🟢 | Body: `{ username: string, password: string }` (frontend field names, see `pages/login.vue`). Returns `{ access_token: string, user: User }`. |
+| `POST` | `/auth/login` | none | 🟢 | Body: `{ email: string, password: string }` (frontend field names, see `pages/login.vue`). Returns `{ access_token: string, user: User }`. |
 | `POST` | `/auth/logout` | Bearer | 🟢 | Invalidates the token server-side if using a blocklist; frontend clears `localStorage` regardless (`useAuth().removeAccessToken()`). |
 | `GET` | `/auth/me` | Bearer | 🟢 | Returns the current `User` (§2.1). Used to hydrate `stores/user.ts` on load instead of trusting client state alone. |
 
@@ -154,7 +154,6 @@ interface User {
   id: number
   first_name: string
   last_name: string
-  username: string
   tel: string
   email: string
   accepted_consent_id: number | null

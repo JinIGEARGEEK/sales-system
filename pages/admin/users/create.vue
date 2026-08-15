@@ -43,7 +43,6 @@ const onSubmit = () => {
   usersStore.add({
     first_name: form.first_name,
     last_name: form.last_name,
-    username: form.email,
     email: form.email,
     tel: form.tel,
     role: form.role as AdminUser['role'],

@@ -118,10 +118,10 @@
 
       <Form class="relative z-10 flex flex-col gap-3" @submit="onSubmit">
         <InputText
-          v-model="state.username"
-          :label="t('global.auth.usernameLabel')"
-          :placeholder="t('global.auth.usernamePlaceholder')"
-          name="username"
+          v-model="state.email"
+          :label="t('global.auth.emailLabel')"
+          :placeholder="t('global.auth.emailPlaceholder')"
+          name="email"
           rules="required"
         />
         <InputPassword
@@ -163,10 +163,10 @@ const { t } = useI18n()
 const { setAccessToken } = useAuth()
 const { success, error } = useNotify()
 const userStore = useUserStore()
-const { post } = useMutateApi<{ access_token: string, user: User }, { username: string, password: string }>('/auth/login')
+const { post } = useMutateApi<{ access_token: string, user: User }, { email: string, password: string }>('/auth/login')
 
 const state = reactive({
-  username: '',
+  email: '',
   password: '',
 })
 
@@ -175,7 +175,7 @@ const onSubmit = async () => {
   loading.value = true
 
   try {
-    const response = await post({ username: state.username, password: state.password })
+    const response = await post({ email: state.email, password: state.password })
     setAccessToken(response.data.access_token)
     userStore.setUser(response.data.user)
     success(t('global.auth.loginSuccess'))

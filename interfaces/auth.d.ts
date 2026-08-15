@@ -1,7 +1,6 @@
 interface User {
   first_name: string
   last_name: string
-  username: string
   tel: string
   email: string
   accepted_consent_id: number | null
