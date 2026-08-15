@@ -1,7 +1,7 @@
 <template>
   <UModal :open="open" @update:open="onUpdateOpen">
     <template #header>
-      <h3 class="text-lg font-medium">{{ isEditing ? t('crm.components.addTaskModal.editTitle') : t('crm.components.addTaskModal.title') }}</h3>
+      <h3 class="text-lg font-medium">{{ t('crm.components.addTaskModal.title') }}</h3>
     </template>
     <template #body>
       <Form ref="formRef">
@@ -41,15 +41,12 @@ const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
-  task?: Task | null
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
   submit: [task: { title: string, due_date: Date, assigned_to: number | null }]
 }>()
-
-const isEditing = computed(() => !!props.task)
 
 const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 
@@ -73,20 +70,14 @@ const emptyForm = () => ({
   assigned_to: '',
 })
 
-const formFromTask = (task: Task) => ({
-  title: task.title,
-  due_date: toDateInputValue(task.due_date),
-  assigned_to: task.assigned_to ? String(task.assigned_to) : '',
-})
-
 const form = reactive(emptyForm())
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-// Reset (to blank, or to the task being edited) on open, not close — the next
-// open is always what the form should reflect, whichever button triggered it.
+// Reset on open, not close — the next open is always a blank form, whichever
+// button triggered it.
 watch(() => props.open, (value) => {
-  if (value) Object.assign(form, props.task ? formFromTask(props.task) : emptyForm())
+  if (value) Object.assign(form, emptyForm())
 })
 
 // The footer's Save button lives outside the <Form>'s own slot, and vee-validate's

@@ -134,12 +134,11 @@
               @click="openAddTask"
             />
           </div>
-          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
+          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
         </ContainerTemplate>
 
         <CrmAddTaskModal
           v-model:open="addTaskOpen"
-          :task="editingTask"
           @submit="onSubmitTask"
         />
       </div>
@@ -153,7 +152,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { companyActivities, lastContactDate, INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -166,6 +165,7 @@ const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
+const activitiesStore = useActivitiesStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -174,6 +174,7 @@ onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  activitiesStore.fetchForRelated('company', companyId)
 })
 
 const activeTab = ref('overview')
@@ -189,10 +190,14 @@ const tabItems = computed(() => [
 const companyContacts = computed(() => contactsStore.items.filter(c => c.company_id === companyId))
 const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
-const companyActivity = computed(() => companyActivities(companyId))
-const lastContact = computed(() => lastContactInfo(lastContactDate(companyId)))
+const companyActivity = computed(() => activitiesStore.forRelated('company', companyId))
+const lastContact = computed(() => {
+  const dates = companyActivity.value.map(a => a.created_at)
+  const latest = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null
+  return lastContactInfo(latest)
+})
 
-const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess')
 
 const form = reactive({
   name: company.value?.name || '',

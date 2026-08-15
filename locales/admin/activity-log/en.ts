@@ -1,10 +1,20 @@
 export default {
   title: 'Activity Log',
-  searchPlaceholder: 'Search by title or description...',
-  typePlaceholder: 'Type',
+  typePlaceholder: 'Entity Type',
+  allTypes: 'All Types',
   columns: {
-    activity: 'Activity',
-    type: 'Type',
+    entity: 'Entity',
+    action: 'Action',
+    actor: 'Actor',
     datetime: 'Date & Time',
+    action2: 'Details',
+  },
+  actions: {
+    viewDetail: 'View Detail',
+  },
+  detail: {
+    title: 'Change Details',
+    before: 'Before',
+    after: 'After',
   },
 }

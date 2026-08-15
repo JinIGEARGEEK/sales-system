@@ -142,3 +142,20 @@ interface Task {
   assigned_to: number | null
   created_at: Date
 }
+
+// GET /dashboard/summary — api-system-spec.md §9.
+interface DashboardSummary {
+  open_pipeline_value: number
+  won_value: number
+  win_rate: number
+  open_deals_count: number
+  avg_deal_size: number
+  avg_sales_cycle_days: number
+  pipeline_coverage_ratio: number
+  quarterly_sales_target: number
+  revenue_trend: { label: string, value: number }[]
+  stage_breakdown: { stage: DealStage, value: number, count: number }[]
+  industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
+  team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number }[]
+  upsell_opportunities: unknown[]
+}

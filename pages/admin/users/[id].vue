@@ -33,13 +33,17 @@ const route = useRoute()
 const { success } = useNotify()
 const usersStore = useUsersStore()
 
+onMounted(() => {
+  if (usersStore.items.length === 0) usersStore.fetchAll()
+})
+
 const userId = Number(route.params.id)
 const user = computed(() => usersStore.items.find(u => u.id === userId))
 
-const breadcrumbs = [
+const breadcrumbs = computed(() => [
   { label: t('admin.users.detail.breadcrumbStaff'), to: '/admin/users' },
   { label: user.value ? `${user.value.first_name} ${user.value.last_name}` : t('admin.users.detail.breadcrumbEdit') },
-]
+])
 
 const form = reactive({
   first_name: user.value?.first_name || '',
@@ -48,19 +52,35 @@ const form = reactive({
   tel: user.value?.tel || '',
   role: user.value?.role || '',
   status: user.value?.is_active ? 'active' : 'inactive',
-  notes: '',
-  birthDate: '',
+  notes: user.value?.notes || '',
+  password: '',
 })
 
-const onSubmit = () => {
+// User loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(user, (value) => {
+  if (!value) return
+  form.first_name = value.first_name
+  form.last_name = value.last_name
+  form.email = value.email
+  form.tel = value.tel
+  form.role = value.role
+  form.status = value.is_active ? 'active' : 'inactive'
+  form.notes = value.notes
+}, { immediate: true })
+
+const onSubmit = async () => {
   if (user.value) {
-    user.value.first_name = form.first_name
-    user.value.last_name = form.last_name
-    user.value.email = form.email
-    user.value.tel = form.tel
-    user.value.role = form.role as AdminUser['role']
-    user.value.is_active = form.status === 'active'
-    user.value.updated_at = new Date()
+    await usersStore.update(user.value.id, {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      tel: form.tel,
+      role: form.role,
+      status: form.status,
+      notes: form.notes,
+      password: form.password,
+    })
   }
   success(t('admin.users.detail.updateSuccess'))
   navigateTo('/admin/users')

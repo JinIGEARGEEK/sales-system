@@ -3,6 +3,7 @@ interface User {
   last_name: string
   tel: string
   email: string
+  notes: string
   accepted_consent_id: number | null
   is_active: boolean
   latest_login: Date | null

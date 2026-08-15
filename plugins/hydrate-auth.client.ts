@@ -4,15 +4,24 @@
  * this, the JWT survives but the store (name/role shown in the UI) is empty
  * until the next login.
  */
+import { MOCK_DEV_TOKEN, MOCK_DEV_USER } from '~/constants/mockData'
+
 export default defineNuxtPlugin(async () => {
-  const { isAuthenticated, removeAccessToken } = useAuth()
+  const { isAuthenticated, getAccessToken, removeAccessToken } = useAuth()
 
   if (!isAuthenticated()) {
     return
   }
 
-  const { $api } = useNuxtApp()
   const userStore = useUserStore()
+
+  // Dev-only mock session — rehydrate locally instead of calling the backend.
+  if (import.meta.dev && getAccessToken() === MOCK_DEV_TOKEN) {
+    userStore.setUser(MOCK_DEV_USER)
+    return
+  }
+
+  const { $api } = useNuxtApp()
 
   try {
     const response = await $api.get<ApiResponse<User>>('/auth/me')

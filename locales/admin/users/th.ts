@@ -45,8 +45,8 @@ export default {
     statusInactive: 'ไม่ได้ใช้งาน',
     notes: 'บันทึกเพิ่มเติม',
     notesPlaceholder: 'กรอกบันทึกเพิ่มเติม',
-    birthDate: 'วันเกิด',
-    birthDatePlaceholder: 'DD/MM/YYYY',
+    password: 'รหัสผ่าน',
+    passwordPlaceholder: 'เว้นว่างเพื่อสร้างอัตโนมัติ',
     cancel: 'ยกเลิก',
   },
   create: {

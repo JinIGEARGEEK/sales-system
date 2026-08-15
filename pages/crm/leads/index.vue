@@ -20,7 +20,7 @@
             <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.leads.index.allSources'), value: 'all' }, ...LEAD_SOURCE_OPTIONS]" :placeholder="t('crm.leads.index.sourcePlaceholder')" name="sourceFilter" />
           </div>
           <div class="w-full sm:w-48">
-            <InputSelect v-model="assigneeFilter" :options="TEAM_MEMBER_FILTER_OPTIONS" :placeholder="t('crm.leads.index.assigneePlaceholder')" name="assigneeFilter" />
+            <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.leads.index.assigneePlaceholder')" name="assigneeFilter" />
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, TEAM_MEMBER_FILTER_OPTIONS, teamMemberNameById, matchesAssigneeFilter } from '~/constants/mockData'
+import { LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, matchesAssigneeFilter } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -62,9 +62,11 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
+const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
   leadsStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
 
 const search = ref('')
@@ -86,7 +88,7 @@ const filteredLeads = computed(() => {
     ...lead,
     statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
     createdDate: dateFormat(lead.created_at.toISOString()),
-    assignedToName: teamMemberNameById(lead.assigned_to),
+    assignedToName: teamMembersStore.nameById(lead.assigned_to),
   }))
 })
 

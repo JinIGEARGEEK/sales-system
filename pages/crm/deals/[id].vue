@@ -214,12 +214,11 @@
               @click="openAddTask"
             />
           </div>
-          <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
+          <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
         </ContainerTemplate>
 
         <CrmAddTaskModal
           v-model:open="addTaskOpen"
-          :task="editingTask"
           @submit="onSubmitTask"
         />
       </div>
@@ -257,7 +256,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_QUOTES, MOCK_ACTIVITIES, DEAL_STAGE_OPTIONS, dealStatusForStage, isTaskOverdue } from '~/constants/mockData'
+import { DEAL_STAGE_OPTIONS, dealStatusForStage, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -271,6 +270,7 @@ const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const paymentsStore = usePaymentsStore()
 const tasksStore = useTasksStore()
+const activitiesStore = useActivitiesStore()
 
 const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
@@ -279,6 +279,9 @@ onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  paymentsStore.fetchForDeal(dealId)
+  activitiesStore.fetchForRelated('deal', dealId)
+  quotesStore.fetchForDeal(dealId)
 })
 
 const activeTab = ref('overview')
@@ -295,10 +298,10 @@ const wonModal = ref(false)
 
 const companyName = computed(() => deal.value ? companiesStore.nameById(deal.value.company_id) : '-')
 const contactName = computed(() => deal.value ? contactsStore.items.find(c => c.id === deal.value!.contact_id)?.name || '-' : '-')
-const dealActivity = computed(() => MOCK_ACTIVITIES.filter(a => a.related_type === 'deal' && a.related_id === dealId))
+const dealActivity = computed(() => activitiesStore.forRelated('deal', dealId))
 
-const quotes = ref<Quote[]>([...MOCK_QUOTES])
-const dealQuotes = computed(() => quotes.value.filter(q => q.deal_id === dealId))
+const quotesStore = useQuotesStore()
+const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 const MAX_QUOTATION_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
@@ -311,7 +314,7 @@ const formatFileSize = (bytes?: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const onFileSelected = (event: Event) => {
+const onFileSelected = async (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
@@ -326,23 +329,12 @@ const onFileSelected = (event: Event) => {
     return
   }
 
-  quotes.value.push({
-    id: Math.max(0, ...quotes.value.map(q => q.id)) + 1,
-    deal_id: dealId,
-    items: [],
-    validity_date: null,
-    status: 'sent',
-    file_name: file.name,
-    file_url: URL.createObjectURL(file),
-    file_size: file.size,
-    uploaded_at: new Date(),
-  })
+  await quotesStore.upload(dealId, file)
   success(t('crm.deals.detail.uploadSuccess'))
 }
 
-const onRemoveQuote = (quote: Quote) => {
-  if (quote.file_url) URL.revokeObjectURL(quote.file_url)
-  quotes.value = quotes.value.filter(q => q.id !== quote.id)
+const onRemoveQuote = async (quote: Quote) => {
+  await quotesStore.remove(quote.id)
 }
 
 const addPaymentOpen = ref(false)
@@ -350,21 +342,17 @@ const dealPayments = computed(() => paymentsStore.forDeal(dealId))
 const totalPaid = computed(() => paymentsStore.totalForDeal(dealId))
 const remainingBalance = computed(() => (deal.value ? deal.value.value - totalPaid.value : 0))
 
-const onAddPayment = (payment: { amount: number, paid_at: Date, method: PaymentMethod, note: string }) => {
-  paymentsStore.add({ deal_id: dealId, ...payment })
+const onAddPayment = async (payment: { amount: number, paid_at: Date, method: PaymentMethod, note: string }) => {
+  await paymentsStore.add(dealId, payment)
   success(t('crm.deals.detail.addPaymentSuccess'))
 }
 
-const onRemovePayment = (id: number) => {
-  paymentsStore.remove(id)
+const onRemovePayment = async (id: number) => {
+  await paymentsStore.remove(id)
   success(t('crm.deals.detail.removePaymentSuccess'))
 }
 
-const { tasks: dealTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
-
-onUnmounted(() => {
-  quotes.value.forEach(q => q.file_url && URL.revokeObjectURL(q.file_url))
-})
+const { tasks: dealTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess')
 
 const stageBadgeColor = computed(() => {
   if (deal.value?.stage === 'Won') return 'success'

@@ -5,6 +5,7 @@ export const useUserStore = defineStore('user', {
       last_name: '',
       tel: '',
       email: '',
+      notes: '',
       accepted_consent_id: null,
       latest_login: null,
       is_active: false,
@@ -22,6 +23,7 @@ export const useUserStore = defineStore('user', {
       this.last_name = user.last_name
       this.tel = user.tel
       this.email = user.email
+      this.notes = user.notes
       this.accepted_consent_id = user.accepted_consent_id
       this.latest_login = user.latest_login
       this.is_active = user.is_active

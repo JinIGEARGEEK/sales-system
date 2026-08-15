@@ -73,6 +73,10 @@ const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const usersStore = useUsersStore()
 
+onMounted(() => {
+  if (usersStore.items.length === 0) usersStore.fetchAll()
+})
+
 const search = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
@@ -137,9 +141,9 @@ const onEdit = (row: AdminUser) => {
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredUsers.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<AdminUser>()
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (target.value) {
-    usersStore.remove(target.value.id)
+    await usersStore.remove(target.value.id)
     success(t('admin.users.index.deleteSuccess'))
   }
   closeDelete()

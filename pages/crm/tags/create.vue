@@ -69,13 +69,12 @@ const form = reactive({
   description: '',
 })
 
-const onSubmit = () => {
-  tagsStore.add({
+const onSubmit = async () => {
+  await tagsStore.add({
     name: form.name,
     category: form.category as TagCategory,
     status: form.status as TagStatus,
     description: form.description,
-    created_at: new Date(),
   })
   success(t('crm.tags.create.createSuccess'))
   navigateTo('/crm/tags')

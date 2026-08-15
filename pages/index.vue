@@ -88,7 +88,7 @@
         {{ winRate }}%
       </CrmStatCard>
       <CrmStatCard :label="t('crm.dashboard.openDeals')">
-        {{ openDeals.length }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
+        {{ openDealsCount }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
     </div>
 
@@ -106,7 +106,7 @@
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
         <template #hint>
-          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${priceFormat(QUARTERLY_SALES_TARGET)} ${t('crm.dashboard.currencyUnit')}` }) }}
+          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${priceFormat(quarterlySalesTarget)} ${t('crm.dashboard.currencyUnit')}` }) }}
         </template>
       </CrmStatCard>
     </div>
@@ -200,7 +200,7 @@
           >
             <div class="min-w-0">
               <p class="truncate text-sm font-medium">{{ task.title }}</p>
-              <p class="truncate text-xs text-[var(--color-gray)]">{{ task.relatedLabel }} · {{ teamMemberNameById(task.assigned_to) }}</p>
+              <p class="truncate text-xs text-[var(--color-gray)]">{{ task.relatedLabel }} · {{ teamMembersStore.nameById(task.assigned_to) }}</p>
             </div>
             <UBadge :color="task.isOverdue ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
               {{ dateFormat(task.due_date) }}
@@ -266,15 +266,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import {
-  MOCK_TEAM_MEMBERS,
   DEAL_STAGE_OPTIONS,
-  QUARTERLY_SALES_TARGET,
   BUSINESS_UNIT_FILTER_OPTIONS,
   PROJECT_FILTER_OPTIONS,
   PRODUCT_FILTER_OPTIONS,
   CHANNEL_FILTER_OPTIONS,
-  lastContactDate,
-  teamMemberNameById,
   isTaskOverdue,
 } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -283,20 +279,23 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.dashboard.pageTitle') })
 
+const { $api } = useNuxtApp()
 const { priceFormat, dateFormat } = useFormatter()
-const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
+const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (tasksStore.items.length === 0) tasksStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
-const { dateRange, activePreset, applyPeriodPreset, isDealInRange, anchorDate } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)
+const { dateRange, activePreset, applyPeriodPreset, isDealInRange } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)
 
 const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodAll'), value: 'all' },
@@ -324,6 +323,8 @@ const clearFilters = () => {
   channelFilter.value = 'all'
 }
 
+// Kept for the toolbar's "Showing X of Y deals" count and the "no deals match" alert
+// only — every metric widget below comes from GET /dashboard/summary instead.
 const filteredDeals = computed(() => {
   return dealsStore.items.filter((deal) => {
     if (!isDealInRange(deal)) return false
@@ -335,9 +336,33 @@ const filteredDeals = computed(() => {
   })
 })
 
-const { openDeals, openValue: openPipelineValue, wonValue, winRate, avgDealSize, avgSalesCycleDays } = useDealMetrics(() => filteredDeals.value)
+const summary = ref<DashboardSummary | null>(null)
 
-const pipelineCoverageRatio = computed(() => openPipelineValue.value / QUARTERLY_SALES_TARGET)
+const fetchSummary = async () => {
+  const businessUnitItem = businessUnitFilter.value === 'Project' ? projectFilter.value : businessUnitFilter.value === 'Product' ? productFilter.value : 'all'
+  const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
+    params: {
+      date_from: dateRange.value?.start,
+      date_to: dateRange.value?.end,
+      business_unit: businessUnitFilter.value !== 'all' ? businessUnitFilter.value : undefined,
+      business_unit_item: businessUnitItem !== 'all' ? businessUnitItem : undefined,
+      channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
+    },
+  })
+  summary.value = response.data.data
+}
+
+onMounted(fetchSummary)
+watch([dateRange, businessUnitFilter, projectFilter, productFilter, channelFilter], fetchSummary)
+
+const openPipelineValue = computed(() => summary.value?.open_pipeline_value ?? 0)
+const wonValue = computed(() => summary.value?.won_value ?? 0)
+const winRate = computed(() => Math.round(summary.value?.win_rate ?? 0))
+const openDealsCount = computed(() => summary.value?.open_deals_count ?? 0)
+const avgDealSize = computed(() => summary.value?.avg_deal_size ?? 0)
+const avgSalesCycleDays = computed(() => summary.value?.avg_sales_cycle_days ?? 0)
+const pipelineCoverageRatio = computed(() => summary.value?.pipeline_coverage_ratio ?? 0)
+const quarterlySalesTarget = computed(() => summary.value?.quarterly_sales_target ?? 0)
 const isPipelineHealthy = computed(() => pipelineCoverageRatio.value >= 1)
 
 const UPCOMING_TASKS_LIMIT = 6
@@ -351,39 +376,21 @@ const upcomingTasks = computed(() => {
     .slice(0, UPCOMING_TASKS_LIMIT)
 })
 
-// Shared win-rate calc for any won/lost tally (industry breakdown, team leaderboard, ...).
-const winRateOf = (wonCount: number, lostCount: number) => {
-  const closed = wonCount + lostCount
-  return closed === 0 ? 0 : Math.round((wonCount / closed) * 100)
-}
-
-const UPSELL_TIER_GROUPS = computed(() => [
-  { tier: 'tier1', label: t('crm.dashboard.upsellTier60') },
-  { tier: 'tier2', label: t('crm.dashboard.upsellTier90') },
-  { tier: 'tier3', label: t('crm.dashboard.upsellTier120') },
+// upsell_opportunities is always [] server-side today (not yet implemented), so every
+// tier's candidate list stays empty until the backend fills it in.
+const upsellGroups = computed(() => [
+  { tier: 'tier1', label: t('crm.dashboard.upsellTier60'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
+  { tier: 'tier2', label: t('crm.dashboard.upsellTier90'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
+  { tier: 'tier3', label: t('crm.dashboard.upsellTier120'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
 ])
 
-const staleCandidates = computed(() => {
-  return companiesStore.items
-    .filter(company => company.status === 'active')
-    .map(company => ({ company, contact: lastContactInfo(lastContactDate(company.id)) }))
-    .filter(({ contact }) => contact.isStale)
-    .sort((a, b) => (b.contact.days ?? Infinity) - (a.contact.days ?? Infinity))
-})
-
-const upsellGroups = computed(() => {
-  return UPSELL_TIER_GROUPS.value.map(group => ({
-    ...group,
-    candidates: staleCandidates.value.filter(({ contact }) => contact.tier === group.tier).slice(0, 5),
-  }))
-})
-
+// Every stage always renders a bar (even at zero) — the backend only returns rows for
+// stages with at least one deal, so missing stages are filled in at zero here.
 const stageBreakdown = computed(() => {
   const stats = new Map(DEAL_STAGE_OPTIONS.map(stage => [stage.value, { value: 0, count: 0 }]))
-  for (const deal of filteredDeals.value) {
-    const stat = stats.get(deal.stage)!
-    stat.value += deal.value
-    stat.count += 1
+  for (const row of summary.value?.stage_breakdown ?? []) {
+    const stat = stats.get(row.stage)
+    if (stat) { stat.value = row.value; stat.count = row.count }
   }
   const maxValue = Math.max(...[...stats.values()].map(s => s.value), 1)
   return DEAL_STAGE_OPTIONS.map((stage) => {
@@ -397,65 +404,28 @@ const stageBreakdown = computed(() => {
   })
 })
 
-// Last 6 calendar months (oldest first) ending on the most recent deal activity in the
-// data set — anchoring to the real current date would run the window dry as mock data ages.
 const revenueTrend = computed(() => {
-  const latest = anchorDate.value
-  const months = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(latest.getFullYear(), latest.getMonth() - (5 - i), 1)
-    return { key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString('en-US', { month: 'short' }), value: 0 }
-  })
-  const byKey = new Map(months.map(m => [m.key, m]))
-  for (const deal of filteredDeals.value) {
-    if (deal.status !== 'won' || !deal.expected_close_date) continue
-    const d = new Date(deal.expected_close_date)
-    const bucket = byKey.get(`${d.getFullYear()}-${d.getMonth()}`)
-    if (bucket) bucket.value += deal.value
-  }
-  const maxValue = Math.max(...months.map(m => m.value), 1)
-  return months.map(m => ({ ...m, percent: Math.round((m.value / maxValue) * 100) }))
+  const points = summary.value?.revenue_trend ?? []
+  const maxValue = Math.max(...points.map(p => p.value), 1)
+  return points.map(p => ({ ...p, percent: Math.round((p.value / maxValue) * 100) }))
 })
 
 const industryBreakdown = computed(() => {
-  const industryByCompanyId = new Map(companiesStore.items.map(c => [c.id, c.industry]))
-  const stats = new Map<string, { wonCount: number; lostCount: number }>()
-  for (const deal of filteredDeals.value) {
-    if (deal.status !== 'won' && deal.status !== 'lost') continue
-    const industry = industryByCompanyId.get(deal.company_id) ?? '-'
-    const stat = stats.get(industry) ?? { wonCount: 0, lostCount: 0 }
-    if (deal.status === 'won') stat.wonCount += 1
-    else stat.lostCount += 1
-    stats.set(industry, stat)
-  }
-  return [...stats.entries()]
-    .map(([industry, stat]) => ({
-      industry,
-      wonCount: stat.wonCount,
-      winRate: winRateOf(stat.wonCount, stat.lostCount),
-    }))
+  return (summary.value?.industry_breakdown ?? [])
+    .map(row => ({ industry: row.industry, wonCount: row.won_count, winRate: Math.round(row.win_rate) }))
     .sort((a, b) => b.winRate - a.winRate)
 })
 
 const teamPerformance = computed(() => {
-  return MOCK_TEAM_MEMBERS
-    .map((member) => {
-      let wonCount = 0
-      let lostCount = 0
-      let wonValue = 0
-      for (const deal of filteredDeals.value) {
-        if (deal.assigned_to !== member.id) continue
-        if (deal.status === 'won') { wonCount += 1; wonValue += deal.value }
-        else if (deal.status === 'lost') lostCount += 1
-      }
-      return {
-        id: member.id,
-        name: member.name,
-        initials: member.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
-        wonCount,
-        wonValue,
-        winRate: winRateOf(wonCount, lostCount),
-      }
-    })
+  return (summary.value?.team_performance ?? [])
+    .map(row => ({
+      id: row.user_id,
+      name: row.name,
+      initials: row.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
+      wonCount: row.won_count,
+      wonValue: row.won_value,
+      winRate: Math.round(row.win_rate),
+    }))
     .sort((a, b) => b.wonValue - a.wonValue)
 })
 </script>

@@ -51,11 +51,11 @@
         name="notes"
       />
     </div>
-    <InputDatePicker
-      v-model="form.birthDate"
-      :label="t('admin.users.form.birthDate')"
-      :placeholder="t('admin.users.form.birthDatePlaceholder')"
-      name="birthDate"
+    <InputPassword
+      v-model="form.password"
+      :label="t('admin.users.form.password')"
+      :placeholder="t('admin.users.form.passwordPlaceholder')"
+      name="password"
     />
   </div>
 </template>
@@ -73,7 +73,7 @@ const form = defineModel<{
   role: string
   status: string
   notes: string
-  birthDate: string
+  password: string
 }>('form', { required: true })
 
 const roleOptions = [

@@ -68,18 +68,6 @@ export const PRODUCT_FILTER_OPTIONS: Select[] = [
   ...MOCK_PRODUCTS,
 ]
 
-// Quarterly new-business quota used for the pipeline coverage ratio on the dashboard.
-export const QUARTERLY_SALES_TARGET = 2000000
-
-export const MOCK_DEALS: Deal[] = [
-  { id: 1, company_id: 1, contact_id: 1, title: 'Acme Co. — Ops Platform Rollout', value: 850000, stage: 'Negotiation', status: 'open', expected_close_date: new Date('2025-09-15'), assigned_to: 1, channel: 'Referral', business_unit: 'Project', business_unit_item: 'ops-platform-rollout', created_at: new Date('2025-05-01') },
-  { id: 2, company_id: 2, contact_id: 3, title: 'Globex — POS Integration', value: 320000, stage: 'Proposal Sent', status: 'open', expected_close_date: new Date('2025-08-30'), assigned_to: 2, channel: 'Event', business_unit: 'Project', business_unit_item: 'pos-integration', created_at: new Date('2025-06-10') },
-  { id: 3, company_id: 3, contact_id: 4, title: 'Initech — Dashboard MVP', value: 180000, stage: 'Qualified', status: 'open', expected_close_date: new Date('2025-09-01'), assigned_to: null, channel: 'Website', business_unit: 'Product', business_unit_item: 'dashboard-suite', created_at: new Date('2025-07-05') },
-  { id: 4, company_id: 5, contact_id: 6, title: 'Soylent — Finance Reporting Suite', value: 540000, stage: 'Won', status: 'won', expected_close_date: new Date('2025-07-01'), assigned_to: 1, channel: 'Referral', business_unit: 'Product', business_unit_item: 'finance-reporting-suite', created_at: new Date('2025-04-15') },
-  { id: 5, company_id: 4, contact_id: 5, title: 'Umbrella — Legacy Migration', value: 95000, stage: 'Lost', status: 'lost', expected_close_date: new Date('2025-05-01'), assigned_to: 3, channel: 'Ads', business_unit: 'Project', business_unit_item: 'legacy-migration', created_at: new Date('2025-03-01') },
-  { id: 6, company_id: 1, contact_id: 2, title: 'Acme Co. — Mobile App Add-on', value: 210000, stage: 'Lead', status: 'open', expected_close_date: null, assigned_to: 4, channel: 'Website', business_unit: 'Product', business_unit_item: 'mobile-app', created_at: new Date('2025-07-25') },
-]
-
 // ── Duplicate detection (simple deal dedup) ─────────────────────────
 
 export const findDuplicateDeals = (deals: Deal[], companyId: string, contactId: string, excludeId?: number): Deal[] => {

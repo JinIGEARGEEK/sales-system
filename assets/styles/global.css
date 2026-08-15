@@ -157,6 +157,10 @@ summary {
   --ui-text: var(--color-black);
   --ui-text-highlighted: var(--color-black);
 
+  /* Focus/Hover Color Kit */
+  --color-focus: var(--color-warning-toast);
+  --color-focus-light: #FDE68A;
+
   /* Toast Color Kit */
   --color-success-toast: #07B53B;
   --color-info-toast: #2D72A7;
@@ -246,6 +250,34 @@ summary {
 [class*="bg-secondary"],
 .text-secondary {
   color: var(--color-black) !important;
+}
+
+/*
+ * Nuxt UI bakes every focus ring/outline into its component classes as
+ * `focus-visible:ring-{color}` / `focus-visible:outline-{color}`, and this
+ * app's components default to `color="primary"` — a dark navy that barely
+ * stands out against the light backgrounds used throughout. Retarget only
+ * the primary-colored ring/outline utilities to the brighter --color-focus
+ * yellow on focus, instead of touching every component file individually.
+ * Scoped to `ring-primary`/`outline-primary` specifically (substring match,
+ * so it still catches opacity modifiers like `ring-primary/70`) so that
+ * error/success/warning rings — form validation, destructive actions —
+ * keep their own color and meaning.
+ */
+[class*="focus-visible:ring-primary"]:focus-visible,
+[class*="focus-visible:outline-primary"]:focus-visible {
+  --tw-ring-color: var(--color-focus) !important;
+  outline-color: var(--color-focus) !important;
+}
+
+/*
+ * Same reasoning for hover: some primary-colored rings (outline/subtle
+ * buttons, `highlight` inputs) stay visible outside of focus. Lighten them
+ * on hover so the interaction still reads, without touching non-primary
+ * (error/success/warning) rings.
+ */
+[class*="ring-primary"]:hover {
+  --tw-ring-color: var(--color-focus-light) !important;
 }
 
 /*

@@ -54,6 +54,10 @@ const route = useRoute()
 const { success } = useNotify()
 const tagsStore = useTagsStore()
 
+onMounted(() => {
+  if (tagsStore.items.length === 0) tagsStore.fetchAll()
+})
+
 const tagId = Number(route.params.id)
 const tag = computed(() => tagsStore.items.find(tg => tg.id === tagId))
 
@@ -64,12 +68,24 @@ const form = reactive({
   description: tag.value?.description || '',
 })
 
-const onSave = () => {
+// Tag loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(tag, (value) => {
+  if (!value) return
+  form.name = value.name
+  form.category = value.category
+  form.status = value.status
+  form.description = value.description
+}, { immediate: true })
+
+const onSave = async () => {
   if (tag.value) {
-    tag.value.name = form.name
-    tag.value.category = form.category as TagCategory
-    tag.value.status = form.status as TagStatus
-    tag.value.description = form.description
+    await tagsStore.update(tag.value.id, {
+      name: form.name,
+      category: form.category as TagCategory,
+      status: form.status as TagStatus,
+      description: form.description,
+    })
   }
   success(t('crm.tags.detail.updateSuccess'))
   navigateTo('/crm/tags')

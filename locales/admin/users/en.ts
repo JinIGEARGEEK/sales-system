@@ -45,8 +45,8 @@ export default {
     statusInactive: 'Inactive',
     notes: 'Notes',
     notesPlaceholder: 'Enter any additional notes',
-    birthDate: 'Birth Date',
-    birthDatePlaceholder: 'DD/MM/YYYY',
+    password: 'Password',
+    passwordPlaceholder: 'Leave blank to auto-generate',
     cancel: 'Cancel',
   },
   create: {

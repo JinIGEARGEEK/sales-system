@@ -15,7 +15,7 @@
           <InputText v-model="search" :placeholder="t('crm.deals.index.searchPlaceholder')" name="search" />
         </div>
         <div class="w-full sm:w-56">
-          <InputSelect v-model="assigneeFilter" :options="TEAM_MEMBER_FILTER_OPTIONS" :placeholder="t('crm.deals.index.assigneePlaceholder')" name="assigneeFilter" />
+          <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.deals.index.assigneePlaceholder')" name="assigneeFilter" />
         </div>
         <div class="w-full sm:w-40">
           <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
@@ -45,7 +45,7 @@
         </div>
         <div class="mt-2 flex items-center justify-between">
           <p class="text-sm font-medium text-[var(--color-primary)]">{{ priceFormat(item.value) }}</p>
-          <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMemberNameById(item.assigned_to) }}</p>
+          <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
         </div>
       </template>
     </CrmPipelineBoard>
@@ -56,12 +56,10 @@
 import { useI18n } from 'vue-i18n'
 import {
   DEAL_STAGE_OPTIONS,
-  TEAM_MEMBER_FILTER_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
   PROJECT_FILTER_OPTIONS,
   PRODUCT_FILTER_OPTIONS,
   CHANNEL_FILTER_OPTIONS,
-  teamMemberNameById,
   matchesAssigneeFilter,
 } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -74,10 +72,12 @@ const { priceFormat } = useFormatter()
 const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
+const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
   dealsStore.fetchAll()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
 
 const search = ref('')

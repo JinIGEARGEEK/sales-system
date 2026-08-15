@@ -83,7 +83,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { INDUSTRY_OPTIONS, COMPANY_STATUS_OPTIONS, lastContactDate } from '~/constants/mockData'
+import { INDUSTRY_OPTIONS, COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -94,6 +94,7 @@ const { dateFormat, toBadge } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
+const activitiesStore = useActivitiesStore()
 
 const search = ref('')
 const industryFilter = ref('all')
@@ -119,7 +120,11 @@ const filteredCompanies = computed(() => {
     const matchTag = tagFilter.value === 'all' || company.tags.includes(tagFilter.value)
     return matchSearch && matchIndustry && matchStatus && matchTag
   }).map((company) => {
-    const contact = lastContactInfo(lastContactDate(company.id))
+    // Only reflects activity already cached from visiting the company's detail page —
+    // there's no bulk "activities for these companies" endpoint to fetch this list-wide.
+    const activityDates = activitiesStore.forRelated('company', company.id).map(a => a.created_at)
+    const lastContactDate = activityDates.length ? new Date(Math.max(...activityDates.map(d => d.getTime()))) : null
+    const contact = lastContactInfo(lastContactDate)
     return {
       ...company,
       tagsDisplay: company.tags.join(', ') || '-',

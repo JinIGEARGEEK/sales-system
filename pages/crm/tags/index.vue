@@ -73,6 +73,10 @@ const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const tagsStore = useTagsStore()
 
+onMounted(() => {
+  if (tagsStore.items.length === 0) tagsStore.fetchAll()
+})
+
 const search = ref('')
 const categoryFilter = ref('all')
 const statusFilter = ref('all')
@@ -124,9 +128,9 @@ const onEdit = (row: Tag) => {
   navigateTo(`/crm/tags/${row.id}`)
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (target.value) {
-    tagsStore.remove(target.value.id)
+    await tagsStore.remove(target.value.id)
     success(t('crm.tags.index.deleteSuccess'))
   }
   closeDelete()

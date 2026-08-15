@@ -6,7 +6,7 @@ export default {
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
   updated: {
-    updatedBy: 'แก้ไขโดย',
+    updatedBy: 'แก้ไขโดย ',
   },
   auth: {
     signIn: 'เข้าสู่ระบบ',

@@ -36,25 +36,19 @@ const form = reactive({
   role: '',
   status: 'active',
   notes: '',
-  birthDate: '',
+  password: '',
 })
 
-const onSubmit = () => {
-  usersStore.add({
+const onSubmit = async () => {
+  await usersStore.add({
     first_name: form.first_name,
     last_name: form.last_name,
     email: form.email,
     tel: form.tel,
-    role: form.role as AdminUser['role'],
-    is_active: form.status === 'active',
-    accepted_consent_id: null,
-    latest_login: null,
-    created_at: new Date(),
-    updated_at: new Date(),
-    deleted_at: null,
-    created_by: 0,
-    updated_by: 0,
-    deleted_by: 0,
+    role: form.role,
+    status: form.status,
+    notes: form.notes,
+    password: form.password,
   })
   success(t('admin.users.create.createSuccess'))
   navigateTo('/admin/users')

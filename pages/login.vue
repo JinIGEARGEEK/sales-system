@@ -150,6 +150,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MOCK_DEV_CREDENTIALS, MOCK_DEV_TOKEN, MOCK_DEV_USER } from '~/constants/mockData'
 
 definePageMeta({
   layout: 'blank',
@@ -175,6 +176,15 @@ const onSubmit = async () => {
   loading.value = true
 
   try {
+    // Dev-only mock login so the app is usable without a running backend.
+    if (import.meta.dev && state.email === MOCK_DEV_CREDENTIALS.email && state.password === MOCK_DEV_CREDENTIALS.password) {
+      setAccessToken(MOCK_DEV_TOKEN)
+      userStore.setUser(MOCK_DEV_USER)
+      success(t('global.auth.loginSuccess'))
+      await navigateTo('/')
+      return
+    }
+
     const response = await post({ email: state.email, password: state.password })
     setAccessToken(response.data.access_token)
     userStore.setUser(response.data.user)

@@ -1,7 +1,7 @@
 <template>
   <InputSelect
     :model-value="modelValue"
-    :options="TEAM_MEMBER_OPTIONS"
+    :options="teamMembersStore.options"
     :label="label ?? t('crm.components.teamMemberSelect.label')"
     :placeholder="placeholder ?? t('crm.components.teamMemberSelect.placeholder')"
     :name="name"
@@ -11,9 +11,13 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { TEAM_MEMBER_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const teamMembersStore = useTeamMembersStore()
+
+onMounted(() => {
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+})
 
 defineProps<{
   modelValue: string

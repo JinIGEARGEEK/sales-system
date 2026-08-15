@@ -70,7 +70,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @edit="openEditTask" @remove="onRemoveTask" />
+            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
           </UCard>
         </div>
       </div>
@@ -82,7 +82,6 @@
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
-      :task="editingTask"
       @submit="onSubmitTask"
     />
   </div>
@@ -90,7 +89,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MOCK_ACTIVITIES, isTaskOverdue } from '~/constants/mockData'
+import { isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -102,6 +101,7 @@ const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
+const activitiesStore = useActivitiesStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
@@ -110,14 +110,15 @@ onMounted(() => {
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  activitiesStore.fetchForRelated('contact', contactId)
 })
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
 const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
-const contactActivity = computed(() => MOCK_ACTIVITIES.filter(a => a.related_type === 'contact' && a.related_id === contactId))
+const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
 
-const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const { tasks: contactTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess')
 const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 
 const form = reactive({
