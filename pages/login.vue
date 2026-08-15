@@ -150,7 +150,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEV_ACCOUNT, DEV_USER } from '~/constants/devAccount'
 
 definePageMeta({
   layout: 'blank',
@@ -164,6 +163,7 @@ const { t } = useI18n()
 const { setAccessToken } = useAuth()
 const { success, error } = useNotify()
 const userStore = useUserStore()
+const { post } = useMutateApi<{ access_token: string, user: User }, { username: string, password: string }>('/auth/login')
 
 const state = reactive({
   username: '',
@@ -171,19 +171,20 @@ const state = reactive({
 })
 
 const loading = ref(false)
-const onSubmit = () => {
+const onSubmit = async () => {
   loading.value = true
 
-  if (state.username === DEV_ACCOUNT.username && state.password === DEV_ACCOUNT.password) {
-    setAccessToken('dev-token')
-    userStore.setUser(DEV_USER)
+  try {
+    const response = await post({ username: state.username, password: state.password })
+    setAccessToken(response.data.access_token)
+    userStore.setUser(response.data.user)
     success(t('global.auth.loginSuccess'))
-    navigateTo('/')
-  } else {
+    await navigateTo('/')
+  } catch {
     error(t('global.auth.loginFailed'))
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
 </script>
 

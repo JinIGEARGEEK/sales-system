@@ -113,11 +113,18 @@ const route = useRoute()
 const drawer = ref(false)
 const { removeAccessToken } = useAuth()
 const userStore = useUserStore()
+const { $api } = useNuxtApp()
 
-const logout = () => {
-  removeAccessToken()
-  userStore.$reset()
-  navigateTo('/login')
+const logout = async () => {
+  try {
+    await $api.post('/auth/logout')
+  } catch {
+    // Best-effort: clear local session regardless of backend result.
+  } finally {
+    removeAccessToken()
+    userStore.$reset()
+    navigateTo('/login')
+  }
 }
 
 const menuList = computed(() => [

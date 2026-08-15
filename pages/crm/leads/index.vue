@@ -60,8 +60,12 @@ const { t } = useI18n()
 useHead({ title: t('crm.leads.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
+
+onMounted(() => {
+  leadsStore.fetchAll()
+})
 
 const search = ref('')
 const statusFilter = ref('all')
@@ -130,10 +134,14 @@ const onConvert = (row: Lead) => {
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredLeads.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Lead>()
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (target.value) {
-    leadsStore.remove(target.value.id)
-    success(t('crm.leads.index.deleteSuccess'))
+    try {
+      await leadsStore.remove(target.value.id)
+      success(t('crm.leads.index.deleteSuccess'))
+    } catch {
+      error(t('global.genericError'))
+    }
   }
   closeDelete()
 }

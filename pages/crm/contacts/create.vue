@@ -67,10 +67,14 @@ const { t } = useI18n()
 useHead({ title: t('crm.contacts.create.pageTitle') })
 
 const route = useRoute()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+
+onMounted(() => {
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+})
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
@@ -83,18 +87,22 @@ const form = reactive({
   tags: '',
 })
 
-const onSubmit = () => {
-  contactsStore.add({
-    name: form.name,
-    company_id: Number(form.company_id),
-    role_title: form.role_title,
-    email: form.email,
-    phone: form.phone,
-    tags: parseTags(form.tags),
-    status: 'active',
-    created_at: new Date(),
-  })
-  success(t('crm.contacts.create.createSuccess'))
-  navigateTo('/crm/contacts')
+const onSubmit = async () => {
+  try {
+    await contactsStore.add({
+      name: form.name,
+      company_id: Number(form.company_id),
+      role_title: form.role_title,
+      email: form.email,
+      phone: form.phone,
+      tags: parseTags(form.tags),
+      status: 'active',
+      created_at: new Date(),
+    })
+    success(t('crm.contacts.create.createSuccess'))
+    navigateTo('/crm/contacts')
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 </script>

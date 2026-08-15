@@ -92,7 +92,7 @@ useHead({ title: t('crm.companies.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { lastContactInfo } = useLastContact()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 
 const search = ref('')
@@ -100,6 +100,10 @@ const industryFilter = ref('all')
 const statusFilter = ref('all')
 const tagFilter = ref('all')
 const showImport = ref(false)
+
+onMounted(() => {
+  companiesStore.fetchAll()
+})
 
 const companies = computed(() => companiesStore.items)
 
@@ -161,10 +165,14 @@ const onEdit = (row: Company) => {
   navigateTo(`/crm/companies/${row.id}`)
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (target.value) {
-    companiesStore.remove(target.value.id)
-    success(t('crm.companies.index.deleteSuccess'))
+    try {
+      await companiesStore.remove(target.value.id)
+      success(t('crm.companies.index.deleteSuccess'))
+    } catch {
+      error(t('global.genericError'))
+    }
   }
   closeDelete()
 }

@@ -54,11 +54,18 @@ const { t } = useI18n()
 useHead({ title: t('crm.deals.create.pageTitle') })
 
 const route = useRoute()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 const dealsStore = useDealsStore()
+
+onMounted(() => {
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  if (leadsStore.items.length === 0) leadsStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+})
 
 const originatingLead = route.query.lead_id ? leadsStore.items.find(l => l.id === Number(route.query.lead_id)) : null
 
@@ -77,22 +84,26 @@ const form = reactive({
 
 const duplicateDeals = computed(() => findDuplicateDeals(dealsStore.items, form.company_id, form.contact_id))
 
-const onSubmit = () => {
-  dealsStore.add({
-    company_id: Number(form.company_id),
-    contact_id: Number(form.contact_id) || 0,
-    title: form.title,
-    value: form.value,
-    stage: form.stage as DealStage,
-    status: dealStatusForStage(form.stage as DealStage),
-    expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
-    assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-    channel: 'Other',
-    business_unit: null,
-    business_unit_item: null,
-    created_at: new Date(),
-  })
-  success(t('crm.deals.create.createSuccess'))
-  navigateTo('/crm/deals')
+const onSubmit = async () => {
+  try {
+    await dealsStore.add({
+      company_id: Number(form.company_id),
+      contact_id: Number(form.contact_id) || 0,
+      title: form.title,
+      value: form.value,
+      stage: form.stage as DealStage,
+      status: dealStatusForStage(form.stage as DealStage),
+      expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
+      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      channel: 'Other',
+      business_unit: null,
+      business_unit_item: null,
+      created_at: new Date(),
+    })
+    success(t('crm.deals.create.createSuccess'))
+    navigateTo('/crm/deals')
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 </script>

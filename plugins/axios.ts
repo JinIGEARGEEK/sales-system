@@ -18,8 +18,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   }
 
+  const apiBase = (nuxtApp.$config.public.API_URL || '').replace(/\/$/, '')
   const api = axios.create({
-    baseURL: nuxtApp.$config.public.API_URL || '',
+    baseURL: `${apiBase}/api/v1`,
     headers: {
       common: {},
     },
@@ -40,13 +41,20 @@ export default defineNuxtPlugin((nuxtApp) => {
     return response
   }, (error) => {
     loadingFinished()
-    if (error.response.status === 401) {
-      return router.push('/login')
-    } else if (error.response.status === 403) {
-      return router.push('/')
-    } else if (error.response.status === 404) {
-      return router.push('/error404')
+    // Auth endpoints report 401 for bad credentials / expired sessions, not for
+    // "you got logged out mid-app" — let callers (e.g. the login form) handle
+    // those directly instead of force-redirecting away from the request itself.
+    const isAuthRequest = (error.config?.url || '').includes('/auth/login')
+    if (error.response?.status === 401 && !isAuthRequest) {
+      router.push('/login')
+    } else if (error.response?.status === 403) {
+      router.push('/')
+    } else if (error.response?.status === 404) {
+      router.push('/error404')
     }
+    // Always reject (even after triggering a redirect above) so callers' own
+    // try/catch runs against the real error instead of an incidental crash
+    // from treating a router-navigation result as the axios response.
     return Promise.reject(error)
   })
 

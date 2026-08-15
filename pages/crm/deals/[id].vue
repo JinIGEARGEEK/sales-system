@@ -275,6 +275,12 @@ const tasksStore = useTasksStore()
 const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
 
+onMounted(() => {
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+})
+
 const activeTab = ref('overview')
 const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
@@ -374,6 +380,17 @@ const form = reactive({
   assigned_to: deal.value?.assigned_to ? String(deal.value.assigned_to) : '',
 })
 
+// Deal loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(deal, (value) => {
+  if (!value) return
+  form.title = value.title
+  form.value = value.value
+  form.stage = value.stage
+  form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
+  form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+}, { immediate: true })
+
 // Nudges a rep to take the next concrete step right after a deal closes, instead
 // of a won deal silently sitting with no follow-up assigned to anyone.
 const WON_FOLLOWUP_DUE_DAYS = 3
@@ -392,29 +409,36 @@ const createWonFollowUpTask = () => {
   info(t('crm.deals.detail.wonFollowUpTaskCreated'))
 }
 
-const onSave = () => {
-  if (deal.value) {
-    const wasWon = deal.value.status === 'won'
-    deal.value.title = form.title
-    deal.value.value = form.value
-    deal.value.stage = form.stage as DealStage
-    deal.value.status = dealStatusForStage(deal.value.stage)
-    deal.value.expected_close_date = form.expected_close_date ? new Date(form.expected_close_date) : null
-    deal.value.assigned_to = form.assigned_to ? Number(form.assigned_to) : null
-    if (!wasWon && deal.value.status === 'won') createWonFollowUpTask()
+const onSave = async () => {
+  if (!deal.value) return
+  const wasWon = deal.value.status === 'won'
+  try {
+    const updated = await dealsStore.update(deal.value.id, {
+      title: form.title,
+      value: form.value,
+      stage: form.stage as DealStage,
+      status: dealStatusForStage(form.stage as DealStage),
+      expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
+      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+    })
+    if (!wasWon && updated.status === 'won') createWonFollowUpTask()
+    success(t('crm.deals.detail.updateSuccess'))
+  } catch {
+    error(t('global.genericError'))
   }
-  success(t('crm.deals.detail.updateSuccess'))
 }
 
-const onMarkWon = () => {
-  if (deal.value) {
-    const wasWon = deal.value.status === 'won'
-    deal.value.stage = 'Won'
-    deal.value.status = dealStatusForStage(deal.value.stage)
+const onMarkWon = async () => {
+  if (!deal.value) return
+  const wasWon = deal.value.status === 'won'
+  try {
+    await dealsStore.updateStage(deal.value.id, 'Won')
     form.stage = 'Won'
     if (!wasWon) createWonFollowUpTask()
     success(t('crm.deals.detail.markWonSuccess'))
     wonModal.value = true
+  } catch {
+    error(t('global.genericError'))
   }
 }
 </script>

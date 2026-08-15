@@ -1,19 +1,47 @@
-import { MOCK_COMPANIES } from '~/constants/mockData'
-import { nextId } from './helpers'
+// Real API-backed store. Company delete is a *soft* delete (§4 of api-system-spec.md):
+// the DELETE endpoint returns 204 and flips `status` to 'archived' server-side, so we
+// patch that locally instead of splicing the record out of `items`.
+const parseDates = (company: Company): Company => ({
+  ...company,
+  created_at: new Date(company.created_at),
+  updated_at: new Date(company.updated_at),
+})
 
 export const useCompaniesStore = defineStore('companies', {
   state: () => ({
-    items: [...MOCK_COMPANIES] as Company[],
+    items: [] as Company[],
+    total: 0,
+    page: 1,
   }),
   getters: {
     nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
     findByName: state => (name: string) => state.items.find(c => c.name.trim().toLowerCase() === name.trim().toLowerCase()),
   },
   actions: {
-    add (company: Omit<Company, 'id'>): number {
-      const id = nextId(this.items)
-      this.items.push({ ...company, id })
-      return id
+    async fetchAll (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Company[]>>('/companies', {
+        params: { per_page: 1000, ...params },
+      })
+      this.items = response.data.data.map(parseDates)
+      this.total = response.data.total
+      this.page = response.data.page
+      return this.items
+    },
+    async add (company: Omit<Company, 'id'>): Promise<Company> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<Company>>('/companies', company)
+      const created = parseDates(response.data.data)
+      this.items.push(created)
+      return created
+    },
+    async update (id: number, changes: Partial<Omit<Company, 'id'>>): Promise<Company> {
+      const { $api } = useNuxtApp()
+      const response = await $api.put<ApiResponse<Company>>(`/companies/${id}`, changes)
+      const updated = parseDates(response.data.data)
+      const index = this.items.findIndex(c => c.id === id)
+      if (index !== -1) this.items[index] = updated
+      return updated
     },
     addTag (id: number, tag: string) {
       const company = this.items.find(c => c.id === id)
@@ -21,8 +49,11 @@ export const useCompaniesStore = defineStore('companies', {
         company.tags.push(tag)
       }
     },
-    remove (id: number) {
-      this.items = this.items.filter(c => c.id !== id)
+    async remove (id: number) {
+      const { $api } = useNuxtApp()
+      await $api.delete(`/companies/${id}`)
+      const company = this.items.find(c => c.id === id)
+      if (company) company.status = 'archived'
     },
   },
 })

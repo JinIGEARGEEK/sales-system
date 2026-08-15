@@ -162,13 +162,19 @@ useHead({ title: t('crm.companies.detail.pageTitle') })
 const route = useRoute()
 const { priceFormat, parseTags } = useFormatter()
 const { lastContactInfo } = useLastContact()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
+
+onMounted(() => {
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+})
 
 const activeTab = ref('overview')
 const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
@@ -198,17 +204,34 @@ const form = reactive({
   notes: company.value?.notes || '',
 })
 
-const onSave = () => {
-  if (company.value) {
-    company.value.name = form.name
-    company.value.industry = form.industry
-    company.value.size = form.size
-    company.value.website = form.website
-    company.value.tags = parseTags(form.tags)
-    company.value.status = form.status as ActiveArchivedStatus
-    company.value.notes = form.notes
-    company.value.updated_at = new Date()
+// Company loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(company, (value) => {
+  if (!value) return
+  form.name = value.name
+  form.industry = value.industry
+  form.size = value.size
+  form.website = value.website
+  form.tags = value.tags.join(', ')
+  form.status = value.status
+  form.notes = value.notes
+}, { immediate: true })
+
+const onSave = async () => {
+  if (!company.value) return
+  try {
+    await companiesStore.update(company.value.id, {
+      name: form.name,
+      industry: form.industry,
+      size: form.size,
+      website: form.website,
+      tags: parseTags(form.tags),
+      status: form.status as ActiveArchivedStatus,
+      notes: form.notes,
+    })
+    success(t('crm.companies.detail.updateSuccess'))
+  } catch {
+    error(t('global.genericError'))
   }
-  success(t('crm.companies.detail.updateSuccess'))
 }
 </script>

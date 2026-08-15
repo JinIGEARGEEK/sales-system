@@ -63,8 +63,12 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.leads.create.pageTitle') })
 
-const { success } = useNotify()
+const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
+
+onMounted(() => {
+  if (leadsStore.items.length === 0) leadsStore.fetchAll()
+})
 
 const form = reactive({
   name: '',
@@ -79,19 +83,23 @@ const form = reactive({
 
 const duplicateLeads = computed(() => findDuplicateLeads(leadsStore.items, form.email, form.phone))
 
-const onSubmit = () => {
-  leadsStore.add({
-    name: form.name,
-    company_name: form.company_name,
-    email: form.email,
-    phone: form.phone,
-    source: form.source as LeadSource,
-    status: form.status as LeadStatus,
-    notes: form.notes,
-    assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-    created_at: new Date(),
-  })
-  success(t('crm.leads.create.createSuccess'))
-  navigateTo('/crm/leads')
+const onSubmit = async () => {
+  try {
+    await leadsStore.add({
+      name: form.name,
+      company_name: form.company_name,
+      email: form.email,
+      phone: form.phone,
+      source: form.source as LeadSource,
+      status: form.status as LeadStatus,
+      notes: form.notes,
+      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      created_at: new Date(),
+    })
+    success(t('crm.leads.create.createSuccess'))
+    navigateTo('/crm/leads')
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 </script>

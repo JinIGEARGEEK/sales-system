@@ -97,7 +97,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.contacts.detail.pageTitle') })
 
 const route = useRoute()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -105,6 +105,12 @@ const dealsStore = useDealsStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
+
+onMounted(() => {
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+})
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
@@ -123,15 +129,32 @@ const form = reactive({
   tags: contact.value?.tags.join(', ') || '',
 })
 
-const onSave = () => {
-  if (contact.value) {
-    contact.value.name = form.name
-    contact.value.company_id = Number(form.company_id)
-    contact.value.role_title = form.role_title
-    contact.value.email = form.email
-    contact.value.phone = form.phone
-    contact.value.tags = parseTags(form.tags)
+// Contact loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(contact, (value) => {
+  if (!value) return
+  form.name = value.name
+  form.company_id = String(value.company_id)
+  form.role_title = value.role_title
+  form.email = value.email
+  form.phone = value.phone
+  form.tags = value.tags.join(', ')
+}, { immediate: true })
+
+const onSave = async () => {
+  if (!contact.value) return
+  try {
+    await contactsStore.update(contact.value.id, {
+      name: form.name,
+      company_id: Number(form.company_id),
+      role_title: form.role_title,
+      email: form.email,
+      phone: form.phone,
+      tags: parseTags(form.tags),
+    })
+    success(t('crm.contacts.detail.updateSuccess'))
+  } catch {
+    error(t('global.genericError'))
   }
-  success(t('crm.contacts.detail.updateSuccess'))
 }
 </script>

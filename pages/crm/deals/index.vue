@@ -63,7 +63,6 @@ import {
   CHANNEL_FILTER_OPTIONS,
   teamMemberNameById,
   matchesAssigneeFilter,
-  dealStatusForStage,
 } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
@@ -72,9 +71,14 @@ const { t } = useI18n()
 useHead({ title: t('crm.deals.index.pageTitle') })
 
 const { priceFormat } = useFormatter()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
+
+onMounted(() => {
+  dealsStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+})
 
 const search = ref('')
 const assigneeFilter = ref('all')
@@ -97,12 +101,17 @@ const filteredDeals = computed(() => {
   })
 })
 
-const onMove = (item: Deal, newStage: string) => {
+const onMove = async (item: Deal, newStage: string) => {
   const deal = dealsStore.items.find(d => d.id === item.id)
   if (deal && deal.stage !== newStage) {
-    deal.stage = newStage as DealStage
-    deal.status = dealStatusForStage(deal.stage)
-    success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+    const previousStage = deal.stage
+    try {
+      await dealsStore.updateStage(deal.id, newStage as DealStage)
+      success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+    } catch {
+      deal.stage = previousStage
+      error(t('global.genericError'))
+    }
   }
 }
 

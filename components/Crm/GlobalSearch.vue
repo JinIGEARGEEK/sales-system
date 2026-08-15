@@ -48,6 +48,16 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 
+// GlobalSearch lives in the layout and mounts once per app load, so this is a
+// convenient single place to warm all four stores instead of only relying on
+// each CRM page's own on-mount fetch.
+onMounted(() => {
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  if (leadsStore.items.length === 0) leadsStore.fetchAll()
+})
+
 const RESULT_LIMIT = 5
 
 const query = ref('')

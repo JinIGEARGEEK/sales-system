@@ -1,6 +1,7 @@
 const lang = {
   noData: 'No Data',
   loading: 'Loading...',
+  genericError: 'Something went wrong. Please try again.',
   previous: 'Previous',
   next: 'Next',
   backToHome: 'Back To Home',

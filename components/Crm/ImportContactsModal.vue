@@ -235,7 +235,7 @@ const buildNotes = (row: ParsedRow) => {
   return lines.join('\n')
 }
 
-const onConfirm = () => {
+const onConfirm = async () => {
   let companiesCreated = 0
   let contactsCreated = 0
 
@@ -244,7 +244,7 @@ const onConfirm = () => {
 
     let company = companiesStore.findByName(row.name)
     if (!company) {
-      const id = companiesStore.add({
+      company = await companiesStore.add({
         name: row.name,
         industry: '',
         size: '',
@@ -255,7 +255,6 @@ const onConfirm = () => {
         created_at: new Date(),
         updated_at: new Date(),
       })
-      company = companiesStore.items.find(c => c.id === id)
       companiesCreated += 1
     } else if (tag) {
       companiesStore.addTag(company.id, tag)
@@ -266,7 +265,7 @@ const onConfirm = () => {
         c => c.company_id === company!.id && c.name.trim().toLowerCase() === row.contactName.trim().toLowerCase(),
       )
       if (!alreadyLinked) {
-        contactsStore.add({
+        await contactsStore.add({
           company_id: company.id,
           name: row.contactName,
           email: row.email,

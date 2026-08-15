@@ -91,9 +91,14 @@ const { t } = useI18n()
 useHead({ title: t('crm.contacts.index.pageTitle') })
 
 const { toBadge } = useFormatter()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+
+onMounted(() => {
+  contactsStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+})
 
 const search = ref('')
 const companyFilter = ref('all')
@@ -156,10 +161,14 @@ const onEdit = (row: Contact) => {
   navigateTo(`/crm/contacts/${row.id}`)
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (target.value) {
-    contactsStore.remove(target.value.id)
-    success(t('crm.contacts.index.deleteSuccess'))
+    try {
+      await contactsStore.remove(target.value.id)
+      success(t('crm.contacts.index.deleteSuccess'))
+    } catch {
+      error(t('global.genericError'))
+    }
   }
   closeDelete()
 }

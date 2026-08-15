@@ -63,11 +63,15 @@ const { t } = useI18n()
 useHead({ title: t('crm.leads.detail.pageTitle') })
 
 const route = useRoute()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
+
+onMounted(() => {
+  if (leadsStore.items.length === 0) leadsStore.fetchAll()
+})
 
 const form = reactive({
   name: lead.value?.name || '',
@@ -80,17 +84,36 @@ const form = reactive({
   notes: lead.value?.notes || '',
 })
 
-const onSave = () => {
-  if (lead.value) {
-    lead.value.name = form.name
-    lead.value.company_name = form.company_name
-    lead.value.email = form.email
-    lead.value.phone = form.phone
-    lead.value.source = form.source as LeadSource
-    lead.value.status = form.status as LeadStatus
-    lead.value.assigned_to = form.assigned_to ? Number(form.assigned_to) : null
-    lead.value.notes = form.notes
+// Lead loads asynchronously now (fetched on mount), so the form is (re)populated
+// once the record arrives instead of only at setup time.
+watch(lead, (value) => {
+  if (!value) return
+  form.name = value.name
+  form.company_name = value.company_name
+  form.email = value.email
+  form.phone = value.phone
+  form.source = value.source
+  form.status = value.status
+  form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+  form.notes = value.notes
+}, { immediate: true })
+
+const onSave = async () => {
+  if (!lead.value) return
+  try {
+    await leadsStore.update(lead.value.id, {
+      name: form.name,
+      company_name: form.company_name,
+      email: form.email,
+      phone: form.phone,
+      source: form.source as LeadSource,
+      status: form.status as LeadStatus,
+      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      notes: form.notes,
+    })
+    success(t('crm.leads.detail.updateSuccess'))
+  } catch {
+    error(t('global.genericError'))
   }
-  success(t('crm.leads.detail.updateSuccess'))
 }
 </script>

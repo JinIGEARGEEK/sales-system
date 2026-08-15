@@ -289,6 +289,11 @@ const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 
+onMounted(() => {
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll()
+})
+
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
 const { dateRange, activePreset, applyPeriodPreset, isDealInRange, anchorDate } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)

@@ -76,7 +76,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.companies.create.pageTitle') })
 
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 
@@ -90,19 +90,23 @@ const form = reactive({
   notes: '',
 })
 
-const onSubmit = () => {
-  companiesStore.add({
-    name: form.name,
-    industry: form.industry,
-    size: form.size,
-    website: form.website,
-    tags: parseTags(form.tags),
-    notes: form.notes,
-    status: form.status as ActiveArchivedStatus,
-    created_at: new Date(),
-    updated_at: new Date(),
-  })
-  success(t('crm.companies.create.createSuccess'))
-  navigateTo('/crm/companies')
+const onSubmit = async () => {
+  try {
+    await companiesStore.add({
+      name: form.name,
+      industry: form.industry,
+      size: form.size,
+      website: form.website,
+      tags: parseTags(form.tags),
+      notes: form.notes,
+      status: form.status as ActiveArchivedStatus,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+    success(t('crm.companies.create.createSuccess'))
+    navigateTo('/crm/companies')
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 </script>
