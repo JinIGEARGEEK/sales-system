@@ -12,7 +12,7 @@
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs hover:bg-[var(--color-light-gray-1)]"
               :class="{ 'bg-[var(--color-primary-bg)] text-[var(--color-primary)]': isActive(menuItem.path) }"
               @click="drawer = false"
             >
@@ -60,7 +60,7 @@
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-white hover:bg-white/10"
+              class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-white hover:bg-white/10"
               :class="{ 'bg-white/10 font-medium': isActive(menuItem.path) }"
             >
               <UIcon :name="menuItem.icon" class="size-5 shrink-0" />

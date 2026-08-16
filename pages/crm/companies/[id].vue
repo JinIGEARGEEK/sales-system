@@ -329,17 +329,22 @@ const openEditProject = (project: Project) => {
   addProjectOpen.value = true
 }
 
-const onSaveProject = async (payload: { name: string, status: ProjectStatus, target_end_date: Date | null, notes: string }) => {
+const onSaveProject = async (payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string }) => {
   try {
     if (editingProject.value) {
+      // A Production-role edit only carries status/production_reference (CrmAddProjectModal
+      // hides the rest) — spreading the full payload as-is keeps that subset intact.
       await projectsStore.update(editingProject.value.id, payload)
       success(t('crm.companies.detail.updateProjectSuccess'))
     } else {
       await projectsStore.add(companyId, {
         deal_id: null,
         start_date: new Date(),
-        production_reference: null,
-        ...payload,
+        name: payload.name!,
+        target_end_date: payload.target_end_date ?? null,
+        notes: payload.notes ?? '',
+        status: payload.status,
+        production_reference: payload.production_reference,
       })
       success(t('crm.companies.detail.addProjectSuccess'))
     }

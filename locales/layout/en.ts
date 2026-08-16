@@ -8,7 +8,7 @@ export default {
     tags: 'Tags',
     leads: 'Leads',
     deals: 'Deals',
-    projects: 'Projects',
+    projects: 'Projects/Products',
     tasks: 'Tasks',
   },
   logout: 'Logout',

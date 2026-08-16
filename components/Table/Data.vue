@@ -75,11 +75,11 @@
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="h-9">
+            <tr class="h-9 bg-[var(--color-light-gray-1)]">
               <th
                 v-for="col in prop.columns"
                 :key="col.field"
-                class="text-left text-[var(--color-black)] px-2 text-sm font-semibold"
+                class="text-left text-[var(--color-black)] px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg"
                 :style="col.width ? `width: ${col.width}px` : ''"
               >
                 <div v-if="col.type === TABLE_CARD_TYPE.SELECTED">

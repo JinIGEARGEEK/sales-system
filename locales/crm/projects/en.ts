@@ -9,6 +9,9 @@ export default {
     searchPlaceholder: 'Search by project or company name...',
     statusPlaceholder: 'Status',
     allStatuses: 'All Statuses',
+    addProject: 'Add Project',
+    addProjectSuccess: 'Project added',
+    updateProjectSuccess: 'Project updated',
     columns: {
       name: 'Name',
       company: 'Company',
@@ -17,5 +20,6 @@ export default {
       action: 'Action',
     },
     viewCompany: 'View Company',
+    edit: 'Edit',
   },
 }

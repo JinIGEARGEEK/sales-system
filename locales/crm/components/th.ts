@@ -88,8 +88,11 @@ export default {
   addProjectModal: {
     title: 'เพิ่ม Project',
     editTitle: 'แก้ไข Project',
+    company: 'บริษัท',
+    companyPlaceholder: 'เลือกบริษัท',
     name: 'ชื่อ Project',
     status: 'สถานะ',
+    productionReference: 'Production Reference',
     targetEndDate: 'วันที่คาดว่าจะเสร็จสิ้น',
     notes: 'บันทึกเพิ่มเติม',
     cancel: 'ยกเลิก',

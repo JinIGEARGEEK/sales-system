@@ -9,6 +9,9 @@ export default {
     searchPlaceholder: 'ค้นหาด้วยชื่อ Project หรือชื่อบริษัท...',
     statusPlaceholder: 'สถานะ',
     allStatuses: 'สถานะทั้งหมด',
+    addProject: 'เพิ่ม Project',
+    addProjectSuccess: 'เพิ่ม Project แล้ว',
+    updateProjectSuccess: 'แก้ไข Project แล้ว',
     columns: {
       name: 'ชื่อ',
       company: 'บริษัท',
@@ -17,5 +20,6 @@ export default {
       action: 'การจัดการ',
     },
     viewCompany: 'ดูข้อมูลบริษัท',
+    edit: 'แก้ไข',
   },
 }

@@ -187,7 +187,7 @@ This is the core addition that makes the CRM follow the **real, ongoing relation
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-CRM-060 | System shall maintain a Product Catalog (id, name, category, description, active flag) representing the products/services IGearGeek offers. | M | ⬜ |
-| FR-CRM-061 | Admin shall be able to create/edit/deactivate Product Catalog entries. | M | ⬜ |
+| FR-CRM-061 | Any authenticated role shall be able to create/edit/deactivate Product Catalog entries. | M | ⬜ |
 | FR-CRM-062 | Quote line items (§3.5) shall reference a Product from the catalog rather than free-text, where possible. | S | ⬜ |
 
 **Customer ↔ Product tracking**

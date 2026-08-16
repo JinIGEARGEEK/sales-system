@@ -88,8 +88,11 @@ export default {
   addProjectModal: {
     title: 'Add Project',
     editTitle: 'Edit Project',
+    company: 'Company',
+    companyPlaceholder: 'Select a company',
     name: 'Project Name',
     status: 'Status',
+    productionReference: 'Production Reference',
     targetEndDate: 'Target End Date',
     notes: 'Notes',
     cancel: 'Cancel',

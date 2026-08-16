@@ -519,13 +519,12 @@ const onMarkWon = async () => {
   }
 }
 
-const onCreateProject = async (payload: { name: string, status: ProjectStatus, target_end_date: Date | null, notes: string }) => {
+const onCreateProject = async (payload: { name: string, status: ProjectStatus, production_reference: string | null, target_end_date: Date | null, notes: string }) => {
   if (!deal.value) return
   try {
     await projectsStore.add(deal.value.company_id, {
       deal_id: deal.value.id,
       start_date: new Date(),
-      production_reference: null,
       ...payload,
     })
     success(t('crm.deals.detail.createProjectSuccess'))

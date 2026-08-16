@@ -15,6 +15,12 @@
           <div class="w-full sm:w-48">
             <InputSelect v-model="statusFilter" :options="statusFilterOptions" :placeholder="t('crm.projects.index.statusPlaceholder')" name="statusFilter" />
           </div>
+          <ButtonPrimary
+            v-if="canManageProjects"
+            :label="t('crm.projects.index.addProject')"
+            icon="material-symbols:add"
+            @click="openAddProject"
+          />
         </div>
       </UCard>
 
@@ -28,20 +34,18 @@
         @change-page="onChangeProjectPage"
         @change-per-page="onChangeProjectPerPage"
         @view-detail="onViewCompany"
+        @edit="openEditProject"
+      />
+
+      <CrmAddProjectModal
+        v-model:open="addProjectOpen"
+        :project="editingProject"
+        :companies="companiesStore.items"
+        @submit="onSaveProject"
       />
     </div>
 
-    <div v-else-if="activeTab === 'products' && canManageProducts">
-      <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.projects.index.tabs.products') }}</h3>
-        <ButtonPrimary
-          :label="t('admin.products.addProduct')"
-          icon="material-symbols:add"
-          small
-          @click="addProductOpen = true"
-        />
-      </div>
-
+    <div v-else-if="activeTab === 'products'">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
@@ -50,6 +54,11 @@
           <div class="w-full sm:w-48">
             <InputSelect v-model="productStatusFilter" :options="productStatusFilterOptions" :placeholder="t('admin.products.statusPlaceholder')" name="productStatusFilter" />
           </div>
+          <ButtonPrimary
+            :label="t('admin.products.addProduct')"
+            icon="material-symbols:add"
+            @click="addProductOpen = true"
+          />
         </div>
       </UCard>
 
@@ -97,21 +106,22 @@ const { success, error } = useNotify()
 const { hasRole } = useRole()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
+const companiesStore = useCompaniesStore()
 
-// GET /products is Admin-only on the backend (the whole route group, not just
-// Create/Deactivate) — fetching it as any other role would just 403, so the
-// Products tab itself is hidden rather than only its buttons.
-const canManageProducts = computed(() => hasRole('Admin'))
+// Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
+// not Production) — same check as the company detail page's Projects tab.
+const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
 onMounted(() => {
   if (projectsStore.items.length === 0) projectsStore.fetchAll()
-  if (canManageProducts.value && productsStore.items.length === 0) productsStore.fetchAll()
+  if (productsStore.items.length === 0) productsStore.fetchAll()
+  if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll()
 })
 
 const activeTab = ref('projects')
 const tabItems = computed(() => [
   { label: t('crm.projects.index.tabs.projects'), value: 'projects' },
-  ...(canManageProducts.value ? [{ label: t('crm.projects.index.tabs.products'), value: 'products' }] : []),
+  { label: t('crm.projects.index.tabs.products'), value: 'products' },
 ])
 
 // ── Projects tab ──────────────────────────────────────────────
@@ -153,12 +163,50 @@ const projectColumns: TableDataColumn[] = [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false },
+      { label: t('crm.projects.index.edit'), emitName: 'edit', isBorderBottom: false },
     ],
   },
 ]
 
 const onViewCompany = (row: Project) => {
   navigateTo(`/crm/companies/${row.company_id}`)
+}
+
+const addProjectOpen = ref(false)
+const editingProject = ref<Project | null>(null)
+
+const openAddProject = () => {
+  editingProject.value = null
+  addProjectOpen.value = true
+}
+
+const openEditProject = (row: Project) => {
+  editingProject.value = row
+  addProjectOpen.value = true
+}
+
+const onSaveProject = async (payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string, company_id?: number }) => {
+  try {
+    if (editingProject.value) {
+      // A Production-role edit only carries status/production_reference (CrmAddProjectModal
+      // hides the rest) — spreading the full payload as-is keeps that subset intact.
+      await projectsStore.update(editingProject.value.id, payload)
+      success(t('crm.projects.index.updateProjectSuccess'))
+    } else {
+      await projectsStore.add(payload.company_id!, {
+        deal_id: null,
+        start_date: new Date(),
+        name: payload.name!,
+        target_end_date: payload.target_end_date ?? null,
+        notes: payload.notes ?? '',
+        status: payload.status,
+        production_reference: payload.production_reference,
+      })
+      success(t('crm.projects.index.addProjectSuccess'))
+    }
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 
 const {

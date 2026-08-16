@@ -521,7 +521,7 @@ interface CustomerProduct {
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` / `POST` | `/products` | Product Catalog CRUD (Admin only). |
+| `GET` / `POST` | `/products` | Product Catalog CRUD (any authenticated role). |
 | `PATCH` | `/products/:id/deactivate` | Sets `is_active: false` rather than deleting. |
 | `GET` | `/companies/:companyId/products` | List a Company's Customer-Product records — powers the Company profile's "Products in use" section (`FR-CRM-066`). |
 | `POST` | `/companies/:companyId/products` | Manually add/change status independent of a Deal (`FR-CRM-065`). |
