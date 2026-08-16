@@ -43,32 +43,14 @@ export const CHANNEL_FILTER_OPTIONS: Select[] = [
   ...CHANNEL_OPTIONS,
 ]
 
-export const BUSINESS_UNIT_FILTER_OPTIONS: Select[] = [
-  { label: 'All Business Units', value: 'all' },
+export const BUSINESS_UNIT_OPTIONS: Select[] = [
   { label: 'Project', value: 'Project' },
   { label: 'Product', value: 'Product' },
 ]
 
-export const MOCK_PROJECTS: Select[] = [
-  { label: 'Ops Platform Rollout', value: 'ops-platform-rollout' },
-  { label: 'POS Integration', value: 'pos-integration' },
-  { label: 'Legacy Migration', value: 'legacy-migration' },
-]
-
-export const MOCK_PRODUCTS: Select[] = [
-  { label: 'Dashboard Suite', value: 'dashboard-suite' },
-  { label: 'Finance Reporting Suite', value: 'finance-reporting-suite' },
-  { label: 'Mobile App', value: 'mobile-app' },
-]
-
-export const PROJECT_FILTER_OPTIONS: Select[] = [
-  { label: 'All Projects', value: 'all' },
-  ...MOCK_PROJECTS,
-]
-
-export const PRODUCT_FILTER_OPTIONS: Select[] = [
-  { label: 'All Products', value: 'all' },
-  ...MOCK_PRODUCTS,
+export const BUSINESS_UNIT_FILTER_OPTIONS: Select[] = [
+  { label: 'All Business Units', value: 'all' },
+  ...BUSINESS_UNIT_OPTIONS,
 ]
 
 // ── Duplicate detection (simple deal dedup) ─────────────────────────

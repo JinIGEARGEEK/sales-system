@@ -22,6 +22,13 @@ export const useQuotesStore = defineStore('quotes', {
       this.items = [...this.items.filter(q => q.deal_id !== dealId), ...fetched]
       return fetched
     },
+    async add (dealId: number, quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }): Promise<Quote> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<Quote>>(`/deals/${dealId}/quotes`, quote)
+      const created = parseDates(response.data.data)
+      this.items.push(created)
+      return created
+    },
     async upload (dealId: number, file: File): Promise<Quote> {
       const { $api } = useNuxtApp()
       const formData = new FormData()

@@ -11,8 +11,6 @@ export default {
   noDealsMatch: 'ไม่มี Deal ที่ตรงกับตัวกรองที่เลือก',
   filterDateRange: 'ช่วงวันที่',
   filterBusinessUnit: 'หน่วยธุรกิจ',
-  filterProject: 'โครงการ',
-  filterProduct: 'สินค้า',
   filterChannel: 'ช่องทางการขาย',
   dateRangePlaceholder: 'เลือกช่วงวันที่',
   periodAll: 'ทั้งหมด',

@@ -31,22 +31,6 @@
           class="w-40"
         />
         <InputSelect
-          v-if="businessUnitFilter === 'Project'"
-          v-model="projectFilter"
-          :options="PROJECT_FILTER_OPTIONS"
-          :placeholder="t('crm.dashboard.filterProject')"
-          name="projectFilter"
-          class="w-40"
-        />
-        <InputSelect
-          v-if="businessUnitFilter === 'Product'"
-          v-model="productFilter"
-          :options="PRODUCT_FILTER_OPTIONS"
-          :placeholder="t('crm.dashboard.filterProduct')"
-          name="productFilter"
-          class="w-40"
-        />
-        <InputSelect
           v-model="channelFilter"
           :options="CHANNEL_FILTER_OPTIONS"
           :placeholder="t('crm.dashboard.filterChannel')"
@@ -268,8 +252,6 @@ import { useI18n } from 'vue-i18n'
 import {
   DEAL_STAGE_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
-  PROJECT_FILTER_OPTIONS,
-  PRODUCT_FILTER_OPTIONS,
   CHANNEL_FILTER_OPTIONS,
   isTaskOverdue,
 } from '~/constants/mockData'
@@ -307,8 +289,6 @@ const PERIOD_PRESETS = computed(() => [
 ])
 
 const businessUnitFilter = ref('all')
-const projectFilter = ref('all')
-const productFilter = ref('all')
 const channelFilter = ref('all')
 
 const hasActiveFilters = computed(() => {
@@ -318,8 +298,6 @@ const hasActiveFilters = computed(() => {
 const clearFilters = () => {
   dateRange.value = null
   businessUnitFilter.value = 'all'
-  projectFilter.value = 'all'
-  productFilter.value = 'all'
   channelFilter.value = 'all'
 }
 
@@ -329,8 +307,6 @@ const filteredDeals = computed(() => {
   return dealsStore.items.filter((deal) => {
     if (!isDealInRange(deal)) return false
     if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
-    if (businessUnitFilter.value === 'Project' && projectFilter.value !== 'all' && deal.business_unit_item !== projectFilter.value) return false
-    if (businessUnitFilter.value === 'Product' && productFilter.value !== 'all' && deal.business_unit_item !== productFilter.value) return false
     if (channelFilter.value !== 'all' && deal.channel !== channelFilter.value) return false
     return true
   })
@@ -339,13 +315,11 @@ const filteredDeals = computed(() => {
 const summary = ref<DashboardSummary | null>(null)
 
 const fetchSummary = async () => {
-  const businessUnitItem = businessUnitFilter.value === 'Project' ? projectFilter.value : businessUnitFilter.value === 'Product' ? productFilter.value : 'all'
   const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
     params: {
       date_from: dateRange.value?.start,
       date_to: dateRange.value?.end,
       business_unit: businessUnitFilter.value !== 'all' ? businessUnitFilter.value : undefined,
-      business_unit_item: businessUnitItem !== 'all' ? businessUnitItem : undefined,
       channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
     },
   })
@@ -353,7 +327,7 @@ const fetchSummary = async () => {
 }
 
 onMounted(fetchSummary)
-watch([dateRange, businessUnitFilter, projectFilter, productFilter, channelFilter], fetchSummary)
+watch([dateRange, businessUnitFilter, channelFilter], fetchSummary)
 
 const openPipelineValue = computed(() => summary.value?.open_pipeline_value ?? 0)
 const wonValue = computed(() => summary.value?.won_value ?? 0)

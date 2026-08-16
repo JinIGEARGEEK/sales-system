@@ -37,8 +37,6 @@ const emit = defineEmits<{
   submit: [payment: { amount: number, paid_at: Date, method: PaymentMethod, note: string }]
 }>()
 
-const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
-
 const emptyForm = () => ({
   amount: 0,
   paid_at: '',
@@ -46,16 +44,9 @@ const emptyForm = () => ({
   note: '',
 })
 
-const form = reactive(emptyForm())
+const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
 
-const onUpdateOpen = (value: boolean) => {
-  if (!value) Object.assign(form, emptyForm())
-  emit('update:open', value)
-}
-
-watch(() => props.open, (value) => {
-  if (value) Object.assign(form, emptyForm())
-})
+const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
 const onSubmit = () => {
   emit('submit', {
@@ -67,11 +58,5 @@ const onSubmit = () => {
   onUpdateOpen(false)
 }
 
-// The footer's Save button lives outside the <Form>'s own slot, and vee-validate's
-// Form component doesn't expose submitForm() on its template ref — only validate()
-// and the field setters — so trigger validation manually before submitting.
-const onSave = async () => {
-  const result = await formRef.value?.validate()
-  if (result?.valid) onSubmit()
-}
+const onSave = () => validateThenSubmit(onSubmit)
 </script>

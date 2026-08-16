@@ -61,16 +61,21 @@ useHead({ title: t('admin.activityLog.title') })
 
 const { $api } = useNuxtApp()
 const { dateFormat, dateTimeFormat, toBadge } = useFormatter()
+const { error } = useNotify()
 const usersStore = useUsersStore()
 
 const entries = ref<AuditLogEntry[]>([])
 
 onMounted(async () => {
   if (usersStore.items.length === 0) usersStore.fetchAll()
-  const response = await $api.get<ApiResponse<AuditLogEntry[]>>('/audit-log', {
-    params: { per_page: 1000 },
-  })
-  entries.value = response.data.data.map(entry => ({ ...entry, created_at: new Date(entry.created_at) }))
+  try {
+    const response = await $api.get<ApiResponse<AuditLogEntry[]>>('/audit-log', {
+      params: { per_page: 1000 },
+    })
+    entries.value = response.data.data.map(entry => ({ ...entry, created_at: new Date(entry.created_at) }))
+  } catch {
+    error(t('global.genericError'))
+  }
 })
 
 const entityTypeFilter = ref('all')

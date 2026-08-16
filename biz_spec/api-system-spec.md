@@ -501,7 +501,6 @@ interface Contract {
 interface Product {
   id: number
   name: string
-  sku: string
   category: string
   description: string
   is_active: boolean

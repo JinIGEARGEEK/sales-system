@@ -20,12 +20,6 @@
         <div class="w-full sm:w-40">
           <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
         </div>
-        <div v-if="businessUnitFilter === 'Project'" class="w-full sm:w-40">
-          <InputSelect v-model="projectFilter" :options="PROJECT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterProject')" name="projectFilter" />
-        </div>
-        <div v-if="businessUnitFilter === 'Product'" class="w-full sm:w-40">
-          <InputSelect v-model="productFilter" :options="PRODUCT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterProduct')" name="productFilter" />
-        </div>
         <div class="w-full sm:w-36">
           <InputSelect v-model="channelFilter" :options="CHANNEL_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
         </div>
@@ -60,8 +54,6 @@ import { useI18n } from 'vue-i18n'
 import {
   DEAL_STAGE_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
-  PROJECT_FILTER_OPTIONS,
-  PRODUCT_FILTER_OPTIONS,
   CHANNEL_FILTER_OPTIONS,
   matchesAssigneeFilter,
 } from '~/constants/mockData'
@@ -86,8 +78,6 @@ onMounted(() => {
 const search = ref('')
 const assigneeFilter = ref('all')
 const businessUnitFilter = ref('all')
-const projectFilter = ref('all')
-const productFilter = ref('all')
 const channelFilter = ref('all')
 
 const filteredDeals = computed(() => {
@@ -97,8 +87,6 @@ const filteredDeals = computed(() => {
       || companiesStore.nameById(deal.company_id).toLowerCase().includes(search.value.toLowerCase())
     const matchAssignee = matchesAssigneeFilter(deal.assigned_to, assigneeFilter.value)
     if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
-    if (businessUnitFilter.value === 'Project' && projectFilter.value !== 'all' && deal.business_unit_item !== projectFilter.value) return false
-    if (businessUnitFilter.value === 'Product' && productFilter.value !== 'all' && deal.business_unit_item !== productFilter.value) return false
     const matchChannel = channelFilter.value === 'all' || deal.channel === channelFilter.value
     return matchSearch && matchAssignee && matchChannel
   })

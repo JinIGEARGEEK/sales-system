@@ -16,6 +16,8 @@ type TaskRelatedType = ActivityRelatedType
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type BusinessUnit = 'Project' | 'Product'
+type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled'
+type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
 
 interface Company {
   id: number
@@ -115,6 +117,46 @@ interface Quote {
   file_url?: string
   file_size?: number
   uploaded_at?: Date
+}
+
+// The company's fixed product catalog (api-system-spec.md §8.2).
+interface Product {
+  id: number
+  name: string
+  category: string
+  description: string
+  is_active: boolean
+}
+
+// Links a Company to a Product it's interested in/using. GET /companies/:id/products
+// is the only way the frontend lists these, and it always merges the Product in —
+// there's no bare CustomerProduct-without-product response to model separately.
+interface CustomerProduct {
+  id: number
+  company_id: number
+  product_id: number
+  status: CustomerProductStatus
+  start_date: Date
+  end_date: Date | null
+  source_deal_id: number | null
+  product: Product
+}
+
+// A summary record only — no sub-resources for tasks/sprints/milestones (api-system-spec.md §8.3).
+interface Project {
+  id: number
+  company_id: number
+  deal_id: number | null
+  name: string
+  status: ProjectStatus
+  start_date: Date
+  target_end_date: Date | null
+  production_reference: string | null
+  notes: string
+  // Only present on rows from GET /projects (the cross-company list) — the
+  // per-company GET /companies/:id/projects doesn't merge this in since the
+  // company is already known from context.
+  company_name?: string
 }
 
 // A single installment paid against a Deal. A Deal's `value` is the total contract

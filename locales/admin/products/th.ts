@@ -1,0 +1,19 @@
+export default {
+  addProduct: 'เพิ่มสินค้า',
+  addSuccess: 'เพิ่มสินค้าสำเร็จ',
+  deactivate: 'ปิดใช้งาน',
+  deactivateModalTitle: 'ปิดใช้งานสินค้านี้หรือไม่?',
+  deactivateModalBody: 'ปิดใช้งาน {name} หรือไม่? จะไม่สามารถเลือกสินค้านี้เพิ่มให้บริษัทอื่นได้อีก แต่การเชื่อมโยงที่มีอยู่แล้วจะไม่ได้รับผลกระทบ',
+  deactivateSuccess: 'ปิดใช้งานสินค้าแล้ว',
+  searchPlaceholder: 'ค้นหาด้วยชื่อหรือหมวดหมู่...',
+  statusPlaceholder: 'สถานะ',
+  allStatuses: 'สถานะทั้งหมด',
+  statusActive: 'ใช้งานอยู่',
+  statusInactive: 'ปิดใช้งาน',
+  columns: {
+    name: 'ชื่อ',
+    category: 'หมวดหมู่',
+    status: 'สถานะ',
+    action: 'การจัดการ',
+  },
+}

@@ -116,6 +116,76 @@
         </ContainerTemplate>
       </div>
 
+      <div v-else-if="activeTab === 'products'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.productsHeading') }}</h3>
+            <ButtonPrimary :label="t('crm.companies.detail.addProduct')" icon="material-symbols:add" small @click="openAddCustomerProduct" />
+          </div>
+          <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.companies.detail.noProducts') }}
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <button
+              v-for="record in companyProducts"
+              :key="record.id"
+              type="button"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+              @click="openEditCustomerProduct(record)"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ record.product.name }}</p>
+                <p class="text-xs text-[var(--color-gray)]">{{ record.product.category || '-' }}</p>
+              </div>
+              <UBadge color="neutral" variant="subtle">{{ record.status }}</UBadge>
+            </button>
+          </div>
+        </ContainerTemplate>
+
+        <CrmAddCustomerProductModal
+          v-model:open="addCustomerProductOpen"
+          :products="activeProducts"
+          :record="editingCustomerProduct"
+          @submit="onAddCustomerProduct"
+          @update="onUpdateCustomerProduct"
+        />
+      </div>
+
+      <div v-else-if="activeTab === 'projects'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.projectsHeading') }}</h3>
+            <ButtonPrimary v-if="canManageProjects" :label="t('crm.companies.detail.addProject')" icon="material-symbols:add" small @click="openAddProject" />
+          </div>
+          <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.companies.detail.noProjects') }}
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <button
+              v-for="project in companyProjects"
+              :key="project.id"
+              type="button"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+              @click="openEditProject(project)"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ project.name }}</p>
+                <p class="text-xs text-[var(--color-gray)]">
+                  {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
+                </p>
+              </div>
+              <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+            </button>
+          </div>
+        </ContainerTemplate>
+
+        <CrmAddProjectModal
+          v-model:open="addProjectOpen"
+          :project="editingProject"
+          @submit="onSaveProject"
+        />
+      </div>
+
       <div v-else-if="activeTab === 'activity'">
         <ContainerTemplate>
           <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
@@ -159,13 +229,20 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat, parseTags } = useFormatter()
+const { priceFormat, parseTags, dateFormat } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
+const { hasRole } = useRole()
+// Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
+// not Production) — internal/routes/routes.go's companies.Post("/:companyId/projects", ...).
+const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const activitiesStore = useActivitiesStore()
+const productsStore = useProductsStore()
+const customerProductsStore = useCustomerProductsStore()
+const projectsStore = useProjectsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -174,7 +251,10 @@ onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (productsStore.items.length === 0) productsStore.fetchAll()
   activitiesStore.fetchForRelated('company', companyId)
+  customerProductsStore.fetchForCompany(companyId)
+  projectsStore.fetchForCompany(companyId)
 })
 
 const activeTab = ref('overview')
@@ -183,6 +263,8 @@ const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.companies.detail.tabs.contacts'), value: 'contacts' },
   { label: t('crm.companies.detail.tabs.deals'), value: 'deals' },
+  { label: t('crm.companies.detail.tabs.products'), value: 'products' },
+  { label: t('crm.companies.detail.tabs.projects'), value: 'projects' },
   { label: t('crm.companies.detail.tabs.activity'), value: 'activity' },
   { label: companyOverdueTaskCount.value > 0 ? `${t('crm.companies.detail.tabs.tasks')} (${companyOverdueTaskCount.value})` : t('crm.companies.detail.tabs.tasks'), value: 'tasks' },
 ])
@@ -198,6 +280,73 @@ const lastContact = computed(() => {
 })
 
 const { tasks: companyTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess')
+
+const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
+const activeProducts = computed(() => productsStore.items.filter(p => p.is_active))
+const addCustomerProductOpen = ref(false)
+const editingCustomerProduct = ref<CustomerProduct | null>(null)
+
+const openAddCustomerProduct = () => {
+  editingCustomerProduct.value = null
+  addCustomerProductOpen.value = true
+}
+
+const openEditCustomerProduct = (record: CustomerProduct) => {
+  editingCustomerProduct.value = record
+  addCustomerProductOpen.value = true
+}
+
+const onAddCustomerProduct = async (payload: { product_id: number, status: CustomerProductStatus }, product: Product) => {
+  try {
+    await customerProductsStore.add(companyId, payload, product)
+    success(t('crm.companies.detail.addProductSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus, end_date: Date | null }) => {
+  if (!editingCustomerProduct.value) return
+  try {
+    await customerProductsStore.update(editingCustomerProduct.value.id, payload)
+    success(t('crm.companies.detail.updateProductSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const companyProjects = computed(() => projectsStore.forCompany(companyId))
+const addProjectOpen = ref(false)
+const editingProject = ref<Project | null>(null)
+
+const openAddProject = () => {
+  editingProject.value = null
+  addProjectOpen.value = true
+}
+
+const openEditProject = (project: Project) => {
+  editingProject.value = project
+  addProjectOpen.value = true
+}
+
+const onSaveProject = async (payload: { name: string, status: ProjectStatus, target_end_date: Date | null, notes: string }) => {
+  try {
+    if (editingProject.value) {
+      await projectsStore.update(editingProject.value.id, payload)
+      success(t('crm.companies.detail.updateProjectSuccess'))
+    } else {
+      await projectsStore.add(companyId, {
+        deal_id: null,
+        start_date: new Date(),
+        production_reference: null,
+        ...payload,
+      })
+      success(t('crm.companies.detail.addProjectSuccess'))
+    }
+  } catch {
+    error(t('global.genericError'))
+  }
+}
 
 const form = reactive({
   name: company.value?.name || '',

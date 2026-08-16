@@ -11,8 +11,6 @@ export default {
   noDealsMatch: 'No deals match the selected filters.',
   filterDateRange: 'Date Range',
   filterBusinessUnit: 'Business Unit',
-  filterProject: 'Project',
-  filterProduct: 'Product',
   filterChannel: 'Channel',
   dateRangePlaceholder: 'Select date range',
   periodAll: 'All Time',

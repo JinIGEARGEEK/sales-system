@@ -33,6 +33,21 @@
                 <InputSelect v-model="form.stage" :options="DEAL_STAGE_OPTIONS" :label="t('crm.deals.detail.stage')" name="stage" rules="required" />
                 <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.detail.expectedCloseDate')" name="expected_close_date" />
                 <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+                <InputSelect
+                  v-model="form.business_unit"
+                  :options="BUSINESS_UNIT_OPTIONS"
+                  :label="t('crm.deals.detail.businessUnit')"
+                  :placeholder="t('crm.deals.detail.businessUnitPlaceholder')"
+                  name="business_unit"
+                />
+                <InputSelect
+                  v-if="form.business_unit"
+                  v-model="form.business_unit_item"
+                  :options="businessUnitItemOptions"
+                  :label="form.business_unit === 'Project' ? t('crm.deals.detail.project') : t('crm.deals.detail.product')"
+                  :placeholder="t('crm.deals.detail.businessUnitItemPlaceholder')"
+                  name="business_unit_item"
+                />
               </div>
               <div class="mt-4 flex gap-3">
                 <ButtonPrimary :label="t('crm.deals.detail.saveChanges')" type="submit" />
@@ -53,7 +68,10 @@
               <NuxtLink :to="`/crm/contacts/${deal.contact_id}`" class="flex justify-between hover:underline">
                 <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.contact') }}</span><span>{{ contactName }}</span>
               </NuxtLink>
-              <div class="flex justify-between">
+              <NuxtLink v-if="linkedProject" :to="`/crm/companies/${deal.company_id}`" class="flex justify-between hover:underline">
+                <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.project') }}</span><span>{{ linkedProject.name }}</span>
+              </NuxtLink>
+              <div v-else class="flex justify-between">
                 <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.project') }}</span>
                 <span class="text-[var(--color-gray)]">{{ deal.status === 'won' ? t('crm.deals.detail.projectNotCreatedYet') : '-' }}</span>
               </div>
@@ -66,7 +84,14 @@
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold">{{ t('crm.deals.detail.quotesTitle') }}</h3>
-            <div>
+            <div class="flex gap-2">
+              <ButtonPrimary
+                :label="t('crm.deals.detail.createQuote')"
+                icon="material-symbols:add"
+                outline
+                small
+                @click="addQuoteOpen = true"
+              />
               <input
                 ref="fileInputRef"
                 type="file"
@@ -90,7 +115,18 @@
             <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
               <div class="mb-2 flex items-center justify-between">
                 <UBadge color="neutral" variant="subtle">{{ quote.status }}</UBadge>
-                <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
+                  <UButton
+                    v-if="!quote.file_name"
+                    icon="material-symbols:download"
+                    variant="ghost"
+                    color="neutral"
+                    size="xs"
+                    :aria-label="t('crm.deals.detail.downloadPdf')"
+                    @click="onExportQuotePdf(quote.id)"
+                  />
+                </div>
               </div>
 
               <div v-if="quote.file_name" class="flex items-center justify-between gap-3 rounded-lg bg-[var(--color-light-gray-1)] p-3">
@@ -136,6 +172,11 @@
             </div>
           </div>
         </ContainerTemplate>
+
+        <CrmAddQuoteModal
+          v-model:open="addQuoteOpen"
+          @submit="onAddQuote"
+        />
       </div>
 
       <div v-else-if="activeTab === 'payments'">
@@ -235,28 +276,19 @@
       {{ t('crm.deals.detail.dealNotFound') }}
     </div>
 
-    <UModal v-model:open="wonModal">
-      <template #header>
-        <h3 class="text-lg font-medium">{{ t('crm.deals.detail.createProjectModalTitle') }}</h3>
-      </template>
-      <template #body>
-        <p class="text-sm text-[var(--color-gray)]">
-          {{ t('crm.deals.detail.createProjectModalBody') }}
-        </p>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <ButtonPrimary :label="t('crm.deals.detail.close')" outline @click="wonModal = false" />
-          <ButtonPrimary :label="t('crm.deals.detail.ok')" disabled />
-        </div>
-      </template>
-    </UModal>
+    <CrmAddProjectModal
+      v-model:open="wonModal"
+      :title="t('crm.deals.detail.createProjectModalTitle')"
+      :default-name="deal?.title"
+      :description="t('crm.deals.detail.createProjectModalBody')"
+      @submit="onCreateProject"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEAL_STAGE_OPTIONS, dealStatusForStage, isTaskOverdue } from '~/constants/mockData'
+import { DEAL_STAGE_OPTIONS, BUSINESS_UNIT_OPTIONS, dealStatusForStage, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -271,9 +303,12 @@ const dealsStore = useDealsStore()
 const paymentsStore = usePaymentsStore()
 const tasksStore = useTasksStore()
 const activitiesStore = useActivitiesStore()
+const projectsStore = useProjectsStore()
+const productsStore = useProductsStore()
 
 const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
+const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
@@ -282,7 +317,14 @@ onMounted(() => {
   paymentsStore.fetchForDeal(dealId)
   activitiesStore.fetchForRelated('deal', dealId)
   quotesStore.fetchForDeal(dealId)
+  if (productsStore.items.length === 0) productsStore.fetchAll()
 })
+
+// Deal loads asynchronously (dealsStore.fetchAll), so company_id isn't known
+// yet at onMounted — fetch this company's projects once the deal resolves.
+watch(deal, (value) => {
+  if (value) projectsStore.fetchForCompany(value.company_id)
+}, { immediate: true })
 
 const activeTab = ref('overview')
 const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
@@ -337,6 +379,31 @@ const onRemoveQuote = async (quote: Quote) => {
   await quotesStore.remove(quote.id)
 }
 
+// GET /quotes/:id/export-pdf returns a raw PDF byte stream, not JSON, and
+// needs the same Authorization header every other API call gets — so it's
+// fetched as a blob via $api rather than a plain browser-navigated link.
+const onExportQuotePdf = async (quoteId: number) => {
+  try {
+    const { $api } = useNuxtApp()
+    const response = await $api.get(`/quotes/${quoteId}/export-pdf`, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `quote-${quoteId}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const addQuoteOpen = ref(false)
+
+const onAddQuote = async (quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }) => {
+  await quotesStore.add(dealId, quote)
+  success(t('crm.deals.detail.createQuoteSuccess'))
+}
+
 const addPaymentOpen = ref(false)
 const dealPayments = computed(() => paymentsStore.forDeal(dealId))
 const totalPaid = computed(() => paymentsStore.totalForDeal(dealId))
@@ -366,18 +433,38 @@ const form = reactive({
   stage: deal.value?.stage || 'Lead',
   expected_close_date: deal.value?.expected_close_date ? deal.value.expected_close_date.toISOString().slice(0, 10) : '',
   assigned_to: deal.value?.assigned_to ? String(deal.value.assigned_to) : '',
+  business_unit: (deal.value?.business_unit || '') as BusinessUnit | '',
+  business_unit_item: deal.value?.business_unit_item || '',
 })
 
 // Deal loads asynchronously now (fetched on mount), so the form is (re)populated
-// once the record arrives instead of only at setup time.
+// once the record arrives instead of only at setup time. `hydrating` suppresses
+// the business_unit watcher below during this — otherwise setting business_unit
+// here would immediately wipe the business_unit_item set two lines later.
+let hydrating = false
 watch(deal, (value) => {
   if (!value) return
+  hydrating = true
   form.title = value.title
   form.value = value.value
   form.stage = value.stage
   form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+  form.business_unit = value.business_unit || ''
+  form.business_unit_item = value.business_unit_item || ''
+  nextTick(() => { hydrating = false })
 }, { immediate: true })
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  computed(() => deal.value?.company_id ?? null),
+)
+
+// Switching business unit invalidates whichever item was picked under the old
+// one — but not during the hydration above, which sets both at once.
+watch(() => form.business_unit, () => {
+  if (!hydrating) form.business_unit_item = ''
+})
 
 // Nudges a rep to take the next concrete step right after a deal closes, instead
 // of a won deal silently sitting with no follow-up assigned to anyone.
@@ -408,6 +495,8 @@ const onSave = async () => {
       status: dealStatusForStage(form.stage as DealStage),
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
     })
     if (!wasWon && updated.status === 'won') createWonFollowUpTask()
     success(t('crm.deals.detail.updateSuccess'))
@@ -425,6 +514,21 @@ const onMarkWon = async () => {
     if (!wasWon) createWonFollowUpTask()
     success(t('crm.deals.detail.markWonSuccess'))
     wonModal.value = true
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onCreateProject = async (payload: { name: string, status: ProjectStatus, target_end_date: Date | null, notes: string }) => {
+  if (!deal.value) return
+  try {
+    await projectsStore.add(deal.value.company_id, {
+      deal_id: deal.value.id,
+      start_date: new Date(),
+      production_reference: null,
+      ...payload,
+    })
+    success(t('crm.deals.detail.createProjectSuccess'))
   } catch {
     error(t('global.genericError'))
   }

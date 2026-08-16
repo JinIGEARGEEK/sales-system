@@ -186,7 +186,7 @@ This is the core addition that makes the CRM follow the **real, ongoing relation
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-060 | System shall maintain a Product Catalog (id, name, SKU, category, description, active flag) representing the products/services IGearGeek offers. | M | ⬜ |
+| FR-CRM-060 | System shall maintain a Product Catalog (id, name, category, description, active flag) representing the products/services IGearGeek offers. | M | ⬜ |
 | FR-CRM-061 | Admin shall be able to create/edit/deactivate Product Catalog entries. | M | ⬜ |
 | FR-CRM-062 | Quote line items (§3.5) shall reference a Product from the catalog rather than free-text, where possible. | S | ⬜ |
 
@@ -251,7 +251,7 @@ Key entities and notable fields:
 - **Quote**: id, deal_id, line_items[] (each referencing product_id), total, status, valid_until
 - **Contract**: id, deal_id, status, signed_file_url, signed_date
 - **Payment**: id, deal_id, amount, paid_at, method (cash/transfer/card/other), note — one row per installment; a Deal's collected revenue is the sum of its Payments, distinct from the Deal's total contract `value`
-- **Product**: id, name, sku, category, description, is_active
+- **Product**: id, name, category, description, is_active
 - **CustomerProduct**: id, company_id, product_id, status (Interested/Trial/Active/Churned), start_date, end_date, source_deal_id (nullable)
 - **Project**: id, company_id, deal_id (nullable), name, status (Not Started/In Progress/On Hold/Completed/Cancelled), start_date, target_end_date, production_reference (text/url, nullable), notes
 - **User**: id, name, email, role, active

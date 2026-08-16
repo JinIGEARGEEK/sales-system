@@ -10,6 +10,7 @@ export const useUserStore = defineStore('user', {
       latest_login: null,
       is_active: false,
       must_change_password: false,
+      role: 'Sales Rep',
       created_at: null,
       updated_at: null,
       deleted_at: null,
@@ -29,6 +30,7 @@ export const useUserStore = defineStore('user', {
       this.latest_login = user.latest_login
       this.is_active = user.is_active
       this.must_change_password = user.must_change_password
+      this.role = user.role
       this.created_at = user.created_at
       this.updated_at = user.updated_at
       this.deleted_at = user.deleted_at

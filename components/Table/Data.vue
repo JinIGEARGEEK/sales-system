@@ -244,6 +244,7 @@ const emit = defineEmits([
   'edit',
   'delete',
   'convert',
+  'deactivate',
 ])
 
 watch(

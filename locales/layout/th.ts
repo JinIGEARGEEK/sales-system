@@ -8,6 +8,7 @@ export default {
     tags: 'Tag',
     leads: 'Leads',
     deals: 'Deals',
+    projects: 'Projects',
     tasks: 'งานติดตาม',
   },
   logout: 'ออกจากระบบ',

@@ -1,6 +1,5 @@
 interface AdminUser extends User {
   id: number
-  role: 'Admin' | 'Sales Rep' | 'Sales Manager' | 'Production'
 }
 
 // GET /audit-log — api-system-spec.md, admin-only, read-only (NFR-007).

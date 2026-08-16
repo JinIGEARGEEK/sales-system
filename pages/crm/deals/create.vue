@@ -34,6 +34,21 @@
           <InputSelect v-model="form.stage" :options="DEAL_STAGE_OPTIONS" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+          <InputSelect
+            v-model="form.business_unit"
+            :options="BUSINESS_UNIT_OPTIONS"
+            :label="t('crm.deals.create.businessUnit')"
+            :placeholder="t('crm.deals.create.businessUnitPlaceholder')"
+            name="business_unit"
+          />
+          <InputSelect
+            v-if="form.business_unit"
+            v-model="form.business_unit_item"
+            :options="businessUnitItemOptions"
+            :label="form.business_unit === 'Project' ? t('crm.deals.create.project') : t('crm.deals.create.product')"
+            :placeholder="t('crm.deals.create.businessUnitItemPlaceholder')"
+            name="business_unit_item"
+          />
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -47,7 +62,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEAL_STAGE_OPTIONS, findDuplicateDeals, dealStatusForStage } from '~/constants/mockData'
+import { DEAL_STAGE_OPTIONS, BUSINESS_UNIT_OPTIONS, findDuplicateDeals, dealStatusForStage } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -59,12 +74,16 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 const dealsStore = useDealsStore()
+const projectsStore = useProjectsStore()
+const productsStore = useProductsStore()
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
   if (leadsStore.items.length === 0) leadsStore.fetchAll()
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (projectsStore.items.length === 0) projectsStore.fetchAll()
+  if (productsStore.items.length === 0) productsStore.fetchAll()
 })
 
 const originatingLead = route.query.lead_id ? leadsStore.items.find(l => l.id === Number(route.query.lead_id)) : null
@@ -80,6 +99,19 @@ const form = reactive({
   stage: 'Lead',
   expected_close_date: '',
   assigned_to: '',
+  business_unit: '' as BusinessUnit | '',
+  business_unit_item: '',
+})
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  computed(() => Number(form.company_id) || null),
+)
+
+// Switching business unit (or company) invalidates whichever item was picked
+// under the old context.
+watch([() => form.business_unit, () => form.company_id], () => {
+  form.business_unit_item = ''
 })
 
 const duplicateDeals = computed(() => findDuplicateDeals(dealsStore.items, form.company_id, form.contact_id))
@@ -103,8 +135,8 @@ const onSubmit = async () => {
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       channel: 'Other',
-      business_unit: null,
-      business_unit_item: null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       created_at: new Date(),
     })
     success(t('crm.deals.create.createSuccess'))
