@@ -12,6 +12,7 @@ export default {
     tasks: 'งานติดตาม',
   },
   logout: 'ออกจากระบบ',
+  changePassword: 'เปลี่ยนรหัสผ่าน',
   user: {
     defaultName: 'ผู้ดูแลระบบ',
   },

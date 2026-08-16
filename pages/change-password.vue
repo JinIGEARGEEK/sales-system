@@ -4,7 +4,7 @@
     :title="t('global.auth.changePasswordTitle')"
     :subtitle="t('global.auth.changePasswordSubtitle')"
   >
-    <Form class="relative z-10 flex flex-col gap-3" @submit="onSubmit">
+    <Form class="relative z-10 flex flex-col gap-3" @submit="submit">
       <InputPassword
         v-model="state.currentPassword"
         :label="t('global.auth.currentPasswordLabel')"
@@ -48,7 +48,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isAxiosError } from 'axios'
 
 definePageMeta({
   layout: 'blank',
@@ -60,34 +59,5 @@ useHead({
 
 const { t } = useI18n()
 const { logout } = useAuth()
-const { success, error } = useNotify()
-const userStore = useUserStore()
-const { post } = useMutateApi<User, { current_password: string, new_password: string, confirm_password: string }>('/auth/change-password')
-
-const state = reactive({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
-})
-
-const loading = ref(false)
-const onSubmit = async () => {
-  loading.value = true
-
-  try {
-    const response = await post({
-      current_password: state.currentPassword,
-      new_password: state.newPassword,
-      confirm_password: state.confirmPassword,
-    })
-    userStore.setUser(response.data)
-    success(t('global.auth.changePasswordSuccess'))
-    await navigateTo('/')
-  } catch (err) {
-    const message = isAxiosError(err) ? err.response?.data?.error?.message : undefined
-    error(message || t('global.auth.changePasswordFailed'))
-  } finally {
-    loading.value = false
-  }
-}
+const { state, loading, submit } = useChangePasswordForm(() => navigateTo('/'))
 </script>

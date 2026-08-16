@@ -26,14 +26,18 @@
       <template #footer>
         <div class="flex items-center justify-between px-2">
           <SwitchLang />
-          <UButton
-            icon="material-symbols:logout"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            :aria-label="t('layout.logout')"
-            @click="logout"
-          />
+          <div class="flex items-center gap-1">
+            <UButton
+              v-for="action in footerActions"
+              :key="action.icon"
+              :icon="action.icon"
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              :aria-label="action.ariaLabel"
+              @click="drawer = false; action.onClick()"
+            />
+          </div>
         </div>
       </template>
     </USlideover>
@@ -81,15 +85,19 @@
         </div>
         <div class="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5 text-white">
           <SwitchLang />
-          <UButton
-            icon="material-symbols:logout"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            class="text-white/70 hover:bg-white/10 hover:text-white"
-            :aria-label="t('layout.logout')"
-            @click="logout"
-          />
+          <div class="flex items-center gap-1">
+            <UButton
+              v-for="action in footerActions"
+              :key="action.icon"
+              :icon="action.icon"
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              class="text-white/70 hover:bg-white/10 hover:text-white"
+              :aria-label="action.ariaLabel"
+              @click="action.onClick"
+            />
+          </div>
         </div>
       </div>
     </aside>
@@ -123,22 +131,42 @@ const { t } = useI18n()
 const route = useRoute()
 const drawer = ref(false)
 const { logout } = useAuth()
+const { hasRole } = useRole()
 const { first_name, last_name, email } = storeToRefs(useUserStore())
 
 const userDisplayName = computed(() => `${first_name.value} ${last_name.value}`.trim() || t('layout.user.defaultName'))
 const userInitials = computed(() => `${first_name.value[0] || ''}${last_name.value[0] || ''}`.toUpperCase() || 'AD')
 
-const menuList = computed(() => [
-  { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
-  { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false },
-  { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false },
-  { icon: 'material-symbols:engineering-outline', label: t('layout.nav.projects'), path: '/crm/projects', separator: false },
-  { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: true },
-  { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false },
-  { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false },
-  { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true },
-  { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false },
-  { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false },
+interface MenuItem {
+  icon: string
+  label: string
+  path: string
+  separator: boolean
+  // Omitted = every role can see it. Only sections the backend actually
+  // restricts (internal/routes/routes.go's RequireRoles) should set this —
+  // everything else is open to any authenticated role at the route level.
+  roles?: Role[]
+}
+
+const menuList = computed(() => {
+  const items: MenuItem[] = [
+    { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
+    { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false },
+    { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false },
+    { icon: 'material-symbols:engineering-outline', label: t('layout.nav.projects'), path: '/crm/projects', separator: false },
+    { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: true },
+    { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false },
+    { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false },
+    { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true },
+    { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },
+    { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
+  ]
+  return items.filter(item => !item.roles || hasRole(...item.roles))
+})
+
+const footerActions = computed(() => [
+  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password') },
+  { icon: 'material-symbols:logout', ariaLabel: t('layout.logout'), onClick: logout },
 ])
 
 // Shows the current page's <h2> title in the header once it scrolls up

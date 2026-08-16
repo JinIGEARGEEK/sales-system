@@ -12,6 +12,7 @@ export default {
     tasks: 'Tasks',
   },
   logout: 'Logout',
+  changePassword: 'Change Password',
   user: {
     defaultName: 'Admin User',
   },

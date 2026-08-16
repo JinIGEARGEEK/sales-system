@@ -102,6 +102,9 @@ sales-system/
 ├── pages/
 │   ├── crm/                      # Leads, Deals, Companies, Contacts, Tags, Tasks, Projects/Products
 │   ├── admin/                    # Staff users, activity log
+│   ├── account/change-password.vue  # Change password (any logged-in user, via the sidebar icon)
+│   ├── login.vue                 # Login
+│   ├── change-password.vue       # Forced password reset for Admin-assigned accounts (must_change_password)
 │   └── index.vue                 # Sales Pipeline Dashboard
 ├── layouts/                      # Nuxt layouts (default, blank)
 ├── plugins/                      # Nuxt plugins (axios, vee-validate, sentry)
