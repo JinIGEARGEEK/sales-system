@@ -8,18 +8,19 @@ Built with **Nuxt 4 + Nuxt UI 3 + Tailwind CSS v4**, running as a Single Page Ap
 
 ## **System Overview**
 
-This app covers the sales lifecycle from an inbound Lead through a Won/Lost Deal:
+This app covers the sales lifecycle from an inbound Lead through a Won/Lost Deal, and beyond into ongoing customer/product/project tracking:
 
-- **Leads** (`/crm/leads`) — capture, qualify, convert to a Deal (and Company/Contact if new).
-- **Deals** (`/crm/deals`) — a Kanban pipeline (Lead → Qualified → Proposition → Negotiation → Won/Lost) with drag-and-drop stage changes, plus per-Deal Quotes (PDF upload), Payments (installments toward the Deal's total value), Tasks/follow-ups, and an activity timeline. "Proposition" is the display label for the `Proposal Sent` stage value — the underlying `DealStage` type/API contract is unchanged.
-- **Companies & Contacts** (`/crm/companies`, `/crm/contacts`) — the customer database, with tagging, per-record Tasks, and a FlowAccount-export bulk-import flow.
+- **Leads** (`/crm/leads`) — capture, qualify, convert to a Deal (and Company/Contact if new), or disqualify.
+- **Deals** (`/crm/deals`) — a unified Kanban pipeline (Lead → Qualified → Proposition → Negotiation → Won/Lost) where **unconverted Leads render as cards alongside Deals**: dragging a Lead card within Lead/Qualified/Lost just updates its status, while dragging it into Proposition/Negotiation/Won auto-converts it into a real Deal in place. Deals also carry per-Deal Quotes (PDF upload), Payments (installments toward the Deal's total value), Tasks/follow-ups, file/link Attachments, and an activity timeline. "Proposition" is the display label for the `Proposal Sent` stage value — the underlying `DealStage` type/API contract is unchanged.
+- **Companies & Contacts** (`/crm/companies`, `/crm/contacts`) — the customer database, with tagging, per-record Tasks and Attachments, related Deals/Projects, and a FlowAccount-export bulk-import flow.
+- **Projects & Products** (`/crm/projects`) — a company-scoped Project catalog (status, target date, an optional link back to the Deal it originated from) and a shared Product Catalog (full CRUD) used to track which Products each Company is using (Customer↔Product).
 - **Tags** (`/crm/tags`) — shared segmentation labels (Tier/Industry/Priority) used across Companies and Contacts.
 - **Tasks** (`/crm/tasks`) — every follow-up task across all Deals/Contacts/Companies in one filterable list, with bulk mark-done/reassign and a confirm-before-done dialog; a Deal marked "Won" auto-creates a kickoff-call follow-up task.
 - **Sales Pipeline Dashboard** (`/`) — pipeline value/win rate/revenue trend/pipeline coverage, filterable by date range, Business Unit, and Channel; a per-rep leaderboard; an "Upcoming Follow-ups" task widget; and stale-account upsell prompts.
 - **Global search** (top nav) — find a Deal, Company, Contact, or Lead by name from anywhere in the app.
-- **Admin** (`/admin/users`, `/admin/activity-log`) — staff account CRUD and an activity feed.
+- **Admin** (`/admin/users`, `/admin/activity-log`) — staff account CRUD; the activity feed is still a static mock, not a real audit log viewer yet.
 
-**Current build status:** the entire app runs on **client-side mock data** (Pinia stores seeded from `constants/mockData/`) — there is no real backend yet. See `biz_spec/api-system-spec.md` for the API contract a separate backend repo needs to implement to replace the mock stores.
+**Current build status:** this app is API-backed by a real Go/Postgres backend — see the sibling [`sales-system-api`](../sales-system-api) repo. Role-based access control (Admin / Sales Rep / Sales Manager / Production) is enforced **server-side**; the frontend mirrors it (via `useRole`) only to hide actions the backend would reject, never as the actual security boundary. `biz_spec/api-system-spec.md` is the API contract both repos are kept in sync against — check it (and `biz_spec/feature-spec.md`'s §9 gap summary) before assuming a given endpoint/requirement is or isn't implemented, since a handful of items (Contracts, CSV export, Admin-side pipeline/tag configurability, a frontend audit-log viewer) are still unbuilt.
 
 ### Documentation (`biz_spec/`)
 
@@ -48,15 +49,15 @@ Read `feature-spec.md` and `design-system.md` before adding a new page or entity
 | **แอดมิน (Admin)** | จัดการบัญชีผู้ใช้งาน (`/admin/users`) และภาพรวมระบบ |
 | **เซลล์ / ผู้ดูแลลูกค้า (Sales Rep / Account Manager)** | ดูแล Lead, Deal, บริษัท, ผู้ติดต่อของตนเอง บันทึกการชำระเงิน และสร้าง/ติดตามงาน (Tasks) ที่ต้องทำ |
 | **หัวหน้าทีมขาย (Sales Manager)** | ดูภาพรวมทีมผ่าน Dashboard, มอบหมาย/โยกย้าย Deal, ติดตามงานเกินกำหนดของทั้งทีม |
-| **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะ Project ที่เชื่อมกับ Deal เท่านั้น (ฟีเจอร์นี้ยังไม่ได้พัฒนา — ดู `biz_spec/feature-spec.md` §3.7) |
+| **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะและ Production Reference ของ Project ที่เชื่อมกับ Deal ของบริษัทลูกค้าเท่านั้น |
 
 ### กรณีการใช้งานจริง (Use Cases)
 
-- **จาก Lead ถึง Deal ที่ปิดสำเร็จ:** เซลล์สร้าง Lead → แปลงเป็น Deal → ลากผ่านบอร์ด Kanban → บันทึกการชำระเงินแต่ละงวด → กดปิด Deal สำเร็จ ระบบจะสร้างงานติดตาม "นัดหมาย Kickoff Call" ให้อัตโนมัติทันที
+- **จาก Lead ถึง Deal ที่ปิดสำเร็จ:** เซลล์สร้าง Lead ใหม่ → การ์ด Lead ปรากฏบนบอร์ด Kanban เดียวกับ Deal ทันที → ลากผ่านขั้นตอนต่าง ๆ (ผ่าน "Qualified" จะแปลงเป็น Deal จริงโดยอัตโนมัติ) → บันทึกการชำระเงินแต่ละงวด → กดปิด Deal สำเร็จ ระบบจะสร้างงานติดตาม "นัดหมาย Kickoff Call" ให้อัตโนมัติทันที
 - **บริหารงานติดตามของทั้งทีม:** เซลล์เปิดหน้า "งานติดตาม" (`/crm/tasks`) เพื่อดู กรอง และจัดการงานทั้งหมดของตนในที่เดียว รวมถึงเลือกหลายรายการเพื่อทำเสร็จหรือมอบหมายใหม่พร้อมกัน
 - **ตรวจสอบภาพรวมยอดขาย:** หัวหน้าทีมเปิด Dashboard เพื่อดู Win Rate, มูลค่า Pipeline, และ Leaderboard ของทีม พร้อมค้นหา Deal/บริษัท/ผู้ติดต่อที่ต้องการจากช่องค้นหาส่วนกลาง
 
-> หมายเหตุ: ระบบยังทำงานด้วยข้อมูลจำลอง (mock data) ฝั่ง Client เท่านั้น ยังไม่มี Backend จริง — ดู `biz_spec/api-system-spec.md`
+> หมายเหตุ: ระบบเชื่อมต่อกับ Backend จริง (Go + PostgreSQL, ดู repo `sales-system-api`) แล้ว ไม่ได้ใช้ข้อมูลจำลองอีกต่อไป — ดู `biz_spec/api-system-spec.md` สำหรับ API Contract
 
 ---
 
@@ -94,12 +95,12 @@ sales-system/
 │   ├── Table/                    # Data table with pagination and card types
 │   └── Container/                # Layout containers
 │
-├── constants/mockData/           # Per-domain mock data (leads, deals, companies, contacts, payments, ...) seeding every store
+├── constants/mockData/           # Despite the folder name, this is no longer seed data — stores are API-backed. Holds static option lists, per-stage colors, and small pure-JS helpers (e.g. DEAL_STAGE_OPTIONS, findDuplicateDeals) shared across pages.
 ├── interfaces/                   # TypeScript interfaces (crm.d.ts, auth.d.ts, admin.d.ts, api.d.ts, ...)
 ├── locales/                      # Language files (en, th)
-├── stores/                       # Pinia stores — one per entity (leads, deals, companies, contacts, payments, tags, tasks, users, ...)
+├── stores/                       # Pinia stores, one per entity — all API-backed (leads, deals, companies, contacts, payments, tags, tasks, projects, products, customerProducts, quotes, attachments, users, ...)
 ├── pages/
-│   ├── crm/                      # Leads, Deals, Companies, Contacts, Tags, Tasks
+│   ├── crm/                      # Leads, Deals, Companies, Contacts, Tags, Tasks, Projects/Products
 │   ├── admin/                    # Staff users, activity log
 │   └── index.vue                 # Sales Pipeline Dashboard
 ├── layouts/                      # Nuxt layouts (default, blank)
@@ -120,11 +121,13 @@ sales-system/
 
 ## **Getting Started**
 
+This frontend needs the [`sales-system-api`](../sales-system-api) backend (and a Postgres database) running to actually log in or load any data — it is not a standalone mock-data app. Start the backend first (see that repo's README: `cp .env.example .env`, then `go run ./cmd/api`; the first run seeds an Admin account and prints its email/password to stdout), then come back here.
+
 ### **1. Clone the project**
 
 ```bash
-git clone git@bitbucket.org:i-gear-geek/nuxtjs-3.git
-cd nuxtjs-3
+git clone https://github.com/JinIGEARGEEK/sales-system.git
+cd sales-system
 ```
 
 ### **2. Set up environment variables**
@@ -133,7 +136,7 @@ cd nuxtjs-3
 cp .env.example .env
 ```
 
-Then edit the `.env` file to match your environment (e.g., API URL, keys, etc.).
+Set `API_URL` to wherever the backend is running (`http://localhost:8080` for local dev).
 
 ### **3. Install dependencies**
 
