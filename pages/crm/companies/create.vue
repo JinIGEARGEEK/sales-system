@@ -49,6 +49,26 @@
             name="status"
             rules="required"
           />
+          <InputText
+            v-model="form.legal_name"
+            :label="t('crm.companies.create.legalName')"
+            :placeholder="t('crm.companies.create.legalNamePlaceholder')"
+            name="legal_name"
+          />
+          <InputText
+            v-model="form.tax_id"
+            :label="t('crm.companies.create.taxId')"
+            :placeholder="t('crm.companies.create.taxIdPlaceholder')"
+            name="tax_id"
+          />
+          <div class="md:col-span-2">
+            <InputTextarea
+              v-model="form.address"
+              :label="t('crm.companies.create.address')"
+              :placeholder="t('crm.companies.create.addressPlaceholder')"
+              name="address"
+            />
+          </div>
           <div class="md:col-span-2">
             <InputTextarea
               v-model="form.notes"
@@ -145,6 +165,9 @@ const form = reactive({
   website: '',
   tags: '',
   status: 'active',
+  legal_name: '',
+  address: '',
+  tax_id: '',
   notes: '',
 })
 
@@ -169,6 +192,9 @@ const onSubmit = async () => {
       tags: parseTags(form.tags),
       notes: form.notes,
       status: form.status as ActiveArchivedStatus,
+      legal_name: form.legal_name || null,
+      address: form.address || null,
+      tax_id: form.tax_id || null,
       created_at: new Date(),
       updated_at: new Date(),
     })

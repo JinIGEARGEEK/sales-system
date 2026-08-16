@@ -3,6 +3,7 @@ import layout from './layout/en'
 import adminActivityLog from './admin/activity-log/en'
 import adminUsers from './admin/users/en'
 import adminProducts from './admin/products/en'
+import adminTrash from './admin/trash/en'
 import crmDashboard from './crm/dashboard/en'
 import crmLeads from './crm/leads/en'
 import crmDeals from './crm/deals/en'
@@ -12,6 +13,8 @@ import crmTags from './crm/tags/en'
 import crmTasks from './crm/tasks/en'
 import crmProjects from './crm/projects/en'
 import crmComponents from './crm/components/en'
+import crmReports from './crm/reports/en'
+import crmContracts from './crm/contracts/en'
 
 const components = {
 }
@@ -24,6 +27,7 @@ export default {
     activityLog: adminActivityLog,
     users: adminUsers,
     products: adminProducts,
+    trash: adminTrash,
   },
   crm: {
     dashboard: crmDashboard,
@@ -35,5 +39,7 @@ export default {
     tasks: crmTasks,
     projects: crmProjects,
     components: crmComponents,
+    reports: crmReports,
+    contracts: crmContracts,
   },
 }

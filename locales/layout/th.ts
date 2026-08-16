@@ -10,6 +10,8 @@ export default {
     deals: 'Deals',
     projects: 'Projects/Products',
     tasks: 'งานติดตาม',
+    reports: 'รายงาน',
+    trash: 'ถังขยะ',
   },
   logout: 'ออกจากระบบ',
   changePassword: 'เปลี่ยนรหัสผ่าน',

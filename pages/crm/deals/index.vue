@@ -2,11 +2,29 @@
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.deals.index.heading') }}</h2>
-      <ButtonPrimary
-        :label="t('crm.deals.index.addDeal')"
-        icon="material-symbols:add"
-        @click="navigateTo('/crm/deals/create')"
-      />
+      <div class="flex items-center gap-2">
+        <ButtonPrimary
+          :outline="viewMode !== 'kanban'"
+          small
+          fit-content
+          icon="material-symbols:view-kanban-outline"
+          :label="t('crm.deals.index.viewKanban')"
+          @click="viewMode = 'kanban'"
+        />
+        <ButtonPrimary
+          :outline="viewMode !== 'list'"
+          small
+          fit-content
+          icon="material-symbols:view-list"
+          :label="t('crm.deals.index.viewList')"
+          @click="viewMode = 'list'"
+        />
+        <ButtonPrimary
+          :label="t('crm.deals.index.addDeal')"
+          icon="material-symbols:add"
+          @click="navigateTo('/crm/deals/create')"
+        />
+      </div>
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
@@ -27,6 +45,7 @@
     </UCard>
 
     <CrmPipelineBoard
+      v-if="viewMode === 'kanban'"
       :columns="DEAL_STAGE_OPTIONS"
       :items="pipelineItems"
       @move="onMove"
@@ -63,6 +82,8 @@
         </template>
       </template>
     </CrmPipelineBoard>
+
+    <CrmDealsTable v-else :rows="filteredDeals" />
   </div>
 </template>
 
@@ -93,6 +114,8 @@ onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
+
+const viewMode = ref<'kanban' | 'list'>('kanban')
 
 const search = ref('')
 const assigneeFilter = ref('all')

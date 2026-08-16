@@ -3,6 +3,7 @@
 export * from './admin'
 export * from './auth'
 export * from './companies'
+export * from './contracts'
 export * from './tags'
 export * from './leads'
 export * from './deals'

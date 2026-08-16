@@ -98,10 +98,12 @@ sales-system/
 ├── constants/mockData/           # Despite the folder name, this is no longer seed data — stores are API-backed. Holds static option lists, per-stage colors, and small pure-JS helpers (e.g. DEAL_STAGE_OPTIONS, findDuplicateDeals) shared across pages.
 ├── interfaces/                   # TypeScript interfaces (crm.d.ts, auth.d.ts, admin.d.ts, api.d.ts, ...)
 ├── locales/                      # Language files (en, th)
-├── stores/                       # Pinia stores, one per entity — all API-backed (leads, deals, companies, contacts, payments, tags, tasks, projects, products, customerProducts, quotes, attachments, users, ...)
+├── stores/                       # Pinia stores, one per entity — all API-backed (leads, deals, companies, contacts, payments, tags, tasks, projects, products, customerProducts, quotes, contracts, attachments, users, ...)
 ├── pages/
-│   ├── crm/                      # Leads, Deals, Companies, Contacts, Tags, Tasks, Projects/Products
-│   ├── admin/                    # Staff users, activity log
+│   ├── crm/
+│   │   ├── leads/ deals/ companies/ contacts/ tags/ tasks/ projects/   # Kanban + list views, bulk actions on Deals/Leads (multi-select toolbar)
+│   │   └── reports/               # Admin/Sales-Manager-only: lead-source conversion, customers-by-product-status
+│   ├── admin/                    # Staff users, activity log, trash.vue (restore soft-deleted Deals/Leads)
 │   ├── account/change-password.vue  # Change password (any logged-in user, via the sidebar icon)
 │   ├── login.vue                 # Login
 │   ├── change-password.vue       # Forced password reset for Admin-assigned accounts (must_change_password)

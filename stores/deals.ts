@@ -1,9 +1,11 @@
-// Real API-backed store. Deal delete is a *hard* delete (§7.1 of api-system-spec.md) —
-// unlike Company/Contact, so a successful DELETE splices the record out of `items`.
+// Real API-backed store. Deal delete is a *soft* delete — DELETE /deals/:id sets
+// deleted_at and splices the record out of `items`, but it stays recoverable via
+// GET /deals/trash + POST /deals/:id/restore (see trashItems below).
 const parseDates = (deal: Deal): Deal => ({
   ...deal,
   created_at: new Date(deal.created_at),
   expected_close_date: deal.expected_close_date ? new Date(deal.expected_close_date) : null,
+  deleted_at: deal.deleted_at ? new Date(deal.deleted_at) : deal.deleted_at,
 })
 
 export const useDealsStore = defineStore('deals', {
@@ -11,6 +13,11 @@ export const useDealsStore = defineStore('deals', {
     items: [] as Deal[],
     total: 0,
     page: 1,
+    // Trash (soft-deleted rows) is kept fully separate from `items` so the
+    // regular list is never polluted by deleted_at-set records.
+    trashItems: [] as Deal[],
+    trashTotal: 0,
+    trashPage: 1,
   }),
   actions: {
     async fetchAll (params?: Record<string, unknown>) {
@@ -67,5 +74,6 @@ export const useDealsStore = defineStore('deals', {
       await $api.delete(`/deals/${id}`)
       this.items = this.items.filter(d => d.id !== id)
     },
+    ...createBulkResourceActions<Deal>('/deals', parseDates),
   },
 })

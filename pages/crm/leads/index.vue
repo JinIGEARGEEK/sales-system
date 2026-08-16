@@ -2,11 +2,19 @@
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.leads.index.heading') }}</h2>
-      <ButtonPrimary
-        :label="t('crm.leads.index.addLead')"
-        icon="material-symbols:add"
-        @click="navigateTo('/crm/leads/create')"
-      />
+      <div class="flex items-center gap-2">
+        <ButtonPrimary
+          v-if="canBulkManage"
+          outline
+          :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
+          @click="toggleSelectMode"
+        />
+        <ButtonPrimary
+          :label="t('crm.leads.index.addLead')"
+          icon="material-symbols:add"
+          @click="navigateTo('/crm/leads/create')"
+        />
+      </div>
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
@@ -28,11 +36,13 @@
 
     <TableData
       v-model:page="page"
+      v-model:select-value="selected"
       :columns="columns"
       :rows="filteredLeads"
       :total="filteredLeads.length"
       :total-page="totalPage"
       :per-page="perPage"
+      :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @view-detail="onViewDetail"
@@ -40,6 +50,16 @@
       @convert="onConvert"
       @view-deal="onViewDeal"
       @delete="requestDelete"
+    />
+
+    <CrmBulkActionBar
+      v-if="selectedIds.length > 0"
+      :selected-ids="selectedIds"
+      :entity-label="t('crm.leads.index.entityLabel')"
+      @reassign="onBulkReassign"
+      @tag="onBulkTag"
+      @archive="onBulkArchive"
+      @cancel="selected = []"
     />
 
     <CrmConfirmDeleteModal
@@ -62,8 +82,12 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
+
+// Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
+const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
 
 onMounted(() => {
   leadsStore.fetchAll()
@@ -100,7 +124,10 @@ const leadStatusColor = (status: LeadStatus) => {
   return 'neutral'
 }
 
-const columns: TableDataColumn[] = [
+const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Lead>()
+
+const columns = computed<TableDataColumn[]>(() => [
+  ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.leads.index.columns.name'), align: 'left', field: 'name' },
   { label: t('crm.leads.index.columns.company'), align: 'left', field: 'company_name' },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source' },
@@ -121,7 +148,7 @@ const columns: TableDataColumn[] = [
       { label: t('crm.leads.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 
 const onViewDetail = (row: Lead) => {
   navigateTo(`/crm/leads/${row.id}`)
@@ -152,5 +179,35 @@ const confirmDelete = async () => {
     }
   }
   closeDelete()
+}
+
+const onBulkReassign = async (assignedTo: number | null) => {
+  try {
+    await leadsStore.bulkReassign(selectedIds.value, assignedTo)
+    success(t('crm.components.bulkActionBar.reassignSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
+    selected.value = []
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }) => {
+  try {
+    await leadsStore.bulkTag(selectedIds.value, tags, mode)
+    success(t('crm.components.bulkActionBar.tagSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
+    selected.value = []
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onBulkArchive = async () => {
+  try {
+    await leadsStore.bulkArchive(selectedIds.value)
+    success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
+    selected.value = []
+  } catch {
+    error(t('global.genericError'))
+  }
 }
 </script>

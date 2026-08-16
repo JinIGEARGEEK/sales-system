@@ -7,7 +7,7 @@
 **Date:** 2026-08-16
 **Companion doc:** `api-system-spec.md` translates the requirements below into the concrete backend API contract for a separate backend repo — cross-check both before implementing a new resource so the two never drift apart.
 
-> **Implementation status (as of 2026-08-16):** Every requirement below now carries a **Status** column reflecting what actually exists in the codebase (`pages/`, `constants/mockData/`, `stores/`), not just what's specified. Legend: ✅ Built · 🚧 Partial (some but not all of the requirement) · ⬜ Not built. Lead/Deal/Company/Contact CRUD, the unified Kanban pipeline (Leads and Deals both render as cards, with drag-to-convert — both the drag flow and the manual "Convert to Deal" form now correctly mark the source Lead as converted), per-Deal payment tracking (§3.3), per-Deal/Contact/Company follow-up Tasks (§3.4), a filterable sales dashboard, Quotes (a real per-Deal store), a fully-editable Product Catalog + Customer↔Product tracking + Project tracking (§3.7), real backend RBAC enforcement (role-gated routes via `RequireRoles`), Lead/Deal/Company Attachments (§3.9), and Company/Contact bulk import all now exist. Contracts (§3.5), Admin-side pipeline/tag/product configurability (§3.8), a frontend view of the audit log, and CSV export remain unbuilt. See §9 for the full gap summary.
+> **Implementation status (as of 2026-08-16):** Every requirement below now carries a **Status** column reflecting what actually exists in the codebase (`pages/`, `constants/mockData/`, `stores/`), not just what's specified. Legend: ✅ Built · 🚧 Partial (some but not all of the requirement) · ⬜ Not built. Lead/Deal/Company/Contact CRUD, the unified Kanban pipeline (Leads and Deals both render as cards, with drag-to-convert — both the drag flow and the manual "Convert to Deal" form now correctly mark the source Lead as converted), per-Deal payment tracking (§3.3), per-Deal/Contact/Company follow-up Tasks (§3.4), a filterable sales dashboard, Quotes and Contracts (both real per-Deal stores, §3.5), a fully-editable Product Catalog + Customer↔Product tracking + Project tracking (§3.7), real backend RBAC enforcement (role-gated routes via `RequireRoles`), Lead/Deal/Company Attachments (§3.9), Company/Contact bulk import, bulk reassign/tag/archive + trash/restore on Deals and Leads, and a Reports section (lead-source conversion, customers-by-product-status) all now exist. Admin-side pipeline/tag/product configurability (§3.8), a frontend view of the audit log, and CSV **export** remain unbuilt. See §9 for the full gap summary.
 
 ---
 
@@ -46,7 +46,7 @@
 3. ดู Leaderboard ผลงานรายบุคคลของทีมเซลล์ พร้อมรายชื่อบัญชีลูกค้าที่ไม่ได้ติดต่อมานาน (โอกาส Upsell)
 4. ค้นหา Deal, บริษัท, ผู้ติดต่อ หรือ Lead ที่ต้องการจากช่องค้นหาส่วนกลางด้านบนของทุกหน้า
 
-> หมายเหตุ: Product/Project Tracking (§3.7) และ Quote (§3.5) ใช้งานได้จริงแล้วในระบบปัจจุบัน ส่วน Contract (§3.5) ยังไม่ได้พัฒนา — ดูรายละเอียดที่ §9
+> หมายเหตุ: Product/Project Tracking (§3.7), Quote และ Contract (§3.5) ใช้งานได้จริงแล้วในระบบปัจจุบัน — ดูรายละเอียดที่ §9
 
 ---
 
@@ -135,7 +135,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-022 | System shall provide a Kanban board view of Deals per stage, with drag-and-drop to change stage. Unconverted Leads also render as cards in the Lead/Qualified/Lost columns (Disqualified Leads land in Lost); dragging a Lead card into Proposal Sent/Negotiation/Won auto-converts it into a real Deal (FR-CRM-004). | M | ✅ |
 | FR-CRM-023 | System shall record a reason code when a Deal is marked "Lost" (e.g., price, timing, competitor, no budget). | S | ⬜ |
 | FR-CRM-024 | System shall support Deal probability (%) either manually set or defaulted by stage, feeding into forecast calculations. | S | ⬜ |
-| FR-CRM-025 | System shall allow re-assigning a Deal's owner, with history of prior owners retained. | S | 🚧 owner/assignee is editable; no history retained |
+| FR-CRM-025 | System shall allow re-assigning a Deal's owner, with history of prior owners retained. | S | 🚧 owner/assignee is editable individually (`PATCH /deals/:id/reassign`) or in bulk across a multi-select (`PATCH /deals/bulk-reassign`, Admin/Sales Manager only), each writing a `reassigned`/`bulk_reassigned` audit-log entry (§9's audit log); there's no dedicated "prior owners" history view distinct from the audit log |
 | FR-CRM-026 | System shall support multiple open Deals per Company (e.g., upsell alongside an existing account). | M | ✅ |
 | FR-CRM-027 | System shall allow recording one or more partial Payments against a Deal (amount, date paid, payment method, note), since a Deal's total value is often collected across multiple installments rather than a single payment. | M | ✅ |
 | FR-CRM-028 | The Deal detail page shall show total amount paid to date and remaining balance (Deal value minus sum of Payments), computed live as Payments are added or removed. | M | ✅ |
@@ -154,12 +154,12 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-040 | System shall support creating a Quote/Proposal with line items, unit price, quantity, discount, and total, attached to a Deal. | M | 🚧 Quotes exist only as a mock array embedded in the Deal detail page — no dedicated create/edit flow |
-| FR-CRM-041 | System shall support Quote status: Draft, Sent, Accepted, Rejected, Expired, with a validity date. | M | 🚧 status/validity fields exist in mock data; no full lifecycle UI |
-| FR-CRM-042 | System shall support exporting a Quote as a PDF using a company template. | S | ⬜ |
-| FR-CRM-043 | System shall support a Contract record with status (Draft, Sent, Signed, Expired) attached to a Deal. | S | ⬜ |
-| FR-CRM-044 | System shall support attaching signed documents (file upload) to a Contract. | M | ⬜ |
-| FR-CRM-045 | System shall require a Contract be marked "Signed" before a Deal can be marked "Won" (configurable, not hard-enforced by default). | C | ⬜ |
+| FR-CRM-040 | System shall support creating a Quote/Proposal with line items, unit price, quantity, discount, and total, attached to a Deal. | M | 🚧 real per-Deal Quote store/API with description/qty/price line items and a computed total; no discount field (see FR-CRM-062 for the line-item-vs-Product gap) |
+| FR-CRM-041 | System shall support Quote status: Draft, Sent, Accepted, Rejected, Expired, with a validity date. | M | 🚧 full create/update lifecycle UI with a validity date; status enum is Draft/Sent/Accepted/Rejected — no "Expired" value exists |
+| FR-CRM-042 | System shall support exporting a Quote as a PDF using a company template. | S | 🚧 `GET /quotes/:id/export-pdf` generates a real PDF (`github.com/go-pdf/fpdf`) — line items, Deal/Company/Contact header, status, validity date — but it's a plain unbranded layout, not a company template |
+| FR-CRM-043 | System shall support a Contract record with status (Draft, Sent, Signed, Expired) attached to a Deal. | S | ✅ real per-Deal Contract store/API + a Contracts tab on the Deal detail page, optionally linked to one of the Deal's Quotes for pricing |
+| FR-CRM-044 | System shall support attaching signed documents (file upload) to a Contract. | M | ✅ `POST /contracts/:id/upload` sets the signed file + date and flips status to Signed |
+| FR-CRM-045 | System shall require a Contract be marked "Signed" before a Deal can be marked "Won" (configurable, not hard-enforced by default). | C | ⬜ not enforced anywhere — a Deal can move to Won regardless of Contract status |
 
 ### 3.6 Reporting & Dashboards
 
@@ -169,9 +169,9 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-051 | System shall calculate and display win rate (won ÷ (won + lost)) over a selectable date range. | M | ✅ dashboard's Time Period presets (This Month/Quarter/Year, Last 6/12 Months) and free-form date-range picker both drive the win rate stat |
 | FR-CRM-052 | System shall provide a revenue forecast (sum of open Deal value × probability) by month/quarter. | S | ⬜ (no probability field exists) |
 | FR-CRM-053 | System shall provide per-rep leaderboard: deals won, revenue closed, activities logged. | S | 🚧 "Team Performance" leaderboard shows won deal count, revenue closed, and win rate per rep; activity-logged count not included |
-| FR-CRM-054 | System shall provide a lead-source report showing conversion rate by source. | S | ⬜ |
-| FR-CRM-055 | System shall allow filtering all reports by date range, Sales Rep, and Company tag/segment. | S | 🚧 dashboard filters by date range (preset or custom), Business Unit (Project/Product), and Channel; filtering by Sales Rep or Company tag is not implemented |
-| FR-CRM-056 | System shall provide a report answering "which customers use Product X" and "which customers have a Project in status Y" (see §3.7). | S | 🚧 backend endpoint built (`GET /reports/customers-by-product-status`, Admin/Sales Manager only), no frontend page consumes it yet. Do not confuse with the dashboard's Business Unit/Project/Product filter (FR-CRM-055), which filters Deals by a lightweight tag field on the Deal itself, not a real CustomerProduct/Project relationship |
+| FR-CRM-054 | System shall provide a lead-source report showing conversion rate by source. | S | ✅ `pages/crm/reports/lead-source.vue`, backed by `GET /reports/lead-source-conversion` (Admin/Sales Manager only) |
+| FR-CRM-055 | System shall allow filtering all reports by date range, Sales Rep, and Company tag/segment. | S | ✅ the Dashboard and both new report pages now filter by date range, Sales Rep (`assigned_to`), and Company tag, alongside the Dashboard's existing Business Unit/Channel filters |
+| FR-CRM-056 | System shall provide a report answering "which customers use Product X" and "which customers have a Project in status Y" (see §3.7). | S | ✅ `pages/crm/reports/customer-product-status.vue`, backed by `GET /reports/customers-by-product-status` (Admin/Sales Manager only). Do not confuse with the dashboard's Business Unit/Project/Product filter, which filters Deals by a lightweight tag field on the Deal itself, not this real CustomerProduct/Project relationship |
 | FR-CRM-057 | System shall display average deal size and average sales cycle length (days from Deal creation to expected/actual close) for won Deals. | S | ✅ |
 | FR-CRM-058 | System shall display a pipeline coverage ratio (open pipeline value ÷ a configured sales quota/target) with an on-track/below-target indicator. | S | ✅ quota is a hardcoded constant (`QUARTERLY_SALES_TARGET`), not yet Admin-configurable |
 | FR-CRM-059 | System shall provide a trailing revenue trend chart (won revenue by month) and a win-rate breakdown segmented by customer industry. | S | ✅ |

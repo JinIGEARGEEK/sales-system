@@ -38,6 +38,11 @@
                   name="status"
                   rules="required"
                 />
+                <InputText v-model="form.legal_name" :label="t('crm.companies.detail.legalName')" name="legal_name" />
+                <InputText v-model="form.tax_id" :label="t('crm.companies.detail.taxId')" name="tax_id" />
+                <div class="md:col-span-2">
+                  <InputTextarea v-model="form.address" :label="t('crm.companies.detail.address')" name="address" />
+                </div>
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.notes" :label="t('crm.companies.detail.notes')" name="notes" />
                 </div>
@@ -359,6 +364,9 @@ const form = reactive({
   website: company.value?.website || '',
   tags: company.value?.tags.join(', ') || '',
   status: company.value?.status || 'active',
+  legal_name: company.value?.legal_name || '',
+  address: company.value?.address || '',
+  tax_id: company.value?.tax_id || '',
   notes: company.value?.notes || '',
 })
 
@@ -372,6 +380,9 @@ watch(company, (value) => {
   form.website = value.website
   form.tags = value.tags.join(', ')
   form.status = value.status
+  form.legal_name = value.legal_name || ''
+  form.address = value.address || ''
+  form.tax_id = value.tax_id || ''
   form.notes = value.notes
 }, { immediate: true })
 
@@ -385,6 +396,9 @@ const onSave = async () => {
       website: form.website,
       tags: parseTags(form.tags),
       status: form.status as ActiveArchivedStatus,
+      legal_name: form.legal_name || null,
+      address: form.address || null,
+      tax_id: form.tax_id || null,
       notes: form.notes,
     })
     success(t('crm.companies.detail.updateSuccess'))

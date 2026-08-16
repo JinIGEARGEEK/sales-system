@@ -10,6 +10,8 @@ export default {
     deals: 'Deals',
     projects: 'Projects/Products',
     tasks: 'Tasks',
+    reports: 'Reports',
+    trash: 'Trash',
   },
   logout: 'Logout',
   changePassword: 'Change Password',

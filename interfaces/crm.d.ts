@@ -8,6 +8,7 @@ type DealStatus = 'open' | 'won' | 'lost'
 type ActivityType = 'call' | 'email' | 'meeting'
 type ActivityRelatedType = 'contact' | 'company' | 'deal'
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+type ContractStatus = 'draft' | 'sent' | 'signed' | 'expired'
 type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other'
 type TaskStatus = 'pending' | 'done'
 // Shared by Task.related_type and Activity.related_type — both point at whichever
@@ -32,6 +33,11 @@ interface Company {
   tags: string[]
   notes: string
   status: ActiveArchivedStatus
+  // Registered-party details used on Contract PDF exports — optional since most
+  // Companies predate this field and a Contract can still render without them.
+  legal_name?: string | null
+  address?: string | null
+  tax_id?: string | null
   created_at: Date
   updated_at: Date
 }
@@ -64,8 +70,11 @@ interface Lead {
   status: LeadStatus
   notes: string
   assigned_to: number | null
+  tags?: string[] | null
   // Set once this Lead has been converted into a Deal (see Deal.lead_id) — null until then.
   converted_deal_id: number | null
+  // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
+  deleted_at?: Date | null
   created_at: Date
 }
 
@@ -82,8 +91,11 @@ interface Deal {
   channel: LeadSource
   business_unit: BusinessUnit | null
   business_unit_item: string | null
+  tags?: string[] | null
   // Set when this Deal was auto-created by converting a Lead — null for Deals created directly.
   lead_id: number | null
+  // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
+  deleted_at?: Date | null
   created_at: Date
 }
 
@@ -125,6 +137,19 @@ interface Quote {
   file_url?: string
   file_size?: number
   uploaded_at?: Date
+}
+
+// A Contract attached to a Deal — optionally linked to the Quote it prices from
+// (quote_id), tracked through draft/sent/signed/expired, with a signed-document
+// upload replacing e-signature (api-system-spec.md §8.1).
+interface Contract {
+  id: number
+  deal_id: number
+  quote_id: number | null
+  status: ContractStatus
+  signed_file_url: string | null
+  signed_date: Date | null
+  created_at: Date
 }
 
 // The company's fixed product catalog (api-system-spec.md §8.2).

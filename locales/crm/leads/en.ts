@@ -24,6 +24,7 @@ export default {
       delete: 'Delete',
     },
     deleteSuccess: 'Lead deleted successfully',
+    entityLabel: 'leads',
   },
   create: {
     pageTitle: 'Add Lead',

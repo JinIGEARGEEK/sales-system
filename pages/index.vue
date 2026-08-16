@@ -37,6 +37,19 @@
           name="channelFilter"
           class="w-36"
         />
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :placeholder="t('crm.dashboard.filterSalesRep')"
+          name="salesRepFilter"
+          class="w-44"
+        />
+        <InputText
+          v-model="companyTagFilter"
+          :placeholder="t('crm.dashboard.filterCompanyTagPlaceholder')"
+          name="companyTagFilter"
+          class="w-40"
+        />
         <UButton
           v-if="hasActiveFilters"
           icon="material-symbols:filter-alt-off-outline"
@@ -290,15 +303,28 @@ const PERIOD_PRESETS = computed(() => [
 
 const businessUnitFilter = ref('all')
 const channelFilter = ref('all')
+const salesRepFilter = ref('all')
+const companyTagFilter = ref('')
+
+const salesRepOptions = computed(() => [
+  { label: t('crm.dashboard.filterSalesRep'), value: 'all' },
+  ...teamMembersStore.options,
+])
 
 const hasActiveFilters = computed(() => {
-  return Boolean(dateRange.value) || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all'
+  return Boolean(dateRange.value)
+    || businessUnitFilter.value !== 'all'
+    || channelFilter.value !== 'all'
+    || salesRepFilter.value !== 'all'
+    || Boolean(companyTagFilter.value)
 })
 
 const clearFilters = () => {
   dateRange.value = null
   businessUnitFilter.value = 'all'
   channelFilter.value = 'all'
+  salesRepFilter.value = 'all'
+  companyTagFilter.value = ''
 }
 
 // Kept for the toolbar's "Showing X of Y deals" count and the "no deals match" alert
@@ -321,13 +347,21 @@ const fetchSummary = async () => {
       date_to: dateRange.value?.end,
       business_unit: businessUnitFilter.value !== 'all' ? businessUnitFilter.value : undefined,
       channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
+      assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
+      company_tag: companyTagFilter.value || undefined,
     },
   })
   summary.value = response.data.data
 }
 
 onMounted(fetchSummary)
-watch([dateRange, businessUnitFilter, channelFilter], fetchSummary)
+watch([dateRange, businessUnitFilter, channelFilter, salesRepFilter], fetchSummary)
+
+let companyTagDebounce: ReturnType<typeof setTimeout> | undefined
+watch(companyTagFilter, () => {
+  clearTimeout(companyTagDebounce)
+  companyTagDebounce = setTimeout(fetchSummary, 400)
+})
 
 const openPipelineValue = computed(() => summary.value?.open_pipeline_value ?? 0)
 const wonValue = computed(() => summary.value?.won_value ?? 0)

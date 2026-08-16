@@ -9,6 +9,27 @@ export default {
     disqualifiedLeadBadge: 'Lead ที่ถูกตัดสิทธิ์',
     leadConvertedToDeal: 'แปลง Lead เป็น Deal สำเร็จ',
     leadStatusUpdated: 'ย้าย Lead ไปยัง {status} แล้ว',
+    viewKanban: 'Kanban',
+    viewList: 'รายการ',
+    entityLabel: 'Deal',
+  },
+  table: {
+    searchPlaceholder: 'ค้นหาด้วยชื่อ Deal หรือบริษัท...',
+    columns: {
+      title: 'ชื่อ Deal',
+      company: 'บริษัท',
+      value: 'มูลค่า',
+      stage: 'ขั้นตอน',
+      assignedTo: 'ผู้รับผิดชอบ',
+      created: 'สร้างเมื่อ',
+      action: 'การดำเนินการ',
+    },
+    actions: {
+      viewDetail: 'ดูรายละเอียด',
+      edit: 'แก้ไข',
+      delete: 'ลบ',
+    },
+    deleteSuccess: 'ลบ Deal สำเร็จ',
   },
   create: {
     pageTitle: 'เพิ่ม Deal',
@@ -42,6 +63,7 @@ export default {
     tabs: {
       overview: 'ภาพรวม',
       quotes: 'ใบเสนอราคา',
+      contracts: 'สัญญา',
       payments: 'การชำระเงิน',
       tasks: 'งานติดตาม',
       activity: 'กิจกรรม',

@@ -24,6 +24,7 @@ export default {
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบ Lead สำเร็จ',
+    entityLabel: 'Lead',
   },
   create: {
     pageTitle: 'เพิ่ม Lead',

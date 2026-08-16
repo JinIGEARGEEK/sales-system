@@ -167,4 +167,29 @@ export default {
     contacts: 'Contacts',
     leads: 'Leads',
   },
+  // Shared by the Deals table and Leads list's "toggle bulk-select mode"
+  // button — both used to declare their own copy of this identical pair.
+  tableSelect: {
+    selectRows: 'Select',
+    cancelSelect: 'Cancel Selection',
+  },
+  bulkActionBar: {
+    selectedCount: '{count} {entity} selected',
+    reassign: 'Reassign',
+    reassignPlaceholder: 'Select team member',
+    reassignApply: 'Reassign',
+    reassignSuccess: '{count} {entity} reassigned',
+    tag: 'Tag',
+    tagPlaceholder: 'e.g. Tier 1, Priority',
+    tagModeAdd: 'Add to existing tags',
+    tagModeSet: 'Replace existing tags',
+    tagApply: 'Apply',
+    tagSuccess: 'Tags updated for {count} {entity}',
+    archive: 'Archive',
+    archiveConfirmTitle: 'Archive {count} {entity}?',
+    archiveConfirmBody: 'This will move {count} {entity} to Trash. You can restore them later.',
+    archiveConfirmButton: 'Archive',
+    archiveSuccess: '{count} {entity} archived',
+    cancel: 'Cancel',
+  },
 }

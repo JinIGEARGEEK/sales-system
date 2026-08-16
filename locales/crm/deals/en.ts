@@ -9,6 +9,27 @@ export default {
     disqualifiedLeadBadge: 'Disqualified Lead',
     leadConvertedToDeal: 'Lead converted to a Deal',
     leadStatusUpdated: 'Lead moved to {status}',
+    viewKanban: 'Kanban',
+    viewList: 'List',
+    entityLabel: 'deals',
+  },
+  table: {
+    searchPlaceholder: 'Search by title or company...',
+    columns: {
+      title: 'Title',
+      company: 'Company',
+      value: 'Value',
+      stage: 'Stage',
+      assignedTo: 'Assigned To',
+      created: 'Created',
+      action: 'Action',
+    },
+    actions: {
+      viewDetail: 'View Detail',
+      edit: 'Edit',
+      delete: 'Delete',
+    },
+    deleteSuccess: 'Deal deleted successfully',
   },
   create: {
     pageTitle: 'Add Deal',
@@ -42,6 +63,7 @@ export default {
     tabs: {
       overview: 'Overview',
       quotes: 'Quotes',
+      contracts: 'Contracts',
       payments: 'Payments',
       tasks: 'Tasks',
       activity: 'Activity',

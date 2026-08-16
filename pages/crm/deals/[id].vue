@@ -179,6 +179,85 @@
         />
       </div>
 
+      <div v-else-if="activeTab === 'contracts'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
+            <div class="flex gap-2">
+              <ButtonPrimary
+                :label="t('crm.contracts.detail.createContract')"
+                icon="material-symbols:add"
+                small
+                @click="addContractOpen = true"
+              />
+              <input
+                ref="contractFileInputRef"
+                type="file"
+                accept="application/pdf"
+                class="hidden"
+                @change="onContractFileSelected"
+              >
+            </div>
+          </div>
+
+          <div v-if="dealContracts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.contracts.detail.noContracts') }}
+          </div>
+          <div v-else class="flex flex-col gap-3">
+            <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
+              <div class="mb-2 flex items-center justify-between">
+                <UBadge color="neutral" variant="subtle">{{ contract.status }}</UBadge>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-[var(--color-gray)]">
+                    {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
+                  </span>
+                  <UButton
+                    icon="material-symbols:download"
+                    variant="ghost"
+                    color="neutral"
+                    size="xs"
+                    :aria-label="t('crm.contracts.detail.downloadPdf')"
+                    @click="onExportContractPdf(contract.id)"
+                  />
+                </div>
+              </div>
+
+              <div v-if="contract.signed_file_url" class="flex items-center justify-between gap-3 rounded-lg bg-[var(--color-light-gray-1)] p-3">
+                <div class="flex min-w-0 items-center gap-3">
+                  <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-[var(--color-danger-toast)]" />
+                  <p class="truncate text-sm font-medium">
+                    {{ contract.signed_date ? t('crm.contracts.detail.uploadedOn', { date: dateTimeFormat(contract.signed_date.toISOString()) }) : '-' }}
+                  </p>
+                </div>
+                <UButton
+                  :to="contract.signed_file_url"
+                  target="_blank"
+                  icon="material-symbols:open-in-new"
+                  variant="ghost"
+                  color="neutral"
+                  size="xs"
+                  :aria-label="t('crm.contracts.detail.viewDocument')"
+                />
+              </div>
+              <ButtonPrimary
+                v-else
+                :label="t('crm.contracts.detail.uploadSignedDocument')"
+                icon="material-symbols:upload-file-outline"
+                outline
+                small
+                @click="triggerContractUpload(contract.id)"
+              />
+            </div>
+          </div>
+        </ContainerTemplate>
+
+        <CrmAddContractModal
+          v-model:open="addContractOpen"
+          :quotes="dealQuotes"
+          @submit="onAddContract"
+        />
+      </div>
+
       <div v-else-if="activeTab === 'payments'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
@@ -337,6 +416,25 @@ const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
 const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
+// Shared by the Quotes and Contracts tabs' "Download PDF" buttons — both
+// export-pdf endpoints return a raw PDF byte stream, not JSON, and need the
+// same Authorization header every other API call gets, so it's fetched as a
+// blob via $api rather than a plain browser-navigated link.
+const downloadPdfBlob = async (path: string, filename: string) => {
+  try {
+    const { $api } = useNuxtApp()
+    const response = await $api.get(path, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
@@ -344,6 +442,7 @@ onMounted(() => {
   paymentsStore.fetchForDeal(dealId)
   activitiesStore.fetchForRelated('deal', dealId)
   quotesStore.fetchForDeal(dealId)
+  contractsStore.fetchForDeal(dealId)
   if (productsStore.items.length === 0) productsStore.fetchAll()
   attachmentsStore.fetchForRelated('deal', dealId)
 })
@@ -359,6 +458,7 @@ const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTas
 const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.deals.detail.tabs.quotes'), value: 'quotes' },
+  { label: t('crm.deals.detail.tabs.contracts'), value: 'contracts' },
   { label: t('crm.deals.detail.tabs.payments'), value: 'payments' },
   { label: dealOverdueTaskCount.value > 0 ? `${t('crm.deals.detail.tabs.tasks')} (${dealOverdueTaskCount.value})` : t('crm.deals.detail.tabs.tasks'), value: 'tasks' },
   { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
@@ -408,23 +508,7 @@ const onRemoveQuote = async (quote: Quote) => {
   await quotesStore.remove(quote.id)
 }
 
-// GET /quotes/:id/export-pdf returns a raw PDF byte stream, not JSON, and
-// needs the same Authorization header every other API call gets — so it's
-// fetched as a blob via $api rather than a plain browser-navigated link.
-const onExportQuotePdf = async (quoteId: number) => {
-  try {
-    const { $api } = useNuxtApp()
-    const response = await $api.get(`/quotes/${quoteId}/export-pdf`, { responseType: 'blob' })
-    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `quote-${quoteId}.pdf`
-    link.click()
-    URL.revokeObjectURL(url)
-  } catch {
-    error(t('global.genericError'))
-  }
-}
+const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)
 
 const addQuoteOpen = ref(false)
 
@@ -432,6 +516,54 @@ const onAddQuote = async (quote: { items: QuoteItem[], validity_date: Date | nul
   await quotesStore.add(dealId, quote)
   success(t('crm.deals.detail.createQuoteSuccess'))
 }
+
+const contractsStore = useContractsStore()
+const dealContracts = computed(() => contractsStore.forDeal(dealId))
+
+const addContractOpen = ref(false)
+
+const onAddContract = async (contract: { status: ContractStatus, quote_id?: number }) => {
+  try {
+    await contractsStore.add(dealId, contract)
+    success(t('crm.contracts.detail.createSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+// The signed-document upload is scoped to a specific Contract (POST /contracts/:id/upload),
+// not the Deal, so the hidden file input's target contract is tracked separately from
+// which button triggered it — mirrors the click-to-open-file-picker pattern used for Quotes.
+const pendingContractUploadId = ref<number | null>(null)
+const contractFileInputRef = ref<HTMLInputElement | null>(null)
+
+const triggerContractUpload = (contractId: number) => {
+  pendingContractUploadId.value = contractId
+  contractFileInputRef.value?.click()
+}
+
+const onContractFileSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  const contractId = pendingContractUploadId.value
+  input.value = ''
+  pendingContractUploadId.value = null
+  if (!file || !contractId) return
+
+  if (file.type !== 'application/pdf') {
+    error(t('crm.contracts.detail.invalidFileType'))
+    return
+  }
+  if (file.size > MAX_QUOTATION_FILE_SIZE) {
+    error(t('crm.contracts.detail.fileTooLarge'))
+    return
+  }
+
+  await contractsStore.upload(contractId, file)
+  success(t('crm.contracts.detail.uploadSuccess'))
+}
+
+const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
 
 const addPaymentOpen = ref(false)
 const dealPayments = computed(() => paymentsStore.forDeal(dealId))

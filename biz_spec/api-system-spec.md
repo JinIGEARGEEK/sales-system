@@ -139,7 +139,7 @@ Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) i
 |---|---|
 | **Admin** | Full access to every resource, including Users, Tags, and (once built) Product Catalog / pipeline config |
 | **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records |
-| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal reassignment |
+| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive), and trash/restore on Deals and Leads |
 | **Production (limited)** | Write access to *only* `status` and `production_reference` on `Project` records (§8.3) — no access to any other resource |
 
 Suggested enforcement: role on the JWT claims, checked server-side per route — not by trusting a client-sent role header.
@@ -209,10 +209,14 @@ interface Lead {
   status: LeadStatus
   notes: string
   assigned_to: number | null   // User.id
+  tags: string[] | null        // free-text array, same convention as Company/Contact.tags
   converted_deal_id: number | null   // Deal.id once converted, else null — see /leads/:id/convert
+  deleted_at?: string | null   // present only on GET /leads/trash rows
   created_at: string
 }
 ```
+
+`Lead` (and `Deal`, §7.1) soft-delete — `DELETE` sets `deleted_at`/`deleted_by` instead of removing the row, recoverable via `/trash` + `/:id/restore` below.
 
 | Method | Path | Status | Description |
 |---|---|---|---|
@@ -220,7 +224,12 @@ interface Lead {
 | `POST` | `/leads` | 🟢 | Create. |
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
 | `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). |
-| `DELETE` | `/leads/:id` | 🟢 | Delete. |
+| `DELETE` | `/leads/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`) — recoverable, see below. |
+| `GET` | `/leads/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Leads (same envelope as `GET /leads`). Backs `pages/admin/trash.vue`. |
+| `POST` | `/leads/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
+| `PATCH` | `/leads/bulk-reassign` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], assigned_to: number \| null}`. `FR-CRM-025`-adjacent bulk operation for the Leads table's multi-select. |
+| `PATCH` | `/leads/bulk-tag` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], tags: string[], mode: 'add' \| 'set'}` (`mode` defaults to `add`, which merges without duplicating). |
+| `PATCH` | `/leads/bulk-archive` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[]}`. Soft-deletes every id in one transaction. |
 | `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Sets the new Deal's `lead_id` and the Lead's `converted_deal_id` in the same transaction. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Lead has already been converted (`converted_deal_id` already set) — guards against a double-fire from the Kanban drag-to-convert flow (§7.1). This is now the **only** path that creates a Deal from a Lead: `pages/crm/deals/create.vue`'s manual "Convert to Deal" form (reached from the Leads list/detail page, letting a rep pick an existing Company/Contact instead of auto-creating new ones) also calls this endpoint rather than plain `POST /deals` — a bug fixed on 2026-08-16 where the manual form created a Deal referencing the Lead without ever marking the Lead converted, leaving it stuck showing "Convert" forever and duplicated on the pipeline board. |
 
 ---
@@ -241,6 +250,11 @@ interface Company {
   tags: string[]        // Tag.name values
   notes: string
   status: ActiveArchivedStatus
+  // Registered-party details, used on Contract PDF exports (§8.1) — optional,
+  // most Companies predate these fields.
+  legal_name?: string | null
+  address?: string | null
+  tax_id?: string | null
   created_at: string
   updated_at: string
 }
@@ -332,7 +346,9 @@ interface Deal {
   channel: LeadSource
   business_unit: BusinessUnit | null
   business_unit_item: string | null   // free-text label, e.g. specific product/project name
+  tags: string[] | null        // free-text array, same convention as Company/Contact.tags
   lead_id: number | null   // set when auto-created via /leads/:id/convert, else null
+  deleted_at?: string | null   // present only on GET /deals/trash rows
   created_at: string
 }
 ```
@@ -341,13 +357,18 @@ interface Deal {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/deals` | 🟢 | Filters: `stage`, `status`, `company_id`, `assigned_to`, `business_unit`, `channel`, `search` (title). Backs both `pages/crm/deals/index.vue` (Kanban) and the dashboard's `filteredDeals`. |
+| `GET` | `/deals` | 🟢 | Filters: `stage`, `status`, `company_id`, `assigned_to`, `business_unit`, `channel`, `search` (title). Backs `pages/crm/deals/index.vue`'s Kanban board **and** its List-view toggle (`components/Crm/DealsTable.vue`), plus the dashboard's `filteredDeals`. |
 | `POST` | `/deals` | 🟢 | Create. |
 | `GET` | `/deals/:id` | 🟢 | Single deal — `pages/crm/deals/[id].vue` Overview tab. |
 | `PUT` | `/deals/:id` | 🟢 | Full update. |
 | `PATCH` | `/deals/:id/stage` | 🟢 | Body: `{ stage: DealStage }`. Dedicated endpoint for the Kanban drag-and-drop (`CrmPipelineBoard`'s `@move`) so the backend can also update `status` (open/won/lost) and fire `FR-CRM-064`'s auto Customer-Product creation (§8.2) in one transaction when stage becomes `Won`. |
-| `DELETE` | `/deals/:id` | 🟢 | Delete. |
-| `PATCH` | `/deals/:id/reassign` | 🔜 | Body: `{ assigned_to: number }`. Separate from the general `PUT` so the backend can append to an owner-history log — `FR-CRM-025`/`M-8`, not built in the frontend yet. |
+| `DELETE` | `/deals/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`) — recoverable, see below. |
+| `PATCH` | `/deals/:id/reassign` | 🟢 | Admin/Sales Manager only. Body: `{ assigned_to: number \| null }`. Separate from the general `PUT` so a reassignment always writes its own `reassigned` audit-log entry (§8.5), regardless of what else changed. |
+| `GET` | `/deals/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Deals (same envelope as `GET /deals`). Backs `pages/admin/trash.vue`. |
+| `POST` | `/deals/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
+| `PATCH` | `/deals/bulk-reassign` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], assigned_to: number \| null}`. Backs the Deals List view's multi-select bulk toolbar. |
+| `PATCH` | `/deals/bulk-tag` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], tags: string[], mode: 'add' \| 'set'}` (`mode` defaults to `add`). |
+| `PATCH` | `/deals/bulk-archive` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[]}`. Soft-deletes every id in one transaction. |
 
 ### 7.2 Activities
 
@@ -480,7 +501,7 @@ interface Task {
 
 ## 8. Planned entities
 
-This section was originally written with nothing built on either side. That's no longer true for every subsection: §8.2 (Products/Customer-Products), §8.3 (Projects), and §8.5 (Audit log) now have real backend handlers **and** frontend pages/stores/interfaces consuming them — treat those as 🟢 **Required now**, kept here rather than moved up only to avoid re-plumbing every cross-reference into them. §8.1 (Contracts) and §8.4 (Reports) remain 🔜 **Planned** in full — no page, store, or interface for either exists in the frontend yet. They're specified here so the backend can be built ahead of or alongside the frontend work, per `feature-spec.md` §3.5/§3.7/§3.8. Do not treat their absence from the frontend today as "not needed" — `feature-spec.md` calls §3.7 (Products/Projects) "the core addition" to this CRM.
+This section was originally written with nothing built on either side. That's no longer true for any subsection: §8.1 (Contracts), §8.2 (Products/Customer-Products), §8.3 (Projects), §8.4 (Reports), and §8.5 (Audit log) all now have real backend handlers **and** frontend pages/stores/interfaces consuming them — treat all of §8 as 🟢 **Built**, kept under "Planned entities" only to avoid re-plumbing every cross-reference into an earlier section. See `feature-spec.md` §3.5/§3.6/§3.7/§3.8 for the corresponding requirement-level status.
 
 ### 8.1 Contracts (`FR-CRM-043`–`045`)
 
@@ -490,6 +511,8 @@ type ContractStatus = 'draft' | 'sent' | 'signed' | 'expired'
 interface Contract {
   id: number
   deal_id: number
+  // Optional — links the Contract to the Quote its PDF export prices from.
+  quote_id: number | null
   status: ContractStatus
   signed_file_url: string | null
   signed_date: string | null
@@ -499,9 +522,12 @@ interface Contract {
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/deals/:dealId/contracts` | List. |
-| `POST` | `/deals/:dealId/contracts` | Create. |
-| `PUT` | `/contracts/:id` | Update status. |
-| `POST` | `/contracts/:id/upload` | Upload the signed document (§6.1) → sets `signed_file_url`/`signed_date`. |
+| `POST` | `/deals/:dealId/contracts` | Create. Body: `{status?, quote_id?}`. |
+| `PUT` | `/contracts/:id` | Update. Body: `{status?, quote_id?}`. |
+| `POST` | `/contracts/:id/upload` | Upload the signed document (§6.1) → sets `signed_file_url`/`signed_date`, flips status to `signed`. |
+| `GET` | `/contracts/:id/export-pdf` | 🟢 — returns a generated PDF (`github.com/go-pdf/fpdf`, same renderer as the Quote export): party details (Company `legal_name`/`address`/`tax_id`, Contact name/role), Deal info, the linked Quote's line items/total (if `quote_id` is set), status, signed date, and a signature-line placeholder. Read-only, same access level as List (no `CanWrite` check). |
+
+Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id].vue`), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes).
 
 ### 8.2 Product Catalog & Customer-Product tracking (`FR-CRM-060`–`066`)
 
@@ -567,12 +593,12 @@ Do **not** add sub-resources for tasks/sprints/milestones under `/projects/:id` 
 
 ### 8.4 Reports (`FR-CRM-054`, `056`)
 
-Two report shapes the frontend dashboard doesn't compute today because the underlying data (lead-source conversion, product/project status) doesn't exist yet:
+Both report endpoints are Admin/Sales-Manager only (`RequireRoles`) and have real frontend pages under `pages/crm/reports/` (a small landing page linking to each, gated the same way):
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/reports/lead-source-conversion` | Conversion rate by `Lead.source` (`FR-CRM-054`). |
-| `GET` | `/reports/customers-by-product-status?product_id=&status=` | "Which customers use Product X" / "have a Project in status Y" (`FR-CRM-056`) — do not confuse with the `business_unit`/`channel` filters in §9, which are lightweight Deal tags, not this real relationship query. |
+| `GET` | `/reports/lead-source-conversion?assigned_to=&date_from=&date_to=` | Conversion rate by `Lead.source` (`FR-CRM-054`). `assigned_to`/date-range filters are `FR-CRM-055`. No `company_tag` filter — `Lead` has no Company foreign key (only a free-text `company_name`), so tag-filtering by company doesn't apply here. |
+| `GET` | `/reports/customers-by-product-status?product_id=&status=&company_tag=` | "Which customers use Product X" / "have a Project in status Y" (`FR-CRM-056`) — do not confuse with the `business_unit`/`channel` filters in §9, which are lightweight Deal tags, not this real relationship query. `company_tag` (`FR-CRM-055`) filters to Companies whose `tags` array contains the given value. |
 
 ### 8.5 Audit log (`FR-CRM-082`)
 
@@ -636,7 +662,7 @@ Exactly one of `file_url`/`external_url` must be present on every row — reject
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`. Returns every stat card + chart the page renders in one response (shape below). |
+| `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`, `assigned_to` (Sales Rep user id, `FR-CRM-055`), `company_tag` (`FR-CRM-055`). Returns every stat card + chart the page renders in one response (shape below). |
 
 Response shape (one object covering every widget on `pages/index.vue`):
 

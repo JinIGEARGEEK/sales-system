@@ -1,8 +1,10 @@
-// Real API-backed store. Lead delete is a *hard* delete (§3 of api-system-spec.md) —
-// unlike Company/Contact, so a successful DELETE splices the record out of `items`.
+// Real API-backed store. Lead delete is a *soft* delete — DELETE /leads/:id sets
+// deleted_at and splices the record out of `items`, but it stays recoverable via
+// GET /leads/trash + POST /leads/:id/restore (see trashItems below).
 const parseDates = (lead: Lead): Lead => ({
   ...lead,
   created_at: new Date(lead.created_at),
+  deleted_at: lead.deleted_at ? new Date(lead.deleted_at) : lead.deleted_at,
 })
 
 export const useLeadsStore = defineStore('leads', {
@@ -10,6 +12,11 @@ export const useLeadsStore = defineStore('leads', {
     items: [] as Lead[],
     total: 0,
     page: 1,
+    // Trash (soft-deleted rows) is kept fully separate from `items` so the
+    // regular list is never polluted by deleted_at-set records.
+    trashItems: [] as Lead[],
+    trashTotal: 0,
+    trashPage: 1,
   }),
   actions: {
     async fetchAll (params?: Record<string, unknown>) {
@@ -42,6 +49,7 @@ export const useLeadsStore = defineStore('leads', {
       await $api.delete(`/leads/${id}`)
       this.items = this.items.filter(l => l.id !== id)
     },
+    ...createBulkResourceActions<Lead>('/leads', parseDates),
     async convert (id: number, payload: { company_id?: number, contact_id?: number, deal: Partial<Deal> & { title: string, value: number, stage: DealStage } }): Promise<{ deal: Deal, company: Company, contact: Contact }> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<{ deal: Deal, company: Company, contact: Contact }>>(`/leads/${id}/convert`, payload)
