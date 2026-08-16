@@ -76,7 +76,7 @@
       </CrmStatCard>
     </div>
 
-    <div class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <CrmStatCard :label="t('crm.dashboard.avgDealSize')">
         {{ priceFormat(avgDealSize) }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.currencyUnit') }}</span>
       </CrmStatCard>
@@ -95,7 +95,7 @@
       </CrmStatCard>
     </div>
 
-    <div class="mb-8">
+    <div class="mb-4">
       <UCard class="ring-[var(--color-card-border)]">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.revenueTrend') }}</h3>
@@ -119,7 +119,7 @@
       </UCard>
     </div>
 
-    <div class="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-5">
+    <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
         <UCard class="ring-[var(--color-card-border)]">
           <template #header>
@@ -166,7 +166,7 @@
       </div>
     </div>
 
-    <div class="mb-8">
+    <div class="mb-4">
       <UCard class="ring-[var(--color-card-border)]">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.upcomingFollowUps') }}</h3>

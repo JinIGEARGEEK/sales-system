@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <div class="mt-6">
+        <div class="mt-4">
           <div class="mb-1 flex items-center justify-between">
             <h3 class="text-base font-semibold">{{ t('crm.companies.create.contactsHeading') }}</h3>
             <ButtonPrimary

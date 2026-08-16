@@ -7,6 +7,7 @@ interface ProjectSavePayload {
   target_end_date?: Date | null
   notes?: string
   company_id?: number
+  deal_id?: number | null
 }
 
 // Shared by the Company detail page's Projects tab and the cross-company
@@ -43,7 +44,7 @@ export const useProjectModal = (defaultCompanyId: number | null, addedMessageKey
       } else {
         const companyId = payload.company_id ?? defaultCompanyId
         await projectsStore.add(companyId!, {
-          deal_id: null,
+          deal_id: payload.deal_id ?? null,
           start_date: new Date(),
           name: payload.name!,
           target_end_date: payload.target_end_date ?? null,

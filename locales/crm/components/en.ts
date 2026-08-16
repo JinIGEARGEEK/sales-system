@@ -90,6 +90,8 @@ export default {
     editTitle: 'Edit Project',
     company: 'Company',
     companyPlaceholder: 'Select a company',
+    deal: 'Deal (optional)',
+    dealPlaceholder: 'Link to a Deal',
     name: 'Project Name',
     status: 'Status',
     productionReference: 'Production Reference',

@@ -90,6 +90,8 @@ export default {
     editTitle: 'แก้ไข Project',
     company: 'บริษัท',
     companyPlaceholder: 'เลือกบริษัท',
+    deal: 'Deal (ไม่บังคับ)',
+    dealPlaceholder: 'เชื่อมโยงกับ Deal',
     name: 'ชื่อ Project',
     status: 'สถานะ',
     productionReference: 'Production Reference',

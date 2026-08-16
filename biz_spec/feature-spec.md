@@ -3,11 +3,11 @@
 **Project codename:** IGearGeek Sales CRM
 **Document type:** Software Requirements Specification (SRS)
 **Prepared for:** Build with Claude Code
-**Version:** 2.3 (adds Thai role/use-case summary; reflects Tasks/Follow-ups now built)
-**Date:** 2026-08-14
+**Version:** 2.4 (reflects unified Lead/Deal pipeline, Product Catalog/CustomerProduct/Project tracking, RBAC enforcement, and Attachments now built)
+**Date:** 2026-08-16
 **Companion doc:** `api-system-spec.md` translates the requirements below into the concrete backend API contract for a separate backend repo — cross-check both before implementing a new resource so the two never drift apart.
 
-> **Implementation status (as of 2026-08-14):** Every requirement below now carries a **Status** column reflecting what actually exists in the codebase (`pages/`, `constants/mockData/`, `stores/`), not just what's specified. Legend: ✅ Built · 🚧 Partial (some but not all of the requirement) · ⬜ Not built. This reflects a still-early build — Lead/Deal/Company/Contact CRUD (Companies/Contacts now backed by real Pinia stores, not static mock copies), the Kanban pipeline, per-Deal payment tracking (§3.3), per-Deal/Contact/Company follow-up Tasks with a dedicated all-tasks view (§3.4), a now-filterable sales dashboard (win rate, revenue trend, pipeline coverage, per-rep leaderboard), and a working Company/Contact bulk-import flow from a specific FlowAccount export format exist; Quotes/Contracts/Product Catalog/Project tracking (§3.5, §3.7), RBAC enforcement, and audit logging do not exist yet. See §9 for the full gap summary.
+> **Implementation status (as of 2026-08-16):** Every requirement below now carries a **Status** column reflecting what actually exists in the codebase (`pages/`, `constants/mockData/`, `stores/`), not just what's specified. Legend: ✅ Built · 🚧 Partial (some but not all of the requirement) · ⬜ Not built. Lead/Deal/Company/Contact CRUD, the unified Kanban pipeline (Leads and Deals both render as cards, with drag-to-convert), per-Deal payment tracking (§3.3), per-Deal/Contact/Company follow-up Tasks (§3.4), a filterable sales dashboard, Quotes (a real per-Deal store), Product Catalog + Customer↔Product tracking + Project tracking (§3.7), real backend RBAC enforcement (role-gated routes via `RequireRoles`), Lead/Deal/Company Attachments (§3.9), and Company/Contact bulk import all now exist. Contracts (§3.5), Admin-side pipeline/tag/product configurability (§3.8), full audit logging beyond Deal stage/reassign changes, and CSV export remain unbuilt. See §9 for the full gap summary.
 
 ---
 
@@ -22,7 +22,7 @@
 | **แอดมิน (Admin)** | จัดการบัญชีผู้ใช้งานทั้งหมด กำหนดสิทธิ์การเข้าถึง และ (ในอนาคต) ตั้งค่าระบบ เช่น ขั้นตอน Pipeline, Tag, Product Catalog |
 | **เซลล์ / ผู้ดูแลลูกค้า (Sales Rep / Account Manager)** | ดูแล Lead, Deal, บริษัท และผู้ติดต่อของตนเอง บันทึกการชำระเงินแต่ละงวด สร้างและติดตามงาน (Tasks) ที่ผูกกับ Deal/ผู้ติดต่อ/บริษัท |
 | **หัวหน้าทีมขาย (Sales Manager)** | ดูภาพรวม Pipeline และผลงานของทั้งทีมผ่าน Dashboard, มอบหมาย/โยกย้าย Deal ระหว่างเซลล์, ติดตามงานที่เกินกำหนดของทั้งทีม |
-| **ทีม Production (สิทธิ์จำกัด)** | ยังไม่ได้เป็นผู้ใช้งานเต็มรูปแบบของระบบนี้ — มีหน้าที่เพียงอัปเดตสถานะของ Project ที่เชื่อมกับ Deal เมื่อฟีเจอร์นี้ถูกสร้างขึ้น (ดู §3.7 — ยังไม่ได้พัฒนา) |
+| **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะและ Production Reference ของ Project ที่เชื่อมกับ Deal ของบริษัทลูกค้า (ดู §3.7 — พัฒนาแล้ว) |
 
 ### กรณีการใช้งานจริง (Use Cases) — อ้างอิงจากฟีเจอร์ที่สร้างเสร็จแล้ว
 
@@ -46,7 +46,7 @@
 3. ดู Leaderboard ผลงานรายบุคคลของทีมเซลล์ พร้อมรายชื่อบัญชีลูกค้าที่ไม่ได้ติดต่อมานาน (โอกาส Upsell)
 4. ค้นหา Deal, บริษัท, ผู้ติดต่อ หรือ Lead ที่ต้องการจากช่องค้นหาส่วนกลางด้านบนของทุกหน้า
 
-> หมายเหตุ: กรณีการใช้งานที่เกี่ยวกับ Quote/Contract และ Product/Project Tracking (ตาม §3.5, §3.7) ยังไม่สามารถใช้งานได้จริงในระบบปัจจุบัน เนื่องจากยังไม่ได้พัฒนา — ดูรายละเอียดที่ §9
+> หมายเหตุ: Product/Project Tracking (§3.7) และ Quote (§3.5) ใช้งานได้จริงแล้วในระบบปัจจุบัน ส่วน Contract (§3.5) ยังไม่ได้พัฒนา — ดูรายละเอียดที่ §9
 
 ---
 
@@ -124,7 +124,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-012 | System shall support multiple Contacts per Company, with one marked as "Primary." | M | 🚧 multiple contacts per company work; explicit "Primary" flag not confirmed |
 | FR-CRM-013 | System shall allow tagging/segmenting Companies and Contacts (e.g., by industry, tier, product interest). | S | ✅ |
 | FR-CRM-014 | System shall support bulk import of Contacts/Companies via CSV, with duplicate detection by email/domain. | C | 🚧 built for a specific FlowAccount export format (CSV/XLS/XLSX, not CSV-only), via `CrmImportContactsModal`; duplicate detection is by company **name**, not email/domain |
-| FR-CRM-015 | System shall show a unified profile page per Company: contacts, deals (open/won/lost), communication timeline, quotes, contracts, tasks, **Products in use, and Projects (past and current)** — see §3.7. | M | 🚧 contacts, deals, and activity feed shown; quotes/contracts/tasks/Products/Projects not shown |
+| FR-CRM-015 | System shall show a unified profile page per Company: contacts, deals (open/won/lost), communication timeline, quotes, contracts, tasks, **Products in use, and Projects (past and current)** — see §3.7. | M | 🚧 contacts, deals, activity feed, Tasks, Products, and Projects tabs all shown; Quotes and Contracts are still Deal-scoped only, not rolled up onto the Company page |
 
 ### 3.3 Pipeline & Deal Management
 
@@ -171,7 +171,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-053 | System shall provide per-rep leaderboard: deals won, revenue closed, activities logged. | S | 🚧 "Team Performance" leaderboard shows won deal count, revenue closed, and win rate per rep; activity-logged count not included |
 | FR-CRM-054 | System shall provide a lead-source report showing conversion rate by source. | S | ⬜ |
 | FR-CRM-055 | System shall allow filtering all reports by date range, Sales Rep, and Company tag/segment. | S | 🚧 dashboard filters by date range (preset or custom), Business Unit (Project/Product), and Channel; filtering by Sales Rep or Company tag is not implemented |
-| FR-CRM-056 | System shall provide a report answering "which customers use Product X" and "which customers have a Project in status Y" (see §3.7). | S | ⬜ still not built — see note below. Do not confuse with the dashboard's Business Unit/Project/Product filter (FR-CRM-055), which filters Deals by a lightweight tag field on the Deal itself, not a real CustomerProduct/Project relationship |
+| FR-CRM-056 | System shall provide a report answering "which customers use Product X" and "which customers have a Project in status Y" (see §3.7). | S | 🚧 backend endpoint built (`GET /reports/customers-by-product-status`, Admin/Sales Manager only), no frontend page consumes it yet. Do not confuse with the dashboard's Business Unit/Project/Product filter (FR-CRM-055), which filters Deals by a lightweight tag field on the Deal itself, not a real CustomerProduct/Project relationship |
 | FR-CRM-057 | System shall display average deal size and average sales cycle length (days from Deal creation to expected/actual close) for won Deals. | S | ✅ |
 | FR-CRM-058 | System shall display a pipeline coverage ratio (open pipeline value ÷ a configured sales quota/target) with an on-track/below-target indicator. | S | ✅ quota is a hardcoded constant (`QUARTERLY_SALES_TARGET`), not yet Admin-configurable |
 | FR-CRM-059 | System shall provide a trailing revenue trend chart (won revenue by month) and a win-rate breakdown segmented by customer industry. | S | ✅ |
@@ -180,42 +180,42 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 
 This is the core addition that makes the CRM follow the **real, ongoing relationship** with each customer, not just the sales pipeline up to Won/Lost. It stays intentionally lightweight (status + dates + reference), so it does not duplicate the Production team's own detailed execution system.
 
-> **Status: ⬜ Not built.** No Product Catalog, CustomerProduct, or Project entity/page exists anywhere in the codebase. The Deal detail page's "Create Project" action is a disabled placeholder modal stating the module "will be enabled in a later phase" (ref FR-INT-001 in the mock copy) — this entire §3.7 is still greenfield.
+> **Status: ✅ Built.** Product Catalog (`stores/products.ts`), CustomerProduct (`stores/customerProducts.ts`, Company detail page's Products tab), and Project (`stores/projects.ts`, `pages/crm/projects/index.vue`, Company detail page's Projects tab) all exist and are wired up. The Deal detail page's "Create Project" action (shown after marking a Deal Won) creates a real Project linked to that Deal's `company_id`/`deal_id` via `CrmAddProjectModal`. The standalone Projects list and the Company detail Projects tab can also link a new Project to an existing Deal via an optional Deal picker in the same modal.
 
 **Product Catalog**
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-060 | System shall maintain a Product Catalog (id, name, category, description, active flag) representing the products/services IGearGeek offers. | M | ⬜ |
-| FR-CRM-061 | Any authenticated role shall be able to create/edit/deactivate Product Catalog entries. | M | ⬜ |
-| FR-CRM-062 | Quote line items (§3.5) shall reference a Product from the catalog rather than free-text, where possible. | S | ⬜ |
+| FR-CRM-060 | System shall maintain a Product Catalog (id, name, category, description, active flag) representing the products/services IGearGeek offers. | M | ✅ |
+| FR-CRM-061 | Any authenticated role shall be able to create/edit/deactivate Product Catalog entries. | M | 🚧 create + deactivate built; no edit action wired in the store/UI |
+| FR-CRM-062 | Quote line items (§3.5) shall reference a Product from the catalog rather than free-text, where possible. | S | ⬜ Quote line items are still free-text |
 
 **Customer ↔ Product tracking**
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-063 | System shall track, per Company, which Products they are associated with via a Customer-Product record: Product, status (Interested, Trial, Active, Churned), start date, end date (nullable), and the source Deal (if any). | M | ⬜ |
-| FR-CRM-064 | When a Deal is marked "Won," the system shall automatically create/update Customer-Product records for each Product on the Deal's Quote, setting status to "Active." | M | ⬜ |
-| FR-CRM-065 | Sales/Admin shall be able to manually add, edit, or change the status of a Customer-Product record independent of any Deal (e.g., marking a product "Churned" after a renewal is lost). | M | ⬜ |
-| FR-CRM-066 | The Company profile page shall list all Products currently and previously associated with that customer, with status and dates. | M | ⬜ |
+| FR-CRM-063 | System shall track, per Company, which Products they are associated with via a Customer-Product record: Product, status (Interested, Trial, Active, Churned), start date, end date (nullable), and the source Deal (if any). | M | ✅ |
+| FR-CRM-064 | When a Deal is marked "Won," the system shall automatically create/update Customer-Product records for each Product on the Deal's Quote, setting status to "Active." | M | 🚧 auto Customer-Product creation on Won exists per backend `deals.go`'s stage-change hook; tying it to specific Products on the Deal's Quote is unconfirmed |
+| FR-CRM-065 | Sales/Admin shall be able to manually add, edit, or change the status of a Customer-Product record independent of any Deal (e.g., marking a product "Churned" after a renewal is lost). | M | ✅ |
+| FR-CRM-066 | The Company profile page shall list all Products currently and previously associated with that customer, with status and dates. | M | ✅ |
 
 **Customer ↔ Project tracking**
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-067 | System shall track, per Company, one or more Project records: name, optional linked Deal, status (Not Started, In Progress, On Hold, Completed, Cancelled), start date, target end date, and an optional Production Reference (free-text ID and/or URL pointing into Production's own system). | M | ⬜ |
-| FR-CRM-068 | System shall allow creating a Project record manually, or prompting to create one when a Deal is marked "Won." | M | ⬜ placeholder modal only, non-functional |
-| FR-CRM-069 | The Project's status/reference fields shall be editable by Sales/Admin by default; automatic sync from Production's system via webhook/API is a later-phase stretch goal, not part of this spec. | S | ⬜ |
-| FR-CRM-070 | The Company profile page shall list all Projects (past and current) for that customer, sorted by most recent, each showing status and the Production Reference link if present. | M | ⬜ |
+| FR-CRM-067 | System shall track, per Company, one or more Project records: name, optional linked Deal, status (Not Started, In Progress, On Hold, Completed, Cancelled), start date, target end date, and an optional Production Reference (free-text ID and/or URL pointing into Production's own system). | M | ✅ |
+| FR-CRM-068 | System shall allow creating a Project record manually, or prompting to create one when a Deal is marked "Won." | M | ✅ |
+| FR-CRM-069 | The Project's status/reference fields shall be editable by Sales/Admin by default; automatic sync from Production's system via webhook/API is a later-phase stretch goal, not part of this spec. | S | ✅ manual edit only, as specified — no webhook sync (not required) |
+| FR-CRM-070 | The Company profile page shall list all Projects (past and current) for that customer, sorted by most recent, each showing status and the Production Reference link if present. | M | ✅ |
 | FR-CRM-071 | This system shall NOT model Tasks, Sprints, Milestones, Backlogs, or Feature Requests as first-class entities. A Project here is a summary record for Sales visibility, not a delivery management tool — detailed execution belongs entirely to Production's own system. | M | ✅ trivially true — no such entities exist |
 
 ### 3.8 Admin & System Settings
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-080 | System shall support role-based access control per §2.2 roles, configurable per user. | M | ⬜ `role` is a display field only; `middleware/auth.global.ts` checks login state, not role — no permission enforcement anywhere |
-| FR-CRM-081 | System shall allow Admin to customize pipeline stages, Lead sources, tags, Product Catalog, and custom fields on Deal/Company/Contact. | S | ⬜ stages/sources are hardcoded constants in `constants/mockData/deals.ts` |
-| FR-CRM-082 | System shall maintain an audit log of key record changes (who changed what, when), at minimum for Deal stage changes, Won/Lost status, and Project/Product status changes. | S | ⬜ a `/admin/activity-log` page exists showing a static mock activity feed (signups, orders, system/payment events), but it is unrelated UI chrome — it does not log real Deal/Won-Lost/Project-Product changes, so this requirement is still not built |
+| FR-CRM-080 | System shall support role-based access control per §2.2 roles, configurable per user. | M | ✅ backend `internal/middleware/auth.go`'s `RequireRoles` gates specific routes (deal reassign, project creation, attachments, reports) by role; frontend mirrors this via `useRole`/`hasRole` to hide actions the backend would reject. Not user-configurable — roles are fixed per §2.2, not admin-defined |
+| FR-CRM-081 | System shall allow Admin to customize pipeline stages, Lead sources, tags, Product Catalog, and custom fields on Deal/Company/Contact. | S | ⬜ stages/sources are hardcoded constants in `constants/mockData/deals.ts`; Product Catalog itself is manageable (§3.7) but not from an Admin config screen |
+| FR-CRM-082 | System shall maintain an audit log of key record changes (who changed what, when), at minimum for Deal stage changes, Won/Lost status, and Project/Product status changes. | S | 🚧 `internal/utils/auditlog.go`'s `SaveWithAudit` writes a real audit row for Deal stage changes and reassignment; Project/Product status changes aren't wired to it yet, and there's no frontend view of this log — the `/admin/activity-log` page is still a separate static mock feed unrelated to this table |
 | FR-CRM-083 | System shall support data export (CSV) for Companies, Contacts, Deals, Products, and Projects. | C | ⬜ |
 | FR-CRM-084 | System shall support email notification integration (SMTP) at minimum; Slack/Line webhook is a stretch goal. | S | ⬜ `useNotify` only drives in-app toasts, no outbound email/SMTP/webhook |
 
@@ -227,12 +227,12 @@ A generic attachment mechanism for the working documents Sales/Production actual
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-CRM-085 | System shall allow uploading one or more file attachments to a Lead, Deal, Company, or Project, each tagged with a category: Quotation, Proposal, Estimation, Plan, Support Info, or Other. | M | ⬜ |
-| FR-CRM-086 | Accepted attachment types shall be PDF, image (PNG/JPG), and spreadsheet (XLSX/XLS/CSV), capped at 10 MB per file (same limit as §6.1's existing upload convention). | M | ⬜ |
-| FR-CRM-087 | System shall also accept an external link (e.g. a Google Sheets/Docs/Drive URL) in place of an uploaded file, since those formats are shared by link rather than downloaded/re-uploaded as a binary. | M | ⬜ |
-| FR-CRM-088 | The record's detail page shall list all attachments (file/link name, category, uploader, uploaded date) with download (for uploaded files) or open-link (for external links) actions. | M | ⬜ |
-| FR-CRM-089 | Only the Sales Rep/Sales Manager/Admin roles shall be able to upload or delete an attachment; any role that can already view the parent Lead/Deal/Company/Project may view and download its attachments. | M | ⬜ |
-| FR-CRM-090 | When a Lead is converted into a Deal (FR-CRM-004), any attachments on that Lead shall be carried over to the resulting Deal rather than left behind on the now-converted Lead record. | M | ⬜ |
+| FR-CRM-085 | System shall allow uploading one or more file attachments to a Lead, Deal, Company, or Project, each tagged with a category: Quotation, Proposal, Estimation, Plan, Support Info, or Other. | M | ✅ Lead/Company/Deal detail pages; Project not wired to an Attachments tab yet |
+| FR-CRM-086 | Accepted attachment types shall be PDF, image (PNG/JPG), and spreadsheet (XLSX/XLS/CSV), capped at 10 MB per file (same limit as §6.1's existing upload convention). | M | ✅ |
+| FR-CRM-087 | System shall also accept an external link (e.g. a Google Sheets/Docs/Drive URL) in place of an uploaded file, since those formats are shared by link rather than downloaded/re-uploaded as a binary. | M | ✅ |
+| FR-CRM-088 | The record's detail page shall list all attachments (file/link name, category, uploader, uploaded date) with download (for uploaded files) or open-link (for external links) actions. | M | ✅ via `components/Crm/AttachmentList.vue` |
+| FR-CRM-089 | Only the Sales Rep/Sales Manager/Admin roles shall be able to upload or delete an attachment; any role that can already view the parent Lead/Deal/Company/Project may view and download its attachments. | M | ✅ enforced server-side (`internal/routes/routes.go`'s attachments route group) |
+| FR-CRM-090 | When a Lead is converted into a Deal (FR-CRM-004), any attachments on that Lead shall be carried over to the resulting Deal rather than left behind on the now-converted Lead record. | M | ✅ handled inside the same transaction as `POST /leads/:id/convert` |
 
 > Deleting an attachment (FR-CRM-089) removes only its metadata row — the underlying file in object storage is not scrubbed. Orphaned-file cleanup is out of scope for v1, consistent with how uploads are handled elsewhere in this spec (§6.1).
 
@@ -325,14 +325,14 @@ Note: `Product`, `CustomerProduct`, and `Project` are kept deliberately summary-
 
 ---
 
-## 9. Implementation Gap Summary (2026-08-14)
+## 9. Implementation Gap Summary (2026-08-16)
 
 What actually exists today vs. what §3 specifies, at a glance:
 
-**✅ Built:** Lead CRUD + status + Lead→Deal conversion, either as a manual action or automatically by dragging a Lead card past "Qualified" on the unified Deals Pipeline board where unconverted Leads and Deals now render side by side (§3.1, §3.3, FR-CRM-004/022); Company/Contact CRUD + tags (§3.2), now backed by real Pinia stores (`stores/companies.ts`/`stores/contacts.ts`) shared across every page instead of static per-page mock copies; Deal CRUD, Kanban pipeline, multiple deals per company, and per-Deal Payment tracking (record installments, live total-paid/remaining-balance) via `stores/payments.ts` and `components/Crm/AddPaymentModal.vue` (§3.3, FR-CRM-027/028); activity timeline display (§3.4); Tasks/Follow-ups (§3.4, FR-CRM-032) via `stores/tasks.ts` — per-Deal/Contact/Company Tasks tabs, a dedicated all-tasks page (`/crm/tasks`) with status/assignee filters and bulk mark-done/reassign, a confirm-before-marking-done dialog, and an auto-created "Schedule kickoff call" follow-up task whenever a Deal is marked Won; pipeline dashboard with win rate over a selectable date range, average deal size/sales cycle, pipeline coverage vs. quota, a trailing revenue trend chart, win-rate-by-industry breakdown, an "Upcoming Follow-ups" task widget, and filtering by date range/Business Unit (Project or Product)/Channel (§3.6, FR-CRM-050/051/057/058/059, and part of FR-CRM-055); a global cross-entity search (Deals/Companies/Contacts/Leads) in the top nav; Staff/user account CRUD and login (§3.8 account management only).
+**✅ Built:** Lead CRUD + status + Lead→Deal conversion, either as a manual action or automatically by dragging a Lead card past "Qualified" on the unified Deals Pipeline board where unconverted Leads and Deals now render side by side (§3.1, §3.3, FR-CRM-004/022); Company/Contact CRUD + tags (§3.2), now backed by real Pinia stores (`stores/companies.ts`/`stores/contacts.ts`) shared across every page instead of static per-page mock copies; Deal CRUD, Kanban pipeline, multiple deals per company, and per-Deal Payment tracking (record installments, live total-paid/remaining-balance) via `stores/payments.ts` and `components/Crm/AddPaymentModal.vue` (§3.3, FR-CRM-027/028); activity timeline display (§3.4); Tasks/Follow-ups (§3.4, FR-CRM-032) via `stores/tasks.ts` — per-Deal/Contact/Company Tasks tabs, a dedicated all-tasks page (`/crm/tasks`) with status/assignee filters and bulk mark-done/reassign, a confirm-before-marking-done dialog, and an auto-created "Schedule kickoff call" follow-up task whenever a Deal is marked Won; pipeline dashboard with win rate over a selectable date range, average deal size/sales cycle, pipeline coverage vs. quota, a trailing revenue trend chart, win-rate-by-industry breakdown, an "Upcoming Follow-ups" task widget, and filtering by date range/Business Unit (Project or Product)/Channel (§3.6, FR-CRM-050/051/057/058/059, and part of FR-CRM-055); a global cross-entity search (Deals/Companies/Contacts/Leads) in the top nav; Staff/user account CRUD and login (§3.8 account management only); Quotes as a real per-Deal store (`stores/quotes.ts`, §3.5); Product Catalog, Customer↔Product tracking, and Project tracking all built and linked from both the Company profile and the Deal-Won flow (§3.7 in full, FR-CRM-060/061/063/065/066/067/068/069/070 — see §3.7 for the couple of partials within it); real backend RBAC enforcement via `RequireRoles` route middleware, mirrored in the frontend (FR-CRM-080); Lead/Company/Deal file & external-link Attachments, including carrying them over on Lead→Deal conversion (§3.9, FR-CRM-085–090).
 
-**🚧 Partial:** Bulk import of Companies/Contacts (FR-CRM-014) — works for CSV/XLS/XLSX, but built specifically against one FlowAccount export column layout, and dedupes by company name rather than email/domain; Lead assignment (manual only, no round-robin); primary-contact flag on Contacts (unconfirmed); pipeline stages (fixed list, not configurable); deal owner reassignment (no history); manual activity-entry form (unconfirmed); Quotes (PDF upload/delete works on the Deal detail page against a page-local mock array, not a shared store; no line-item create form); per-rep leaderboard (won deals/revenue/win rate shown, activity count not); report filtering (date range/Business Unit/Channel work, filtering by Sales Rep or Company tag does not); pipeline coverage quota is a hardcoded constant, not Admin-configurable; Tasks' "notification on due" (email/push delivery) is not built — everything else in FR-CRM-032 is.
+**🚧 Partial:** Bulk import of Companies/Contacts (FR-CRM-014) — works for CSV/XLS/XLSX, but built specifically against one FlowAccount export column layout, and dedupes by company name rather than email/domain; Lead assignment (manual only, no round-robin); primary-contact flag on Contacts (unconfirmed); pipeline stages (fixed list, not configurable); deal owner reassignment (no history); manual activity-entry form (unconfirmed); per-rep leaderboard (won deals/revenue/win rate shown, activity count not); report filtering (date range/Business Unit/Channel work, filtering by Sales Rep or Company tag does not); pipeline coverage quota is a hardcoded constant, not Admin-configurable; Tasks' "notification on due" (email/push delivery) is not built — everything else in FR-CRM-032 is; audit logging (FR-CRM-082 — real for Deal stage/reassignment changes via `SaveWithAudit`, not yet extended to Project/Product status changes, and no frontend view of the log exists); the Product/Project status report (FR-CRM-056) exists as a backend-only endpoint (`GET /reports/customers-by-product-status`) with no frontend consumer yet; Product Catalog edit (create/deactivate exist, no update action).
 
-**⬜ Not built at all:** Contracts; Product Catalog; CustomerProduct tracking; Project tracking (§3.7 in full — the Deal-detail "Create Project" action is a disabled placeholder); Task due-date email/push notifications; email/Slack integration; @mentions; deal lost-reason codes; deal probability/forecast (FR-CRM-052); lead-source report (FR-CRM-054); the Product/Project status report of FR-CRM-056; RBAC enforcement and Admin-side configurability (§3.8); audit log (FR-CRM-082 — the `/admin/activity-log` page is a static mock feed, not a real change log); CSV/data **export** (only import exists now).
+**⬜ Not built at all:** Contracts (§3.5); Task due-date email/push notifications; email/Slack integration; @mentions; deal lost-reason codes; deal probability/forecast (FR-CRM-052); lead-source report (FR-CRM-054); Admin-side configurability of pipeline stages/tags/custom fields (FR-CRM-081); CSV/data **export** (only import exists now); Attachments on Project records (Lead/Company/Deal only so far).
 
-Practically: this is currently a **Leads/Deals/Companies/Contacts CRM with a Kanban pipeline, per-Deal payment tracking, follow-up Task management (per-record and team-wide), a genuinely filterable sales dashboard, and a working (if FlowAccount-specific) bulk-import path for Companies/Contacts** — reporting (§3.6) and task/follow-up tracking (§3.4) are now the most complete sections outside core CRUD, but the customer-portfolio tracking that §3.7 describes as "the core addition" has not been started, and none of §3.5's Quote/Contract lifecycle or §3.8's admin/governance requirements are implemented beyond static UI text. Note: the dashboard's new "Business Unit" (Project/Product) and "Channel" filters live entirely on the `Deal` record as simple tag fields (§4) — they are a dashboard convenience, not the real CustomerProduct/Project data model that §3.7 still requires. Also note: Leads, Deals, Tags, Companies, Contacts, Payments, Tasks, and Users are all now backed by real, shared Pinia stores (`stores/`) rather than page-local mock copies — Quotes are the one remaining exception (still a page-local array on the Deal detail page, not a store).
+Practically: this is now a **Leads/Deals/Companies/Contacts CRM with a unified Kanban pipeline (Leads and Deals share one board), per-Deal payment tracking, follow-up Task management (per-record and team-wide), a genuinely filterable sales dashboard, a working (if FlowAccount-specific) bulk-import path for Companies/Contacts, a full customer-portfolio layer (Product Catalog, Customer↔Product, and Project tracking, §3.7), real backend RBAC enforcement, and file/link Attachments on Leads/Companies/Deals** — the customer-portfolio tracking that §3.7 once described as greenfield is now built end-to-end, and RBAC enforcement (FR-CRM-080) is real, not just a display field. What's left of §3.8's admin/governance requirements is specifically the *configurability* half (FR-CRM-081) and a full audit log with a frontend view (FR-CRM-082); none of §3.5's Contract lifecycle is implemented. Also note: Leads, Deals, Tags, Companies, Contacts, Payments, Tasks, Users, Quotes, Products, CustomerProducts, Projects, and Attachments are all now backed by real, shared Pinia stores (`stores/`) rather than page-local mock copies.

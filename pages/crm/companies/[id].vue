@@ -182,6 +182,7 @@
         <CrmAddProjectModal
           v-model:open="addProjectOpen"
           :project="editingProject"
+          :company-id="companyId"
           @submit="onSaveProject"
         />
       </div>

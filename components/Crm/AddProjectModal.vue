@@ -16,6 +16,14 @@
             name="company_id"
             rules="required"
           />
+          <InputSelect
+            v-if="!project && !productionEditor && filterCompanyId"
+            v-model="form.deal_id"
+            :options="dealOptions"
+            :label="t('crm.components.addProjectModal.deal')"
+            :placeholder="t('crm.components.addProjectModal.dealPlaceholder')"
+            name="deal_id"
+          />
           <InputText v-if="!productionEditor" v-model="form.name" :label="t('crm.components.addProjectModal.name')" name="name" rules="required" />
           <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
           <InputText v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
@@ -56,11 +64,16 @@ const props = defineProps<{
   // Projects list, where there's no company already in context). Omitted entirely
   // in edit mode and wherever the parent already knows the company.
   companies?: { id: number, name: string }[]
+  // The fixed company this Project belongs to, when the parent already knows it
+  // (e.g. the Company detail page's Projects tab) and so doesn't pass `companies`.
+  // Used only to filter the optional Deal picker below — the parent still decides
+  // the actual company_id sent on submit via its own defaultCompanyId fallback.
+  companyId?: number | null
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string, company_id?: number }]
+  submit: [payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string, company_id?: number, deal_id?: number | null }]
 }>()
 
 const { hasRole } = useRole()
@@ -74,8 +87,25 @@ const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10)
 
 const companyOptions = computed(() => (props.companies ?? []).map(c => ({ label: c.name, value: String(c.id) })))
 
+const dealsStore = useDealsStore()
+
+// Which company to filter the Deal picker by: the one currently picked in the
+// Company field when it's shown, otherwise the fixed `companyId` the parent
+// already knows (e.g. the Company detail page's Projects tab). No company
+// context at all (e.g. the Deal-detail "mark Won" flow, which already knows
+// its own deal_id and doesn't need this picker) hides the field entirely.
+const filterCompanyId = computed(() => {
+  if (props.companies) return Number(form.company_id) || null
+  return props.companyId ?? null
+})
+
+const dealOptions = computed(() => dealsStore.items
+  .filter(d => d.company_id === filterCompanyId.value)
+  .map(d => ({ label: d.title, value: String(d.id) })))
+
 const emptyForm = () => ({
   company_id: '',
+  deal_id: '',
   name: props.project?.name ?? props.defaultName ?? '',
   status: (props.project?.status ?? 'Not Started') as ProjectStatus,
   production_reference: props.project?.production_reference ?? '',
@@ -84,6 +114,13 @@ const emptyForm = () => ({
 })
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+
+// A Deal picked before switching companies would otherwise belong to the
+// wrong company and get submitted anyway — clear it so the field always
+// reflects only the currently-selected company's deals.
+watch(() => form.company_id, () => {
+  form.deal_id = ''
+})
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
@@ -104,6 +141,7 @@ const onSubmit = () => {
     target_end_date: form.target_end_date ? new Date(form.target_end_date) : null,
     notes: form.notes,
     ...(props.companies && !props.project ? { company_id: Number(form.company_id) } : {}),
+    ...(!props.project ? { deal_id: form.deal_id ? Number(form.deal_id) : null } : {}),
   })
   onUpdateOpen(false)
 }
