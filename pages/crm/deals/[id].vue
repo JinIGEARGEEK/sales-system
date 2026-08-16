@@ -276,6 +276,7 @@
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold">{{ t('crm.deals.detail.attachmentsTitle') }}</h3>
             <ButtonPrimary
+              v-if="canManageAttachments"
               :label="t('crm.deals.detail.addAttachment')"
               icon="material-symbols:add"
               small
@@ -317,8 +318,13 @@ useHead({ title: t('crm.deals.detail.pageTitle') })
 const route = useRoute()
 const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
 const { success, error, info } = useNotify()
+const { hasRole } = useRole()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+
+// Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
+// not Production) — internal/routes/routes.go.
+const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 const dealsStore = useDealsStore()
 const paymentsStore = usePaymentsStore()
 const tasksStore = useTasksStore()

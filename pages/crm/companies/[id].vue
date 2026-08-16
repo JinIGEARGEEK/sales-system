@@ -219,6 +219,7 @@
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold">{{ t('crm.companies.detail.attachmentsHeading') }}</h3>
             <ButtonPrimary
+              v-if="canManageAttachments"
               :label="t('crm.companies.detail.addAttachment')"
               icon="material-symbols:add"
               small
@@ -257,6 +258,9 @@ const { hasRole } = useRole()
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go's companies.Post("/:companyId/projects", ...).
 const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+// Matches the backend's POST /attachments RBAC — same role set as Projects,
+// coincidentally, but a separate backend rule, so kept as its own computed.
+const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
