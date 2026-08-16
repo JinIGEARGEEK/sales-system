@@ -172,42 +172,13 @@ const onViewCompany = (row: Project) => {
   navigateTo(`/crm/companies/${row.company_id}`)
 }
 
-const addProjectOpen = ref(false)
-const editingProject = ref<Project | null>(null)
-
-const openAddProject = () => {
-  editingProject.value = null
-  addProjectOpen.value = true
-}
-
-const openEditProject = (row: Project) => {
-  editingProject.value = row
-  addProjectOpen.value = true
-}
-
-const onSaveProject = async (payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string, company_id?: number }) => {
-  try {
-    if (editingProject.value) {
-      // A Production-role edit only carries status/production_reference (CrmAddProjectModal
-      // hides the rest) — spreading the full payload as-is keeps that subset intact.
-      await projectsStore.update(editingProject.value.id, payload)
-      success(t('crm.projects.index.updateProjectSuccess'))
-    } else {
-      await projectsStore.add(payload.company_id!, {
-        deal_id: null,
-        start_date: new Date(),
-        name: payload.name!,
-        target_end_date: payload.target_end_date ?? null,
-        notes: payload.notes ?? '',
-        status: payload.status,
-        production_reference: payload.production_reference,
-      })
-      success(t('crm.projects.index.addProjectSuccess'))
-    }
-  } catch {
-    error(t('global.genericError'))
-  }
-}
+const {
+  open: addProjectOpen,
+  editing: editingProject,
+  openAdd: openAddProject,
+  openEdit: openEditProject,
+  onSave: onSaveProject,
+} = useProjectModal(null, 'crm.projects.index.addProjectSuccess', 'crm.projects.index.updateProjectSuccess')
 
 const {
   page: projectPage,

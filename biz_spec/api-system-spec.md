@@ -54,6 +54,8 @@ These apply to every endpoint below unless a section says otherwise.
 | `403` | Redirects to `/` | Authenticated but not authorized for this resource/action |
 | `404` | Redirects to `/error404` | Resource not found |
 
+> **Forced password change is a special `403`.** Every route except `/auth/me`, `/auth/logout`, and `/auth/change-password` returns `403` with `error.code: "PASSWORD_CHANGE_REQUIRED"` for an account whose `must_change_password` is still `true` (§2.1) — set whenever an Admin creates the account or resets its password (§2.2), cleared only by a successful `POST /auth/change-password`. The frontend's blanket "`403` → redirect to `/`" rule (row above) needs a carve-out for this code — otherwise the account bounces to `/`, which immediately 403s again on its own API calls. Check `error.code` in the axios response interceptor and route to a dedicated "set your password" page instead when it's `PASSWORD_CHANGE_REQUIRED`.
+
 - No refresh-token flow exists in the frontend today. Recommend a long-lived access token (or add refresh in the API without requiring a frontend change for v1 — `useAuth` would need a follow-up change to consume it).
 
 #### Endpoints
@@ -63,6 +65,7 @@ These apply to every endpoint below unless a section says otherwise.
 | `POST` | `/auth/login` | none | 🟢 | Body: `{ email: string, password: string }` (frontend field names, see `pages/login.vue`). Returns `{ access_token: string, user: User }`. |
 | `POST` | `/auth/logout` | Bearer | 🟢 | Invalidates the token server-side if using a blocklist; frontend clears `localStorage` regardless (`useAuth().removeAccessToken()`). |
 | `GET` | `/auth/me` | Bearer | 🟢 | Returns the current `User` (§2.1). Used to hydrate `stores/user.ts` on load instead of trusting client state alone. |
+| `POST` | `/auth/change-password` | Bearer | 🟢 | Body: `{ current_password: string, new_password: string, confirm_password: string }`. Verifies `current_password`, requires `new_password === confirm_password` and at least 8 characters and different from the current password, then clears `must_change_password`. Returns the updated `User`. This is the only way to satisfy a `PASSWORD_CHANGE_REQUIRED` block (see the note above the status table), so it stays reachable even while that block is active. |
 
 ### 1.3 Response envelope
 
@@ -112,7 +115,7 @@ Resource-specific filter params (status, stage, date range, etc.) are listed per
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Human-readable summary",
-    "fields": { "email": ["Email is already in use"] }
+    "fields": { "email": ["Email already in use"] }
   }
 }
 ```
@@ -155,9 +158,10 @@ interface User {
   first_name: string
   last_name: string
   tel: string
-  email: string
+  email: string   // login identifier; must be unique and on the @igeargeek.com domain
   accepted_consent_id: number | null
   is_active: boolean
+  must_change_password: boolean   // true until the holder sets their own password via POST /auth/change-password
   latest_login: string | null   // ISO 8601
   created_at: string | null
   updated_at: string | null
@@ -179,9 +183,9 @@ interface AdminUser extends User {
 | Method | Path | Auth | Status | Description |
 |---|---|---|---|---|
 | `GET` | `/users` | Admin | 🟢 | List staff accounts. Filters: `role`, `status` (`active`/`inactive` derived from `is_active`), `search` (name/email). Backs `pages/admin/users/index.vue`. |
-| `POST` | `/users` | Admin | 🟢 | Create a staff account. Body per `AdminUserForm` fields: `first_name, last_name, email, tel, role, status, notes`. |
+| `POST` | `/users` | Admin | 🟢 | Create a staff account. Body per `AdminUserForm` fields: `first_name, last_name, email, tel, role, status, notes` (and optionally `password` — a random one is generated if omitted). `email` doubles as the login identifier and must be a valid address on the company domain (`@igeargeek.com`) — enforced server-side, not just a frontend hint. `must_change_password` is always set `true` on the created row — not a client-settable field — so every new account is forced through `POST /auth/change-password` on first use. |
 | `GET` | `/users/:id` | Admin | 🟢 | Single staff record — `pages/admin/users/[id].vue`. |
-| `PUT` | `/users/:id` | Admin | 🟢 | Full update. |
+| `PUT` | `/users/:id` | Admin | 🟢 | Full update. `email` is required and re-validated against the same `@igeargeek.com` rule as create. Supplying a non-empty `password` resets it and re-sets `must_change_password: true`, same as a fresh create. |
 | `DELETE` | `/users/:id` | Admin | 🟢 | Soft-delete (deactivate), not a hard delete — see §1.6. |
 | `GET` | `/team-members` | any authenticated | 🟢 | Lightweight `{ id, name, email }[]` list (`TeamMember` in `interfaces/crm.d.ts`) for assignee dropdowns (`CrmTeamMemberSelect`) — do not require Admin role for this one, every Sales role needs it to assign Leads/Deals/Tasks. |
 
@@ -272,7 +276,7 @@ interface Contact {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/contacts` | 🟢 | Filters: `company_id`, `status`, `tag`, `search` (name/email). Backs `pages/crm/contacts/index.vue` and the Company detail page's contact list. |
+| `GET` | `/contacts` | 🟢 | Filters: `company_id`, `status`, `tag`, `search` (name/email). Backs `pages/crm/contacts/index.vue` and the Company detail page's contact list. Also the source of truth for `pages/crm/deals/create.vue`'s "Primary Contact" field, which must only offer contacts belonging to the Deal's selected Company — done client-side today via `contactsStore.byCompany(company_id)` (a thin wrapper over this same `company_id` relationship) since the store already holds every contact from one unfiltered fetch; a backend serving this at scale should either keep that filter server-side per request or ensure the frontend switches to `?company_id=` here instead of fetching everything. |
 | `POST` | `/contacts` | 🟢 | Create. |
 | `GET` | `/contacts/:id` | 🟢 | Single contact — `pages/crm/contacts/[id].vue`. |
 | `PUT` | `/contacts/:id` | 🟢 | Update. |
@@ -419,7 +423,7 @@ interface Quote {
 | `POST` | `/deals/:dealId/quotes/upload` | 🔜 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
 | `PUT` | `/quotes/:id` | 🔜 | Update status/items/validity_date. |
 | `DELETE` | `/quotes/:id` | 🔜 | Delete. |
-| `GET` | `/quotes/:id/export-pdf` | 🔜 | `FR-CRM-042` — returns a generated PDF. Lowest priority in this section; build only once line-item Quotes exist. |
+| `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). |
 
 ### 7.5 Payments
 
@@ -470,9 +474,9 @@ interface Task {
 
 ---
 
-## 8. Planned entities (not yet in the frontend)
+## 8. Planned entities
 
-Everything in this section is 🔜 **Planned** in full — no page, store, or interface for these exists in the frontend codebase yet. They're specified here so the backend can be built ahead of or alongside the frontend work, per `feature-spec.md` §3.5/§3.7/§3.8. Do not treat their absence from the frontend today as "not needed" — `feature-spec.md` calls §3.7 (Products/Projects) "the core addition" to this CRM.
+This section was originally written with nothing built on either side. That's no longer true for every subsection: §8.2 (Products/Customer-Products), §8.3 (Projects), and §8.5 (Audit log) now have real backend handlers **and** frontend pages/stores/interfaces consuming them — treat those as 🟢 **Required now**, kept here rather than moved up only to avoid re-plumbing every cross-reference into them. §8.1 (Contracts) and §8.4 (Reports) remain 🔜 **Planned** in full — no page, store, or interface for either exists in the frontend yet. They're specified here so the backend can be built ahead of or alongside the frontend work, per `feature-spec.md` §3.5/§3.7/§3.8. Do not treat their absence from the frontend today as "not needed" — `feature-spec.md` calls §3.7 (Products/Projects) "the core addition" to this CRM.
 
 ### 8.1 Contracts (`FR-CRM-043`–`045`)
 
@@ -521,11 +525,12 @@ interface CustomerProduct {
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` / `POST` | `/products` | Product Catalog CRUD (any authenticated role). |
+| `GET` / `POST` | `/products` | Product Catalog CRUD (Admin only). |
 | `PATCH` | `/products/:id/deactivate` | Sets `is_active: false` rather than deleting. |
 | `GET` | `/companies/:companyId/products` | List a Company's Customer-Product records — powers the Company profile's "Products in use" section (`FR-CRM-066`). |
 | `POST` | `/companies/:companyId/products` | Manually add/change status independent of a Deal (`FR-CRM-065`). |
-| **Side effect, not a separate endpoint** | — | When `PATCH /deals/:id/stage` (§7.1) sets `stage: 'Won'`, the backend must auto-create/update a `CustomerProduct` (`status: 'Active'`) for each Product on that Deal's accepted Quote (`FR-CRM-064`). Implement inside that same transaction, not as a client-triggered follow-up call. |
+| `PATCH` | `/customer-products/:id` | Update a Customer-Product's own `status`/`end_date` after creation (e.g. Interested → Trial → Active → Churned) — `company_id`/`product_id` are immutable. Writes a `customer_product`/`status_changed` audit entry (§8.5) when `status` actually changes. |
+| **Side effect, not a separate endpoint** | — | When `PATCH /deals/:id/stage` (§7.1) sets `stage: 'Won'`, the backend must auto-create/update a `CustomerProduct` (`status: 'Active'`) for each Product on that Deal's accepted Quote (`FR-CRM-064`). Implement inside that same transaction, not as a client-triggered follow-up call. Still not implemented — deferred until Quotes have a real "accepted" flow. |
 
 ### 8.3 Projects (`FR-CRM-067`–`071`)
 
@@ -542,6 +547,7 @@ interface Project {
   target_end_date: string | null
   production_reference: string | null   // free-text ID and/or URL into Production's own system
   notes: string
+  company_name?: string   // only present on GET /projects rows (see below) — the per-company list doesn't merge this in
 }
 ```
 
@@ -549,7 +555,8 @@ interface Project {
 |---|---|---|---|
 | `GET` | `/companies/:companyId/projects` | any | List — Company profile's "Projects" section (`FR-CRM-070`). |
 | `POST` | `/companies/:companyId/projects` | Sales/Admin | Create manually, or prompted when a Deal is marked Won (`FR-CRM-068`). |
-| `PATCH` | `/projects/:id` | Sales/Admin **or** Production (§1.7) | Production's role is scoped to `status` and `production_reference` only — enforce field-level, not just endpoint-level, authorization here. |
+| `GET` | `/projects` | any | Cross-company list — a global Projects view, since `/companies/:companyId/projects` can only show one company at a time. Supports `status`, `company_id` filters; each row's `company_name` is merged in the same way `/companies/:companyId/products` merges Product into CustomerProduct. |
+| `PATCH` | `/projects/:id` | Sales/Admin **or** Production (§1.7) | Production's role is scoped to `status` and `production_reference` only — enforce field-level, not just endpoint-level, authorization here: reject the request if the body contains any other key, don't just silently drop them. Writes a `project`/`status_changed` audit entry (§8.5) when `status` actually changes, same as `PATCH /customer-products/:id`. `components/Crm/AddProjectModal.vue` mirrors this client-side — a Production caller only ever sees/submits `status`/`production_reference`, since submitting the full field set would 403 against this same restriction. |
 
 Do **not** add sub-resources for tasks/sprints/milestones under `/projects/:id` — `FR-CRM-071` explicitly rules this out; a Project here is a summary record, never a delivery-management tool.
 
@@ -581,7 +588,7 @@ interface AuditLogEntry {
 |---|---|---|---|
 | `GET` | `/audit-log` | Admin | Filters: `entity_type`, `entity_id`, `actor_id`, date range. Must be **append-only** at the storage layer (`NFR-007`) — no `PUT`/`DELETE` route should exist for this resource at all. |
 
-At minimum, write an entry whenever: a Deal's `stage` changes, a Deal's `status` becomes `won`/`lost`, or a `CustomerProduct`/`Project` `status` changes (per `FR-CRM-082`'s explicit minimum scope). The current `/admin/activity-log` frontend page shows an unrelated static mock feed (signups/orders/system events) — this endpoint is not that; it's a real change log the frontend's activity-log page should be repointed at once built.
+At minimum, write an entry whenever: a Deal's `stage` changes, a Deal's `status` becomes `won`/`lost`, or a `CustomerProduct`/`Project` `status` changes (per `FR-CRM-082`'s explicit minimum scope) — all four are now implemented (`deals.go` for the Deal events, `projects.go`/`products.go` for the other two). The frontend's `/admin/activity-log` page is already repointed at this real endpoint.
 
 ---
 

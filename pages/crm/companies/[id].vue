@@ -316,42 +316,13 @@ const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus,
 }
 
 const companyProjects = computed(() => projectsStore.forCompany(companyId))
-const addProjectOpen = ref(false)
-const editingProject = ref<Project | null>(null)
-
-const openAddProject = () => {
-  editingProject.value = null
-  addProjectOpen.value = true
-}
-
-const openEditProject = (project: Project) => {
-  editingProject.value = project
-  addProjectOpen.value = true
-}
-
-const onSaveProject = async (payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string }) => {
-  try {
-    if (editingProject.value) {
-      // A Production-role edit only carries status/production_reference (CrmAddProjectModal
-      // hides the rest) — spreading the full payload as-is keeps that subset intact.
-      await projectsStore.update(editingProject.value.id, payload)
-      success(t('crm.companies.detail.updateProjectSuccess'))
-    } else {
-      await projectsStore.add(companyId, {
-        deal_id: null,
-        start_date: new Date(),
-        name: payload.name!,
-        target_end_date: payload.target_end_date ?? null,
-        notes: payload.notes ?? '',
-        status: payload.status,
-        production_reference: payload.production_reference,
-      })
-      success(t('crm.companies.detail.addProjectSuccess'))
-    }
-  } catch {
-    error(t('global.genericError'))
-  }
-}
+const {
+  open: addProjectOpen,
+  editing: editingProject,
+  openAdd: openAddProject,
+  openEdit: openEditProject,
+  onSave: onSaveProject,
+} = useProjectModal(companyId, 'crm.companies.detail.addProjectSuccess', 'crm.companies.detail.updateProjectSuccess')
 
 const form = reactive({
   name: company.value?.name || '',
