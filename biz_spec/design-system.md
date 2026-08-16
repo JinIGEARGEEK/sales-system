@@ -137,7 +137,7 @@ As of the most recent density pass, every page under `pages/` follows this consi
 
 **Do not use `p-6`, `mb-6`, `mt-6`, `gap-5`, `gap-6`, `space-y-4`, or `space-y-6` for new page-level layout** — those were the previous, looser scale and have been swept out of every existing page. Component-*internal* spacing (icon-to-label gaps inside a button/nav-row, padding inside a badge, avatar+text row gaps) is unaffected by this scale and typically sits at `gap-1`–`gap-3` — copy the pattern from the nearest existing component rather than the page-level table above.
 
-Nuxt UI's default `UCard` body padding (`p-4 sm:p-6`) is overridden globally to `p-3 sm:p-4` via `app.config.ts`'s `ui.card.slots.body`, so every filter-panel `UCard` across list pages gets the tighter scale automatically — don't add a per-instance `:ui="{ body: '...' }"` override to "fix" this, and don't reintroduce `p-6` by overriding it back up. `TableData`'s own outer wrapper (`components/Table/Data.vue`) uses `p-3` for the same reason.
+Nuxt UI's default `UCard` padding (`header`/`footer`: `p-4 sm:px-6`, `body`: `p-4 sm:p-6`) is overridden globally to a uniform `p-3 sm:p-4` on all three slots via `app.config.ts`'s `ui.card.slots`, so every filter-panel `UCard` across list pages gets the tighter scale automatically and a card's header/footer padding always matches its body — don't add a per-instance `:ui="{ header/body/footer: '...' }"` override to "fix" this, and don't reintroduce `p-6` by overriding it back up. `TableData`'s own outer wrapper (`components/Table/Data.vue`) uses `p-3` for the same reason.
 
 ---
 

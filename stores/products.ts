@@ -20,6 +20,14 @@ export const useProductsStore = defineStore('products', {
       this.items.push(created)
       return created
     },
+    async update (id: number, changes: { name: string, category: string, description: string }): Promise<Product> {
+      const { $api } = useNuxtApp()
+      const response = await $api.patch<ApiResponse<Product>>(`/products/${id}`, changes)
+      const updated = response.data.data
+      const index = this.items.findIndex(p => p.id === id)
+      if (index !== -1) this.items[index] = updated
+      return updated
+    },
     async deactivate (id: number) {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Product>>(`/products/${id}/deactivate`)

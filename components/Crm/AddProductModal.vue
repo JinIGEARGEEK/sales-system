@@ -1,7 +1,7 @@
 <template>
   <UModal :open="open" @update:open="onUpdateOpen">
     <template #header>
-      <h3 class="text-lg font-medium">{{ t('crm.components.addProductModal.title') }}</h3>
+      <h3 class="text-lg font-medium">{{ product ? t('crm.components.addProductModal.editTitle') : t('crm.components.addProductModal.title') }}</h3>
     </template>
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
@@ -28,6 +28,10 @@ const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
+  // Passing an existing Product switches this into edit mode (prefilled
+  // fields, "Edit Product" title) — the parent decides add vs. update on
+  // submit based on whether it's holding a product reference.
+  product?: Product | null
 }>()
 
 const emit = defineEmits<{
@@ -36,9 +40,9 @@ const emit = defineEmits<{
 }>()
 
 const emptyForm = () => ({
-  name: '',
-  category: '',
-  description: '',
+  name: props.product?.name ?? '',
+  category: props.product?.category ?? '',
+  description: props.product?.description ?? '',
 })
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)

@@ -70,6 +70,7 @@ export default {
   },
   addProductModal: {
     title: 'Add Product',
+    editTitle: 'Edit Product',
     name: 'Name',
     category: 'Category',
     description: 'Description',

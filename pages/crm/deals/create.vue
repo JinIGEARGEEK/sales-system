@@ -86,13 +86,19 @@ onMounted(() => {
   if (productsStore.items.length === 0) productsStore.fetchAll()
 })
 
-const originatingLead = route.query.lead_id ? leadsStore.items.find(l => l.id === Number(route.query.lead_id)) : null
+// leadsStore.items is fetched asynchronously (onMounted), so on a fresh page
+// load (e.g. a direct/bookmarked URL, or a hard refresh) it's still empty at
+// setup time — this must stay reactive rather than a one-time lookup, or a
+// direct load would silently miss that this Deal originates from a Lead.
+const originatingLead = computed(() => route.query.lead_id
+  ? leadsStore.items.find(l => l.id === Number(route.query.lead_id))
+  : null)
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 const contactOptions = computed(() => contactsStore.byCompany(form.company_id).map(c => ({ label: c.name, value: String(c.id) })))
 
 const form = reactive({
-  title: originatingLead ? `${originatingLead.company_name} — New Opportunity` : '',
+  title: '',
   company_id: (route.query.company_id as string) || '',
   contact_id: '',
   value: 0,
@@ -102,6 +108,10 @@ const form = reactive({
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',
 })
+
+watch(originatingLead, (lead) => {
+  if (lead && !form.title) form.title = `${lead.company_name} — New Opportunity`
+}, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
@@ -125,21 +135,42 @@ watch(() => form.company_id, () => {
 
 const onSubmit = async () => {
   try {
-    await dealsStore.add({
-      company_id: Number(form.company_id),
-      contact_id: Number(form.contact_id) || 0,
+    // Shared by both branches below — only company_id/contact_id/status/
+    // lead_id differ between a plain create and a Lead-originated one.
+    const dealFields = {
       title: form.title,
       value: form.value,
       stage: form.stage as DealStage,
-      status: dealStatusForStage(form.stage as DealStage),
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      channel: 'Other',
+      channel: 'Other' as LeadSource,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-      lead_id: originatingLead?.id ?? null,
-      created_at: new Date(),
-    })
+    }
+
+    if (originatingLead.value) {
+      // Route this through the same conversion endpoint the pipeline board's
+      // drag-to-convert uses, so the Lead actually gets marked converted
+      // (converted_deal_id set) instead of just creating an unrelated Deal
+      // that happens to reference it — POST /deals has no idea Leads exist.
+      const { deal } = await leadsStore.convert(originatingLead.value.id, {
+        company_id: Number(form.company_id),
+        contact_id: Number(form.contact_id) || undefined,
+        deal: dealFields,
+      })
+      const convertedLead = leadsStore.items.find(l => l.id === originatingLead.value!.id)
+      if (convertedLead) convertedLead.converted_deal_id = deal.id
+      dealsStore.receiveConverted(deal)
+    } else {
+      await dealsStore.add({
+        ...dealFields,
+        company_id: Number(form.company_id),
+        contact_id: Number(form.contact_id) || 0,
+        status: dealStatusForStage(form.stage as DealStage),
+        lead_id: null,
+        created_at: new Date(),
+      })
+    }
     success(t('crm.deals.create.createSuccess'))
     navigateTo('/crm/deals')
   } catch {

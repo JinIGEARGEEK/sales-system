@@ -30,6 +30,14 @@ export const useDealsStore = defineStore('deals', {
       this.items.push(created)
       return created
     },
+    // Folds in a Deal returned by POST /leads/:id/convert (raw, unparsed dates)
+    // — used by both the pipeline board's drag-to-convert and the manual
+    // "Convert to Deal" form, so this state update only needs to be right once.
+    receiveConverted (deal: Deal): Deal {
+      const parsed = parseDates(deal)
+      this.items.push(parsed)
+      return parsed
+    },
     async update (id: number, changes: Partial<Omit<Deal, 'id'>>): Promise<Deal> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Deal>>(`/deals/${id}`, changes)

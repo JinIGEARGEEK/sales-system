@@ -70,6 +70,7 @@ export default {
   },
   addProductModal: {
     title: 'เพิ่มสินค้า',
+    editTitle: 'แก้ไขสินค้า',
     name: 'ชื่อ',
     category: 'หมวดหมู่',
     description: 'รายละเอียด',

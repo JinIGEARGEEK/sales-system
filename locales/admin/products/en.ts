@@ -1,6 +1,8 @@
 export default {
   addProduct: 'Add Product',
   addSuccess: 'Product added successfully',
+  edit: 'Edit',
+  updateSuccess: 'Product updated successfully',
   deactivate: 'Deactivate',
   deactivateModalTitle: 'Deactivate this product?',
   deactivateModalBody: 'Deactivate {name}? It will no longer be selectable when linking a product to a company, but existing links are unaffected.',

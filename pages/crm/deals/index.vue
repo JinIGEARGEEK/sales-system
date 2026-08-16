@@ -182,11 +182,7 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     })
     const index = leadsStore.items.findIndex(l => l.id === lead.id)
     if (index !== -1) leadsStore.items.splice(index, 1)
-    dealsStore.items.push({
-      ...deal,
-      created_at: new Date(deal.created_at),
-      expected_close_date: deal.expected_close_date ? new Date(deal.expected_close_date) : null,
-    })
+    dealsStore.receiveConverted(deal)
     success(t('crm.deals.index.leadConvertedToDeal'))
   } catch {
     error(t('global.genericError'))

@@ -57,7 +57,7 @@
           <ButtonPrimary
             :label="t('admin.products.addProduct')"
             icon="material-symbols:add"
-            @click="addProductOpen = true"
+            @click="openAddProduct"
           />
         </div>
       </UCard>
@@ -71,12 +71,14 @@
         :per-page="productPerPage"
         @change-page="onChangeProductPage"
         @change-per-page="onChangeProductPerPage"
+        @edit="openEditProduct"
         @deactivate="requestDeactivate"
       />
 
       <CrmAddProductModal
         v-model:open="addProductOpen"
-        @submit="onAddProduct"
+        :product="editingProduct"
+        @submit="onSaveProduct"
       />
 
       <CrmConfirmDeleteModal
@@ -233,6 +235,7 @@ const productColumns: TableDataColumn[] = [
     width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
+      { label: t('admin.products.edit'), emitName: 'edit', isBorderBottom: false },
       { label: t('admin.products.deactivate'), emitName: 'deactivate', isBorderBottom: false },
     ],
   },
@@ -247,11 +250,27 @@ const {
 } = useTablePagination(() => filteredProducts.value.length)
 
 const addProductOpen = ref(false)
+const editingProduct = ref<Product | null>(null)
 
-const onAddProduct = async (product: { name: string, category: string, description: string }) => {
+const openAddProduct = () => {
+  editingProduct.value = null
+  addProductOpen.value = true
+}
+
+const openEditProduct = (product: Product) => {
+  editingProduct.value = product
+  addProductOpen.value = true
+}
+
+const onSaveProduct = async (product: { name: string, category: string, description: string }) => {
   try {
-    await productsStore.add(product)
-    success(t('admin.products.addSuccess'))
+    if (editingProduct.value) {
+      await productsStore.update(editingProduct.value.id, product)
+      success(t('admin.products.updateSuccess'))
+    } else {
+      await productsStore.add(product)
+      success(t('admin.products.addSuccess'))
+    }
   } catch {
     error(t('global.genericError'))
   }

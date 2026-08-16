@@ -10,12 +10,15 @@ interface ProjectSavePayload {
   deal_id?: number | null
 }
 
-// Shared by the Company detail page's Projects tab and the cross-company
-// Projects list, which each open the same CrmAddProjectModal for add/edit.
-// defaultCompanyId is used on create when the modal doesn't supply its own
-// company_id (i.e. everywhere except the cross-company list, where the modal
-// carries a Company picker instead).
-export const useProjectModal = (defaultCompanyId: number | null, addedMessageKey: string, updatedMessageKey: string) => {
+// Shared by the Company detail page's Projects tab, the Contact detail page's
+// Projects section, and the cross-company Projects list, which each open the
+// same CrmAddProjectModal for add/edit. defaultCompanyId is used on create
+// when the modal doesn't supply its own company_id (i.e. everywhere except
+// the cross-company list, where the modal carries a Company picker instead).
+// Accepts a Ref so callers whose company id comes from an async-loaded record
+// (e.g. the Contact page's contact.company_id) can pass a computed() that
+// resolves once that record arrives, rather than a value frozen at setup time.
+export const useProjectModal = (defaultCompanyId: number | null | Ref<number | null>, addedMessageKey: string, updatedMessageKey: string) => {
   const { t } = useI18n()
   const { success, error } = useNotify()
   const projectsStore = useProjectsStore()
@@ -42,7 +45,7 @@ export const useProjectModal = (defaultCompanyId: number | null, addedMessageKey
         await projectsStore.update(editing.value.id, payload)
         success(t(updatedMessageKey))
       } else {
-        const companyId = payload.company_id ?? defaultCompanyId
+        const companyId = payload.company_id ?? unref(defaultCompanyId)
         await projectsStore.add(companyId!, {
           deal_id: payload.deal_id ?? null,
           start_date: new Date(),

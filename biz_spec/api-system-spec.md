@@ -221,7 +221,7 @@ interface Lead {
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
 | `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). |
 | `DELETE` | `/leads/:id` | 🟢 | Delete. |
-| `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Sets the new Deal's `lead_id` and the Lead's `converted_deal_id` in the same transaction. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Lead has already been converted (`converted_deal_id` already set) — guards against a double-fire from the Kanban drag-to-convert flow (§7.1). |
+| `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Sets the new Deal's `lead_id` and the Lead's `converted_deal_id` in the same transaction. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Lead has already been converted (`converted_deal_id` already set) — guards against a double-fire from the Kanban drag-to-convert flow (§7.1). This is now the **only** path that creates a Deal from a Lead: `pages/crm/deals/create.vue`'s manual "Convert to Deal" form (reached from the Leads list/detail page, letting a rep pick an existing Company/Contact instead of auto-creating new ones) also calls this endpoint rather than plain `POST /deals` — a bug fixed on 2026-08-16 where the manual form created a Deal referencing the Lead without ever marking the Lead converted, leaving it stuck showing "Convert" forever and duplicated on the pipeline board. |
 
 ---
 
@@ -529,7 +529,8 @@ interface CustomerProduct {
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` / `POST` | `/products` | Product Catalog CRUD (Admin only). |
+| `GET` / `POST` | `/products` | Product Catalog list/create (any authenticated role — the catalog is a shared resource, not Admin-gated). |
+| `PATCH` | `/products/:id` | Full edit of the catalog entry's own fields (name/category/description/is_active) — distinct from Deactivate below, which is left as the dedicated "remove from catalog" action. |
 | `PATCH` | `/products/:id/deactivate` | Sets `is_active: false` rather than deleting. |
 | `GET` | `/companies/:companyId/products` | List a Company's Customer-Product records — powers the Company profile's "Products in use" section (`FR-CRM-066`). |
 | `POST` | `/companies/:companyId/products` | Manually add/change status independent of a Deal (`FR-CRM-065`). |

@@ -49,6 +49,38 @@
           </UCard>
           <UCard class="mb-4">
             <template #header>
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedProjects') }}</h3>
+                <ButtonPrimary
+                  v-if="canManageProjects"
+                  :label="t('crm.contacts.detail.addProject')"
+                  icon="material-symbols:add"
+                  small
+                  @click="openAddProject"
+                />
+              </div>
+            </template>
+            <div v-if="contactCompanyProjects.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.contacts.detail.noLinkedProjects') }}</div>
+            <div v-else class="flex flex-col gap-2">
+              <button
+                v-for="project in contactCompanyProjects"
+                :key="project.id"
+                type="button"
+                class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+                @click="openEditProject(project)"
+              >
+                <div>
+                  <p class="text-sm font-medium">{{ project.name }}</p>
+                  <p class="text-xs text-[var(--color-gray)]">
+                    {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
+                  </p>
+                </div>
+                <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+              </button>
+            </div>
+          </UCard>
+          <UCard class="mb-4">
+            <template #header>
               <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
             </template>
             <CrmActivityTimeline :items="contactActivity" />
@@ -84,6 +116,13 @@
       v-model:open="addTaskOpen"
       @submit="onSubmitTask"
     />
+
+    <CrmAddProjectModal
+      v-model:open="addProjectOpen"
+      :project="editingProject"
+      :company-id="contact?.company_id"
+      @submit="onSaveProject"
+    />
   </div>
 </template>
 
@@ -97,10 +136,12 @@ useHead({ title: t('crm.contacts.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
-const { parseTags } = useFormatter()
+const { parseTags, dateFormat } = useFormatter()
+const { hasRole } = useRole()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
+const projectsStore = useProjectsStore()
 const activitiesStore = useActivitiesStore()
 
 const contactId = Number(route.params.id)
@@ -113,10 +154,34 @@ onMounted(() => {
   activitiesStore.fetchForRelated('contact', contactId)
 })
 
+// Project has no contact_id of its own — it only relates to a Company (and
+// optionally a Deal) — so "this contact's Projects" means the Projects of
+// the Company the contact belongs to. Fetched once that company id is known,
+// since the contact itself loads asynchronously.
+watch(() => contact.value?.company_id, (companyId) => {
+  if (companyId) projectsStore.fetchForCompany(companyId)
+}, { immediate: true })
+
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
 const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
 const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
+
+// Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not Production).
+const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+const contactCompanyProjects = computed(() => contact.value ? projectsStore.forCompany(contact.value.company_id) : [])
+
+const {
+  open: addProjectOpen,
+  editing: editingProject,
+  openAdd: openAddProject,
+  openEdit: openEditProject,
+  onSave: onSaveProject,
+} = useProjectModal(
+  computed(() => contact.value?.company_id ?? null),
+  'crm.contacts.detail.addProjectSuccess',
+  'crm.contacts.detail.updateProjectSuccess',
+)
 
 const { tasks: contactTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess')
 const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
