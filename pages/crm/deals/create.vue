@@ -70,7 +70,7 @@ onMounted(() => {
 const originatingLead = route.query.lead_id ? leadsStore.items.find(l => l.id === Number(route.query.lead_id)) : null
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
-const contactOptions = computed(() => contactsStore.items.map(c => ({ label: c.name, value: String(c.id) })))
+const contactOptions = computed(() => contactsStore.byCompany(form.company_id).map(c => ({ label: c.name, value: String(c.id) })))
 
 const form = reactive({
   title: originatingLead ? `${originatingLead.company_name} — New Opportunity` : '',
@@ -83,6 +83,13 @@ const form = reactive({
 })
 
 const duplicateDeals = computed(() => findDuplicateDeals(dealsStore.items, form.company_id, form.contact_id))
+
+// A contact picked before switching companies would otherwise belong to the
+// wrong company and get submitted anyway — clear it so the field always
+// reflects only the currently-selected company's contacts.
+watch(() => form.company_id, () => {
+  form.contact_id = ''
+})
 
 const onSubmit = async () => {
   try {

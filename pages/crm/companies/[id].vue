@@ -187,7 +187,7 @@ const tabItems = computed(() => [
   { label: companyOverdueTaskCount.value > 0 ? `${t('crm.companies.detail.tabs.tasks')} (${companyOverdueTaskCount.value})` : t('crm.companies.detail.tabs.tasks'), value: 'tasks' },
 ])
 
-const companyContacts = computed(() => contactsStore.items.filter(c => c.company_id === companyId))
+const companyContacts = computed(() => contactsStore.byCompany(companyId))
 const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
 const companyActivity = computed(() => activitiesStore.forRelated('company', companyId))

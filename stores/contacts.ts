@@ -14,6 +14,9 @@ export const useContactsStore = defineStore('contacts', {
   }),
   getters: {
     nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
+    // Accepts number or string so callers backed by a select's string v-model
+    // (e.g. a company_id form field) don't need to coerce first.
+    byCompany: state => (companyId: number | string) => state.items.filter(c => String(c.company_id) === String(companyId)),
   },
   actions: {
     async fetchAll (params?: Record<string, unknown>) {
