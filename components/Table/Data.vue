@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-lg border border-[var(--color-light-gray-2)] bg-white p-4">
+  <div class="rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3">
     <!-- Mobile View -->
     <div class="md:hidden">
       <div v-if="!prop.loading">

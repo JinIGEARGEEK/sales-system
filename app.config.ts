@@ -9,6 +9,11 @@ export default defineAppConfig({
         list: 'bg-white/65 backdrop-blur-2xl border border-white/90 divide-x divide-white/70 shadow-xl',
       },
     },
+    card: {
+      slots: {
+        body: 'p-3 sm:p-4',
+      },
+    },
     modal: {
       slots: {
         overlay: 'fixed inset-0 bg-black/70 backdrop-blur-sm',

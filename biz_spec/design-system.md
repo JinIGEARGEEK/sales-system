@@ -137,6 +137,8 @@ As of the most recent density pass, every page under `pages/` follows this consi
 
 **Do not use `p-6`, `mb-6`, `mt-6`, `gap-5`, `gap-6`, `space-y-4`, or `space-y-6` for new page-level layout** — those were the previous, looser scale and have been swept out of every existing page. Component-*internal* spacing (icon-to-label gaps inside a button/nav-row, padding inside a badge, avatar+text row gaps) is unaffected by this scale and typically sits at `gap-1`–`gap-3` — copy the pattern from the nearest existing component rather than the page-level table above.
 
+Nuxt UI's default `UCard` body padding (`p-4 sm:p-6`) is overridden globally to `p-3 sm:p-4` via `app.config.ts`'s `ui.card.slots.body`, so every filter-panel `UCard` across list pages gets the tighter scale automatically — don't add a per-instance `:ui="{ body: '...' }"` override to "fix" this, and don't reintroduce `p-6` by overriding it back up. `TableData`'s own outer wrapper (`components/Table/Data.vue`) uses `p-3` for the same reason.
+
 ---
 
 ## 5. Layout & App Shell
@@ -223,7 +225,7 @@ Material Symbols exclusively, referenced as `material-symbols:icon-name` (outlin
 |---|---|---|
 | `ButtonPrimary` (`components/Button/Primary.vue`) | The only button wrapper in the app | Wraps `UButton`. Props: `outline` (→ `variant="outline"`), `flat` (→ `variant="ghost"`), `block`, `fitContent`, `small`, `color` (default `primary`). Always `rounded-full px-6 min-w-24`. **There is no separate `ButtonOutline` component** (despite older docs implying one) — use `<ButtonPrimary outline>`. |
 | `InputText`, `InputPassword`, `InputSelect`, `InputTextarea`, `InputDatePicker`, `InputDateRangePicker` (`components/Input/`) | Form field wrappers, all built on `InputFormField` + a Nuxt UI primitive, integrated with Vee-Validate | Follow the existing `v-model`/`label`/`placeholder`/`name`/`rules` prop pattern for any new input wrapper. `InputTextarea`'s `<UTextarea>` explicitly sets `class="w-full"` — any new wrapper around a Nuxt UI form primitive should do the same, since Nuxt UI's root is `inline-flex` and won't stretch to its container without it. |
-| `ContainerTemplate` (`components/Container/Template.vue`) | The white card wrapper around every form (`bg-white rounded-xl px-8 py-8 drop-shadow`) | Use for every create/edit form; don't reach for a bare `UCard` for forms. |
+| `ContainerTemplate` (`components/Container/Template.vue`) | The white card wrapper around every form (`bg-white rounded-xl p-5 drop-shadow`) | Use for every create/edit form; don't reach for a bare `UCard` for forms. |
 | `TableData` / `TablePagination` / `Table/Card/*` (`components/Table/`) | The data-table system, paired with `TABLE_CARD_TYPE` (`constants/tableCardType.ts`) for column render types (STATUS, ACTION, LINK, MULTI_LINE, UPDATED_AT) | Every list page uses this instead of a hand-rolled table. |
 | `CrmStatusPill` | Segmented status-filter tabs (not a status *badge* despite the name — see `toBadge()` in `useFormatter` for actual badge coloring) | Active state: `border-[var(--color-primary)] bg-[var(--color-primary-bg)] text-[var(--color-primary)]`. Inactive: light gray border/bg. |
 | `CrmMetricBar` | Horizontal progress/amount bar (label + track + fill + slot for trailing stats) | Default fill `bg-sky-400` — see §2.6, don't reconnect to primary. |

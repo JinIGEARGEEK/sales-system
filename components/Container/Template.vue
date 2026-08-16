@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white rounded-xl px-8 py-8 drop-shadow"
+    class="bg-white rounded-xl p-5 drop-shadow"
   >
     <slot />
   </div>
