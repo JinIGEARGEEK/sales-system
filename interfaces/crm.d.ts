@@ -18,6 +18,10 @@ type TagStatus = 'active' | 'inactive'
 type BusinessUnit = 'Project' | 'Product'
 type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled'
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
+type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
+// Deliberately broader than ActivityRelatedType (which excludes Lead) — attachments
+// are useful before a Lead ever converts to a Deal.
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
 
 interface Company {
   id: number
@@ -60,6 +64,8 @@ interface Lead {
   status: LeadStatus
   notes: string
   assigned_to: number | null
+  // Set once this Lead has been converted into a Deal (see Deal.lead_id) — null until then.
+  converted_deal_id: number | null
   created_at: Date
 }
 
@@ -76,6 +82,8 @@ interface Deal {
   channel: LeadSource
   business_unit: BusinessUnit | null
   business_unit_item: string | null
+  // Set when this Deal was auto-created by converting a Lead — null for Deals created directly.
+  lead_id: number | null
   created_at: Date
 }
 
@@ -182,6 +190,24 @@ interface Task {
   due_date: Date
   status: TaskStatus
   assigned_to: number | null
+  created_at: Date
+}
+
+// A file or external link attached to a Lead/Deal/Company/Project — quotations,
+// proposals, estimations, plans, etc. Distinct from Quote's own PDF export and
+// Contract.signed_file_url, which stay purpose-specific (api-system-spec.md §8.6).
+// Exactly one of file_url/external_url is set.
+interface Attachment {
+  id: number
+  related_type: AttachmentRelatedType
+  related_id: number
+  category: AttachmentCategory
+  file_name: string
+  file_url: string | null
+  external_url: string | null
+  file_size: number | null
+  mime_type: string | null
+  uploaded_by: number
   created_at: Date
 }
 

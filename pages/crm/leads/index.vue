@@ -38,6 +38,7 @@
       @view-detail="onViewDetail"
       @edit="onEdit"
       @convert="onConvert"
+      @view-deal="onViewDeal"
       @delete="requestDelete"
     />
 
@@ -115,7 +116,8 @@ const columns: TableDataColumn[] = [
     actions: [
       { label: t('crm.leads.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       { label: t('crm.leads.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
-      { label: t('crm.leads.index.actions.convert'), emitName: 'convert', isBorderBottom: false },
+      { label: t('crm.leads.index.actions.convert'), emitName: 'convert', isBorderBottom: false, hideIf: row => !!row.converted_deal_id },
+      { label: t('crm.leads.index.actions.viewDeal'), emitName: 'viewDeal', isBorderBottom: false, hideIf: row => !row.converted_deal_id },
       { label: t('crm.leads.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -131,6 +133,10 @@ const onEdit = (row: Lead) => {
 
 const onConvert = (row: Lead) => {
   navigateTo(`/crm/deals/create?lead_id=${row.id}`)
+}
+
+const onViewDeal = (row: Lead) => {
+  navigateTo(`/crm/deals/${row.converted_deal_id}`)
 }
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredLeads.value.length)

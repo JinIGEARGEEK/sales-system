@@ -72,6 +72,7 @@ export default {
       projects: 'Projects',
       activity: 'Activity',
       tasks: 'Tasks',
+      attachments: 'Attachments',
     },
     companyName: 'Company Name',
     industry: 'Industry',
@@ -110,5 +111,9 @@ export default {
     editTaskSuccess: 'Task updated successfully',
     companyNotFound: 'Company not found.',
     updateSuccess: 'Company updated successfully',
+    attachmentsHeading: 'Attachments',
+    addAttachment: 'Add Attachment',
+    addAttachmentSuccess: 'Attachment added',
+    removeAttachmentSuccess: 'Attachment removed',
   },
 }

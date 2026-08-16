@@ -270,6 +270,26 @@
           <CrmActivityTimeline :items="dealActivity" />
         </ContainerTemplate>
       </div>
+
+      <div v-else-if="activeTab === 'attachments'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.deals.detail.attachmentsTitle') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.deals.detail.addAttachment')"
+              icon="material-symbols:add"
+              small
+              @click="addAttachmentOpen = true"
+            />
+          </div>
+          <CrmAttachmentList :attachments="dealAttachments" @remove="onRemoveAttachment" />
+        </ContainerTemplate>
+
+        <CrmAddAttachmentModal
+          v-model:open="addAttachmentOpen"
+          @submit="onAddAttachment"
+        />
+      </div>
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -305,6 +325,7 @@ const tasksStore = useTasksStore()
 const activitiesStore = useActivitiesStore()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
+const attachmentsStore = useAttachmentsStore()
 
 const dealId = Number(route.params.id)
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
@@ -318,6 +339,7 @@ onMounted(() => {
   activitiesStore.fetchForRelated('deal', dealId)
   quotesStore.fetchForDeal(dealId)
   if (productsStore.items.length === 0) productsStore.fetchAll()
+  attachmentsStore.fetchForRelated('deal', dealId)
 })
 
 // Deal loads asynchronously (dealsStore.fetchAll), so company_id isn't known
@@ -334,6 +356,7 @@ const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.payments'), value: 'payments' },
   { label: dealOverdueTaskCount.value > 0 ? `${t('crm.deals.detail.tabs.tasks')} (${dealOverdueTaskCount.value})` : t('crm.deals.detail.tabs.tasks'), value: 'tasks' },
   { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
+  { label: t('crm.deals.detail.tabs.attachments'), value: 'attachments' },
 ])
 
 const wonModal = ref(false)
@@ -528,6 +551,31 @@ const onCreateProject = async (payload: { name: string, status: ProjectStatus, p
       ...payload,
     })
     success(t('crm.deals.detail.createProjectSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const addAttachmentOpen = ref(false)
+const dealAttachments = computed(() => attachmentsStore.forRelated('deal', dealId))
+
+const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
+  try {
+    if ('file' in payload) {
+      await attachmentsStore.addFile('deal', dealId, payload.category, payload.file)
+    } else {
+      await attachmentsStore.addLink('deal', dealId, payload.category, payload.fileName, payload.externalUrl)
+    }
+    success(t('crm.deals.detail.addAttachmentSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onRemoveAttachment = async (id: number) => {
+  try {
+    await attachmentsStore.remove(id)
+    success(t('crm.deals.detail.removeAttachmentSuccess'))
   } catch {
     error(t('global.genericError'))
   }

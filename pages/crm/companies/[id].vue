@@ -212,6 +212,26 @@
           @submit="onSubmitTask"
         />
       </div>
+
+      <div v-else-if="activeTab === 'attachments'">
+        <ContainerTemplate>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.attachmentsHeading') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.companies.detail.addAttachment')"
+              icon="material-symbols:add"
+              small
+              @click="addAttachmentOpen = true"
+            />
+          </div>
+          <CrmAttachmentList :attachments="companyAttachments" @remove="onRemoveAttachment" />
+        </ContainerTemplate>
+
+        <CrmAddAttachmentModal
+          v-model:open="addAttachmentOpen"
+          @submit="onAddAttachment"
+        />
+      </div>
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -243,6 +263,7 @@ const activitiesStore = useActivitiesStore()
 const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()
 const projectsStore = useProjectsStore()
+const attachmentsStore = useAttachmentsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -255,6 +276,7 @@ onMounted(() => {
   activitiesStore.fetchForRelated('company', companyId)
   customerProductsStore.fetchForCompany(companyId)
   projectsStore.fetchForCompany(companyId)
+  attachmentsStore.fetchForRelated('company', companyId)
 })
 
 const activeTab = ref('overview')
@@ -267,6 +289,7 @@ const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.projects'), value: 'projects' },
   { label: t('crm.companies.detail.tabs.activity'), value: 'activity' },
   { label: companyOverdueTaskCount.value > 0 ? `${t('crm.companies.detail.tabs.tasks')} (${companyOverdueTaskCount.value})` : t('crm.companies.detail.tabs.tasks'), value: 'tasks' },
+  { label: t('crm.companies.detail.tabs.attachments'), value: 'attachments' },
 ])
 
 const companyContacts = computed(() => contactsStore.byCompany(companyId))
@@ -360,6 +383,31 @@ const onSave = async () => {
       notes: form.notes,
     })
     success(t('crm.companies.detail.updateSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const addAttachmentOpen = ref(false)
+const companyAttachments = computed(() => attachmentsStore.forRelated('company', companyId))
+
+const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
+  try {
+    if ('file' in payload) {
+      await attachmentsStore.addFile('company', companyId, payload.category, payload.file)
+    } else {
+      await attachmentsStore.addLink('company', companyId, payload.category, payload.fileName, payload.externalUrl)
+    }
+    success(t('crm.companies.detail.addAttachmentSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onRemoveAttachment = async (id: number) => {
+  try {
+    await attachmentsStore.remove(id)
+    success(t('crm.companies.detail.removeAttachmentSuccess'))
   } catch {
     error(t('global.genericError'))
   }

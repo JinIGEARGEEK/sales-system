@@ -26,7 +26,7 @@
       >
         <div
           v-for="item in grouped[column.value] || []"
-          :key="item.id"
+          :key="`${item._type}-${item.id}`"
           draggable="true"
           class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-[var(--color-card-border)] bg-white p-3 active:cursor-grabbing"
           @dragstart="onDragStart(item)"
@@ -49,9 +49,15 @@ import { DEAL_STAGE_COLORS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
+// A card can be a Deal or a Lead being shown ahead of conversion — `_lane` is the
+// column (DealStage value) it renders under, precomputed by the caller so this
+// component never needs to know how a Lead's status maps onto Deal stages.
+type PipelineCard = { id: number, _type: 'deal', _lane: string } & Deal
+  | { id: number, _type: 'lead', _lane: string } & Lead
+
 const props = defineProps<{
   columns: Select[]
-  items: Deal[]
+  items: PipelineCard[]
 }>()
 
 const FALLBACK_COLOR = 'var(--color-primary)'
@@ -82,21 +88,21 @@ const getColumnTint = (value: string) => {
 }
 
 const emit = defineEmits<{
-  move: [item: Deal, newValue: string]
-  select: [item: Deal]
+  move: [item: PipelineCard, newValue: string]
+  select: [item: PipelineCard]
 }>()
 
-const draggingItem = ref<Deal | null>(null)
+const draggingItem = ref<PipelineCard | null>(null)
 
 const grouped = computed(() => {
-  const result: Record<string, Deal[]> = {}
+  const result: Record<string, PipelineCard[]> = {}
   for (const item of props.items) {
-    (result[item.stage] ||= []).push(item)
+    (result[item._lane] ||= []).push(item)
   }
   return result
 })
 
-const onDragStart = (item: Deal) => {
+const onDragStart = (item: PipelineCard) => {
   draggingItem.value = item
 }
 

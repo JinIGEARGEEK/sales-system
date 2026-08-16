@@ -209,18 +209,19 @@ interface Lead {
   status: LeadStatus
   notes: string
   assigned_to: number | null   // User.id
+  converted_deal_id: number | null   // Deal.id once converted, else null — see /leads/:id/convert
   created_at: string
 }
 ```
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `search` (name/company_name/email). Backs `pages/crm/leads/index.vue`. |
+| `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `search` (name/company_name/email), `exclude_converted=true` (returns only Leads with `converted_deal_id IS NULL` — used by the Deals Pipeline board, see §7.1, so already-converted Leads don't show up as cards alongside their own resulting Deal). Backs `pages/crm/leads/index.vue`. |
 | `POST` | `/leads` | 🟢 | Create. |
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
 | `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). |
 | `DELETE` | `/leads/:id` | 🟢 | Delete. |
-| `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. |
+| `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Sets the new Deal's `lead_id` and the Lead's `converted_deal_id` in the same transaction. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Lead has already been converted (`converted_deal_id` already set) — guards against a double-fire from the Kanban drag-to-convert flow (§7.1). |
 
 ---
 
@@ -331,9 +332,12 @@ interface Deal {
   channel: LeadSource
   business_unit: BusinessUnit | null
   business_unit_item: string | null   // free-text label, e.g. specific product/project name
+  lead_id: number | null   // set when auto-created via /leads/:id/convert, else null
   created_at: string
 }
 ```
+
+> **Unified pipeline board:** `pages/crm/deals/index.vue`'s Kanban also renders unconverted Leads (`GET /leads?exclude_converted=true`, §3) as cards in the `Lead`/`Qualified` columns, plus Disqualified Leads in `Lost`. Dragging a Lead card within `Lead`/`Qualified`/`Lost` just updates its `status` (`PUT /leads/:id`); dragging it into `Proposal Sent`, `Negotiation`, or `Won` instead fires `POST /leads/:id/convert` (§3) with `stage` set to the dropped column, turning the card into a real Deal in place.
 
 | Method | Path | Status | Description |
 |---|---|---|---|
@@ -589,6 +593,39 @@ interface AuditLogEntry {
 | `GET` | `/audit-log` | Admin | Filters: `entity_type`, `entity_id`, `actor_id`, date range. Must be **append-only** at the storage layer (`NFR-007`) — no `PUT`/`DELETE` route should exist for this resource at all. |
 
 At minimum, write an entry whenever: a Deal's `stage` changes, a Deal's `status` becomes `won`/`lost`, or a `CustomerProduct`/`Project` `status` changes (per `FR-CRM-082`'s explicit minimum scope) — all four are now implemented (`deals.go` for the Deal events, `projects.go`/`products.go` for the other two). The frontend's `/admin/activity-log` page is already repointed at this real endpoint.
+
+### 8.6 Attachments (`FR-CRM-085`–`090`)
+
+Generic file/link attachments for Leads, Deals, Companies, and Projects — quotations, proposals, estimations, plans, and other supporting material — as distinct from the two narrower, purpose-specific file fields that already exist: `Quote`'s exported PDF (§7.4) and `Contract.signed_file_url` (§8.1). Those keep their own dedicated upload endpoints; this is the general-purpose one for everything else.
+
+```ts
+type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
+
+interface Attachment {
+  id: number
+  related_type: AttachmentRelatedType
+  related_id: number
+  category: AttachmentCategory
+  file_name: string
+  file_url: string | null       // set when uploaded as a binary file (§6.1 convention)
+  external_url: string | null   // set when linking an external doc instead (e.g. Google Sheets/Docs/Drive) — link, not upload, since Google Workspace files aren't downloaded/re-hosted
+  file_size: number | null      // bytes; null when external_url is set
+  mime_type: string | null      // null when external_url is set
+  uploaded_by: number
+  created_at: string
+}
+```
+
+Exactly one of `file_url`/`external_url` must be present on every row — reject a create request that sets both or neither, same as `productionAllowedKeys`-style field-level validation elsewhere in this spec (§8.3).
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/attachments` | any | Filters: `related_type`, `related_id` (required together), `category`. Backs a shared "Attachments" panel usable on Lead/Deal/Company/Project detail pages, the same way `/activities` (§7.2) backs the shared timeline — note `Activity` itself doesn't cover Lead, so this is one step broader than that existing pattern. |
+| `POST` | `/attachments` | Sales/Admin (same RBAC as Project create, §8.3) | Two request shapes depending on which field is set: `multipart/form-data` with a `file` part (§6.1 convention: max 10 MB, allow-listed MIME types — PDF, PNG/JPG, XLSX/XLS/CSV) when uploading, or a plain JSON body `{ related_type, related_id, category, external_url }` when linking. Always also takes `related_type`/`related_id`/`category` either as form fields or JSON. |
+| `DELETE` | `/attachments/:id` | Sales/Admin, or the original uploader | Deletes the metadata row only — the file itself is left in object storage (no orphan-cleanup job in v1, matching §6.1's general storage approach). |
+
+> **Lead → Deal conversion (`POST /leads/:id/convert`, §3):** re-point any `Attachment` rows with `related_type: 'lead'` and `related_id: <the converted lead>` to `related_type: 'deal'`/the newly created Deal's id, in the same transaction as the conversion — don't leave them stranded on a Lead record that no longer appears in any list view once converted.
 
 ---
 

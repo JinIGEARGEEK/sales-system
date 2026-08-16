@@ -287,10 +287,12 @@ const getColumAction = ():TableDataColumn => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getActionMenuItems = (col: TableDataColumn, row: any, _rowIndex: number) => {
   if (!col.actions) return []
-  return col.actions.map(action => ({
-    label: action.label,
-    onSelect: () => emit(action.emitName as never, row),
-  }))
+  return col.actions
+    .filter(action => !action.hideIf || !action.hideIf(row))
+    .map(action => ({
+      label: action.label,
+      onSelect: () => emit(action.emitName as never, row),
+    }))
 }
 
 const innerField = ref('')

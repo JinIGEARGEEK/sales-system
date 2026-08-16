@@ -12,6 +12,8 @@ interface TableDataColumnActions {
   label: string
   emitName: string
   isBorderBottom: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  hideIf?: (row: any) => boolean
 }
 
 interface TableTypeLink {

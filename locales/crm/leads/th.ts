@@ -20,6 +20,7 @@ export default {
       viewDetail: 'ดูรายละเอียด',
       edit: 'แก้ไข',
       convert: 'แปลงเป็น Deal',
+      viewDeal: 'ดู Deal',
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบ Lead สำเร็จ',
@@ -61,5 +62,9 @@ export default {
     saveChanges: 'บันทึกการเปลี่ยนแปลง',
     leadNotFound: 'ไม่พบข้อมูล Lead',
     updateSuccess: 'แก้ไข Lead สำเร็จ',
+    attachmentsHeading: 'ไฟล์แนบ',
+    addAttachment: 'เพิ่มไฟล์แนบ',
+    addAttachmentSuccess: 'เพิ่มไฟล์แนบแล้ว',
+    removeAttachmentSuccess: 'ลบไฟล์แนบแล้ว',
   },
 }

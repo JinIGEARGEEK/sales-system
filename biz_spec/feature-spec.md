@@ -28,7 +28,7 @@
 
 **กรณีที่ 1 — จาก Lead ถึง Deal ที่ปิดสำเร็จ พร้อมงานติดตามอัตโนมัติ**
 1. เซลล์สร้าง Lead ใหม่จากช่องทางเว็บไซต์ พร้อมระบุแหล่งที่มา
-2. เซลล์ตรวจสอบคุณสมบัติ (Qualify) แล้วแปลง Lead เป็น Deal พร้อมสร้างข้อมูลบริษัทและผู้ติดต่อใหม่โดยอัตโนมัติ
+2. Lead นี้ปรากฏเป็นการ์ดบนบอร์ด Kanban เดียวกับ Deal ทันที (ในคอลัมน์ "Lead") — เซลล์ลากการ์ดไปยังคอลัมน์ "Qualified" เพื่อตรวจสอบคุณสมบัติ แล้วลากต่อไปยัง "Proposition" เพื่อแปลงเป็น Deal โดยอัตโนมัติ พร้อมสร้างข้อมูลบริษัทและผู้ติดต่อใหม่ทันที ไม่ต้องกรอกฟอร์มแยก
 3. เซลล์ลาก Deal ผ่านขั้นตอนต่าง ๆ บนบอร์ด Kanban จนถึงขั้น "เจรจาต่อรอง"
 4. เมื่อกดปิด Deal สำเร็จ ("Won") ระบบจะสร้างงานติดตาม "นัดหมาย Kickoff Call" ให้อัตโนมัติ กำหนดส่งใน 3 วัน และมอบหมายให้เจ้าของ Deal ทันที
 5. เซลล์บันทึกการชำระเงินงวดแรกในหน้า Deal และเห็นยอดที่ชำระแล้ว/ยอดคงเหลือแบบเรียลไทม์
@@ -112,7 +112,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-001 | System shall allow creating a Lead with name, contact info, source (referral, web, event, ads, etc.), and notes. | M | ✅ |
 | FR-CRM-002 | System shall support Lead status: New, Contacted, Qualified, Disqualified. | M | ✅ |
 | FR-CRM-003 | System shall allow assigning a Lead to a Sales Rep, manually or via round-robin/rule (stretch). | M / C | 🚧 manual assign only, no round-robin |
-| FR-CRM-004 | System shall support converting a Qualified Lead into a Deal (and Contact/Company if new). | M | ✅ |
+| FR-CRM-004 | System shall support converting a Qualified Lead into a Deal (and Contact/Company if new), either via a manual "Convert to Deal" action or automatically when a Lead card is dragged past "Qualified" on the unified Deals Pipeline board (FR-CRM-022). | M | ✅ |
 | FR-CRM-005 | System shall capture Lead source analytics (count/conversion rate by source). | S | ⬜ |
 
 ### 3.2 Company & Contact Management
@@ -132,7 +132,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 |---|---|---|---|
 | FR-CRM-020 | System shall support Deals/Opportunities with title, value, currency, expected close date, owner (Sales Rep), and linked Company/Contact. | M | ✅ |
 | FR-CRM-021 | System shall support a customizable pipeline of stages (e.g., Lead → Qualified → Proposition → Negotiation → Won/Lost). | M | 🚧 fixed stage list (`DEAL_STAGE_OPTIONS` constant), not Admin-configurable — "Proposition" is the display label for the `Proposal Sent` stage value |
-| FR-CRM-022 | System shall provide a Kanban board view of Deals per stage, with drag-and-drop to change stage. | M | ✅ |
+| FR-CRM-022 | System shall provide a Kanban board view of Deals per stage, with drag-and-drop to change stage. Unconverted Leads also render as cards in the Lead/Qualified/Lost columns (Disqualified Leads land in Lost); dragging a Lead card into Proposal Sent/Negotiation/Won auto-converts it into a real Deal (FR-CRM-004). | M | ✅ |
 | FR-CRM-023 | System shall record a reason code when a Deal is marked "Lost" (e.g., price, timing, competitor, no budget). | S | ⬜ |
 | FR-CRM-024 | System shall support Deal probability (%) either manually set or defaulted by stage, feeding into forecast calculations. | S | ⬜ |
 | FR-CRM-025 | System shall allow re-assigning a Deal's owner, with history of prior owners retained. | S | 🚧 owner/assignee is editable; no history retained |
@@ -221,6 +221,21 @@ This is the core addition that makes the CRM follow the **real, ongoing relation
 
 > Note: the *account management* half of this section — creating/editing/listing Staff user accounts (`pages/admin/users/`) — is ✅ built; it's specifically the *access-control enforcement* (FR-CRM-080) and *configurability* (FR-CRM-081) that are missing.
 
+### 3.9 Document Attachments
+
+A generic attachment mechanism for the working documents Sales/Production actually pass around — quotations, proposals, estimations, plans, and other supporting material — as distinct from the two narrower, already-specified file fields that exist for a specific lifecycle purpose: the Quote PDF export (FR-CRM-042) and the Contract signed document (FR-CRM-044). Those two stay as-is; this section covers everything else, attachable to a Lead, Deal, Company, or Project.
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR-CRM-085 | System shall allow uploading one or more file attachments to a Lead, Deal, Company, or Project, each tagged with a category: Quotation, Proposal, Estimation, Plan, Support Info, or Other. | M | ⬜ |
+| FR-CRM-086 | Accepted attachment types shall be PDF, image (PNG/JPG), and spreadsheet (XLSX/XLS/CSV), capped at 10 MB per file (same limit as §6.1's existing upload convention). | M | ⬜ |
+| FR-CRM-087 | System shall also accept an external link (e.g. a Google Sheets/Docs/Drive URL) in place of an uploaded file, since those formats are shared by link rather than downloaded/re-uploaded as a binary. | M | ⬜ |
+| FR-CRM-088 | The record's detail page shall list all attachments (file/link name, category, uploader, uploaded date) with download (for uploaded files) or open-link (for external links) actions. | M | ⬜ |
+| FR-CRM-089 | Only the Sales Rep/Sales Manager/Admin roles shall be able to upload or delete an attachment; any role that can already view the parent Lead/Deal/Company/Project may view and download its attachments. | M | ⬜ |
+| FR-CRM-090 | When a Lead is converted into a Deal (FR-CRM-004), any attachments on that Lead shall be carried over to the resulting Deal rather than left behind on the now-converted Lead record. | M | ⬜ |
+
+> Deleting an attachment (FR-CRM-089) removes only its metadata row — the underlying file in object storage is not scrubbed. Orphaned-file cleanup is out of scope for v1, consistent with how uploads are handled elsewhere in this spec (§6.1).
+
 ---
 
 ## 4. Data Model (Core Entities)
@@ -235,6 +250,10 @@ Deal    (1) ── (N) Contract
 Deal    (1) ── (N) Payment                              [§3.3 — partial payments toward Deal value]
 Deal    (1) ── (N) Activity (call/email/meeting note)
 Deal    (1) ── (N) Task/Reminder
+Deal    (1) ── (N) Attachment                           [§3.9 — polymorphic, also attaches to Lead/Company/Project]
+Lead    (1) ── (N) Attachment                           [§3.9 — carried over to the Deal on conversion, FR-CRM-090]
+Company (1) ── (N) Attachment                           [§3.9]
+Project (1) ── (N) Attachment                           [§3.9]
 Contact (1) ── (N) Activity
 User (1) ── (N) Deal (owner)
 User (1) ── (1) Role
@@ -254,6 +273,7 @@ Key entities and notable fields:
 - **Product**: id, name, category, description, is_active
 - **CustomerProduct**: id, company_id, product_id, status (Interested/Trial/Active/Churned), start_date, end_date, source_deal_id (nullable)
 - **Project**: id, company_id, deal_id (nullable), name, status (Not Started/In Progress/On Hold/Completed/Cancelled), start_date, target_end_date, production_reference (text/url, nullable), notes
+- **Attachment**: id, related_type (lead/deal/company/project), related_id, category (Quotation/Proposal/Estimation/Plan/Support/Other), file_name, file_url (nullable), external_url (nullable — exactly one of file_url/external_url is set), file_size (nullable), mime_type (nullable), uploaded_by, created_at
 - **User**: id, name, email, role, active
 
 Note: `Product`, `CustomerProduct`, and `Project` are kept deliberately summary-level. No Task/Sprint/Roadmap/FeatureRequest tables exist in this schema — that detail lives entirely in Production's own system.
@@ -309,7 +329,7 @@ Note: `Product`, `CustomerProduct`, and `Project` are kept deliberately summary-
 
 What actually exists today vs. what §3 specifies, at a glance:
 
-**✅ Built:** Lead CRUD + status + Lead→Deal conversion (§3.1); Company/Contact CRUD + tags (§3.2), now backed by real Pinia stores (`stores/companies.ts`/`stores/contacts.ts`) shared across every page instead of static per-page mock copies; Deal CRUD, Kanban pipeline, multiple deals per company, and per-Deal Payment tracking (record installments, live total-paid/remaining-balance) via `stores/payments.ts` and `components/Crm/AddPaymentModal.vue` (§3.3, FR-CRM-027/028); activity timeline display (§3.4); Tasks/Follow-ups (§3.4, FR-CRM-032) via `stores/tasks.ts` — per-Deal/Contact/Company Tasks tabs, a dedicated all-tasks page (`/crm/tasks`) with status/assignee filters and bulk mark-done/reassign, a confirm-before-marking-done dialog, and an auto-created "Schedule kickoff call" follow-up task whenever a Deal is marked Won; pipeline dashboard with win rate over a selectable date range, average deal size/sales cycle, pipeline coverage vs. quota, a trailing revenue trend chart, win-rate-by-industry breakdown, an "Upcoming Follow-ups" task widget, and filtering by date range/Business Unit (Project or Product)/Channel (§3.6, FR-CRM-050/051/057/058/059, and part of FR-CRM-055); a global cross-entity search (Deals/Companies/Contacts/Leads) in the top nav; Staff/user account CRUD and login (§3.8 account management only).
+**✅ Built:** Lead CRUD + status + Lead→Deal conversion, either as a manual action or automatically by dragging a Lead card past "Qualified" on the unified Deals Pipeline board where unconverted Leads and Deals now render side by side (§3.1, §3.3, FR-CRM-004/022); Company/Contact CRUD + tags (§3.2), now backed by real Pinia stores (`stores/companies.ts`/`stores/contacts.ts`) shared across every page instead of static per-page mock copies; Deal CRUD, Kanban pipeline, multiple deals per company, and per-Deal Payment tracking (record installments, live total-paid/remaining-balance) via `stores/payments.ts` and `components/Crm/AddPaymentModal.vue` (§3.3, FR-CRM-027/028); activity timeline display (§3.4); Tasks/Follow-ups (§3.4, FR-CRM-032) via `stores/tasks.ts` — per-Deal/Contact/Company Tasks tabs, a dedicated all-tasks page (`/crm/tasks`) with status/assignee filters and bulk mark-done/reassign, a confirm-before-marking-done dialog, and an auto-created "Schedule kickoff call" follow-up task whenever a Deal is marked Won; pipeline dashboard with win rate over a selectable date range, average deal size/sales cycle, pipeline coverage vs. quota, a trailing revenue trend chart, win-rate-by-industry breakdown, an "Upcoming Follow-ups" task widget, and filtering by date range/Business Unit (Project or Product)/Channel (§3.6, FR-CRM-050/051/057/058/059, and part of FR-CRM-055); a global cross-entity search (Deals/Companies/Contacts/Leads) in the top nav; Staff/user account CRUD and login (§3.8 account management only).
 
 **🚧 Partial:** Bulk import of Companies/Contacts (FR-CRM-014) — works for CSV/XLS/XLSX, but built specifically against one FlowAccount export column layout, and dedupes by company name rather than email/domain; Lead assignment (manual only, no round-robin); primary-contact flag on Contacts (unconfirmed); pipeline stages (fixed list, not configurable); deal owner reassignment (no history); manual activity-entry form (unconfirmed); Quotes (PDF upload/delete works on the Deal detail page against a page-local mock array, not a shared store; no line-item create form); per-rep leaderboard (won deals/revenue/win rate shown, activity count not); report filtering (date range/Business Unit/Channel work, filtering by Sales Rep or Company tag does not); pipeline coverage quota is a hardcoded constant, not Admin-configurable; Tasks' "notification on due" (email/push delivery) is not built — everything else in FR-CRM-032 is.
 

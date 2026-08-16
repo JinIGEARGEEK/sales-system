@@ -137,6 +137,7 @@ const onSubmit = async () => {
       channel: 'Other',
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
+      lead_id: originatingLead?.id ?? null,
       created_at: new Date(),
     })
     success(t('crm.deals.create.createSuccess'))

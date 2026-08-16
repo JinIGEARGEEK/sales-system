@@ -72,6 +72,7 @@ export default {
       projects: 'Projects',
       activity: 'กิจกรรม',
       tasks: 'งานติดตาม',
+      attachments: 'ไฟล์แนบ',
     },
     companyName: 'ชื่อบริษัท',
     industry: 'อุตสาหกรรม',
@@ -110,5 +111,9 @@ export default {
     editTaskSuccess: 'แก้ไขงานติดตามสำเร็จ',
     companyNotFound: 'ไม่พบบริษัท',
     updateSuccess: 'แก้ไขบริษัทสำเร็จ',
+    attachmentsHeading: 'ไฟล์แนบ',
+    addAttachment: 'เพิ่มไฟล์แนบ',
+    addAttachmentSuccess: 'เพิ่มไฟล์แนบแล้ว',
+    removeAttachmentSuccess: 'ลบไฟล์แนบแล้ว',
   },
 }

@@ -20,6 +20,7 @@ export default {
       viewDetail: 'View Detail',
       edit: 'Edit',
       convert: 'Convert to Deal',
+      viewDeal: 'View Deal',
       delete: 'Delete',
     },
     deleteSuccess: 'Lead deleted successfully',
@@ -61,5 +62,9 @@ export default {
     saveChanges: 'Save Changes',
     leadNotFound: 'Lead not found.',
     updateSuccess: 'Lead updated successfully',
+    attachmentsHeading: 'Attachments',
+    addAttachment: 'Add Attachment',
+    addAttachmentSuccess: 'Attachment added',
+    removeAttachmentSuccess: 'Attachment removed',
   },
 }

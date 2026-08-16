@@ -14,7 +14,13 @@
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
         </div>
         <ButtonPrimary
-          v-if="lead.status !== 'Disqualified'"
+          v-if="lead.converted_deal_id"
+          :label="t('crm.leads.index.actions.viewDeal')"
+          icon="material-symbols:open-in-new"
+          @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
+        />
+        <ButtonPrimary
+          v-else-if="lead.status !== 'Disqualified'"
           :label="t('crm.leads.detail.convertToDeal')"
           icon="material-symbols:swap-horiz"
           @click="navigateTo(`/crm/deals/create?lead_id=${lead.id}`)"
@@ -46,6 +52,24 @@
           </div>
         </Form>
       </ContainerTemplate>
+
+      <ContainerTemplate class="mt-4">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-base font-semibold">{{ t('crm.leads.detail.attachmentsHeading') }}</h3>
+          <ButtonPrimary
+            :label="t('crm.leads.detail.addAttachment')"
+            icon="material-symbols:add"
+            small
+            @click="addAttachmentOpen = true"
+          />
+        </div>
+        <CrmAttachmentList :attachments="leadAttachments" @remove="onRemoveAttachment" />
+      </ContainerTemplate>
+
+      <CrmAddAttachmentModal
+        v-model:open="addAttachmentOpen"
+        @submit="onAddAttachment"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -65,13 +89,40 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
+const attachmentsStore = useAttachmentsStore()
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 onMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll()
+  attachmentsStore.fetchForRelated('lead', leadId)
 })
+
+const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
+const addAttachmentOpen = ref(false)
+
+const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
+  try {
+    if ('file' in payload) {
+      await attachmentsStore.addFile('lead', leadId, payload.category, payload.file)
+    } else {
+      await attachmentsStore.addLink('lead', leadId, payload.category, payload.fileName, payload.externalUrl)
+    }
+    success(t('crm.leads.detail.addAttachmentSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
+
+const onRemoveAttachment = async (id: number) => {
+  try {
+    await attachmentsStore.remove(id)
+    success(t('crm.leads.detail.removeAttachmentSuccess'))
+  } catch {
+    error(t('global.genericError'))
+  }
+}
 
 const form = reactive({
   name: lead.value?.name || '',

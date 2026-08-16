@@ -94,6 +94,7 @@ const onSubmit = async () => {
       status: form.status as LeadStatus,
       notes: form.notes,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      converted_deal_id: null,
       created_at: new Date(),
     })
     success(t('crm.leads.create.createSuccess'))

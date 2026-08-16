@@ -28,22 +28,39 @@
 
     <CrmPipelineBoard
       :columns="DEAL_STAGE_OPTIONS"
-      :items="filteredDeals"
+      :items="pipelineItems"
       @move="onMove"
       @select="onSelect"
     >
       <template #card="{ item }">
-        <div>
-          <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-          <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
-        </div>
-        <p class="mt-2 text-sm font-medium text-[var(--color-primary)]">
-          {{ priceFormat(item.value) }} {{ t('crm.dashboard.currencyUnit') }}
-        </p>
-        <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
-          <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
-          <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
-        </div>
+        <template v-if="item._type === 'deal'">
+          <div>
+            <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
+            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
+          </div>
+          <p class="mt-2 text-sm font-medium text-[var(--color-primary)]">
+            {{ priceFormat(item.value) }} {{ t('crm.dashboard.currencyUnit') }}
+          </p>
+          <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
+            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
+            <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
+          </div>
+        </template>
+        <template v-else>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <p class="line-clamp-2 text-sm font-medium">{{ item.name }}</p>
+              <UBadge size="xs" color="neutral" variant="subtle">
+                {{ item.status === 'Disqualified' ? t('crm.deals.index.disqualifiedLeadBadge') : item.status }}
+              </UBadge>
+            </div>
+            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ item.company_name }}</p>
+          </div>
+          <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
+            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
+            <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
+          </div>
+        </template>
       </template>
     </CrmPipelineBoard>
   </div>
@@ -67,10 +84,12 @@ const { priceFormat } = useFormatter()
 const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
+const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
   dealsStore.fetchAll()
+  leadsStore.fetchAll({ exclude_converted: true })
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
@@ -92,21 +111,89 @@ const filteredDeals = computed(() => {
   })
 })
 
-const onMove = async (item: Deal, newStage: string) => {
-  const deal = dealsStore.items.find(d => d.id === item.id)
-  if (deal && deal.stage !== newStage) {
-    const previousStage = deal.stage
+// Leads have no business_unit/channel, so only search and assignee apply here.
+const filteredLeads = computed(() => {
+  return leadsStore.items.filter((lead) => {
+    const matchSearch = !search.value
+      || lead.name.toLowerCase().includes(search.value.toLowerCase())
+      || lead.company_name.toLowerCase().includes(search.value.toLowerCase())
+    const matchAssignee = matchesAssigneeFilter(lead.assigned_to, assigneeFilter.value)
+    return matchSearch && matchAssignee
+  })
+})
+
+// A Lead has no `stage` — this maps its status onto the board's DealStage lanes:
+// New/Contacted share the "Lead" column, Qualified gets its own column, and
+// Disqualified lands in "Lost" alongside real lost Deals (see the card badge).
+const leadLane = (lead: Lead): string => {
+  if (lead.status === 'Disqualified') return 'Lost'
+  if (lead.status === 'Qualified') return 'Qualified'
+  return 'Lead'
+}
+
+// Status a Lead should take when dropped directly on one of its own lanes.
+// Dropping past "Qualified" (Proposal Sent/Negotiation/Won) instead triggers
+// a real conversion — see the `else` branch of onMove below.
+const LEAD_STATUS_FOR_LANE: Record<string, LeadStatus> = {
+  Lead: 'New',
+  Qualified: 'Qualified',
+  Lost: 'Disqualified',
+}
+
+const pipelineItems = computed(() => [
+  ...filteredDeals.value.map(deal => ({ ...deal, _type: 'deal' as const, _lane: deal.stage })),
+  ...filteredLeads.value.map(lead => ({ ...lead, _type: 'lead' as const, _lane: leadLane(lead) })),
+])
+
+const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string) => {
+  if (item._type === 'deal') {
+    const deal = dealsStore.items.find(d => d.id === item.id)
+    if (deal && deal.stage !== newStage) {
+      const previousStage = deal.stage
+      try {
+        await dealsStore.updateStage(deal.id, newStage as DealStage)
+        success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+      } catch {
+        deal.stage = previousStage
+        error(t('global.genericError'))
+      }
+    }
+    return
+  }
+
+  const lead = leadsStore.items.find(l => l.id === item.id)
+  if (!lead) return
+
+  const newStatus = LEAD_STATUS_FOR_LANE[newStage]
+  if (newStatus) {
+    if (lead.status === newStatus) return
     try {
-      await dealsStore.updateStage(deal.id, newStage as DealStage)
-      success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+      await leadsStore.update(lead.id, { status: newStatus })
+      success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
     } catch {
-      deal.stage = previousStage
       error(t('global.genericError'))
     }
+    return
+  }
+
+  try {
+    const { deal } = await leadsStore.convert(lead.id, {
+      deal: { title: lead.name, value: 0, stage: newStage as DealStage },
+    })
+    const index = leadsStore.items.findIndex(l => l.id === lead.id)
+    if (index !== -1) leadsStore.items.splice(index, 1)
+    dealsStore.items.push({
+      ...deal,
+      created_at: new Date(deal.created_at),
+      expected_close_date: deal.expected_close_date ? new Date(deal.expected_close_date) : null,
+    })
+    success(t('crm.deals.index.leadConvertedToDeal'))
+  } catch {
+    error(t('global.genericError'))
   }
 }
 
-const onSelect = (item: Deal) => {
-  navigateTo(`/crm/deals/${item.id}`)
+const onSelect = (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' })) => {
+  navigateTo(item._type === 'deal' ? `/crm/deals/${item.id}` : `/crm/leads/${item.id}`)
 }
 </script>
