@@ -34,7 +34,6 @@
             :label="t('crm.contacts.create.email')"
             :placeholder="t('crm.contacts.create.emailPlaceholder')"
             name="email"
-            rules="required"
           />
           <InputText
             v-model="form.phone"

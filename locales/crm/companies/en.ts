@@ -51,6 +51,13 @@ export default {
     createCompany: 'Create Company',
     cancel: 'Cancel',
     createSuccess: 'Company created successfully',
+    contactsHeading: 'Contacts',
+    contactsSubheading: 'Optionally add this company\'s contacts right away.',
+    addContact: 'Add Contact',
+    noContacts: 'No contacts yet. Click "Add Contact" to add one.',
+    contactRowLabel: 'Contact {index}',
+    removeContact: 'Remove this contact',
+    contactCreateFailed: 'Company created, but some contacts could not be added.',
   },
   detail: {
     pageTitle: 'Company Detail',

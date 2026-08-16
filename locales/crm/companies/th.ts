@@ -51,6 +51,13 @@ export default {
     createCompany: 'สร้างบริษัท',
     cancel: 'ยกเลิก',
     createSuccess: 'สร้างบริษัทสำเร็จ',
+    contactsHeading: 'ผู้ติดต่อ',
+    contactsSubheading: 'เพิ่มผู้ติดต่อของบริษัทนี้ได้ทันที (ไม่บังคับ)',
+    addContact: 'เพิ่มผู้ติดต่อ',
+    noContacts: 'ยังไม่มีผู้ติดต่อ กด "เพิ่มผู้ติดต่อ" เพื่อเพิ่ม',
+    contactRowLabel: 'ผู้ติดต่อ {index}',
+    removeContact: 'ลบผู้ติดต่อนี้',
+    contactCreateFailed: 'สร้างบริษัทสำเร็จ แต่เพิ่มผู้ติดต่อบางรายการไม่สำเร็จ',
   },
   detail: {
     pageTitle: 'รายละเอียดบริษัท',
