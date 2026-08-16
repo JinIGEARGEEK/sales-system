@@ -43,8 +43,11 @@
           <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
           <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
         </div>
-        <div class="mt-2 flex items-center justify-between">
-          <p class="text-sm font-medium text-[var(--color-primary)]">{{ priceFormat(item.value) }}</p>
+        <p class="mt-2 text-sm font-medium text-[var(--color-primary)]">
+          {{ priceFormat(item.value) }} {{ t('crm.dashboard.currencyUnit') }}
+        </p>
+        <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
+          <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
           <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
         </div>
       </template>

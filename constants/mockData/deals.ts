@@ -1,7 +1,10 @@
+// Labels are the display text shown to users; `value` stays 'Proposal Sent' since
+// that's the DealStage the backend API and stored deals actually use — renaming the
+// label doesn't touch the underlying stage identifier.
 export const DEAL_STAGE_OPTIONS: Select[] = [
   { label: 'Lead', value: 'Lead' },
   { label: 'Qualified', value: 'Qualified' },
-  { label: 'Proposal Sent', value: 'Proposal Sent' },
+  { label: 'Proposition', value: 'Proposal Sent' },
   { label: 'Negotiation', value: 'Negotiation' },
   { label: 'Won', value: 'Won' },
   { label: 'Lost', value: 'Lost' },

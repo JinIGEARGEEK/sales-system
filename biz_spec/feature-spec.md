@@ -131,7 +131,7 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-CRM-020 | System shall support Deals/Opportunities with title, value, currency, expected close date, owner (Sales Rep), and linked Company/Contact. | M | ✅ |
-| FR-CRM-021 | System shall support a customizable pipeline of stages (e.g., Lead → Qualified → Proposal Sent → Negotiation → Won/Lost). | M | 🚧 fixed stage list (`DEAL_STAGE_OPTIONS` constant), not Admin-configurable |
+| FR-CRM-021 | System shall support a customizable pipeline of stages (e.g., Lead → Qualified → Proposition → Negotiation → Won/Lost). | M | 🚧 fixed stage list (`DEAL_STAGE_OPTIONS` constant), not Admin-configurable — "Proposition" is the display label for the `Proposal Sent` stage value |
 | FR-CRM-022 | System shall provide a Kanban board view of Deals per stage, with drag-and-drop to change stage. | M | ✅ |
 | FR-CRM-023 | System shall record a reason code when a Deal is marked "Lost" (e.g., price, timing, competitor, no budget). | S | ⬜ |
 | FR-CRM-024 | System shall support Deal probability (%) either manually set or defaulted by stage, feeding into forecast calculations. | S | ⬜ |

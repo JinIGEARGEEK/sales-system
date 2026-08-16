@@ -11,7 +11,7 @@ Built with **Nuxt 4 + Nuxt UI 3 + Tailwind CSS v4**, running as a Single Page Ap
 This app covers the sales lifecycle from an inbound Lead through a Won/Lost Deal:
 
 - **Leads** (`/crm/leads`) — capture, qualify, convert to a Deal (and Company/Contact if new).
-- **Deals** (`/crm/deals`) — a Kanban pipeline (Lead → Qualified → Proposal Sent → Negotiation → Won/Lost) with drag-and-drop stage changes, plus per-Deal Quotes (PDF upload), Payments (installments toward the Deal's total value), Tasks/follow-ups, and an activity timeline.
+- **Deals** (`/crm/deals`) — a Kanban pipeline (Lead → Qualified → Proposition → Negotiation → Won/Lost) with drag-and-drop stage changes, plus per-Deal Quotes (PDF upload), Payments (installments toward the Deal's total value), Tasks/follow-ups, and an activity timeline. "Proposition" is the display label for the `Proposal Sent` stage value — the underlying `DealStage` type/API contract is unchanged.
 - **Companies & Contacts** (`/crm/companies`, `/crm/contacts`) — the customer database, with tagging, per-record Tasks, and a FlowAccount-export bulk-import flow.
 - **Tags** (`/crm/tags`) — shared segmentation labels (Tier/Industry/Priority) used across Companies and Contacts.
 - **Tasks** (`/crm/tasks`) — every follow-up task across all Deals/Contacts/Companies in one filterable list, with bulk mark-done/reassign and a confirm-before-done dialog; a Deal marked "Won" auto-creates a kickoff-call follow-up task.

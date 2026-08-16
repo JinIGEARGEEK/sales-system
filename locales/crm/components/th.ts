@@ -1,6 +1,14 @@
 export default {
   pipelineBoard: {
     noItems: 'ไม่มีรายการ',
+    stageDescriptions: {
+      lead: 'ลูกค้าที่มีแนวโน้มใหม่',
+      qualified: 'ผ่านการคัดกรองแล้ว',
+      proposalSent: 'ส่งข้อเสนอแล้ว',
+      negotiation: 'อยู่ระหว่างเจรจาต่อรอง',
+      won: 'ปิดการขายสำเร็จ',
+      lost: 'ดีลไม่สำเร็จ',
+    },
   },
   activityTimeline: {
     noActivity: 'ยังไม่มีกิจกรรมที่บันทึกไว้',

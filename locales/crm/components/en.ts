@@ -1,6 +1,14 @@
 export default {
   pipelineBoard: {
     noItems: 'No items',
+    stageDescriptions: {
+      lead: 'New potential customer',
+      qualified: 'Confirmed as a good fit',
+      proposalSent: 'Proposal has been sent',
+      negotiation: 'Terms being discussed',
+      won: 'Deal closed successfully',
+      lost: 'Deal did not close',
+    },
   },
   activityTimeline: {
     noActivity: 'No activity logged yet.',
