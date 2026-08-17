@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.projects.index.heading') }}</h2>
+      <h2 class="text-xl font-black">{{ t('crm.projects.index.heading') }}</h2>
     </div>
 
     <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />

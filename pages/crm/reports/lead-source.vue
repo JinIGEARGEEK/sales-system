@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.reports.leadSource.heading') }}</h2>
+        <h2 class="text-xl font-black">{{ t('crm.reports.leadSource.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.leadSource.subheading') }}</p>
       </div>
       <UButton

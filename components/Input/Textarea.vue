@@ -17,6 +17,7 @@
           :rows="Number(props.rows)"
           :maxlength="props.maxlength"
           class="w-full"
+          :ui="{ base: 'text-base' }"
         >
           <slot />
         </UTextarea>

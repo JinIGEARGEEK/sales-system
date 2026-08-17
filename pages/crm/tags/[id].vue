@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="tag">
       <div class="mb-4">
-        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.tags.detail.heading') }}</h2>
+        <h2 class="text-xl font-black">{{ t('crm.tags.detail.heading') }}</h2>
       </div>
 
       <ContainerTemplate>

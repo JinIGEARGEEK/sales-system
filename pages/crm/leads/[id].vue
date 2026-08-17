@@ -10,7 +10,7 @@
             class="cursor-pointer p-0 hover:bg-transparent"
             @click="navigateTo('/crm/leads')"
           />
-          <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ lead.name }}</h2>
+          <h2 class="text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
         </div>
         <ButtonPrimary

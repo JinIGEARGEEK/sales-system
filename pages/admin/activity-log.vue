@@ -6,7 +6,7 @@
     <template v-else>
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.activityLog.title') }}</h2>
+          <h2 class="text-xl font-black">{{ t('admin.activityLog.title') }}</h2>
           <p class="text-sm text-[var(--color-gray)]">{{ dateFormat(new Date().toISOString()) }}</p>
         </div>
       </div>

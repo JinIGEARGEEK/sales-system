@@ -9,7 +9,7 @@
           class="cursor-pointer p-0 hover:bg-transparent"
           @click="navigateTo('/crm/contacts')"
         />
-        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ contact.name }}</h2>
+        <h2 class="text-xl font-black">{{ contact.name }}</h2>
         <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
       </div>
 

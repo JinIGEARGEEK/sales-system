@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('global.auth.changePasswordTitle') }}</h2>
+      <h2 class="text-xl font-black">{{ t('global.auth.changePasswordTitle') }}</h2>
     </div>
 
     <UCard class="max-w-md" :ui="GLASS_PANEL_UI">

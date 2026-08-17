@@ -10,7 +10,7 @@
             class="cursor-pointer p-0 hover:bg-transparent"
             @click="navigateTo('/crm/companies')"
           />
-          <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ company.name }}</h2>
+          <h2 class="text-xl font-black">{{ company.name }}</h2>
           <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
             {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
           </UBadge>

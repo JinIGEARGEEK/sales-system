@@ -89,23 +89,21 @@ Two chart-only categorical tokens exist purely for multi-series charts (Pipeline
 
 ## 3. Typography
 
-### 3.1 Font — a real constraint, not a style choice
+### 3.1 Font
 
-"Prompt" is loaded via local `@font-face` in `assets/styles/typography.css`, but **only three weight files actually exist**: `public/fonts/Prompt-Light.ttf` (300), `Prompt-Regular.ttf` (400), `Prompt-Medium.ttf` (500). There is **no** Bold/ExtraBold/Black file.
+"Prompt" is loaded via local `@font-face` in `assets/styles/typography.css`. All weights actually used in this codebase now have a real font file — `Prompt-Light.ttf` (300), `Prompt-Regular.ttf` (400), `Prompt-Medium.ttf` (500), `Prompt-SemiBold.ttf` (600), `Prompt-Bold.ttf` (700), `Prompt-Black.ttf` (900), all sourced from Google's own `google/fonts` repo (same OFL license as the original three) — so `font-semibold`/`font-bold`/`font-black` all render as genuine weights, not the browser's synthetic ("faux") bold.
 
-This means every `font-bold` / `font-extrabold` / `font-black` utility in this codebase renders via the browser's synthetic ("faux") bold, not a real bold font face — and synthetic bold has a visual ceiling. If a heavier real weight is ever needed:
-- Preferred fix: source and add real `Prompt-Bold.ttf` / `Prompt-Black.ttf` files and register matching `@font-face` blocks.
-- Interim hack already in use: page titles add `[-webkit-text-stroke:0.6px_currentColor]` alongside `font-black` to reinforce the glyph weight beyond what synthetic bold alone achieves (see §3.2). Don't stack this hack much further (thicker strokes start looking like an outline effect, not "bold").
+**Historical note:** before these three files were added, every `font-black` page title carried a `[-webkit-text-stroke:0.6px_currentColor]` hack to compensate for missing real weight — that hack has been removed everywhere (see §3.2) now that 900 is a real face; don't reintroduce it.
 
 ### 3.2 Page title convention
 
 Every page's main `<h2>` title uses the same exact class string:
 
 ```
-text-xl font-black [-webkit-text-stroke:0.6px_currentColor]
+text-xl font-black
 ```
 
-This is applied identically across all 21 pages (list, create, and detail views) — **when adding a new page, copy this exact string**, don't approximate it, so titles stay pixel-consistent site-wide.
+This is applied identically across all 28 pages (list, create, and detail views) — **when adding a new page, copy this exact string**, don't approximate it, so titles stay pixel-consistent site-wide.
 
 ### 3.3 Design-token typography scale (`typography.css`)
 
@@ -228,7 +226,7 @@ Material Symbols exclusively, referenced as `material-symbols:icon-name` (outlin
 | Component | Purpose | Notes |
 |---|---|---|
 | `ButtonPrimary` (`components/Button/Primary.vue`) | The only button wrapper in the app | Wraps `UButton`. Props: `outline` (→ `variant="outline"`), `flat` (→ `variant="ghost"`), `block`, `fitContent`, `small`, `color` (default `primary`). Always `rounded-full px-6 min-w-24`. **There is no separate `ButtonOutline` component** (despite older docs implying one) — use `<ButtonPrimary outline>`. |
-| `InputText`, `InputPassword`, `InputSelect`, `InputTextarea`, `InputDatePicker`, `InputDateRangePicker` (`components/Input/`) | Form field wrappers, all built on `InputFormField` + a Nuxt UI primitive, integrated with Vee-Validate | Follow the existing `v-model`/`label`/`placeholder`/`name`/`rules` prop pattern for any new input wrapper. `InputTextarea`'s `<UTextarea>` explicitly sets `class="w-full"` — any new wrapper around a Nuxt UI form primitive should do the same, since Nuxt UI's root is `inline-flex` and won't stretch to its container without it. **Two size mechanisms coexist on `InputText`/`InputSelect` — don't combine them.** The older `small` boolean only shrinks font size (`text-sm`), used in ~25 places across the app; a proper `size` prop (default `'md'`, forwarded straight to the underlying `UInput`/`USelect`, real Nuxt UI height/padding variant) was added later specifically so a row of inputs/buttons can match height (e.g. `size="xs"` next to `UButton size="xs"` — this is what fixed the dashboard filter bar's inconsistent heights). Prefer `size` for any new call site needing real height control; `small` stays only for existing font-only usages. `InputDateRangePicker` only has `size` (no legacy `small`). |
+| `InputText`, `InputPassword`, `InputSelect`, `InputTextarea`, `InputDatePicker`, `InputDateRangePicker` (`components/Input/`) | Form field wrappers, all built on `InputFormField` + a Nuxt UI primitive, integrated with Vee-Validate | Follow the existing `v-model`/`label`/`placeholder`/`name`/`rules` prop pattern for any new input wrapper. `InputTextarea`'s `<UTextarea>` explicitly sets `class="w-full"` — any new wrapper around a Nuxt UI form primitive should do the same, since Nuxt UI's root is `inline-flex` and won't stretch to its container without it. **Two size mechanisms coexist on `InputText`/`InputSelect` — don't combine them.** The older `small` boolean only shrinks font size (`text-sm`), used in ~25 places across the app; a proper `size` prop (default `'md'`, forwarded straight to the underlying `UInput`/`USelect`, real Nuxt UI height/padding variant) was added later specifically so a row of inputs/buttons can match height (e.g. `size="xs"` next to `UButton size="xs"` — this is what fixed the dashboard filter bar's inconsistent heights). Prefer `size` for any new call site needing real height control; `small` stays only for existing font-only usages. `InputDateRangePicker` only has `size` (no legacy `small`). `InputTextarea` deliberately overrides its `<UTextarea>` to `text-base` (16px) instead of Nuxt UI's default `md`-size `text-sm` (14px) — this app's 14px scale is tuned for scanned content (tables, labels, badges), but a textarea is genuinely *read* prose (notes, addresses, descriptions), where current accessibility guidance calls for 16px minimum. Don't remove this override to "match" the rest of the app's density scale — the two cases aren't the same. |
 | `ContainerTemplate` (`components/Container/Template.vue`) | The white card wrapper around every form (`bg-white rounded-xl p-5 drop-shadow`) | Use for every create/edit form; don't reach for a bare `UCard` for forms. |
 | `TableData` / `TablePagination` / `Table/Card/*` (`components/Table/`) | The data-table system, paired with `TABLE_CARD_TYPE` (`constants/tableCardType.ts`) for column render types (STATUS, ACTION, LINK, MULTI_LINE, UPDATED_AT) | Every list page uses this instead of a hand-rolled table. |
 | `CrmStatusPill` | Segmented status-filter tabs (not a status *badge* despite the name — see `toBadge()` in `useFormatter` for actual badge coloring) | Active state: `border-[var(--color-primary)] bg-[var(--color-primary-bg)] text-[var(--color-primary)]`. Inactive: light gray border/bg. |

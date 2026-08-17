@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.pipelineConfig.heading') }}</h2>
+      <h2 class="text-xl font-black">{{ t('admin.pipelineConfig.heading') }}</h2>
       <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.subheading') }}</p>
     </div>
 

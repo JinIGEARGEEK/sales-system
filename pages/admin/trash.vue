@@ -5,7 +5,7 @@
     </div>
     <template v-else>
       <div class="mb-4">
-        <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.trash.title') }}</h2>
+        <h2 class="text-xl font-black">{{ t('admin.trash.title') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('admin.trash.subtitle') }}</p>
       </div>
 

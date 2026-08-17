@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-4">
       <UBreadcrumb :items="breadcrumbs" />
-      <h2 class="mt-2 text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.users.detail.heading') }}</h2>
+      <h2 class="mt-2 text-xl font-black">{{ t('admin.users.detail.heading') }}</h2>
     </div>
 
     <ContainerTemplate v-if="user">

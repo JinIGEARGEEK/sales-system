@@ -10,7 +10,7 @@
             class="cursor-pointer p-0 hover:bg-transparent"
             @click="navigateTo('/crm/deals')"
           />
-          <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ deal.title }}</h2>
+          <h2 class="text-xl font-black">{{ deal.title }}</h2>
           <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
         </div>
         <ButtonPrimary

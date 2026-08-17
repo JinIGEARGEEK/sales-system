@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('admin.users.index.heading') }}</h2>
+      <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
       <ButtonPrimary
         :label="t('admin.users.index.addStaff')"
         icon="material-symbols:add"
