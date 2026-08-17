@@ -3,7 +3,8 @@
     <div
       v-for="column in columns"
       :key="column.value"
-      class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border border-white/70 shadow-xl"
+      class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl"
+      :style="{ borderColor: getColumnBorderTint(String(column.value)) }"
       @dragover.prevent
       @drop="onDrop(column.value)"
     >
@@ -105,10 +106,16 @@ const getColumnColor = (value: string) => {
 
 const getColumnHeaderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 80%, transparent)`
 
+// A strong, saturated glass tint (not the old barely-there 14% wash) — each
+// lane should read as its own colored panel at a glance, not a near-white
+// card with a faint hint of hue. Kept slightly translucent (88%) so the
+// backdrop-blur still shows some glass-through effect against the page.
 const getColumnTint = (value: string) => {
-  const solidTint = `color-mix(in srgb, ${getColumnColor(value)} 14%, white)`
-  return `color-mix(in srgb, ${solidTint} 92%, transparent)`
+  const solidTint = `color-mix(in srgb, ${getColumnColor(value)} 32%, white)`
+  return `color-mix(in srgb, ${solidTint} 88%, transparent)`
 }
+
+const getColumnBorderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 45%, transparent)`
 
 const emit = defineEmits<{
   move: [item: PipelineCard, newValue: string]
