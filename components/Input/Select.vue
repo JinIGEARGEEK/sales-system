@@ -13,7 +13,7 @@
         v-bind="field"
         :model-value="props.modelValue"
         :data-cy="dataCy"
-        :placeholder="placeholder"
+        :placeholder="placeholder || undefined"
         :items="props.options"
         :loading="props.loading"
         :disabled="props.disable"
