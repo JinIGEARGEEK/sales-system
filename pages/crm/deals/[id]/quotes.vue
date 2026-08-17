@@ -33,7 +33,7 @@
       <div v-else class="flex flex-col gap-3">
         <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
           <div class="mb-2 flex items-center justify-between">
-            <UBadge color="neutral" variant="subtle">{{ quote.status }}</UBadge>
+            <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
             <div class="flex items-center gap-3">
               <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
               <UButton
@@ -110,6 +110,7 @@ const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
+const { quoteStatusBadgeColor } = useQuoteStatusColor()
 
 const dealId = Number(route.params.id)
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))

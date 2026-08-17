@@ -16,7 +16,7 @@
           <span class="text-[11px] text-white/70">{{ getStageDescription(column.value) }}</span>
         </div>
         <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
-          {{ grouped[column.value]?.length || 0 }}
+          {{ columnCounts?.[column.value] ?? (grouped[column.value]?.length || 0) }}
         </span>
       </div>
 
@@ -38,6 +38,10 @@
         <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-[var(--color-gray)]">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
+
+        <!-- Optional per-column "Load more" affordance (e.g. paginated Deals) —
+             composed by the caller since only it knows loaded-vs-total counts. -->
+        <slot name="column-footer" :column="column" />
       </div>
     </div>
   </div>
@@ -59,6 +63,11 @@ type PipelineCard = { id: number, _type: 'deal', _lane: string } & Deal
 const props = defineProps<{
   columns: Select[]
   items: PipelineCard[]
+  // Optional override for the header's count badge, keyed by column.value —
+  // lets a caller show a server-side total (e.g. Deals paginated per stage)
+  // instead of the number of items actually loaded/rendered in that column.
+  // Falls back to grouped[column.value]?.length when a column is absent/undefined.
+  columnCounts?: Record<string, number>
 }>()
 
 const FALLBACK_COLOR = 'var(--color-primary)'

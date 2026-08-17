@@ -7,7 +7,9 @@ type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' 
 type DealStatus = 'open' | 'won' | 'lost'
 type ActivityType = 'call' | 'email' | 'meeting'
 type ActivityRelatedType = 'contact' | 'company' | 'deal'
-type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+// 'expired' is a read-derived value computed server-side (Quote.EffectiveStatus)
+// for display/filtering only — never a value the create/edit status picker sets.
+type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
 type ContractStatus = 'draft' | 'sent' | 'signed' | 'expired'
 type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other'
 type TaskStatus = 'pending' | 'done'
@@ -294,6 +296,11 @@ interface DashboardSummary {
   pipeline_coverage_ratio: number
   quarterly_sales_target: number
   revenue_trend: { label: string, value: number }[]
+  // Forward-looking counterpart to revenue_trend: probability-weighted value of
+  // open deals bucketed by ExpectedCloseDate month (next 6 months). Deals with no
+  // expected_close_date are excluded from every point, so these points may sum to
+  // less than forecasted_revenue above — don't present this as the full forecast.
+  forecast_trend: { label: string, value: number }[]
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number }[]

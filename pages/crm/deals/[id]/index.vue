@@ -71,6 +71,36 @@
           </div>
         </div>
       </UCard>
+
+      <UCard v-if="canViewOwnerHistory" class="mt-4">
+        <template #header>
+          <h3 class="text-base font-semibold">{{ t('crm.deals.detail.ownerHistory') }}</h3>
+        </template>
+        <div v-if="ownerHistory.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          {{ t('crm.deals.detail.noOwnerHistory') }}
+        </div>
+        <div v-else class="flex flex-col gap-4">
+          <div v-for="entry in ownerHistory" :key="entry.id" class="flex gap-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-bg)]">
+              <UIcon name="material-symbols:swap-horiz" class="size-4 text-[var(--color-primary)]" />
+            </div>
+            <div class="min-w-0 flex-1 border-b border-[var(--color-light-gray-2)] pb-3 last:border-none">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm font-medium">
+                  {{ entry.before?.assigned_to
+                    ? t('crm.deals.detail.ownerHistoryReassigned', {
+                      from: teamMembersStore.nameById(entry.before.assigned_to as number ?? null),
+                      to: teamMembersStore.nameById(entry.after?.assigned_to as number ?? null),
+                    })
+                    : t('crm.deals.detail.ownerHistoryAssigned', { to: teamMembersStore.nameById(entry.after?.assigned_to as number ?? null) }) }}
+                </p>
+                <span class="shrink-0 text-xs text-[var(--color-gray)]">{{ dateTimeFormat(entry.created_at.toISOString()) }}</span>
+              </div>
+              <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.ownerHistoryBy', { actor: actorName(entry.actor_id) }) }}</p>
+            </div>
+          </div>
+        </div>
+      </UCard>
     </div>
   </div>
 </template>
@@ -82,12 +112,22 @@ import { BUSINESS_UNIT_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDe
 const { t } = useI18n()
 
 const { success, error } = useNotify()
+const { dateTimeFormat } = useFormatter()
+const { hasRole } = useRole()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
 const pipelineStagesStore = usePipelineStagesStore()
+const teamMembersStore = useTeamMembersStore()
+const usersStore = useUsersStore()
+const auditLogStore = useAuditLogStore()
+
+// Owner History mirrors admin/activity-log.vue's Admin-only gating — GET
+// /audit-log is Admin-only server-side, so non-Admins never get entries back
+// anyway; this just avoids the doomed request and hides the section for them.
+const canViewOwnerHistory = computed(() => hasRole('Admin'))
 
 // Prefers the configured PipelineStage row's is_lost_stage flag (so a custom,
 // admin-renamed Lost stage still shows/requires lost_reason), falling back to
@@ -103,7 +143,30 @@ onMounted(() => {
   if (contactsStore.items.length === 0) contactsStore.fetchAll()
   if (productsStore.items.length === 0) productsStore.fetchAll()
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (canViewOwnerHistory.value) {
+    if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+    if (usersStore.items.length === 0) usersStore.fetchAll()
+    // auditLogStore.fetchAll defaults to per_page: 20 (sized for the paginated
+    // admin/activity-log.vue list view). This call wants every audit-log row
+    // for one Deal so client-side filtering below doesn't miss older
+    // reassignments once other action types (updated/stage_changed/etc.) push
+    // them past row 20 — there's no server-side `action` filter to narrow this
+    // to just reassignments (api-system-spec.md §8.5), so bump the bound
+    // instead, same 200-row convention used elsewhere for "fetch it all" cases.
+    auditLogStore.fetchAll({ entity_type: 'deal', entity_id: dealId, per_page: 200 })
+  }
 })
+
+// Only reassignment-type audit actions belong in Owner History (created/updated
+// entries for unrelated field edits also land in the same audit_log table).
+const ownerHistory = computed(() => auditLogStore.items
+  .filter(entry => entry.entity_type === 'deal' && entry.entity_id === dealId && ['reassigned', 'bulk_reassigned'].includes(entry.action))
+  .sort((a, b) => b.created_at.getTime() - a.created_at.getTime()))
+
+const actorName = (actorId: number) => {
+  const user = usersStore.items.find(u => u.id === actorId)
+  return user ? `${user.first_name} ${user.last_name}` : '-'
+}
 
 // Deal loads asynchronously (dealsStore.fetchAll, in the parent [id].vue), so
 // company_id isn't known yet at onMounted — fetch this company's projects once

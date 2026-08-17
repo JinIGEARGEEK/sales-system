@@ -4,6 +4,11 @@ export default {
   subheading: 'Manage the pipeline stages and lead/deal sources used across Leads and Deals.',
   cancel: 'Cancel',
   save: 'Save',
+  relatedConfig: {
+    heading: 'Related Configuration',
+    tagsHint: 'Tags are managed on their own page, shared across Companies, Contacts, Leads, and Deals.',
+    manageTags: 'Manage Tags',
+  },
   stages: {
     heading: 'Pipeline Stages',
     addStage: 'Add Stage',

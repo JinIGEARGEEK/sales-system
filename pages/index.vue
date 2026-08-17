@@ -185,7 +185,7 @@
       </CrmStatCard>
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <UCard class="ring-[var(--color-card-border)]">
         <template #header>
           <div class="flex items-center gap-2">
@@ -209,6 +209,38 @@
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
                   :class="bucket.value > 0 ? 'bg-sky-400' : 'bg-[var(--color-gray)]/40'"
+                  :style="`height: ${Math.max(bucket.percent, 4)}%`"
+                />
+              </div>
+            </UTooltip>
+            <span class="text-xs text-[var(--color-gray)]">{{ bucket.label }}</span>
+          </div>
+        </div>
+      </UCard>
+
+      <UCard class="ring-[var(--color-card-border)]">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-violet)]/15">
+              <UIcon name="material-symbols:trending-up" class="size-4 text-[var(--color-chart-violet)]" />
+            </div>
+            <h3 class="text-lg font-medium">{{ t('crm.dashboard.forecastTrend') }}</h3>
+          </div>
+          <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.forecastTrendHint') }}</p>
+        </template>
+        <div class="relative flex h-40 items-end gap-4 px-2">
+          <div class="pointer-events-none absolute inset-x-2 top-0 flex h-28 flex-col justify-between">
+            <div v-for="line in 4" :key="line" class="border-t border-dashed border-[var(--color-light-gray-2)]" />
+          </div>
+          <div v-for="bucket in forecastTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
+            <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-[var(--color-black)]' : 'text-[var(--color-gray)]'">
+              {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+            </span>
+            <UTooltip :text="`${bucket.label}: ${t('crm.dashboard.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+              <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-[var(--color-light-gray-2)]">
+                <div
+                  class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
+                  :class="bucket.value > 0 ? 'bg-violet-400' : 'bg-[var(--color-gray)]/40'"
                   :style="`height: ${Math.max(bucket.percent, 4)}%`"
                 />
               </div>
@@ -581,6 +613,12 @@ const stageBreakdown = computed(() => {
 
 const revenueTrend = computed(() => {
   const points = summary.value?.revenue_trend ?? []
+  const maxValue = Math.max(...points.map(p => p.value), 1)
+  return points.map(p => ({ ...p, percent: Math.round((p.value / maxValue) * 100) }))
+})
+
+const forecastTrend = computed(() => {
+  const points = summary.value?.forecast_trend ?? []
   const maxValue = Math.max(...points.map(p => p.value), 1)
   return points.map(p => ({ ...p, percent: Math.round((p.value / maxValue) * 100) }))
 })

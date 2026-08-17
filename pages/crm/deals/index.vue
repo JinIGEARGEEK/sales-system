@@ -72,9 +72,21 @@
       v-if="viewMode === 'kanban'"
       :columns="pipelineStagesStore.activeOptions"
       :items="pipelineItems"
+      :column-counts="columnCounts"
       @move="onMove"
       @select="onSelect"
     >
+      <template #column-footer="{ column }">
+        <button
+          v-if="hasMoreDeals(column.value)"
+          type="button"
+          class="mt-1 shrink-0 cursor-pointer rounded-md border border-dashed border-[var(--color-light-gray-2)] py-1.5 text-xs text-[var(--color-gray)] transition-colors hover:text-[var(--color-black)] disabled:cursor-not-allowed disabled:opacity-60"
+          :disabled="loadingMoreStage === column.value"
+          @click="loadMoreDeals(column.value)"
+        >
+          {{ loadingMoreStage === column.value ? t('global.loading') : t('crm.deals.index.loadMoreDeals', { count: remainingDealsCount(column.value) }) }}
+        </button>
+      </template>
       <template #card="{ item }">
         <template v-if="item._type === 'deal'">
           <div>
@@ -153,12 +165,88 @@ const channelFilterOptions = computed(() => [
 const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
 const onExport = () => downloadCsvBlob('/deals/export', 'deals.csv')
 
-onMounted(() => {
-  dealsStore.fetchAll()
+// The Kanban board no longer loads Deals via dealsStore.fetchAll() (capped at
+// per_page: 200 — would silently truncate columns once Deal volume exceeds
+// that). Instead each active pipeline stage is fetched as its own bounded,
+// paginated page via dealsStore.fetchList({ stage, ... }), which does NOT
+// touch dealsStore.items/total — kept fully local to this page in
+// `dealStageBuckets` below. Other pages/composables that read
+// dealsStore.items (Deal detail, dropdowns, duplicate-deal checks, Global
+// Search, dashboard, etc.) all guard with `if (dealsStore.items.length === 0)
+// dealsStore.fetchAll()` themselves, so not populating it here doesn't break
+// them — they simply fetch their own copy on demand.
+const DEALS_PAGE_SIZE = 40
+
+interface DealStageBucket {
+  items: Deal[]
+  total: number
+  page: number
+}
+
+const dealStageBuckets = ref<Record<string, DealStageBucket>>({})
+const loadingMoreStage = ref<string | null>(null)
+
+const fetchStageDeals = async (stageName: string, page = 1) => {
+  const result = await dealsStore.fetchList({ stage: stageName, per_page: DEALS_PAGE_SIZE, page })
+  const bucket = dealStageBuckets.value[stageName] ?? { items: [], total: 0, page: 0 }
+  bucket.items = page === 1 ? result.items : [...bucket.items, ...result.items]
+  bucket.total = result.total
+  bucket.page = result.page
+  dealStageBuckets.value[stageName] = bucket
+  return result
+}
+
+const loadAllStageDeals = async () => {
+  await Promise.all(pipelineStagesStore.activeOptions.map(option => fetchStageDeals(option.value as string, 1)))
+}
+
+// Re-fetches every page currently loaded for a stage (1..bucket.page), not
+// just page 1 — a plain `fetchStageDeals(stage, 1)` would silently overwrite
+// `bucket.items` with only that first page, discarding any "Load more" pages
+// a user had already fetched for that column. Used after a move/conversion,
+// where we need the column's contents to stay correct without losing state
+// the user had already paged into.
+const refetchStageDeals = async (stageName: string) => {
+  const pagesToRefetch = Math.max(dealStageBuckets.value[stageName]?.page ?? 0, 1)
+  let items: Deal[] = []
+  let total = 0
+  for (let page = 1; page <= pagesToRefetch; page++) {
+    const result = await dealsStore.fetchList({ stage: stageName, per_page: DEALS_PAGE_SIZE, page })
+    items = [...items, ...result.items]
+    total = result.total
+  }
+  dealStageBuckets.value[stageName] = { items, total, page: pagesToRefetch }
+}
+
+const hasMoreDeals = (stageName: string) => {
+  const bucket = dealStageBuckets.value[stageName]
+  return !!bucket && bucket.items.length < bucket.total
+}
+
+const remainingDealsCount = (stageName: string) => {
+  const bucket = dealStageBuckets.value[stageName]
+  return bucket ? bucket.total - bucket.items.length : 0
+}
+
+const loadMoreDeals = async (stageName: string) => {
+  const bucket = dealStageBuckets.value[stageName]
+  if (!bucket || loadingMoreStage.value) return
+  loadingMoreStage.value = stageName
+  try {
+    await fetchStageDeals(stageName, bucket.page + 1)
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  } finally {
+    loadingMoreStage.value = null
+  }
+}
+
+onMounted(async () => {
+  if (pipelineStagesStore.items.length === 0) await pipelineStagesStore.fetchAll()
+  loadAllStageDeals()
   leadsStore.fetchAll({ exclude_converted: true })
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
-  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
 })
 
@@ -169,8 +257,14 @@ const assigneeFilter = ref('all')
 const businessUnitFilter = ref('all')
 const channelFilter = ref('all')
 
+// Flattens the currently-loaded pages across every stage bucket — this is
+// what actually renders on the board, so a column only ever shows up to
+// `DEALS_PAGE_SIZE` (+ any "Load more" pages fetched) Deals at once, never the
+// column's full total.
+const loadedDeals = computed(() => Object.values(dealStageBuckets.value).flatMap(bucket => bucket.items))
+
 const filteredDeals = computed(() => {
-  return dealsStore.items.filter((deal) => {
+  return loadedDeals.value.filter((deal) => {
     const matchSearch = !search.value
       || deal.title.toLowerCase().includes(search.value.toLowerCase())
       || companiesStore.nameById(deal.company_id).toLowerCase().includes(search.value.toLowerCase())
@@ -226,18 +320,43 @@ const pipelineItems = computed(() => [
   ...filteredLeads.value.map(lead => ({ ...lead, _type: 'lead' as const, _lane: leadLane(lead) })),
 ])
 
+// Real per-column count for the board header, even though only up to
+// DEALS_PAGE_SIZE (+ any loaded "more" pages) Deals are actually rendered:
+// stage's server-reported `total` (from the paginated fetch) plus however
+// many Leads are currently sharing that lane (Leads are fully loaded via
+// fetchAll, so filteredLeads is already a complete count, unlike Deals).
+const columnCounts = computed(() => {
+  const result: Record<string, number> = {}
+  for (const option of pipelineStagesStore.activeOptions) {
+    const stageName = option.value as string
+    const dealTotal = dealStageBuckets.value[stageName]?.total ?? 0
+    const leadCount = filteredLeads.value.filter(lead => leadLane(lead) === stageName).length
+    result[stageName] = dealTotal + leadCount
+  }
+  return result
+})
+
 const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string) => {
   if (item._type === 'deal') {
-    const deal = dealsStore.items.find(d => d.id === item.id)
-    if (deal && deal.stage !== newStage) {
-      const previousStage = deal.stage
-      try {
-        await dealsStore.updateStage(deal.id, newStage as DealStage)
-        success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
-      } catch (err) {
-        deal.stage = previousStage
-        error(getApiErrorMessage(err, t('global.genericError')))
-      }
+    const originStage = item.stage
+    if (originStage === newStage) return
+    try {
+      await dealsStore.updateStage(item.id, newStage as DealStage)
+      success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+      // Board state for Deals lives in `dealStageBuckets`, keyed per stage —
+      // simplest/safest way to keep both columns correct (including their
+      // header totals) after a move is to refetch each affected stage rather
+      // than hand-splice the moved card between local arrays. Origin and
+      // destination may be the same bucket in edge cases (e.g. two rapid
+      // drops), Promise.all still resolves both fine.
+      await Promise.all([
+        refetchStageDeals(originStage),
+        refetchStageDeals(newStage),
+      ])
+    } catch (err) {
+      // Nothing was mutated optimistically, so there's nothing to roll back —
+      // the card simply stays put in its origin column.
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
     return
   }
@@ -264,6 +383,12 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     const index = leadsStore.items.findIndex(l => l.id === lead.id)
     if (index !== -1) leadsStore.items.splice(index, 1)
     dealsStore.receiveConverted(deal)
+    // The newly-converted Deal needs to land in this page's own per-stage
+    // bucket (dealsStore.receiveConverted only pushes to the global
+    // dealsStore.items cache, which the board no longer reads from) — refetch
+    // that stage (preserving any already-loaded pages) so it appears with a
+    // correct total.
+    await refetchStageDeals(deal.stage)
     success(t('crm.deals.index.leadConvertedToDeal'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

@@ -4,6 +4,11 @@ export default {
   subheading: 'จัดการขั้นตอนของไปป์ไลน์และแหล่งที่มาของ Lead/Deal ที่ใช้ทั่วทั้งระบบ',
   cancel: 'ยกเลิก',
   save: 'บันทึก',
+  relatedConfig: {
+    heading: 'การตั้งค่าที่เกี่ยวข้อง',
+    tagsHint: 'Tag มีหน้าจัดการแยกต่างหาก ใช้ร่วมกันระหว่างบริษัท ผู้ติดต่อ Lead และ Deal',
+    manageTags: 'จัดการ Tag',
+  },
   stages: {
     heading: 'ขั้นตอนของไปป์ไลน์',
     addStage: 'เพิ่มขั้นตอน',

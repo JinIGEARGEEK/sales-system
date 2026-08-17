@@ -1,14 +1,14 @@
 # API System Specification — I GEAR GEEK Sales CRM
 
 **Companion document to:** `feature-spec.md` (business requirements), `user-story.md` (role acceptance criteria), `design-system.md` (frontend conventions)
-**Purpose:** The contract for the backend API this frontend is built against. This frontend (`sales-system`) is currently **100% client-side mock data** (Pinia stores seeded from `constants/mockData/`, see `design-system.md` §8) — no real HTTP calls exist yet beyond the `axios` plugin scaffold (`plugins/axios.ts`) and the `useMutateApi`/`useFetchApi` composables (`composables/utils/useAPI.ts`). This document specifies the API a **separate backend repo/project** must implement so this frontend can be wired up for real, resource by resource, without changing its existing conventions.
+**Purpose:** The contract for the backend API this frontend is built against. This frontend (`sales-system`) is now wired up to a real Go/Postgres backend (the sibling `sales-system-api` repo) for the resources marked 🟢 below — those Pinia stores make real `$api` calls (via `plugins/axios.ts` / `composables/utils/useAPI.ts`) instead of reading from `constants/mockData/`. A handful of narrower items are still mock-only or unbuilt; check each endpoint's status marker rather than assuming everything below is live. This document remains the contract the backend repo is kept in sync against as remaining resources get wired up.
 **Audience:** Backend engineering team / AI coding agent implementing the API in another repository.
-**Version:** 1.2 (adds Deal probability/lost-reason, Admin-configurable pipeline stages/lead sources, CSV export, a real audit-log endpoint consumer, Lead auto-assignment, Task due-date email notifications, and resolved server-side list pagination)
+**Version:** 1.3 (adds `forecast_trend` to `/dashboard/summary`, documents Quote `EffectiveStatus`/`expired` derivation across all Quote endpoints, corrects Quote CRUD status markers to 🟢, notes the Kanban board's per-stage pagination fix, and documents Owner History as an `/audit-log` consumer)
 **Date:** 2026-08-17
 
 > **Status legend** (mirrors `feature-spec.md`'s legend, applied per endpoint):
-> 🟢 **Required now** — replaces an existing mock Pinia store; needed to take this frontend off mock data as-is.
-> 🔜 **Planned** — supports a `feature-spec.md` requirement that isn't built in the frontend yet either (Quotes CRUD, Contracts, Products/Projects, RBAC enforcement, audit log). Build after the 🟢 set; the frontend will grow into these.
+> 🟢 **Built** — a real backend endpoint exists and the matching frontend Pinia store calls it (no more mock data for this resource).
+> 🔜 **Planned** — supports a `feature-spec.md` requirement that isn't built in the frontend yet either. Check each endpoint's own marker below rather than assuming a whole resource is done or not — most of §§1–9 has moved to 🟢 since this legend was first written; only individually-marked 🔜 items (see `feature-spec.md`'s §9 gap summary for the current list) remain outstanding.
 
 ---
 
@@ -133,7 +133,7 @@ Every resource shares these unless noted:
 
 ### 1.7 Roles & authorization
 
-Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) is 🔜 **Planned** — not enforced anywhere in the frontend today (`role` is a display-only field) — but the API must enforce it from day one; UI-only hiding is explicitly called out as insufficient (`NFR-001`).
+Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) is 🟢 **Built** — enforced server-side via `RequireRoles` route middleware; the frontend mirrors it via `useRole()`/`hasRole()` only to hide actions the backend would reject (e.g. `canExport`/`canViewOwnerHistory` checks scattered across `pages/crm/**`), never as the actual security boundary — UI-only hiding alone would still be insufficient (`NFR-001`).
 
 | Role | Summary |
 |---|---|
@@ -430,7 +430,7 @@ interface Tag {
 ### 7.4 Quotes
 
 ```ts
-type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
+type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
 
 interface QuoteItem {
   description: string
@@ -458,12 +458,14 @@ interface Quote {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/deals/:dealId/quotes` | 🔜 | List quotes for a Deal. **Planned** — `FR-CRM-040`/`041`; today Quotes are a mock array embedded directly in the Deal detail page, no dedicated CRUD exists in the frontend either. |
-| `POST` | `/deals/:dealId/quotes` | 🔜 | Create a line-item quote. |
-| `POST` | `/deals/:dealId/quotes/upload` | 🔜 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
-| `PUT` | `/quotes/:id` | 🔜 | Update status/items/validity_date. |
-| `DELETE` | `/quotes/:id` | 🔜 | Delete. |
+| `GET` | `/deals/:dealId/quotes` | 🟢 | List quotes for a Deal — `FR-CRM-040`/`041`. Real per-Deal CRUD (`internal/handlers/quotes.go`, `stores/quotes.ts`), no longer a mock array embedded in the Deal detail page. |
+| `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote. |
+| `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
+| `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. |
+| `DELETE` | `/quotes/:id` | 🟢 | Delete. |
 | `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). |
+
+> **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
 ### 7.5 Payments
 
@@ -637,6 +639,8 @@ interface AuditLogEntry {
 
 At minimum, write an entry whenever: a Deal's `stage` changes, a Deal's `status` becomes `won`/`lost`, or a `CustomerProduct`/`Project` `status` changes (per `FR-CRM-082`'s explicit minimum scope) — all four are now implemented (`deals.go` for the Deal events, `projects.go`/`products.go` for the other two). The frontend's `/admin/activity-log` page is already repointed at this real endpoint.
 
+`entity_type`+`entity_id` filtering (already supported above) also now backs a second, narrower consumer: the Deal detail page's Admin-only "Owner History" card (`pages/crm/deals/[id]/index.vue`) calls `GET /audit-log?entity_type=deal&entity_id=:id&per_page=200`, then filters client-side to `reassigned`/`bulk_reassigned` actions to show that one Deal's prior owners. No endpoint changes were needed for this — it's a straightforward second consumer of the existing filter. The explicit `per_page=200` override (the store's own default is 20, sized for the paginated Activity Log list view) exists because there's no server-side `action` filter to narrow the query to just reassignments — without it, a Deal with more than 20 total audit-log rows of any action type could silently drop older reassignments off this card. Same class of "unbounded-but-capped" limitation as NFR-003 below, just smaller-radius.
+
 ### 8.6 Attachments (`FR-CRM-085`–`090`)
 
 Generic file/link attachments for Leads, Deals, Companies, and Projects — quotations, proposals, estimations, plans, and other supporting material — as distinct from the two narrower, purpose-specific file fields that already exist: `Quote`'s exported PDF (§7.4) and `Contract.signed_file_url` (§8.1). Those keep their own dedicated upload endpoints; this is the general-purpose one for everything else.
@@ -752,6 +756,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
     "pipeline_coverage_ratio": 1.6,
     "quarterly_sales_target": 3000000,
     "revenue_trend": [ { "label": "Mar", "value": 320000 }, "...6 months" ],
+    "forecast_trend": [ { "label": "Mar", "value": 410000 }, "...6 months forward" ],
     "stage_breakdown": [ { "stage": "Qualified", "value": 900000, "count": 4 }, "...per DealStage" ],
     "industry_breakdown": [ { "industry": "Retail", "win_rate": 55, "won_count": 6 }, "..." ],
     "team_performance": [ { "user_id": 3, "name": "...", "won_count": 5, "won_value": 620000, "win_rate": 60 }, "..." ],
@@ -762,6 +767,8 @@ Response shape (one object covering every widget on `pages/index.vue`):
 
 `quarterly_sales_target` is now sourced server-side from the `AppSettings` singleton row (§8.7a, `FR-CRM-058` — Admin-configurable via `GET`/`PATCH /admin/settings`) rather than a hardcoded frontend constant.
 
+`forecast_trend` (`internal/handlers/dashboard.go`'s `forecastTrend()`) is the forward-looking counterpart to `revenue_trend`: instead of bucketing *won* Deal value by month for the trailing 6 months, it buckets *open* Deal value × probability by `expected_close_date` for the current month + 5 forward, mirroring `revenueTrend()`'s exact shape (`{label, value}[]`). Deals with no `expected_close_date` are excluded from these monthly buckets but are still counted in the headline `forecasted_revenue` total above — the two numbers are not required to reconcile bucket-by-bucket. Backs the new "Forecast Trend" chart card on `pages/index.vue`, next to Revenue Trend.
+
 ---
 
 ## 10. Cross-cutting non-functional requirements
@@ -771,7 +778,7 @@ Carried over from `feature-spec.md` §5 where they bear directly on the API:
 | ID | Requirement |
 |---|---|
 | NFR-001 | RBAC (§1.7) enforced server-side on every route — never rely on the frontend hiding a button. |
-| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. Resolved for the list views: the Leads (`pages/crm/leads/index.vue`), Contacts (`pages/crm/contacts/index.vue`), Companies (`pages/crm/companies/index.vue`) list pages and the Deals List sub-view (`components/Crm/DealsTable.vue`) now call a new `fetchList()` store action (via `composables/utils/useServerListPage.ts`), which sends `page`/`per_page`/filters to the API and paginates server-side — no more fetching a single `per_page: 200` page and slicing it client-side. **Known exception:** the Deals Kanban board (`pages/crm/deals/index.vue`) still calls `dealsStore.fetchAll()` (still capped at `per_page: 200` client-side) since the board needs the full set of open Deals in memory at once to render every column; that view is not yet server-paginated and rows beyond the first 200 remain invisible there. |
+| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. Resolved for the list views: the Leads (`pages/crm/leads/index.vue`), Contacts (`pages/crm/contacts/index.vue`), Companies (`pages/crm/companies/index.vue`) list pages and the Deals List sub-view (`components/Crm/DealsTable.vue`) now call a new `fetchList()` store action (via `composables/utils/useServerListPage.ts`), which sends `page`/`per_page`/filters to the API and paginates server-side — no more fetching a single `per_page: 200` page and slicing it client-side. **Formerly known exception, now resolved:** the Deals Kanban board (`pages/crm/deals/index.vue`) no longer calls `dealsStore.fetchAll()`. It now fetches each active pipeline stage's Deals separately and in parallel via `dealsStore.fetchList({ stage, per_page: 40, page: 1 })`, with a `columnCounts` prop + `column-footer` "Load more" slot on `components/Crm/PipelineBoard.vue` (§design-system.md's component table) so a column can page in more Deals past the first 40 without ever loading the full unbounded set. |
 | NFR-004 | HTTPS/TLS only; passwords hashed (bcrypt/argon2) — never returned in any response, including the `User` shape in §2.1. |
 | NFR-007 | Audit log (§8.5) is append-only — no update/delete route. |
 

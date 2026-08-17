@@ -6,6 +6,22 @@
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.relatedConfig.heading') }}</h3>
+          <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
+        </div>
+        <ButtonPrimary
+          :label="t('admin.pipelineConfig.relatedConfig.manageTags')"
+          icon="material-symbols:sell-outline"
+          outline
+          fit-content
+          @click="navigateTo('/crm/tags')"
+        />
+      </div>
+    </UCard>
+
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <template #header>
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.stages.heading') }}</h3>
