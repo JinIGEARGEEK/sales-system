@@ -1,10 +1,13 @@
 // Real API-backed store. Company delete is a *soft* delete (§4 of api-system-spec.md):
-// the DELETE endpoint returns 204 and flips `status` to 'archived' server-side, so we
-// patch that locally instead of splicing the record out of `items`.
+// the DELETE endpoint returns 204 and sets deleted_at server-side, excluding the row
+// from subsequent GET /companies responses — so we splice it out of `items` locally
+// too, same as Leads/Deals. It stays recoverable via GET /companies/trash +
+// POST /companies/:id/restore (see trashItems below).
 const parseDates = (company: Company): Company => ({
   ...company,
   created_at: new Date(company.created_at),
   updated_at: new Date(company.updated_at),
+  deleted_at: company.deleted_at ? new Date(company.deleted_at) : company.deleted_at,
 })
 
 export const useCompaniesStore = defineStore('companies', {
@@ -12,6 +15,11 @@ export const useCompaniesStore = defineStore('companies', {
     items: [] as Company[],
     total: 0,
     page: 1,
+    // Trash (soft-deleted rows) is kept fully separate from `items` so the
+    // regular list is never polluted by deleted_at-set records.
+    trashItems: [] as Company[],
+    trashTotal: 0,
+    trashPage: 1,
   }),
   getters: {
     nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
@@ -21,7 +29,7 @@ export const useCompaniesStore = defineStore('companies', {
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Company[]>>('/companies', {
-        params: { per_page: 1000, ...params },
+        params: { per_page: 200, ...params },
       })
       this.items = response.data.data.map(parseDates)
       this.total = response.data.total
@@ -52,8 +60,8 @@ export const useCompaniesStore = defineStore('companies', {
     async remove (id: number) {
       const { $api } = useNuxtApp()
       await $api.delete(`/companies/${id}`)
-      const company = this.items.find(c => c.id === id)
-      if (company) company.status = 'archived'
+      this.items = this.items.filter(c => c.id !== id)
     },
+    ...createTrashActions<Company>('/companies', parseDates),
   },
 })

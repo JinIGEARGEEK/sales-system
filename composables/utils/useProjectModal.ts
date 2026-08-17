@@ -57,8 +57,8 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
         })
         success(t(addedMessageKey))
       }
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
 

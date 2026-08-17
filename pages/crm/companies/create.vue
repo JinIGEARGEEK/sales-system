@@ -218,8 +218,8 @@ const onSubmit = async () => {
       error(t('crm.companies.create.contactCreateFailed'))
     }
     navigateTo('/crm/companies')
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

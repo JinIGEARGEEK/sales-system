@@ -100,8 +100,8 @@ const onSubmit = async () => {
     })
     success(t('crm.contacts.create.createSuccess'))
     navigateTo('/crm/contacts')
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

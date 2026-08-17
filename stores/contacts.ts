@@ -1,9 +1,12 @@
 // Real API-backed store. Contact delete is a *soft* delete (§5 of api-system-spec.md):
-// the DELETE endpoint returns 204 and flips `status` to 'archived' server-side, so we
-// patch that locally instead of splicing the record out of `items`.
+// the DELETE endpoint returns 204 and sets deleted_at server-side, excluding the row
+// from subsequent GET /contacts responses — so we splice it out of `items` locally
+// too, same as Leads/Deals. It stays recoverable via GET /contacts/trash +
+// POST /contacts/:id/restore (see trashItems below).
 const parseDates = (contact: Contact): Contact => ({
   ...contact,
   created_at: new Date(contact.created_at),
+  deleted_at: contact.deleted_at ? new Date(contact.deleted_at) : contact.deleted_at,
 })
 
 export const useContactsStore = defineStore('contacts', {
@@ -11,6 +14,11 @@ export const useContactsStore = defineStore('contacts', {
     items: [] as Contact[],
     total: 0,
     page: 1,
+    // Trash (soft-deleted rows) is kept fully separate from `items` so the
+    // regular list is never polluted by deleted_at-set records.
+    trashItems: [] as Contact[],
+    trashTotal: 0,
+    trashPage: 1,
   }),
   getters: {
     nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
@@ -22,7 +30,7 @@ export const useContactsStore = defineStore('contacts', {
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Contact[]>>('/contacts', {
-        params: { per_page: 1000, ...params },
+        params: { per_page: 200, ...params },
       })
       this.items = response.data.data.map(parseDates)
       this.total = response.data.total
@@ -47,8 +55,8 @@ export const useContactsStore = defineStore('contacts', {
     async remove (id: number) {
       const { $api } = useNuxtApp()
       await $api.delete(`/contacts/${id}`)
-      const contact = this.items.find(c => c.id === id)
-      if (contact) contact.status = 'archived'
+      this.items = this.items.filter(c => c.id !== id)
     },
+    ...createTrashActions<Contact>('/contacts', parseDates),
   },
 })

@@ -21,6 +21,7 @@
       :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
+      @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @delete="requestDelete"
@@ -76,23 +77,25 @@ const stageBadgeColor = (stage: DealStage) => {
   return 'neutral'
 }
 
-const displayRows = computed(() => props.rows.map(deal => ({
+const { onSort, sortRows } = useSortableRows()
+
+const displayRows = computed(() => sortRows(props.rows.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
   valueDisplay: priceFormat(deal.value),
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
   createdDate: dateFormat(deal.created_at.toISOString()),
-})))
+})), { createdDate: 'created_at' }))
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
-  { label: t('crm.deals.table.columns.title'), align: 'left', field: 'title' },
-  { label: t('crm.deals.table.columns.company'), align: 'left', field: 'companyName' },
+  { label: t('crm.deals.table.columns.title'), align: 'left', field: 'title', isSort: true },
+  { label: t('crm.deals.table.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.deals.table.columns.value'), align: 'left', field: 'valueDisplay' },
   { label: t('crm.deals.table.columns.stage'), align: 'left', field: 'stageBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.deals.table.columns.assignedTo'), align: 'left', field: 'assignedToName' },
-  { label: t('crm.deals.table.columns.created'), align: 'left', field: 'createdDate' },
+  { label: t('crm.deals.table.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   {
     label: t('crm.deals.table.columns.action'),
     align: 'left',
@@ -123,8 +126,8 @@ const confirmDelete = async () => {
     try {
       await dealsStore.remove(target.value.id)
       success(t('crm.deals.table.deleteSuccess'))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
   closeDelete()
@@ -135,8 +138,8 @@ const onBulkReassign = async (assignedTo: number | null) => {
     await dealsStore.bulkReassign(selectedIds.value, assignedTo)
     success(t('crm.components.bulkActionBar.reassignSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -145,8 +148,8 @@ const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }
     await dealsStore.bulkTag(selectedIds.value, tags, mode)
     success(t('crm.components.bulkActionBar.tagSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -155,8 +158,8 @@ const onBulkArchive = async () => {
     await dealsStore.bulkArchive(selectedIds.value)
     success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

@@ -62,7 +62,7 @@ export default {
     viewCompany: 'ดูข้อมูลบริษัท →',
     linkedDeals: 'Deal ที่เกี่ยวข้อง',
     noLinkedDeals: 'ไม่มี Deal ที่เกี่ยวข้อง',
-    linkedProjects: 'Project ที่เกี่ยวข้อง',
+    linkedProjects: 'Project ของบริษัท',
     noLinkedProjects: 'ยังไม่มี Project สำหรับบริษัทของผู้ติดต่อนี้',
     addProject: 'เพิ่ม Project',
     addProjectSuccess: 'เพิ่ม Project แล้ว',

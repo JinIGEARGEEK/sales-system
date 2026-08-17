@@ -99,8 +99,8 @@ const onSubmit = async () => {
     })
     success(t('crm.leads.create.createSuccess'))
     navigateTo('/crm/leads')
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

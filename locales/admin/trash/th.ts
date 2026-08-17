@@ -4,6 +4,8 @@ export default {
   tabs: {
     deals: 'Deal',
     leads: 'Lead',
+    companies: 'บริษัท',
+    contacts: 'ผู้ติดต่อ',
   },
   columns: {
     deals: {
@@ -17,6 +19,19 @@ export default {
       name: 'ชื่อ',
       company: 'บริษัท',
       source: 'แหล่งที่มา',
+      deletedAt: 'ลบเมื่อ',
+      action: 'การดำเนินการ',
+    },
+    companies: {
+      name: 'ชื่อ',
+      industry: 'อุตสาหกรรม',
+      deletedAt: 'ลบเมื่อ',
+      action: 'การดำเนินการ',
+    },
+    contacts: {
+      name: 'ชื่อ',
+      company: 'บริษัท',
+      email: 'อีเมล',
       deletedAt: 'ลบเมื่อ',
       action: 'การดำเนินการ',
     },

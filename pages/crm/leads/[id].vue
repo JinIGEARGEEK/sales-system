@@ -116,8 +116,8 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
       await attachmentsStore.addLink('lead', leadId, payload.category, payload.fileName, payload.externalUrl)
     }
     success(t('crm.leads.detail.addAttachmentSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -125,8 +125,8 @@ const onRemoveAttachment = async (id: number) => {
   try {
     await attachmentsStore.remove(id)
     success(t('crm.leads.detail.removeAttachmentSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -169,8 +169,8 @@ const onSave = async () => {
       notes: form.notes,
     })
     success(t('crm.leads.detail.updateSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

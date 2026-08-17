@@ -116,10 +116,6 @@
         rules="required"
       />
 
-      <div class="-mt-2 text-right">
-        <a href="#" class="text-xs text-white/70 hover:text-white">{{ t('global.auth.forgotPassword') }}</a>
-      </div>
-
       <button
         type="submit"
         :disabled="loading"

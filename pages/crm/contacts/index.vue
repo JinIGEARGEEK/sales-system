@@ -62,6 +62,7 @@
       :per-page="perPage"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
+      @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @delete="requestDelete"
@@ -111,8 +112,10 @@ const contacts = computed(() => contactsStore.items)
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 const tagOptions = computed(() => [...new Set(contacts.value.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
 
+const { onSort, sortRows } = useSortableRows()
+
 const filteredContacts = computed(() => {
-  return contacts.value.filter((contact) => {
+  const filtered = contacts.value.filter((contact) => {
     const matchSearch = !search.value
       || contact.name.toLowerCase().includes(search.value.toLowerCase())
       || contact.email.toLowerCase().includes(search.value.toLowerCase())
@@ -127,13 +130,14 @@ const filteredContacts = computed(() => {
       ? toBadge(t('crm.contacts.index.statusActive'), 'success')
       : toBadge(t('crm.contacts.index.statusArchived')),
   }))
+  return sortRows(filtered)
 })
 
 const columns: TableDataColumn[] = [
-  { label: t('crm.contacts.index.columns.name'), align: 'left', field: 'name' },
-  { label: t('crm.contacts.index.columns.company'), align: 'left', field: 'companyName' },
+  { label: t('crm.contacts.index.columns.name'), align: 'left', field: 'name', isSort: true },
+  { label: t('crm.contacts.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.contacts.index.columns.role'), align: 'left', field: 'role_title' },
-  { label: t('crm.contacts.index.columns.email'), align: 'left', field: 'email' },
+  { label: t('crm.contacts.index.columns.email'), align: 'left', field: 'email', isSort: true },
   { label: t('crm.contacts.index.columns.phone'), align: 'left', field: 'phone' },
   { label: t('crm.contacts.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -166,8 +170,8 @@ const confirmDelete = async () => {
     try {
       await contactsStore.remove(target.value.id)
       success(t('crm.contacts.index.deleteSuccess'))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
   closeDelete()

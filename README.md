@@ -103,7 +103,7 @@ sales-system/
 │   ├── crm/
 │   │   ├── leads/ deals/ companies/ contacts/ tags/ tasks/ projects/   # Kanban + list views, bulk actions on Deals/Leads (multi-select toolbar)
 │   │   └── reports/               # Admin/Sales-Manager-only: lead-source conversion, customers-by-product-status
-│   ├── admin/                    # Staff users, activity log, trash.vue (restore soft-deleted Deals/Leads)
+│   ├── admin/                    # Staff users, activity log, trash.vue (restore soft-deleted Deals/Leads/Companies/Contacts, one tab each)
 │   ├── account/change-password.vue  # Change password (any logged-in user, via the sidebar icon)
 │   ├── login.vue                 # Login
 │   ├── change-password.vue       # Forced password reset for Admin-assigned accounts (must_change_password)

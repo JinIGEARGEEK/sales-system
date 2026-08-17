@@ -271,8 +271,8 @@ const onSaveProduct = async (product: { name: string, category: string, descript
       await productsStore.add(product)
       success(t('admin.products.addSuccess'))
     }
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -288,8 +288,8 @@ const confirmDeactivate = async () => {
     try {
       await productsStore.deactivate(deactivateTarget.value.id)
       success(t('admin.products.deactivateSuccess'))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
   closeDeactivate()

@@ -173,8 +173,8 @@ const onSubmit = async () => {
     }
     success(t('crm.deals.create.createSuccess'))
     navigateTo('/crm/deals')
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

@@ -62,6 +62,7 @@
       :per-page="perPage"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
+      @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @delete="requestDelete"
@@ -110,8 +111,10 @@ const companies = computed(() => companiesStore.items)
 
 const tagOptions = computed(() => [...new Set(companies.value.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
 
+const { onSort, sortRows } = useSortableRows()
+
 const filteredCompanies = computed(() => {
-  return companies.value.filter((company) => {
+  const filtered = companies.value.filter((company) => {
     const matchSearch = !search.value
       || company.name.toLowerCase().includes(search.value.toLowerCase())
       || company.website.toLowerCase().includes(search.value.toLowerCase())
@@ -135,15 +138,16 @@ const filteredCompanies = computed(() => {
       lastContactBadge: toBadge(contact.label, contact.color),
     }
   })
+  return sortRows(filtered, { createdDate: 'created_at' })
 })
 
 const columns: TableDataColumn[] = [
-  { label: t('crm.companies.index.columns.name'), align: 'left', field: 'name' },
-  { label: t('crm.companies.index.columns.industry'), align: 'left', field: 'industry' },
+  { label: t('crm.companies.index.columns.name'), align: 'left', field: 'name', isSort: true },
+  { label: t('crm.companies.index.columns.industry'), align: 'left', field: 'industry', isSort: true },
   { label: t('crm.companies.index.columns.size'), align: 'left', field: 'size' },
   { label: t('crm.companies.index.columns.tags'), align: 'left', field: 'tagsDisplay' },
   { label: t('crm.companies.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.companies.index.columns.created'), align: 'left', field: 'createdDate' },
+  { label: t('crm.companies.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   { label: t('crm.companies.index.columns.lastContact'), align: 'left', field: 'lastContactBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('crm.companies.index.columns.action'),
@@ -175,8 +179,8 @@ const confirmDelete = async () => {
     try {
       await companiesStore.remove(target.value.id)
       success(t('crm.companies.index.deleteSuccess'))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
   closeDelete()

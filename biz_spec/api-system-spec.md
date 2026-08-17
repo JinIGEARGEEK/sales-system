@@ -128,7 +128,7 @@ Every resource shares these unless noted:
 
 - **`id`**: number, server-generated, auto-increment or equivalent. The frontend never generates IDs client-side for real records (mock stores use a local `nextId()` helper purely as a stand-in — see `stores/helpers.ts` — real IDs always come from the API).
 - **Timestamps**: ISO 8601 strings in transit (`2026-08-14T09:30:00Z`); the frontend parses them to `Date` at the store boundary. Every entity has `created_at`; most have `updated_at`.
-- **Soft delete + audit trail**: the base `User` shape (`interfaces/auth.d.ts`) already models `created_at/updated_at/deleted_at` + `created_by/updated_by/deleted_by` (user IDs). Apply the same pattern to every resource below — "delete" on Company/Contact/Tag/Product is `status: 'archived'` or `deleted_at` being set, never a hard row delete, so history and audit-log (§9) stay intact.
+- **Soft delete + audit trail**: the base `User` shape (`interfaces/auth.d.ts`) already models `created_at/updated_at/deleted_at` + `created_by/updated_by/deleted_by` (user IDs). Apply the same pattern to every resource below — "delete" on Lead/Deal/Company/Contact sets `deleted_at`/`deleted_by` (recoverable via `/trash` + `/:id/restore`); Tag/Product instead flip their own `status` field inactive/archived — either way, never a hard row delete, so history and audit-log (§9) stay intact.
 - **Enums**: transmitted as their literal string values (e.g. `"Qualified"`, not an integer code) — see each resource's TypeScript type for the exact allowed values, taken verbatim from `interfaces/crm.d.ts`.
 
 ### 1.7 Roles & authorization
@@ -139,7 +139,7 @@ Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) i
 |---|---|
 | **Admin** | Full access to every resource, including Users, Tags, and (once built) Product Catalog / pipeline config |
 | **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records |
-| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive), and trash/restore on Deals and Leads |
+| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts |
 | **Production (limited)** | Write access to *only* `status` and `production_reference` on `Project` records (§8.3) — no access to any other resource |
 
 Suggested enforcement: role on the JWT claims, checked server-side per route — not by trusting a client-sent role header.
@@ -266,7 +266,9 @@ interface Company {
 | `POST` | `/companies` | 🟢 | Create. |
 | `GET` | `/companies/:id` | 🟢 | Single company — `pages/crm/companies/[id].vue`'s Overview tab. |
 | `PUT` | `/companies/:id` | 🟢 | Update. |
-| `DELETE` | `/companies/:id` | 🟢 | Sets `status: 'archived'` (soft delete, §1.6) — never a hard delete, since Deals/Contacts/Payments reference `company_id`. |
+| `DELETE` | `/companies/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`, same pattern as Leads/Deals, §1.6) — never a hard delete, since Deals/Contacts/Payments reference `company_id`. Note this is distinct from the `status: 'active' \| 'archived'` field above, which is untouched by Delete and still exists as its own toggle — recoverable via `/trash` + `/:id/restore` below. |
+| `GET` | `/companies/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Companies (same envelope as `GET /companies`). Backs `pages/admin/trash.vue`. |
+| `POST` | `/companies/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
 | `POST` | `/companies/import` | 🟢 | Bulk import — see §6.2. `FR-CRM-014`. |
 
 ---
@@ -295,7 +297,9 @@ interface Contact {
 | `POST` | `/contacts` | 🟢 | Create. |
 | `GET` | `/contacts/:id` | 🟢 | Single contact — `pages/crm/contacts/[id].vue`. |
 | `PUT` | `/contacts/:id` | 🟢 | Update. |
-| `DELETE` | `/contacts/:id` | 🟢 | Soft-delete (`status: 'archived'`). |
+| `DELETE` | `/contacts/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`, same pattern as Companies above) — distinct from the separate `status: 'active' \| 'archived'` field, which Delete no longer touches. Recoverable via `/trash` + `/:id/restore` below. |
+| `GET` | `/contacts/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Contacts (same envelope as `GET /contacts`). Backs `pages/admin/trash.vue`. |
+| `POST` | `/contacts/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
 | `POST` | `/contacts/import` | 🟢 | Bulk import — see §6.2, same FlowAccount-export path as Companies. |
 
 > `FR-CRM-012` ("one Contact marked Primary per Company") is 🔜 **Planned** — no `is_primary` field exists in the frontend interface today. If added, it should live here as a boolean with a uniqueness constraint per `company_id`.
@@ -359,7 +363,7 @@ interface Deal {
 |---|---|---|---|
 | `GET` | `/deals` | 🟢 | Filters: `stage`, `status`, `company_id`, `assigned_to`, `business_unit`, `channel`, `search` (title). Backs `pages/crm/deals/index.vue`'s Kanban board **and** its List-view toggle (`components/Crm/DealsTable.vue`), plus the dashboard's `filteredDeals`. |
 | `POST` | `/deals` | 🟢 | Create. |
-| `GET` | `/deals/:id` | 🟢 | Single deal — `pages/crm/deals/[id].vue` Overview tab. |
+| `GET` | `/deals/:id` | 🟢 | Single deal — Overview tab, `pages/crm/deals/[id]/index.vue` (the Deal detail page was split from one file into `pages/crm/deals/[id].vue` as a thin `<NuxtPage/>` parent holding the header/tab bar, plus one nested route file per tab). |
 | `PUT` | `/deals/:id` | 🟢 | Full update. |
 | `PATCH` | `/deals/:id/stage` | 🟢 | Body: `{ stage: DealStage }`. Dedicated endpoint for the Kanban drag-and-drop (`CrmPipelineBoard`'s `@move`) so the backend can also update `status` (open/won/lost) and fire `FR-CRM-064`'s auto Customer-Product creation (§8.2) in one transaction when stage becomes `Won`. |
 | `DELETE` | `/deals/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`) — recoverable, see below. |
@@ -527,7 +531,7 @@ interface Contract {
 | `POST` | `/contracts/:id/upload` | Upload the signed document (§6.1) → sets `signed_file_url`/`signed_date`, flips status to `signed`. |
 | `GET` | `/contracts/:id/export-pdf` | 🟢 — returns a generated PDF (`github.com/go-pdf/fpdf`, same renderer as the Quote export): party details (Company `legal_name`/`address`/`tax_id`, Contact name/role), Deal info, the linked Quote's line items/total (if `quote_id` is set), status, signed date, and a signature-line placeholder. Read-only, same access level as List (no `CanWrite` check). |
 
-Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id].vue`), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes).
+Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id]/contracts.vue`, nested under the `pages/crm/deals/[id].vue` tab-bar parent), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes).
 
 ### 8.2 Product Catalog & Customer-Product tracking (`FR-CRM-060`–`066`)
 
@@ -697,7 +701,7 @@ Carried over from `feature-spec.md` §5 where they bear directly on the API:
 | ID | Requirement |
 |---|---|
 | NFR-001 | RBAC (§1.7) enforced server-side on every route — never rely on the frontend hiding a button. |
-| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. |
+| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. Currently a real gap, not just a future-scale concern: `stores/leads.ts`/`deals.ts`/`companies.ts`/`contacts.ts`'s `fetchAll()` all request `per_page: 200` and then filter/sort/paginate that one fetched page entirely client-side — any rows beyond the first 200 (by the API's default `sort`) are invisible to search/filter/sort on those list pages until this is replaced with real server-side paging. |
 | NFR-004 | HTTPS/TLS only; passwords hashed (bcrypt/argon2) — never returned in any response, including the `User` shape in §2.1. |
 | NFR-007 | Audit log (§8.5) is append-only — no update/delete route. |
 

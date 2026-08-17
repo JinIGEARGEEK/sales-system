@@ -176,9 +176,9 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
       try {
         await dealsStore.updateStage(deal.id, newStage as DealStage)
         success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
-      } catch {
+      } catch (err) {
         deal.stage = previousStage
-        error(t('global.genericError'))
+        error(getApiErrorMessage(err, t('global.genericError')))
       }
     }
     return
@@ -193,8 +193,8 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     try {
       await leadsStore.update(lead.id, { status: newStatus })
       success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
     return
   }
@@ -207,8 +207,8 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     if (index !== -1) leadsStore.items.splice(index, 1)
     dealsStore.receiveConverted(deal)
     success(t('crm.deals.index.leadConvertedToDeal'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 

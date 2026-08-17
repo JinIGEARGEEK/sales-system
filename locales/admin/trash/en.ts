@@ -4,6 +4,8 @@ export default {
   tabs: {
     deals: 'Deals',
     leads: 'Leads',
+    companies: 'Companies',
+    contacts: 'Contacts',
   },
   columns: {
     deals: {
@@ -17,6 +19,19 @@ export default {
       name: 'Name',
       company: 'Company',
       source: 'Source',
+      deletedAt: 'Deleted On',
+      action: 'Action',
+    },
+    companies: {
+      name: 'Name',
+      industry: 'Industry',
+      deletedAt: 'Deleted On',
+      action: 'Action',
+    },
+    contacts: {
+      name: 'Name',
+      company: 'Company',
+      email: 'Email',
       deletedAt: 'Deleted On',
       action: 'Action',
     },

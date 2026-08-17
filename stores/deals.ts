@@ -23,7 +23,7 @@ export const useDealsStore = defineStore('deals', {
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Deal[]>>('/deals', {
-        params: { per_page: 1000, ...params },
+        params: { per_page: 200, ...params },
       })
       this.items = response.data.data.map(parseDates)
       this.total = response.data.total

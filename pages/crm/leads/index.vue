@@ -45,6 +45,7 @@
       :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
+      @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @convert="onConvert"
@@ -99,8 +100,10 @@ const statusFilter = ref('all')
 const sourceFilter = ref('all')
 const assigneeFilter = ref('all')
 
+const { onSort, sortRows } = useSortableRows()
+
 const filteredLeads = computed(() => {
-  return leadsStore.items.filter((lead) => {
+  const filtered = leadsStore.items.filter((lead) => {
     const matchSearch = !search.value
       || lead.name.toLowerCase().includes(search.value.toLowerCase())
       || lead.company_name.toLowerCase().includes(search.value.toLowerCase())
@@ -115,6 +118,7 @@ const filteredLeads = computed(() => {
     createdDate: dateFormat(lead.created_at.toISOString()),
     assignedToName: teamMembersStore.nameById(lead.assigned_to),
   }))
+  return sortRows(filtered, { createdDate: 'created_at' })
 })
 
 const leadStatusColor = (status: LeadStatus) => {
@@ -128,12 +132,12 @@ const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelecti
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
-  { label: t('crm.leads.index.columns.name'), align: 'left', field: 'name' },
-  { label: t('crm.leads.index.columns.company'), align: 'left', field: 'company_name' },
+  { label: t('crm.leads.index.columns.name'), align: 'left', field: 'name', isSort: true },
+  { label: t('crm.leads.index.columns.company'), align: 'left', field: 'company_name', isSort: true },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source' },
   { label: t('crm.leads.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.leads.index.columns.assignedTo'), align: 'left', field: 'assignedToName' },
-  { label: t('crm.leads.index.columns.created'), align: 'left', field: 'createdDate' },
+  { label: t('crm.leads.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   {
     label: t('crm.leads.index.columns.action'),
     align: 'left',
@@ -174,8 +178,8 @@ const confirmDelete = async () => {
     try {
       await leadsStore.remove(target.value.id)
       success(t('crm.leads.index.deleteSuccess'))
-    } catch {
-      error(t('global.genericError'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
     }
   }
   closeDelete()
@@ -186,8 +190,8 @@ const onBulkReassign = async (assignedTo: number | null) => {
     await leadsStore.bulkReassign(selectedIds.value, assignedTo)
     success(t('crm.components.bulkActionBar.reassignSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -196,8 +200,8 @@ const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }
     await leadsStore.bulkTag(selectedIds.value, tags, mode)
     success(t('crm.components.bulkActionBar.tagSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -206,8 +210,8 @@ const onBulkArchive = async () => {
     await leadsStore.bulkArchive(selectedIds.value)
     success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

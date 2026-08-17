@@ -38,6 +38,8 @@ interface Company {
   legal_name?: string | null
   address?: string | null
   tax_id?: string | null
+  // Present only on trash-listing responses (GET /companies/trash) — absent (undefined) elsewhere.
+  deleted_at?: Date | null
   created_at: Date
   updated_at: Date
 }
@@ -51,6 +53,8 @@ interface Contact {
   role_title: string
   tags: string[]
   status: ActiveArchivedStatus
+  // Present only on trash-listing responses (GET /contacts/trash) — absent (undefined) elsewhere.
+  deleted_at?: Date | null
   created_at: Date
 }
 

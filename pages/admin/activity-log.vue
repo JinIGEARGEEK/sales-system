@@ -73,8 +73,8 @@ onMounted(async () => {
       params: { per_page: 1000 },
     })
     entries.value = response.data.data.map(entry => ({ ...entry, created_at: new Date(entry.created_at) }))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 

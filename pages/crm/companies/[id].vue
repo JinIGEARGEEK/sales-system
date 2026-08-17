@@ -333,8 +333,8 @@ const onAddCustomerProduct = async (payload: { product_id: number, status: Custo
   try {
     await customerProductsStore.add(companyId, payload, product)
     success(t('crm.companies.detail.addProductSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -343,8 +343,8 @@ const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus,
   try {
     await customerProductsStore.update(editingCustomerProduct.value.id, payload)
     success(t('crm.companies.detail.updateProductSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -402,8 +402,8 @@ const onSave = async () => {
       notes: form.notes,
     })
     success(t('crm.companies.detail.updateSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -418,8 +418,8 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
       await attachmentsStore.addLink('company', companyId, payload.category, payload.fileName, payload.externalUrl)
     }
     success(t('crm.companies.detail.addAttachmentSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 
@@ -427,8 +427,8 @@ const onRemoveAttachment = async (id: number) => {
   try {
     await attachmentsStore.remove(id)
     success(t('crm.companies.detail.removeAttachmentSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>

@@ -1,11 +1,38 @@
 export const nextId = <T extends { id: number }>(items: T[]): number => Math.max(0, ...items.map(item => item.id)) + 1
 
-// Shared by stores/deals.ts and stores/leads.ts, which both got a near-identical
-// bulkReassign/bulkTag/bulkArchive/restore/fetchTrash set added (one endpoint
-// group per resource, gated Admin/Sales Manager on the backend). Spread the
-// result into a store's `actions` — the explicit `this` typings below only
-// require the bit of state each action actually touches, so they're satisfied
-// by the full store instance without any other changes to the store.
+// Shared by every resource that got a GET :resource/trash + POST :id/restore pair
+// added (Leads, Deals, Companies, Contacts), gated Admin/Sales Manager on the
+// backend. Spread the result into a store's `actions` — the explicit `this`
+// typings below only require the bit of state each action actually touches, so
+// they're satisfied by the full store instance without any other changes to
+// the store.
+export const createTrashActions = <T extends { id: number }>(
+  resourcePath: string,
+  parseDates: (item: T) => T,
+) => ({
+  async restore (this: { trashItems: T[] }, id: number): Promise<T> {
+    const { $api } = useNuxtApp()
+    const response = await $api.post<ApiResponse<T>>(`${resourcePath}/${id}/restore`)
+    const restored = parseDates(response.data.data)
+    this.trashItems = this.trashItems.filter(item => item.id !== id)
+    return restored
+  },
+  async fetchTrash (this: { trashItems: T[], trashTotal: number, trashPage: number }, page = 1, perPage = 10): Promise<T[]> {
+    const { $api } = useNuxtApp()
+    const response = await $api.get<ApiResponse<T[]>>(`${resourcePath}/trash`, {
+      params: { page, per_page: perPage },
+    })
+    this.trashItems = response.data.data.map(parseDates)
+    this.trashTotal = response.data.total
+    this.trashPage = response.data.page
+    return this.trashItems
+  },
+})
+
+// Additionally shared by stores/deals.ts and stores/leads.ts only — Companies and
+// Contacts don't have an `assigned_to` field or bulk-reassign/bulk-tag/bulk-archive
+// endpoints on the backend (only trash/restore), so they use createTrashActions
+// directly instead of this superset.
 export const createBulkResourceActions = <T extends { id: number, assigned_to: number | null, tags?: string[] | null }>(
   resourcePath: string,
   parseDates: (item: T) => T,
@@ -30,21 +57,5 @@ export const createBulkResourceActions = <T extends { id: number, assigned_to: n
     await $api.patch(`${resourcePath}/bulk-archive`, { ids })
     this.items = this.items.filter(item => !ids.includes(item.id))
   },
-  async restore (this: { trashItems: T[] }, id: number): Promise<T> {
-    const { $api } = useNuxtApp()
-    const response = await $api.post<ApiResponse<T>>(`${resourcePath}/${id}/restore`)
-    const restored = parseDates(response.data.data)
-    this.trashItems = this.trashItems.filter(item => item.id !== id)
-    return restored
-  },
-  async fetchTrash (this: { trashItems: T[], trashTotal: number, trashPage: number }, page = 1, perPage = 10): Promise<T[]> {
-    const { $api } = useNuxtApp()
-    const response = await $api.get<ApiResponse<T[]>>(`${resourcePath}/trash`, {
-      params: { page, per_page: perPage },
-    })
-    this.trashItems = response.data.data.map(parseDates)
-    this.trashTotal = response.data.total
-    this.trashPage = response.data.page
-    return this.trashItems
-  },
+  ...createTrashActions<T>(resourcePath, parseDates),
 })

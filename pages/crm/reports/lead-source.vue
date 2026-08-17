@@ -142,8 +142,8 @@ const fetchReport = async () => {
       },
     })
     rows.value = response.data.data
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   } finally {
     loading.value = false
   }

@@ -219,8 +219,8 @@ const onSave = async () => {
       tags: parseTags(form.tags),
     })
     success(t('crm.contacts.detail.updateSuccess'))
-  } catch {
-    error(t('global.genericError'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
 </script>
