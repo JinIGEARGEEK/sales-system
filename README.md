@@ -18,9 +18,9 @@ This app covers the sales lifecycle from an inbound Lead through a Won/Lost Deal
 - **Tasks** (`/crm/tasks`) — every follow-up task across all Deals/Contacts/Companies in one filterable list, with bulk mark-done/reassign and a confirm-before-done dialog; a Deal marked "Won" auto-creates a kickoff-call follow-up task.
 - **Sales Pipeline Dashboard** (`/`) — pipeline value/win rate/revenue trend/pipeline coverage, filterable by date range, Business Unit, and Channel; a per-rep leaderboard; an "Upcoming Follow-ups" task widget; and stale-account upsell prompts.
 - **Global search** (top nav) — find a Deal, Company, Contact, or Lead by name from anywhere in the app.
-- **Admin** (`/admin/users`, `/admin/activity-log`) — staff account CRUD; the activity feed is still a static mock, not a real audit log viewer yet.
+- **Admin** (`/admin/users`, `/admin/activity-log`, `/admin/pipeline-config`) — staff account CRUD; a real audit-log viewer backed by `GET /audit-log` (filterable by entity type/date range, with a before/after diff view); and Admin-configurable pipeline stages/Lead sources, superseding the old hardcoded `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants.
 
-**Current build status:** this app is API-backed by a real Go/Postgres backend — see the sibling [`sales-system-api`](../sales-system-api) repo. Role-based access control (Admin / Sales Rep / Sales Manager / Production) is enforced **server-side**; the frontend mirrors it (via `useRole`) only to hide actions the backend would reject, never as the actual security boundary. `biz_spec/api-system-spec.md` is the API contract both repos are kept in sync against — check it (and `biz_spec/feature-spec.md`'s §9 gap summary) before assuming a given endpoint/requirement is or isn't implemented, since a handful of items (Contracts, CSV export, Admin-side pipeline/tag configurability, a frontend audit-log viewer) are still unbuilt.
+**Current build status:** this app is API-backed by a real Go/Postgres backend — see the sibling [`sales-system-api`](../sales-system-api) repo. Role-based access control (Admin / Sales Rep / Sales Manager / Production) is enforced **server-side**; the frontend mirrors it (via `useRole`) only to hide actions the backend would reject, never as the actual security boundary. `biz_spec/api-system-spec.md` is the API contract both repos are kept in sync against — check it (and `biz_spec/feature-spec.md`'s §9 gap summary) before assuming a given endpoint/requirement is or isn't implemented; a handful of narrower items (Tag/custom-field Admin configurability, Task push notifications, the Deals Kanban view's server-side pagination) are still unbuilt or partial.
 
 ### Documentation (`biz_spec/`)
 
@@ -95,7 +95,7 @@ sales-system/
 │   ├── Table/                    # Data table with pagination and card types
 │   └── Container/                # Layout containers
 │
-├── constants/mockData/           # Despite the folder name, this is no longer seed data — stores are API-backed. Holds static option lists, per-stage colors, and small pure-JS helpers (e.g. DEAL_STAGE_OPTIONS, findDuplicateDeals) shared across pages.
+├── constants/mockData/           # Despite the folder name, this is no longer seed data — stores are API-backed. Holds per-stage fallback colors and small pure-JS helpers (e.g. findDuplicateDeals) shared across pages; the old hardcoded DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS/LEAD_SOURCE_OPTIONS lists were removed in favor of the Admin-configurable `stores/pipelineStages.ts`/`stores/leadSources.ts`.
 ├── interfaces/                   # TypeScript interfaces (crm.d.ts, auth.d.ts, admin.d.ts, api.d.ts, ...)
 ├── locales/                      # Language files (en, th)
 ├── stores/                       # Pinia stores, one per entity — all API-backed (leads, deals, companies, contacts, payments, tags, tasks, projects, products, customerProducts, quotes, contracts, attachments, users, ...)

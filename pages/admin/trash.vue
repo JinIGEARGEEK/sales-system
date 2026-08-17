@@ -20,6 +20,7 @@
           :total-page="dealsTotalPage"
           :per-page="dealsPerPage"
           :loading="dealsLoading"
+          server-paginated
           @change-page="onChangeDealsPage"
           @change-per-page="onChangeDealsPerPage"
           @restore="onRestoreDeal"
@@ -34,6 +35,7 @@
           :total-page="leadsTotalPage"
           :per-page="leadsPerPage"
           :loading="leadsLoading"
+          server-paginated
           @change-page="onChangeLeadsPage"
           @change-per-page="onChangeLeadsPerPage"
           @restore="onRestoreLead"
@@ -48,6 +50,7 @@
           :total-page="companiesTotalPage"
           :per-page="companiesPerPage"
           :loading="companiesLoading"
+          server-paginated
           @change-page="onChangeCompaniesPage"
           @change-per-page="onChangeCompaniesPerPage"
           @restore="onRestoreCompany"
@@ -62,6 +65,7 @@
           :total-page="contactsTotalPage"
           :per-page="contactsPerPage"
           :loading="contactsLoading"
+          server-paginated
           @change-page="onChangeContactsPage"
           @change-per-page="onChangeContactsPerPage"
           @restore="onRestoreContact"

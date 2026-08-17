@@ -10,6 +10,7 @@ export default {
     statusPlaceholder: 'Status',
     allStatuses: 'All Statuses',
     addProject: 'Add Project',
+    exportCsv: 'Export CSV',
     addProjectSuccess: 'Project added',
     updateProjectSuccess: 'Project updated',
     columns: {

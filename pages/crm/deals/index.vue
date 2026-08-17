@@ -20,6 +20,15 @@
           @click="viewMode = 'list'"
         />
         <ButtonPrimary
+          v-if="canExport"
+          outline
+          small
+          fit-content
+          :label="t('crm.deals.index.exportCsv')"
+          icon="material-symbols:download"
+          @click="onExport"
+        />
+        <ButtonPrimary
           :label="t('crm.deals.index.addDeal')"
           icon="material-symbols:add"
           @click="navigateTo('/crm/deals/create')"
@@ -39,14 +48,14 @@
           <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
         </div>
         <div class="w-full sm:w-36">
-          <InputSelect v-model="channelFilter" :options="CHANNEL_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
+          <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
         </div>
       </div>
     </UCard>
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
-      :columns="DEAL_STAGE_OPTIONS"
+      :columns="pipelineStagesStore.activeOptions"
       :items="pipelineItems"
       @move="onMove"
       @select="onSelect"
@@ -83,16 +92,20 @@
       </template>
     </CrmPipelineBoard>
 
-    <CrmDealsTable v-else :rows="filteredDeals" />
+    <CrmDealsTable
+      v-else
+      :search="search"
+      :assignee-filter="assigneeFilter"
+      :business-unit-filter="businessUnitFilter"
+      :channel-filter="channelFilter"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import {
-  DEAL_STAGE_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
-  CHANNEL_FILTER_OPTIONS,
   matchesAssigneeFilter,
 } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -103,16 +116,35 @@ useHead({ title: t('crm.deals.index.pageTitle') })
 
 const { priceFormat } = useFormatter()
 const { success, error } = useNotify()
+const { hasRole } = useRole()
+const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
+const pipelineStagesStore = usePipelineStagesStore()
+const leadSourcesStore = useLeadSourcesStore()
+
+// Admin-configurable stage/source lists (replaces the previously hardcoded
+// DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants) — the Kanban board's columns
+// and this filter both read from the same store.
+const channelFilterOptions = computed(() => [
+  { label: 'All Channels', value: 'all' },
+  ...leadSourcesStore.activeOptions,
+])
+
+// Matches the backend's /deals/export RBAC (Admin/Sales Manager) — same
+// bulkRoles gate as the Deals bulk-action bar (components/Crm/DealsTable.vue).
+const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+const onExport = () => downloadCsvBlob('/deals/export', 'deals.csv')
 
 onMounted(() => {
   dealsStore.fetchAll()
   leadsStore.fetchAll({ exclude_converted: true })
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
 })
 
 const viewMode = ref<'kanban' | 'list'>('kanban')

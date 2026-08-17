@@ -32,7 +32,7 @@
         />
         <InputSelect
           v-model="channelFilter"
-          :options="CHANNEL_FILTER_OPTIONS"
+          :options="channelFilterOptions"
           :placeholder="t('crm.dashboard.filterChannel')"
           name="channelFilter"
           class="w-36"
@@ -86,6 +86,13 @@
       </CrmStatCard>
       <CrmStatCard :label="t('crm.dashboard.openDeals')">
         {{ openDealsCount }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
+      </CrmStatCard>
+    </div>
+
+    <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <CrmStatCard :label="t('crm.dashboard.forecastedRevenue')">
+        {{ priceFormat(forecastedRevenue) }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.currencyUnit') }}</span>
+        <template #hint>{{ t('crm.dashboard.forecastedRevenueHint') }}</template>
       </CrmStatCard>
     </div>
 
@@ -263,9 +270,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import {
-  DEAL_STAGE_OPTIONS,
   BUSINESS_UNIT_FILTER_OPTIONS,
-  CHANNEL_FILTER_OPTIONS,
   isTaskOverdue,
 } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -273,6 +278,20 @@ import { GLASS_PANEL_UI } from '~/constants/ui'
 const { t } = useI18n()
 
 useHead({ title: t('crm.dashboard.pageTitle') })
+
+const pipelineStagesStore = usePipelineStagesStore()
+const leadSourcesStore = useLeadSourcesStore()
+onMounted(() => {
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+})
+
+// Admin-configurable stage/source lists (replaces the previously hardcoded
+// DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants).
+const channelFilterOptions = computed(() => [
+  { label: 'All Channels', value: 'all' },
+  ...leadSourcesStore.activeOptions,
+])
 
 const { $api } = useNuxtApp()
 const { priceFormat, dateFormat } = useFormatter()
@@ -367,6 +386,7 @@ const openPipelineValue = computed(() => summary.value?.open_pipeline_value ?? 0
 const wonValue = computed(() => summary.value?.won_value ?? 0)
 const winRate = computed(() => Math.round(summary.value?.win_rate ?? 0))
 const openDealsCount = computed(() => summary.value?.open_deals_count ?? 0)
+const forecastedRevenue = computed(() => summary.value?.forecasted_revenue ?? 0)
 const avgDealSize = computed(() => summary.value?.avg_deal_size ?? 0)
 const avgSalesCycleDays = computed(() => summary.value?.avg_sales_cycle_days ?? 0)
 const pipelineCoverageRatio = computed(() => summary.value?.pipeline_coverage_ratio ?? 0)
@@ -395,13 +415,13 @@ const upsellGroups = computed(() => [
 // Every stage always renders a bar (even at zero) — the backend only returns rows for
 // stages with at least one deal, so missing stages are filled in at zero here.
 const stageBreakdown = computed(() => {
-  const stats = new Map(DEAL_STAGE_OPTIONS.map(stage => [stage.value, { value: 0, count: 0 }]))
+  const stats = new Map(pipelineStagesStore.activeOptions.map(stage => [stage.value, { value: 0, count: 0 }]))
   for (const row of summary.value?.stage_breakdown ?? []) {
     const stat = stats.get(row.stage)
     if (stat) { stat.value = row.value; stat.count = row.count }
   }
   const maxValue = Math.max(...[...stats.values()].map(s => s.value), 1)
-  return DEAL_STAGE_OPTIONS.map((stage) => {
+  return pipelineStagesStore.activeOptions.map((stage) => {
     const stat = stats.get(stage.value)!
     return {
       stage: stage.label,

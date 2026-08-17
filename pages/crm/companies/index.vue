@@ -4,6 +4,13 @@
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.companies.index.heading') }}</h2>
       <div class="flex gap-2">
         <ButtonPrimary
+          v-if="canExport"
+          :label="t('crm.companies.index.exportCsv')"
+          icon="material-symbols:download"
+          outline
+          @click="onExport"
+        />
+        <ButtonPrimary
           :label="t('crm.companies.index.import')"
           icon="material-symbols:upload-file-outline"
           outline
@@ -55,11 +62,13 @@
 
     <TableData
       v-model:page="page"
+      server-paginated
       :columns="columns"
-      :rows="filteredCompanies"
-      :total="filteredCompanies.length"
+      :rows="displayCompanies"
+      :total="total"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -94,8 +103,13 @@ useHead({ title: t('crm.companies.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
+const { hasRole } = useRole()
+const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const activitiesStore = useActivitiesStore()
+
+// Matches the backend's /companies/export RBAC (Admin/Sales Manager).
+const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const search = ref('')
 const industryFilter = ref('all')
@@ -103,43 +117,72 @@ const statusFilter = ref('all')
 const tagFilter = ref('all')
 const showImport = ref(false)
 
+const onExport = () => downloadCsvBlob('/companies/export', 'companies.csv')
+
 onMounted(() => {
-  companiesStore.fetchAll()
+  fetch()
+  // A full (up to 200) fetch is kept purely to derive the tag filter's option
+  // list below — there's no "distinct tags" endpoint, so this stays separate
+  // from the server-paginated `rows` that the table itself renders.
+  if (companiesStore.items.length === 0) companiesStore.fetchAll()
 })
 
-const companies = computed(() => companiesStore.items)
+const tagOptions = computed(() => [...new Set(companiesStore.items.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
 
-const tagOptions = computed(() => [...new Set(companies.value.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
+// Maps a TableData column field to the `sort` query param GET /companies
+// understands (created_at/name/industry).
+const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const { onSort, sortRows } = useSortableRows()
+const sortField = ref('')
+const sortDir = ref<'asc' | 'desc'>('asc')
 
-const filteredCompanies = computed(() => {
-  const filtered = companies.value.filter((company) => {
-    const matchSearch = !search.value
-      || company.name.toLowerCase().includes(search.value.toLowerCase())
-      || company.website.toLowerCase().includes(search.value.toLowerCase())
-    const matchIndustry = industryFilter.value === 'all' || company.industry === industryFilter.value
-    const matchStatus = statusFilter.value === 'all' || company.status === statusFilter.value
-    const matchTag = tagFilter.value === 'all' || company.tags.includes(tagFilter.value)
-    return matchSearch && matchIndustry && matchStatus && matchTag
-  }).map((company) => {
-    // Only reflects activity already cached from visiting the company's detail page —
-    // there's no bulk "activities for these companies" endpoint to fetch this list-wide.
-    const activityDates = activitiesStore.forRelated('company', company.id).map(a => a.created_at)
-    const lastContactDate = activityDates.length ? new Date(Math.max(...activityDates.map(d => d.getTime()))) : null
-    const contact = lastContactInfo(lastContactDate)
-    return {
-      ...company,
-      tagsDisplay: company.tags.join(', ') || '-',
-      statusBadge: company.status === 'active'
-        ? toBadge(t('crm.companies.index.statusActive'), 'success')
-        : toBadge(t('crm.companies.index.statusArchived')),
-      createdDate: dateFormat(company.created_at.toISOString()),
-      lastContactBadge: toBadge(contact.label, contact.color),
-    }
-  })
-  return sortRows(filtered, { createdDate: 'created_at' })
+const onSort = (field: string, direction: 'asc' | 'desc') => {
+  sortField.value = field
+  sortDir.value = direction
+  refetchFromStart()
+}
+
+const buildParams = () => ({
+  search: search.value || undefined,
+  industry: industryFilter.value !== 'all' ? industryFilter.value : undefined,
+  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  tag: tagFilter.value !== 'all' ? tagFilter.value : undefined,
+  sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
+
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams)
+
+watch(search, () => refetchDebounced())
+watch([industryFilter, statusFilter, tagFilter], () => refetchFromStart())
+
+const displayCompanies = computed(() => rows.value.map((company) => {
+  // Only reflects activity already cached from visiting the company's detail page —
+  // there's no bulk "activities for these companies" endpoint to fetch this list-wide.
+  const activityDates = activitiesStore.forRelated('company', company.id).map(a => a.created_at)
+  const lastContactDate = activityDates.length ? new Date(Math.max(...activityDates.map(d => d.getTime()))) : null
+  const contact = lastContactInfo(lastContactDate)
+  return {
+    ...company,
+    tagsDisplay: company.tags.join(', ') || '-',
+    statusBadge: company.status === 'active'
+      ? toBadge(t('crm.companies.index.statusActive'), 'success')
+      : toBadge(t('crm.companies.index.statusArchived')),
+    createdDate: dateFormat(company.created_at.toISOString()),
+    lastContactBadge: toBadge(contact.label, contact.color),
+  }
+}))
 
 const columns: TableDataColumn[] = [
   { label: t('crm.companies.index.columns.name'), align: 'left', field: 'name', isSort: true },
@@ -163,7 +206,6 @@ const columns: TableDataColumn[] = [
   },
 ]
 
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredCompanies.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Company>()
 
 const onViewDetail = (row: Company) => {
@@ -179,6 +221,7 @@ const confirmDelete = async () => {
     try {
       await companiesStore.remove(target.value.id)
       success(t('crm.companies.index.deleteSuccess'))
+      await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }
@@ -188,5 +231,6 @@ const confirmDelete = async () => {
 
 const onImported = ({ companies: companyCount, contacts: contactCount }: { companies: number, contacts: number }) => {
   success(t('crm.companies.index.importSuccess', { companies: companyCount, contacts: contactCount }))
+  fetch()
 }
 </script>

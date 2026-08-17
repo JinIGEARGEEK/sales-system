@@ -214,11 +214,21 @@ const prop = defineProps({
     type: String,
     default: 'top',
   },
+  // When true, `rows` is assumed to already be just the current page (fetched
+  // server-side) and is rendered as-is — `page`/`perPage` are only used to
+  // drive TablePagination's controls/labels. When false (default), `rows` is
+  // the full dataset and this component does the page slicing itself, as
+  // every existing client-side-paginated caller expects.
+  serverPaginated: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const { t } = useI18n()
 
 const paginatedRows = computed(() => {
+  if (prop.serverPaginated) return prop.rows
   const start = (Math.max(prop.page, 1) - 1) * prop.perPage
   return prop.rows.slice(start, start + prop.perPage)
 })

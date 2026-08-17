@@ -3,6 +3,7 @@ export default {
     pageTitle: 'บริษัท',
     heading: 'บริษัท',
     addCompany: 'เพิ่มบริษัท',
+    exportCsv: 'ส่งออก CSV',
     import: 'นำเข้าข้อมูล',
     importSuccess: 'นำเข้าบริษัท {companies} รายการ และผู้ติดต่อ {contacts} รายการสำเร็จ',
     searchPlaceholder: 'ค้นหาด้วยชื่อหรือเว็บไซต์...',

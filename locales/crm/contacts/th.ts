@@ -3,6 +3,7 @@ export default {
     pageTitle: 'ผู้ติดต่อ',
     heading: 'ผู้ติดต่อ',
     addContact: 'เพิ่มผู้ติดต่อ',
+    exportCsv: 'ส่งออก CSV',
     import: 'นำเข้าข้อมูล',
     importSuccess: 'นำเข้าบริษัท {companies} รายการ และผู้ติดต่อ {contacts} รายการสำเร็จ',
     searchPlaceholder: 'ค้นหาด้วยชื่อหรืออีเมล...',

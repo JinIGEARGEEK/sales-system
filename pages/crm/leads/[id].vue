@@ -34,7 +34,7 @@
             <InputText v-model="form.company_name" :label="t('crm.leads.detail.companyName')" name="company_name" />
             <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" rules="required" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
-            <InputSelect v-model="form.source" :options="LEAD_SOURCE_OPTIONS" :label="t('crm.leads.detail.source')" name="source" rules="required" />
+            <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
             <InputSelect
               v-model="form.status"
               :options="LEAD_STATUS_FORM_OPTIONS"
@@ -81,7 +81,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -92,6 +92,7 @@ const { success, error } = useNotify()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
+const leadSourcesStore = useLeadSourcesStore()
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go.
@@ -102,6 +103,7 @@ const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 onMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll()
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
   attachmentsStore.fetchForRelated('lead', leadId)
 })
 

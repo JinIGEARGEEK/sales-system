@@ -4,6 +4,7 @@ import adminActivityLog from './admin/activity-log/en'
 import adminUsers from './admin/users/en'
 import adminProducts from './admin/products/en'
 import adminTrash from './admin/trash/en'
+import adminPipelineConfig from './admin/pipeline-config/en'
 import crmDashboard from './crm/dashboard/en'
 import crmLeads from './crm/leads/en'
 import crmDeals from './crm/deals/en'
@@ -28,6 +29,7 @@ export default {
     users: adminUsers,
     products: adminProducts,
     trash: adminTrash,
+    pipelineConfig: adminPipelineConfig,
   },
   crm: {
     dashboard: crmDashboard,

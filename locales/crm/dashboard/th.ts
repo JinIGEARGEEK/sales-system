@@ -6,6 +6,8 @@ export default {
   wonThisPeriod: 'ปิดสำเร็จในช่วงนี้',
   winRate: 'อัตราการปิด Deal สำเร็จ',
   openDeals: 'Deal ที่เปิดอยู่',
+  forecastedRevenue: 'รายได้คาดการณ์',
+  forecastedRevenueHint: 'ผลรวมของมูลค่า Deal ที่เปิดอยู่ × โอกาสในการปิดสำเร็จ',
   clearFilters: 'ล้างตัวกรอง',
   showingDeals: 'แสดง {count} จาก {total} ดีล',
   noDealsMatch: 'ไม่มี Deal ที่ตรงกับตัวกรองที่เลือก',

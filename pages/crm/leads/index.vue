@@ -25,7 +25,7 @@
             <InputText v-model="search" :placeholder="t('crm.leads.index.searchPlaceholder')" name="search" />
           </div>
           <div class="w-full sm:w-40">
-            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.leads.index.allSources'), value: 'all' }, ...LEAD_SOURCE_OPTIONS]" :placeholder="t('crm.leads.index.sourcePlaceholder')" name="sourceFilter" />
+            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.leads.index.allSources'), value: 'all' }, ...leadSourcesStore.activeOptions]" :placeholder="t('crm.leads.index.sourcePlaceholder')" name="sourceFilter" />
           </div>
           <div class="w-full sm:w-48">
             <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.leads.index.assigneePlaceholder')" name="assigneeFilter" />
@@ -37,11 +37,13 @@
     <TableData
       v-model:page="page"
       v-model:select-value="selected"
+      server-paginated
       :columns="columns"
-      :rows="filteredLeads"
-      :total="filteredLeads.length"
+      :rows="displayRows"
+      :total="total"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
@@ -74,7 +76,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { LEAD_STATUS_OPTIONS, LEAD_SOURCE_OPTIONS, matchesAssigneeFilter } from '~/constants/mockData'
+import { LEAD_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -86,40 +88,69 @@ const { success, error } = useNotify()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
+const leadSourcesStore = useLeadSourcesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
-
-onMounted(() => {
-  leadsStore.fetchAll()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
-})
 
 const search = ref('')
 const statusFilter = ref('all')
 const sourceFilter = ref('all')
 const assigneeFilter = ref('all')
 
-const { onSort, sortRows } = useSortableRows()
+// Maps a TableData column field to the `sort` query param the backend
+// understands (see GET /leads' ApplySort allow-list: created_at/name/company_name).
+const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const filteredLeads = computed(() => {
-  const filtered = leadsStore.items.filter((lead) => {
-    const matchSearch = !search.value
-      || lead.name.toLowerCase().includes(search.value.toLowerCase())
-      || lead.company_name.toLowerCase().includes(search.value.toLowerCase())
-      || lead.email.toLowerCase().includes(search.value.toLowerCase())
-    const matchStatus = statusFilter.value === 'all' || lead.status === statusFilter.value
-    const matchSource = sourceFilter.value === 'all' || lead.source === sourceFilter.value
-    const matchAssignee = matchesAssigneeFilter(lead.assigned_to, assigneeFilter.value)
-    return matchSearch && matchStatus && matchSource && matchAssignee
-  }).map(lead => ({
-    ...lead,
-    statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
-    createdDate: dateFormat(lead.created_at.toISOString()),
-    assignedToName: teamMembersStore.nameById(lead.assigned_to),
-  }))
-  return sortRows(filtered, { createdDate: 'created_at' })
+const sortField = ref('')
+const sortDir = ref<'asc' | 'desc'>('asc')
+
+const onSort = (field: string, direction: 'asc' | 'desc') => {
+  sortField.value = field
+  sortDir.value = direction
+  refetchFromStart()
+}
+
+const buildParams = () => ({
+  search: search.value || undefined,
+  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  source: sourceFilter.value !== 'all' ? sourceFilter.value : undefined,
+  assigned_to: assigneeFilter.value !== 'all' ? assigneeFilter.value : undefined,
+  sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
+
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<Lead>(params => leadsStore.fetchList(params), buildParams)
+
+onMounted(() => {
+  fetch()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+})
+
+watch(search, () => refetchDebounced())
+watch([statusFilter, sourceFilter, assigneeFilter], () => refetchFromStart())
+// Selection is scoped to the currently visible page — a page/filter/sort
+// change invalidates whatever was selected before it.
+watch([page, () => buildParams()], () => { selected.value = [] })
+
+const displayRows = computed(() => rows.value.map(lead => ({
+  ...lead,
+  statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
+  createdDate: dateFormat(lead.created_at.toISOString()),
+  assignedToName: teamMembersStore.nameById(lead.assigned_to),
+})))
 
 const leadStatusColor = (status: LeadStatus) => {
   if (status === 'Qualified') return 'success'
@@ -170,7 +201,6 @@ const onViewDeal = (row: Lead) => {
   navigateTo(`/crm/deals/${row.converted_deal_id}`)
 }
 
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredLeads.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Lead>()
 
 const confirmDelete = async () => {
@@ -178,6 +208,7 @@ const confirmDelete = async () => {
     try {
       await leadsStore.remove(target.value.id)
       success(t('crm.leads.index.deleteSuccess'))
+      await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }
@@ -190,6 +221,7 @@ const onBulkReassign = async (assignedTo: number | null) => {
     await leadsStore.bulkReassign(selectedIds.value, assignedTo)
     success(t('crm.components.bulkActionBar.reassignSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
@@ -200,6 +232,7 @@ const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }
     await leadsStore.bulkTag(selectedIds.value, tags, mode)
     success(t('crm.components.bulkActionBar.tagSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
@@ -210,6 +243,7 @@ const onBulkArchive = async () => {
     await leadsStore.bulkArchive(selectedIds.value)
     success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.leads.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

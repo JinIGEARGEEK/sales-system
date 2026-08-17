@@ -48,6 +48,7 @@ import { useI18n } from 'vue-i18n'
 import { DEAL_STAGE_COLORS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const pipelineStagesStore = usePipelineStagesStore()
 
 // A card can be a Deal or a Lead being shown ahead of conversion — `_lane` is the
 // column (DealStage value) it renders under, precomputed by the caller so this
@@ -78,7 +79,20 @@ const getStageDescription = (value: string) => {
   return key ? t(`crm.components.pipelineBoard.stageDescriptions.${key}`) : ''
 }
 
-const getColumnColor = (value: string) => DEAL_STAGE_COLORS[value as DealStage] || FALLBACK_COLOR
+const WON_COLOR = '#00C875'
+const LOST_COLOR = '#E2445C'
+
+// Prefers the hardcoded DEAL_STAGE_COLORS map (kept for the default stages'
+// exact existing look), then falls back to the configured PipelineStage's
+// is_won_stage/is_lost_stage flags so a custom Admin-added stage still renders
+// sensibly (green/red/primary) without needing a per-stage hardcoded color.
+const getColumnColor = (value: string) => {
+  if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
+  const row = pipelineStagesStore.byName(value)
+  if (row?.is_won_stage) return WON_COLOR
+  if (row?.is_lost_stage) return LOST_COLOR
+  return FALLBACK_COLOR
+}
 
 const getColumnHeaderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 80%, transparent)`
 

@@ -1,8 +1,8 @@
 # User Stories & Use Cases — CRM for Sales Team
 
 **Companion document to:** `feature-spec.md`, `api-system-spec.md` (backend API contract derived from these stories' requirements)
-**Version:** 2.3 (adds Thai role/use-case summary; reflects Tasks/Follow-ups now built)
-**Date:** 2026-08-14
+**Version:** 2.4 (adds Thai role/use-case summary; reflects Tasks/Follow-ups now built, plus Deal probability/lost-reason/forecast, Admin-configurable pipeline stages/lead sources, a real audit-log view, CSV export, Lead round-robin auto-assignment, and Task due-date email notifications)
+**Date:** 2026-08-17
 
 Each story references the Feature Requirement ID(s) it satisfies from `feature-spec.md`, for traceability. Format: *As a [role], I want to [action], so that [benefit].*
 
@@ -43,10 +43,10 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | # | User Story | Refs | Status |
 |---|---|---|---|
 | A-1 | As an Admin, I want to create and deactivate user accounts and assign roles, so that access is controlled per team member. | FR-CRM-080 | 🚧 account CRUD (`pages/admin/users/`) works; role has no access-control effect |
-| A-2 | As an Admin, I want to customize pipeline stages, lead sources, tags, and custom fields, so that the system matches our actual sales process. | FR-CRM-081 | ⬜ |
+| A-2 | As an Admin, I want to customize pipeline stages, lead sources, tags, and custom fields, so that the system matches our actual sales process. | FR-CRM-081 | 🚧 pipeline stages and Lead sources are now Admin-configurable (`pages/admin/pipeline-config.vue`, `/admin/pipeline-stages`, `/admin/lead-sources`); Tags and custom fields still are not |
 | A-3 | As an Admin, I want to maintain the Product Catalog (add/edit/deactivate products), so that the list of what we sell stays accurate for Quotes and reporting. | FR-CRM-060, FR-CRM-061 | ⬜ |
-| A-4 | As an Admin, I want to view an audit log of key changes (deal stage, won/lost, project/product status), so that I can investigate mistakes or disputes. | FR-CRM-082 | ⬜ `/admin/activity-log` shows a static mock activity feed, not a real audit trail of record changes |
-| A-5 | As an Admin, I want to export Companies, Contacts, Deals, Products, and Projects to CSV, so that I can analyze data outside the system or back it up. | FR-CRM-083 | ⬜ |
+| A-4 | As an Admin, I want to view an audit log of key changes (deal stage, won/lost, project/product status), so that I can investigate mistakes or disputes. | FR-CRM-082 | ✅ `/admin/activity-log` now consumes the real `GET /audit-log` endpoint via `stores/auditLog.ts`, filterable by entity type/date range, with a before/after diff view |
+| A-5 | As an Admin, I want to export Companies, Contacts, Deals, Products, and Projects to CSV, so that I can analyze data outside the system or back it up. | FR-CRM-083 | ✅ `GET /{companies,contacts,deals,products,projects}/export` (Admin/Sales Manager only) + a frontend export button on each list page |
 | A-6 | As an Admin, I want to configure email notification settings, so that the team receives timely alerts. | FR-CRM-084 | ⬜ |
 
 ---
@@ -58,10 +58,10 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | # | User Story | Refs | Status |
 |---|---|---|---|
 | S-1 | As a Sales rep, I want to log a new Lead with source and contact details, so that no inbound inquiry is lost, and so we can later see which sources actually convert. | FR-CRM-001, FR-CRM-002, FR-CRM-005 | 🚧 create/status built; source analytics not built |
-| S-1b | As a Sales rep, I want new Leads to be auto-assigned to me or a teammate (round-robin or rule-based), so that inbound leads get picked up fast even when no one manually assigns them. | FR-CRM-003 | ⬜ manual assignment only |
+| S-1b | As a Sales rep, I want new Leads to be auto-assigned to me or a teammate (round-robin or rule-based), so that inbound leads get picked up fast even when no one manually assigns them. | FR-CRM-003 | ✅ a new Lead created with no explicit assignee is auto-assigned via `pickAutoAssignee()` — a least-open-load strategy among active Sales Reps, not literal index-based round robin; manual assignment/reassignment still available |
 | S-2 | As a Sales rep, I want to convert a Qualified Lead into a Deal (creating the Company/Contact if new) with title, value, currency, owner, and expected close date, so that I can start tracking it through the pipeline. | FR-CRM-004, FR-CRM-020 | ✅ |
-| S-3 | As a Sales rep, I want to move a Deal across pipeline stages on a Kanban board, so that I can track progress visually. | FR-CRM-021, FR-CRM-022 | ✅ Kanban works; stages are a fixed list, not Admin-configurable |
-| S-4 | As a Sales rep, I want to record a reason when I mark a Deal "Lost," so that we learn from it later. | FR-CRM-023 | ⬜ |
+| S-3 | As a Sales rep, I want to move a Deal across pipeline stages on a Kanban board, so that I can track progress visually. | FR-CRM-021, FR-CRM-022 | ✅ Kanban works; stages are now Admin-configurable via `/admin/pipeline-stages` (see A-2) rather than a fixed list |
+| S-4 | As a Sales rep, I want to record a reason when I mark a Deal "Lost," so that we learn from it later. | FR-CRM-023 | ✅ `Deal.lost_reason` (price/timing/competitor/no_budget/other), required once a Deal resolves to Lost; conditional select on the Deal detail page |
 | S-5 | As a Sales rep, I want to track multiple open Deals for the same Company, so that I can pursue upsells on an existing account without losing track of the original deal. | FR-CRM-026 | ✅ |
 
 ### 2.2 Contacts & Companies
@@ -79,7 +79,7 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | # | User Story | Refs | Status |
 |---|---|---|---|
 | S-11 | As a Sales rep, I want to log calls/emails/meeting notes against a Contact or Deal, so that my team has full context on every interaction. | FR-CRM-030, FR-CRM-031 | 🚧 timeline display built; manual entry form unconfirmed |
-| S-12 | As a Sales rep, I want to set follow-up reminders on a Deal (or a Contact/Company), so that I never miss a next step. | FR-CRM-032 | 🚧 Tasks tab on Deal/Contact/Company detail pages, a dedicated all-tasks page (`/crm/tasks`) with filters and bulk mark-done/reassign, confirm-before-done dialog, and an auto-created follow-up task on Deal Won (`stores/tasks.ts`); email/push notification-on-due not built |
+| S-12 | As a Sales rep, I want to set follow-up reminders on a Deal (or a Contact/Company), so that I never miss a next step. | FR-CRM-032 | 🚧 Tasks tab on Deal/Contact/Company detail pages, a dedicated all-tasks page (`/crm/tasks`) with filters and bulk mark-done/reassign, confirm-before-done dialog, and an auto-created follow-up task on Deal Won (`stores/tasks.ts`); due-date notification is now built as email (a 15-min `internal/notifier` ticker) but needs real SMTP credentials configured to actually send; push notification not built |
 | S-13 | As a Sales rep, I want to @mention a teammate in a note, so that they're notified and can jump in. | FR-CRM-034 | ⬜ |
 | S-13b | As a Sales rep, I want emails I send/receive with a client to be auto-logged against their Contact (via BCC-to-log or inbox sync), so that I don't have to manually copy-paste every thread. | FR-CRM-033 | ⬜ |
 
@@ -113,7 +113,7 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 |---|---|---|---|
 | M-1 | As a Sales Manager, I want a pipeline dashboard showing deal count/value per stage, so that I can report on team performance. | FR-CRM-050 | ✅ |
 | M-2 | As a Sales Manager, I want to see the team's win rate over a date range, so that I can track sales effectiveness. | FR-CRM-051 | ✅ Time Period presets (This Month/Quarter/Year, Last 6/12 Months) plus a free-form date-range picker both drive win rate |
-| M-3 | As a Sales Manager, I want a revenue forecast based on open deal value × probability, so that I can plan for the quarter. | FR-CRM-052, FR-CRM-024 | ⬜ |
+| M-3 | As a Sales Manager, I want a revenue forecast based on open deal value × probability, so that I can plan for the quarter. | FR-CRM-052, FR-CRM-024 | 🚧 `Deal.probability` (defaulted per-stage, manually overridable) feeds `/dashboard/summary`'s `forecasted_revenue`, shown as a stat card on `pages/index.vue`; it's a single running total, not yet broken out by month/quarter |
 | M-4 | As a Sales Manager, I want a per-rep leaderboard (deals won, revenue, activity count), so that I can coach the team fairly. | FR-CRM-053 | 🚧 "Team Performance" widget shows deals won, revenue closed, and win rate per rep; activity count not included |
 | M-5 | As a Sales Manager, I want a lead-source report showing conversion rate by source, so that I know where to invest marketing spend. | FR-CRM-054 | ⬜ |
 | M-6 | As a Sales Manager, I want to filter any report by date range, rep, or company tag, so that I can slice data the way I need. | FR-CRM-055 | 🚧 dashboard filters by date range, Business Unit (Project/Product), and Channel; filtering by Sales Rep or Company tag is not implemented |

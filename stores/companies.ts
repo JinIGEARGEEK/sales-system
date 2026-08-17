@@ -36,6 +36,20 @@ export const useCompaniesStore = defineStore('companies', {
       this.page = response.data.page
       return this.items
     },
+    // Server-paginated fetch used by the Companies list page. Deliberately does
+    // NOT touch `items`/`total`/`page` above — those stay the "up to 200,
+    // everything" cache that dropdowns, the Company detail page and the
+    // nameById/findByName getters all rely on via fetchAll().
+    async fetchList (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Company[]>>('/companies', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
     async add (company: Omit<Company, 'id'>): Promise<Company> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Company>>('/companies', company)

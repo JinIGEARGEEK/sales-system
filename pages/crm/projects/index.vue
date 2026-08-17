@@ -16,6 +16,13 @@
             <InputSelect v-model="statusFilter" :options="statusFilterOptions" :placeholder="t('crm.projects.index.statusPlaceholder')" name="statusFilter" />
           </div>
           <ButtonPrimary
+            v-if="canExport"
+            outline
+            :label="t('crm.projects.index.exportCsv')"
+            icon="material-symbols:download"
+            @click="onExportProjects"
+          />
+          <ButtonPrimary
             v-if="canManageProjects"
             :label="t('crm.projects.index.addProject')"
             icon="material-symbols:add"
@@ -54,6 +61,13 @@
           <div class="w-full sm:w-48">
             <InputSelect v-model="productStatusFilter" :options="productStatusFilterOptions" :placeholder="t('admin.products.statusPlaceholder')" name="productStatusFilter" />
           </div>
+          <ButtonPrimary
+            v-if="canExport"
+            outline
+            :label="t('admin.products.exportCsv')"
+            icon="material-symbols:download"
+            @click="onExportProducts"
+          />
           <ButtonPrimary
             :label="t('admin.products.addProduct')"
             icon="material-symbols:add"
@@ -106,6 +120,7 @@ useHead({ title: t('crm.projects.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { hasRole } = useRole()
+const downloadCsvBlob = useDownloadCsvBlob()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
 const companiesStore = useCompaniesStore()
@@ -114,6 +129,11 @@ const dealsStore = useDealsStore()
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — same check as the company detail page's Projects tab.
 const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
+// Matches the backend's /projects/export and /products/export RBAC (Admin/Sales Manager).
+const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+const onExportProjects = () => downloadCsvBlob('/projects/export', 'projects.csv')
+const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv')
 
 onMounted(() => {
   if (projectsStore.items.length === 0) projectsStore.fetchAll()

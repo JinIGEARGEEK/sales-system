@@ -3,6 +3,7 @@ export default {
     pageTitle: 'Contacts',
     heading: 'Contacts',
     addContact: 'Add Contact',
+    exportCsv: 'Export CSV',
     import: 'Import',
     importSuccess: 'Imported {companies} companies and {contacts} contacts',
     searchPlaceholder: 'Search by name or email...',

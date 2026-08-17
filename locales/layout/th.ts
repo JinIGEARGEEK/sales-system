@@ -2,6 +2,7 @@ export default {
   nav: {
     adminActivities: 'กิจกรรมระบบ',
     customers: 'พนักงาน',
+    pipelineConfig: 'ตั้งค่าไปป์ไลน์',
     salesDashboard: 'Dashboard',
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',

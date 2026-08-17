@@ -4,6 +4,13 @@
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.contacts.index.heading') }}</h2>
       <div class="flex gap-2">
         <ButtonPrimary
+          v-if="canExport"
+          :label="t('crm.contacts.index.exportCsv')"
+          icon="material-symbols:download"
+          outline
+          @click="onExport"
+        />
+        <ButtonPrimary
           :label="t('crm.contacts.index.import')"
           icon="material-symbols:upload-file-outline"
           outline
@@ -55,11 +62,13 @@
 
     <TableData
       v-model:page="page"
+      server-paginated
       :columns="columns"
-      :rows="filteredContacts"
-      :total="filteredContacts.length"
+      :rows="displayContacts"
+      :total="total"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -93,12 +102,21 @@ useHead({ title: t('crm.contacts.index.pageTitle') })
 
 const { toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { hasRole } = useRole()
+const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
+// Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
+const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+
 onMounted(() => {
-  contactsStore.fetchAll()
+  fetch()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  // A full (up to 200) fetch is kept purely to derive the tag filter's option
+  // list below — there's no "distinct tags" endpoint, so this stays separate
+  // from the server-paginated `rows` that the table itself renders.
+  if (contactsStore.items.length === 0) contactsStore.fetchAll()
 })
 
 const search = ref('')
@@ -107,31 +125,56 @@ const statusFilter = ref('all')
 const tagFilter = ref('all')
 const showImport = ref(false)
 
-const contacts = computed(() => contactsStore.items)
+const onExport = () => downloadCsvBlob('/contacts/export', 'contacts.csv')
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
-const tagOptions = computed(() => [...new Set(contacts.value.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
+const tagOptions = computed(() => [...new Set(contactsStore.items.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
 
-const { onSort, sortRows } = useSortableRows()
+// Maps a TableData column field to the `sort` query param GET /contacts
+// understands (created_at/name/email, plus the join-backed company_name).
+const SORT_FIELD_MAP: Record<string, string> = { companyName: 'company_name' }
 
-const filteredContacts = computed(() => {
-  const filtered = contacts.value.filter((contact) => {
-    const matchSearch = !search.value
-      || contact.name.toLowerCase().includes(search.value.toLowerCase())
-      || contact.email.toLowerCase().includes(search.value.toLowerCase())
-    const matchCompany = companyFilter.value === 'all' || String(contact.company_id) === companyFilter.value
-    const matchStatus = statusFilter.value === 'all' || contact.status === statusFilter.value
-    const matchTag = tagFilter.value === 'all' || contact.tags.includes(tagFilter.value)
-    return matchSearch && matchCompany && matchStatus && matchTag
-  }).map(contact => ({
-    ...contact,
-    companyName: companiesStore.nameById(contact.company_id),
-    statusBadge: contact.status === 'active'
-      ? toBadge(t('crm.contacts.index.statusActive'), 'success')
-      : toBadge(t('crm.contacts.index.statusArchived')),
-  }))
-  return sortRows(filtered)
+const sortField = ref('')
+const sortDir = ref<'asc' | 'desc'>('asc')
+
+const onSort = (field: string, direction: 'asc' | 'desc') => {
+  sortField.value = field
+  sortDir.value = direction
+  refetchFromStart()
+}
+
+const buildParams = () => ({
+  search: search.value || undefined,
+  company_id: companyFilter.value !== 'all' ? companyFilter.value : undefined,
+  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  tag: tagFilter.value !== 'all' ? tagFilter.value : undefined,
+  sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
+
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<Contact>(params => contactsStore.fetchList(params), buildParams)
+
+watch(search, () => refetchDebounced())
+watch([companyFilter, statusFilter, tagFilter], () => refetchFromStart())
+
+const displayContacts = computed(() => rows.value.map(contact => ({
+  ...contact,
+  companyName: companiesStore.nameById(contact.company_id),
+  statusBadge: contact.status === 'active'
+    ? toBadge(t('crm.contacts.index.statusActive'), 'success')
+    : toBadge(t('crm.contacts.index.statusArchived')),
+})))
 
 const columns: TableDataColumn[] = [
   { label: t('crm.contacts.index.columns.name'), align: 'left', field: 'name', isSort: true },
@@ -154,7 +197,6 @@ const columns: TableDataColumn[] = [
   },
 ]
 
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredContacts.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Contact>()
 
 const onViewDetail = (row: Contact) => {
@@ -170,6 +212,7 @@ const confirmDelete = async () => {
     try {
       await contactsStore.remove(target.value.id)
       success(t('crm.contacts.index.deleteSuccess'))
+      await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }
@@ -179,5 +222,6 @@ const confirmDelete = async () => {
 
 const onImported = ({ companies: companyCount, contacts: contactCount }: { companies: number, contacts: number }) => {
   success(t('crm.contacts.index.importSuccess', { companies: companyCount, contacts: contactCount }))
+  fetch()
 }
 </script>

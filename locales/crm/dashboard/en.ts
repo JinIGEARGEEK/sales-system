@@ -6,6 +6,8 @@ export default {
   wonThisPeriod: 'Won This Period',
   winRate: 'Win Rate',
   openDeals: 'Open Deals',
+  forecastedRevenue: 'Forecasted Revenue',
+  forecastedRevenueHint: 'Sum of open deal value × win probability.',
   clearFilters: 'Clear all',
   showingDeals: 'Showing {count} of {total} deals',
   noDealsMatch: 'No deals match the selected filters.',

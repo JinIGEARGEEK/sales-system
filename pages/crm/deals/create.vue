@@ -31,7 +31,7 @@
           <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" rules="required" />
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" />
           <InputText v-model.number="form.value" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" type="number" rules="required" />
-          <InputSelect v-model="form.stage" :options="DEAL_STAGE_OPTIONS" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
+          <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
           <InputSelect
@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEAL_STAGE_OPTIONS, BUSINESS_UNIT_OPTIONS, findDuplicateDeals, dealStatusForStage } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS, findDuplicateDeals, dealStatusForStage, stageDefaultProbability } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -76,6 +76,7 @@ const leadsStore = useLeadsStore()
 const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
+const pipelineStagesStore = usePipelineStagesStore()
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
@@ -84,6 +85,7 @@ onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
   if (projectsStore.items.length === 0) projectsStore.fetchAll()
   if (productsStore.items.length === 0) productsStore.fetchAll()
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
 })
 
 // leadsStore.items is fetched asynchronously (onMounted), so on a fresh page
@@ -146,6 +148,8 @@ const onSubmit = async () => {
       channel: 'Other' as LeadSource,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
+      probability: stageDefaultProbability(form.stage),
+      lost_reason: null,
     }
 
     if (originatingLead.value) {

@@ -1,5 +1,6 @@
 export default {
   addProduct: 'Add Product',
+  exportCsv: 'Export CSV',
   addSuccess: 'Product added successfully',
   edit: 'Edit',
   updateSuccess: 'Product updated successfully',

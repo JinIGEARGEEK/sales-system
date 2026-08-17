@@ -42,6 +42,7 @@ export default {
     sourcePlaceholder: 'เลือกแหล่งที่มา',
     status: 'สถานะ',
     statusPlaceholder: 'เลือกสถานะ',
+    assignedToPlaceholder: 'เว้นว่างเพื่อมอบหมายอัตโนมัติ (round robin)',
     notes: 'บันทึกเพิ่มเติม',
     notesPlaceholder: 'กรอกบันทึกเพิ่มเติม (ถ้ามี)',
     createLead: 'เพิ่ม Lead',

@@ -13,11 +13,13 @@
     <TableData
       v-model:page="page"
       v-model:select-value="selected"
+      server-paginated
       :columns="columns"
       :rows="displayRows"
-      :total="displayRows.length"
+      :total="total"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
@@ -49,8 +51,15 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
+// Filters are owned by the parent (pages/crm/deals/index.vue) so the same
+// search/assignee/business-unit/channel inputs drive both this list view and
+// the Kanban board's client-side filtering — this table just turns them into
+// server query params for its own paginated fetch.
 const props = defineProps<{
-  rows: Deal[]
+  search: string
+  assigneeFilter: string
+  businessUnitFilter: string
+  channelFilter: string
 }>()
 
 const { t } = useI18n()
@@ -62,6 +71,7 @@ const companiesStore = useCompaniesStore()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
+  fetch()
   if (companiesStore.items.length === 0) companiesStore.fetchAll()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
 })
@@ -71,22 +81,57 @@ const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Deal>()
 
-const stageBadgeColor = (stage: DealStage) => {
-  if (stage === 'Won') return 'success'
-  if (stage === 'Lost') return 'error'
-  return 'neutral'
+const { stageBadgeColor } = useDealStageColor()
+
+// Maps a TableData column field to the `sort` query param GET /deals
+// understands (created_at/title/value, plus the join-backed company_name).
+const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
+
+const sortField = ref('')
+const sortDir = ref<'asc' | 'desc'>('asc')
+
+const onSort = (field: string, direction: 'asc' | 'desc') => {
+  sortField.value = field
+  sortDir.value = direction
+  refetchFromStart()
 }
 
-const { onSort, sortRows } = useSortableRows()
+const buildParams = () => ({
+  search: props.search || undefined,
+  assigned_to: props.assigneeFilter !== 'all' ? props.assigneeFilter : undefined,
+  business_unit: props.businessUnitFilter !== 'all' ? props.businessUnitFilter : undefined,
+  channel: props.channelFilter !== 'all' ? props.channelFilter : undefined,
+  sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
+})
 
-const displayRows = computed(() => sortRows(props.rows.map(deal => ({
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams)
+
+watch(() => props.search, () => refetchDebounced())
+watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.channelFilter], () => refetchFromStart())
+// Selection is scoped to the currently visible page — a page/filter/sort
+// change invalidates whatever was selected before it.
+watch([page, () => buildParams()], () => { selected.value = [] })
+
+const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
   valueDisplay: priceFormat(deal.value),
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
   createdDate: dateFormat(deal.created_at.toISOString()),
-})), { createdDate: 'created_at' }))
+})))
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
@@ -118,7 +163,6 @@ const onEdit = (row: Deal) => {
   navigateTo(`/crm/deals/${row.id}`)
 }
 
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => displayRows.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Deal>()
 
 const confirmDelete = async () => {
@@ -126,6 +170,7 @@ const confirmDelete = async () => {
     try {
       await dealsStore.remove(target.value.id)
       success(t('crm.deals.table.deleteSuccess'))
+      await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }
@@ -138,6 +183,7 @@ const onBulkReassign = async (assignedTo: number | null) => {
     await dealsStore.bulkReassign(selectedIds.value, assignedTo)
     success(t('crm.components.bulkActionBar.reassignSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
@@ -148,6 +194,7 @@ const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }
     await dealsStore.bulkTag(selectedIds.value, tags, mode)
     success(t('crm.components.bulkActionBar.tagSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
@@ -158,6 +205,7 @@ const onBulkArchive = async () => {
     await dealsStore.bulkArchive(selectedIds.value)
     success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.deals.index.entityLabel') }))
     selected.value = []
+    await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

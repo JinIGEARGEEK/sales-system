@@ -30,6 +30,20 @@ export const useDealsStore = defineStore('deals', {
       this.page = response.data.page
       return this.items
     },
+    // Server-paginated fetch used by the Deals list (table) view. Deliberately
+    // does NOT touch `items`/`total`/`page` above — those stay the "up to 200,
+    // everything" cache the Kanban board, Deal detail page, dropdowns and
+    // duplicate-deal checks all rely on via fetchAll().
+    async fetchList (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Deal[]>>('/deals', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
     async add (deal: Omit<Deal, 'id'>): Promise<Deal> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Deal>>('/deals', deal)

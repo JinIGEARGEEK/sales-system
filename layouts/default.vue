@@ -161,6 +161,7 @@ const menuList = computed(() => {
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
     { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
+    { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:delete-outline', label: t('layout.nav.trash'), path: '/admin/trash', separator: false, roles: ['Admin', 'Sales Manager'] },
   ]
   return items.filter(item => !item.roles || hasRole(...item.roles))

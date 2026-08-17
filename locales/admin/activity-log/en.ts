@@ -2,6 +2,9 @@ export default {
   title: 'Activity Log',
   typePlaceholder: 'Entity Type',
   allTypes: 'All Types',
+  dateRangePlaceholder: 'Date Range',
+  clearFilters: 'Clear Filters',
+  noAccess: 'You do not have permission to view this page.',
   columns: {
     entity: 'Entity',
     action: 'Action',
@@ -16,5 +19,6 @@ export default {
     title: 'Change Details',
     before: 'Before',
     after: 'After',
+    noChange: 'No data',
   },
 }

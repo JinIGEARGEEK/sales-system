@@ -53,11 +53,13 @@ const { success, error } = useNotify()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 const projectsStore = useProjectsStore()
+const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal } = useCurrentDeal()
 
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
 })
 
 // Tab navigation is route-driven: "overview" lives at the base `/crm/deals/:id`
@@ -86,11 +88,8 @@ const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.attachments'), value: 'attachments' },
 ])
 
-const stageBadgeColor = computed(() => {
-  if (deal.value?.stage === 'Won') return 'success'
-  if (deal.value?.stage === 'Lost') return 'error'
-  return 'neutral'
-})
+const { stageBadgeColor: stageColorFor } = useDealStageColor()
+const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
 const wonModal = ref(false)
 const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)

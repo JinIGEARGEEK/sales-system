@@ -16,6 +16,7 @@ type TaskStatus = 'pending' | 'done'
 type TaskRelatedType = ActivityRelatedType
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
+type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
 type BusinessUnit = 'Project' | 'Product'
 type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled'
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
@@ -98,8 +99,34 @@ interface Deal {
   tags?: string[] | null
   // Set when this Deal was auto-created by converting a Lead — null for Deals created directly.
   lead_id: number | null
+  // 0-100 win-probability, defaulted server-side per-stage but manually overridable.
+  probability: number | null
+  // Required (server-validated) only while stage/status is Lost; cleared once it moves elsewhere.
+  lost_reason: LostReason | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
+  created_at: Date
+}
+
+// An Admin-configurable pipeline stage — GET/POST/PATCH/DELETE /admin/pipeline-stages.
+// Replaces the previously hardcoded DealStage enum as the source of truth for what
+// stages exist; DealStage itself stays a plain string so existing Deal rows keep working.
+interface PipelineStage {
+  id: number
+  name: string
+  sort_order: number
+  is_active: boolean
+  is_won_stage: boolean
+  is_lost_stage: boolean
+  created_at: Date
+}
+
+// An Admin-configurable lead/deal source — GET/POST/PATCH/DELETE /admin/lead-sources.
+// Replaces the previously hardcoded LeadSource enum shared by Lead.source/Deal.channel.
+interface LeadSourceOption {
+  id: number
+  name: string
+  is_active: boolean
   created_at: Date
 }
 
@@ -246,6 +273,7 @@ interface DashboardSummary {
   won_value: number
   win_rate: number
   open_deals_count: number
+  forecasted_revenue: number
   avg_deal_size: number
   avg_sales_cycle_days: number
   pipeline_coverage_ratio: number

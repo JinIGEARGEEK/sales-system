@@ -2,6 +2,7 @@ export default {
   nav: {
     adminActivities: 'Activity Log',
     customers: 'Staff',
+    pipelineConfig: 'Pipeline Config',
     salesDashboard: 'Dashboard',
     companies: 'Companies',
     contacts: 'Contacts',

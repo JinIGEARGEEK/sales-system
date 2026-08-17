@@ -10,6 +10,7 @@ export default {
     statusPlaceholder: 'สถานะ',
     allStatuses: 'สถานะทั้งหมด',
     addProject: 'เพิ่ม Project',
+    exportCsv: 'ส่งออก CSV',
     addProjectSuccess: 'เพิ่ม Project แล้ว',
     updateProjectSuccess: 'แก้ไข Project แล้ว',
     columns: {

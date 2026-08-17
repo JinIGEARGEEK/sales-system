@@ -37,6 +37,20 @@ export const useContactsStore = defineStore('contacts', {
       this.page = response.data.page
       return this.items
     },
+    // Server-paginated fetch used by the Contacts list page. Deliberately does
+    // NOT touch `items`/`total`/`page` above — those stay the "up to 200,
+    // everything" cache that dropdowns, the Contact detail page and
+    // nameById/byCompany getters all rely on via fetchAll().
+    async fetchList (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Contact[]>>('/contacts', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
     async add (contact: Omit<Contact, 'id'>): Promise<Contact> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Contact>>('/contacts', contact)

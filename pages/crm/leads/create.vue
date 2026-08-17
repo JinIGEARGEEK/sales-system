@@ -31,7 +31,7 @@
           <InputText v-model="form.company_name" :label="t('crm.leads.create.companyName')" :placeholder="t('crm.leads.create.companyNamePlaceholder')" name="company_name" />
           <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" rules="required" />
           <InputText v-model="form.phone" :label="t('crm.leads.create.phone')" :placeholder="t('crm.leads.create.phonePlaceholder')" name="phone" />
-          <InputSelect v-model="form.source" :options="LEAD_SOURCE_OPTIONS" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
+          <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
           <InputSelect
             v-model="form.status"
             :options="LEAD_STATUS_FORM_OPTIONS"
@@ -40,7 +40,11 @@
             name="status"
             rules="required"
           />
-          <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+          <CrmTeamMemberSelect
+            v-model="form.assigned_to"
+            name="assigned_to"
+            :placeholder="t('crm.leads.create.assignedToPlaceholder')"
+          />
           <div class="md:col-span-2">
             <InputTextarea v-model="form.notes" :label="t('crm.leads.create.notes')" :placeholder="t('crm.leads.create.notesPlaceholder')" name="notes" />
           </div>
@@ -57,7 +61,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_FORM_OPTIONS, findDuplicateLeads } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS, findDuplicateLeads } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -65,9 +69,11 @@ useHead({ title: t('crm.leads.create.pageTitle') })
 
 const { success, error } = useNotify()
 const leadsStore = useLeadsStore()
+const leadSourcesStore = useLeadSourcesStore()
 
 onMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll()
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
 })
 
 const form = reactive({

@@ -29,6 +29,22 @@ export const useLeadsStore = defineStore('leads', {
       this.page = response.data.page
       return this.items
     },
+    // Server-paginated fetch used by the Leads list page (search/filter/sort/page
+    // all round-trip to GET /leads). Deliberately does NOT touch `items`/`total`/
+    // `page` above — those stay the "up to 200, everything" cache that duplicate
+    // checks, dropdowns, the pipeline board and the Lead detail page all rely on
+    // via fetchAll(). Mixing the two would silently truncate those callers to
+    // whatever page the list view last landed on.
+    async fetchList (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Lead[]>>('/leads', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
     async add (lead: Omit<Lead, 'id'>): Promise<Lead> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Lead>>('/leads', lead)

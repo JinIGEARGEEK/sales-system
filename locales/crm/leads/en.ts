@@ -42,6 +42,7 @@ export default {
     sourcePlaceholder: 'Select source',
     status: 'Status',
     statusPlaceholder: 'Select status',
+    assignedToPlaceholder: 'Leave blank to auto-assign (round robin)',
     notes: 'Notes',
     notesPlaceholder: 'Enter any additional notes',
     createLead: 'Create Lead',

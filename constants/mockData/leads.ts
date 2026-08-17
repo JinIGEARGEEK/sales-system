@@ -1,11 +1,3 @@
-export const LEAD_SOURCE_OPTIONS: Select[] = [
-  { label: 'Referral', value: 'Referral' },
-  { label: 'Website', value: 'Website' },
-  { label: 'Event', value: 'Event' },
-  { label: 'Ads', value: 'Ads' },
-  { label: 'Other', value: 'Other' },
-]
-
 export const LEAD_STATUS_OPTIONS: Select[] = [
   { label: 'All Status', value: 'all' },
   { label: 'New', value: 'New' },

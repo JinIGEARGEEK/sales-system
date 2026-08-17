@@ -3,8 +3,8 @@
 **Companion document to:** `feature-spec.md` (business requirements), `user-story.md` (role acceptance criteria), `design-system.md` (frontend conventions)
 **Purpose:** The contract for the backend API this frontend is built against. This frontend (`sales-system`) is currently **100% client-side mock data** (Pinia stores seeded from `constants/mockData/`, see `design-system.md` §8) — no real HTTP calls exist yet beyond the `axios` plugin scaffold (`plugins/axios.ts`) and the `useMutateApi`/`useFetchApi` composables (`composables/utils/useAPI.ts`). This document specifies the API a **separate backend repo/project** must implement so this frontend can be wired up for real, resource by resource, without changing its existing conventions.
 **Audience:** Backend engineering team / AI coding agent implementing the API in another repository.
-**Version:** 1.1 (adds Thai role/use-case summary)
-**Date:** 2026-08-14
+**Version:** 1.2 (adds Deal probability/lost-reason, Admin-configurable pipeline stages/lead sources, CSV export, a real audit-log endpoint consumer, Lead auto-assignment, Task due-date email notifications, and resolved server-side list pagination)
+**Date:** 2026-08-17
 
 > **Status legend** (mirrors `feature-spec.md`'s legend, applied per endpoint):
 > 🟢 **Required now** — replaces an existing mock Pinia store; needed to take this frontend off mock data as-is.
@@ -221,7 +221,7 @@ interface Lead {
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `search` (name/company_name/email), `exclude_converted=true` (returns only Leads with `converted_deal_id IS NULL` — used by the Deals Pipeline board, see §7.1, so already-converted Leads don't show up as cards alongside their own resulting Deal). Backs `pages/crm/leads/index.vue`. |
-| `POST` | `/leads` | 🟢 | Create. |
+| `POST` | `/leads` | 🟢 | Create. If the request body omits `assigned_to` (or sends `null`), the backend auto-assigns the new Lead via `pickAutoAssignee()` (`internal/handlers/leads.go`) — a least-open-load strategy that picks whichever active Sales Rep currently has the fewest open Leads/Deals, not a literal round-robin index. This only fires on creation with no explicit assignee; bulk-reassign and Kanban-drag reassignment flows are untouched. |
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
 | `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). |
 | `DELETE` | `/leads/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`) — recoverable, see below. |
@@ -337,6 +337,8 @@ type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' 
 type DealStatus = 'open' | 'won' | 'lost'
 type BusinessUnit = 'Project' | 'Product'
 
+type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
+
 interface Deal {
   id: number
   company_id: number
@@ -345,6 +347,8 @@ interface Deal {
   value: number
   stage: DealStage
   status: DealStatus
+  probability: number | null   // 0-100; defaulted per-stage (StageDefaultProbability) at write time, always manually overridable — feeds /dashboard/summary's forecasted_revenue (§9)
+  lost_reason: LostReason | null   // required once stage/status resolves to Lost; cleared automatically if the Deal moves off Lost
   expected_close_date: string | null
   assigned_to: number | null
   channel: LeadSource
@@ -356,6 +360,8 @@ interface Deal {
   created_at: string
 }
 ```
+
+> Won/Lost resolution (for `status`, and for whether `lost_reason` is required) is **not** a hardcoded `stage === 'Won' | 'Lost'` string match — it reads the configured `PipelineStage` row's `is_won_stage`/`is_lost_stage` flags (§8.7) via `IsWonStage`/`IsLostStage`, so an Admin-renamed or custom-added stage still resolves correctly. `PATCH /deals/:id/stage`, `POST /deals`, and `PUT /deals/:id` all share this same resolution logic.
 
 > **Unified pipeline board:** `pages/crm/deals/index.vue`'s Kanban also renders unconverted Leads (`GET /leads?exclude_converted=true`, §3) as cards in the `Lead`/`Qualified` columns, plus Disqualified Leads in `Lost`. Dragging a Lead card within `Lead`/`Qualified`/`Lost` just updates its `status` (`PUT /leads/:id`); dragging it into `Proposal Sent`, `Negotiation`, or `Won` instead fires `POST /leads/:id/convert` (§3) with `stage` set to the dropped column, turning the card into a real Deal in place.
 
@@ -489,6 +495,7 @@ interface Task {
   due_date: string
   status: TaskStatus
   assigned_to: number | null
+  notified_at: string | null   // set once the due-date reminder email has been sent for this Task, so the 15-min ticker doesn't re-send it
   created_at: string
 }
 ```
@@ -499,7 +506,7 @@ interface Task {
 | `POST` | `/tasks` | 🟢 | Create. |
 | `PATCH` | `/tasks/:id/toggle` | 🟢 | Flips `pending`⇄`done` — mirrors `stores/tasks.ts`'s `toggleDone`. |
 | `DELETE` | `/tasks/:id` | 🟢 | Delete. |
-| — | *(reminder notifications)* | 🔜 | `FR-CRM-032`'s "notification on due" — no delivery mechanism (email/push) exists in the frontend; needs a scheduled job + `/6` integrations, out of scope for this v1 endpoint list. |
+| — | *(reminder notifications)* | 🟢 | `FR-CRM-032`'s "notification on due" is now built as email: a new `internal/notifier` package runs a 15-minute ticker, sends via `internal/utils/mailer.go`, and sets `Task.notified_at` so a Task is only ever notified once. It degrades safely (silently no-ops) if no `SMTP_*` env vars (`SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, see `.env.example`) are configured — an operator must supply real SMTP credentials for reminders to actually send. Push notification is not built. |
 
 ---
 
@@ -658,6 +665,47 @@ Exactly one of `file_url`/`external_url` must be present on every row — reject
 
 > **Lead → Deal conversion (`POST /leads/:id/convert`, §3):** re-point any `Attachment` rows with `related_type: 'lead'` and `related_id: <the converted lead>` to `related_type: 'deal'`/the newly created Deal's id, in the same transaction as the conversion — don't leave them stranded on a Lead record that no longer appears in any list view once converted.
 
+### 8.7 Admin pipeline configuration (`FR-CRM-021`, `FR-CRM-081`)
+
+```ts
+interface PipelineStage {
+  id: number
+  name: string          // the DealStage string value used elsewhere (e.g. "Proposal Sent")
+  display_label: string | null   // optional Admin-set label shown in the UI instead of name (e.g. "Proposition")
+  sort_order: number
+  is_won_stage: boolean    // Deal.status resolves to "won" when its stage matches a row with this flag
+  is_lost_stage: boolean   // Deal.status resolves to "lost" when its stage matches a row with this flag, and lost_reason becomes required
+  is_active: boolean
+}
+
+interface LeadSourceOption {
+  id: number
+  name: string   // the LeadSource string value used elsewhere
+  is_active: boolean
+}
+```
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` / `POST` | `/admin/pipeline-stages` | Admin | List/create pipeline stage rows. Seeded from the previously hardcoded `DEAL_STAGE_OPTIONS` list on first run so existing Deals keep resolving the same way. |
+| `PUT` / `DELETE` | `/admin/pipeline-stages/:id` | Admin | Update/deactivate a stage. `is_won_stage`/`is_lost_stage` are read by `internal/handlers/deals.go`'s `IsWonStage`/`IsLostStage` helpers, so renaming or adding a custom stage with these flags set is honored by Won/Lost resolution across Create/Update/`PATCH /deals/:id/stage`. |
+| `GET` / `POST` | `/admin/lead-sources` | Admin | List/create Lead source rows. Seeded from the previously hardcoded `CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` lists on first run. |
+| `PUT` / `DELETE` | `/admin/lead-sources/:id` | Admin | Update/deactivate a Lead source. |
+
+Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants (`constants/mockData/deals.ts`, `leads.ts`) were removed — these two stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
+
+### 8.8 CSV export (`FR-CRM-083`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/companies/export` | Admin/Sales Manager | Streams a CSV of every non-deleted Company matching the same filter params as `GET /companies` (§4), skipping pagination entirely so the file covers the full dataset. |
+| `GET` | `/contacts/export` | Admin/Sales Manager | Same pattern, Contacts (§5). |
+| `GET` | `/deals/export` | Admin/Sales Manager | Same pattern, Deals (§7.1). |
+| `GET` | `/products/export` | Admin/Sales Manager | Same pattern, Product Catalog (§8.2). |
+| `GET` | `/projects/export` | Admin/Sales Manager | Same pattern, Projects (§8.3). |
+
+Backend: `internal/handlers/export.go`'s `ExportHandler`, gated by the same `bulkRoles` (Admin/Sales Manager) middleware as the trash/bulk-action routes. Frontend: an export button per list page + `composables/utils/useCsvExport.ts` (`downloadCsvBlob(path, filename)`).
+
 ---
 
 ## 9. Dashboard / reporting aggregates
@@ -677,6 +725,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
     "won_value": 1250000,
     "win_rate": 42,
     "open_deals_count": 18,
+    "forecasted_revenue": 1740000,
     "avg_deal_size": 185000,
     "avg_sales_cycle_days": 34,
     "pipeline_coverage_ratio": 1.6,
@@ -701,7 +750,7 @@ Carried over from `feature-spec.md` §5 where they bear directly on the API:
 | ID | Requirement |
 |---|---|
 | NFR-001 | RBAC (§1.7) enforced server-side on every route — never rely on the frontend hiding a button. |
-| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. Currently a real gap, not just a future-scale concern: `stores/leads.ts`/`deals.ts`/`companies.ts`/`contacts.ts`'s `fetchAll()` all request `per_page: 200` and then filter/sort/paginate that one fetched page entirely client-side — any rows beyond the first 200 (by the API's default `sort`) are invisible to search/filter/sort on those list pages until this is replaced with real server-side paging. |
+| NFR-003 | List/dashboard endpoints must respond within budget for ~10,000 Company/Contact/Deal rows — this is the reason §9 is one aggregate endpoint instead of the frontend fetching full tables. Resolved for the list views: the Leads (`pages/crm/leads/index.vue`), Contacts (`pages/crm/contacts/index.vue`), Companies (`pages/crm/companies/index.vue`) list pages and the Deals List sub-view (`components/Crm/DealsTable.vue`) now call a new `fetchList()` store action (via `composables/utils/useServerListPage.ts`), which sends `page`/`per_page`/filters to the API and paginates server-side — no more fetching a single `per_page: 200` page and slicing it client-side. **Known exception:** the Deals Kanban board (`pages/crm/deals/index.vue`) still calls `dealsStore.fetchAll()` (still capped at `per_page: 200` client-side) since the board needs the full set of open Deals in memory at once to render every column; that view is not yet server-paginated and rows beyond the first 200 remain invisible there. |
 | NFR-004 | HTTPS/TLS only; passwords hashed (bcrypt/argon2) — never returned in any response, including the `User` shape in §2.1. |
 | NFR-007 | Audit log (§8.5) is append-only — no update/delete route. |
 

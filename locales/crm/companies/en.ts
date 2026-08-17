@@ -3,6 +3,7 @@ export default {
     pageTitle: 'Companies',
     heading: 'Companies',
     addCompany: 'Add Company',
+    exportCsv: 'Export CSV',
     import: 'Import',
     importSuccess: 'Imported {companies} companies and {contacts} contacts',
     searchPlaceholder: 'Search by name or website...',
