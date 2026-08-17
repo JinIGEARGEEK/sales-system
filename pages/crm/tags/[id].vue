@@ -29,7 +29,7 @@
           </div>
 
           <div class="mt-4 flex gap-3">
-            <ButtonPrimary :label="t('crm.tags.detail.saveChanges')" type="submit" />
+            <ButtonPrimary :label="t('crm.tags.detail.saveChanges')" type="submit" :loading="loading" />
             <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="navigateTo('/crm/tags')" />
           </div>
         </Form>
@@ -78,7 +78,9 @@ watch(tag, (value) => {
   form.description = value.description
 }, { immediate: true })
 
-const onSave = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSave = guard(async () => {
   if (tag.value) {
     await tagsStore.update(tag.value.id, {
       name: form.name,
@@ -89,5 +91,5 @@ const onSave = async () => {
   }
   success(t('crm.tags.detail.updateSuccess'))
   navigateTo('/crm/tags')
-}
+})
 </script>

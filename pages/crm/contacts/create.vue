@@ -50,7 +50,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.contacts.create.createContact')" type="submit" />
+          <ButtonPrimary :label="t('crm.contacts.create.createContact')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('crm.contacts.create.cancel')" cancel @click="navigateTo('/crm/contacts')" />
         </div>
       </Form>
@@ -86,7 +86,9 @@ const form = reactive({
   tags: '',
 })
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   try {
     await contactsStore.add({
       name: form.name,
@@ -103,5 +105,5 @@ const onSubmit = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

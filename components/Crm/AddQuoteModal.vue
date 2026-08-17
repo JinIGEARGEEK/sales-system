@@ -71,7 +71,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addQuoteModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addQuoteModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addQuoteModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -97,7 +97,7 @@ const emptyForm = () => ({
   status: 'draft' as QuoteStatus,
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 // Optional Product picker per line item — additive on top of the existing
 // free-text flow, not a replacement for it. Selecting a product just
@@ -139,7 +139,7 @@ watch(() => props.open, (value) => {
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   emit('submit', {
     items: items.value.map(({ description, qty, price, product_id }) => ({
       description,
@@ -151,7 +151,7 @@ const onSubmit = () => {
     status: form.status,
   })
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

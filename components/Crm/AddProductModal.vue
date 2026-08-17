@@ -22,7 +22,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addProductModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addProductModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addProductModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -53,14 +53,14 @@ const emptyForm = () => ({
   price: props.product?.price ?? 0,
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   emit('submit', { ...form })
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

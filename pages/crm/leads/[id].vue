@@ -48,7 +48,7 @@
             </div>
           </div>
           <div class="mt-4 flex gap-3">
-            <ButtonPrimary :label="t('crm.leads.detail.saveChanges')" type="submit" />
+            <ButtonPrimary :label="t('crm.leads.detail.saveChanges')" type="submit" :loading="loading" />
           </div>
         </Form>
       </ContainerTemplate>
@@ -157,7 +157,9 @@ watch(lead, (value) => {
   form.notes = value.notes
 }, { immediate: true })
 
-const onSave = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSave = guard(async () => {
   if (!lead.value) return
   try {
     await leadsStore.update(lead.value.id, {
@@ -174,5 +176,5 @@ const onSave = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

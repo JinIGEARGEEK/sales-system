@@ -7,6 +7,7 @@
 export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm: () => T) => {
   const form = reactive(emptyForm()) as T
   const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+  const { loading, guard } = useSubmitGuard()
 
   watch(isOpen, (value) => {
     if (value) Object.assign(form, emptyForm())
@@ -17,5 +18,11 @@ export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm:
     if (result?.valid) onValid()
   }
 
-  return { form, formRef, validateThenSubmit }
+  // Wrap the caller's real submit function with this BEFORE passing it to
+  // both `<Form @submit>` and `validateThenSubmit(...)` — the Form's own
+  // @submit fires directly on Enter-key press, bypassing the footer button
+  // (and its click-only loadingAuto) entirely, so the guard has to live on
+  // the submit function itself to cover both trigger paths with one `loading`
+  // ref. Bind that `loading` to the footer button's `:loading` explicitly.
+  return { form, formRef, validateThenSubmit, loading, guard }
 }

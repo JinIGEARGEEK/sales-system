@@ -137,7 +137,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.companies.create.createCompany')" type="submit" />
+          <ButtonPrimary :label="t('crm.companies.create.createCompany')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('crm.companies.create.cancel')" cancel @click="navigateTo('/crm/companies')" />
         </div>
       </Form>
@@ -182,7 +182,9 @@ const removeContactRow = (index: number) => {
   contacts.value.splice(index, 1)
 }
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   try {
     const company = await companiesStore.add({
       name: form.name,
@@ -221,5 +223,5 @@ const onSubmit = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

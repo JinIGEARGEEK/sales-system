@@ -38,6 +38,7 @@
         :total="projectRows.length"
         :total-page="projectTotalPage"
         :per-page="projectPerPage"
+        :loading="projectsLoading"
         @change-page="onChangeProjectPage"
         @change-per-page="onChangeProjectPerPage"
         @view-detail="onViewCompany"
@@ -83,6 +84,7 @@
         :total="productRows.length"
         :total-page="productTotalPage"
         :per-page="productPerPage"
+        :loading="productsLoading"
         @change-page="onChangeProductPage"
         @change-per-page="onChangeProductPerPage"
         @edit="openEditProduct"
@@ -135,9 +137,18 @@ const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
 const onExportProjects = () => downloadCsvBlob('/projects/export', 'projects.csv')
 const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv')
 
-onMounted(() => {
-  if (projectsStore.items.length === 0) projectsStore.fetchAll()
-  if (productsStore.items.length === 0) productsStore.fetchAll()
+const projectsLoading = ref(false)
+const productsLoading = ref(false)
+
+onMounted(async () => {
+  if (projectsStore.items.length === 0) {
+    projectsLoading.value = true
+    projectsStore.fetchAll().finally(() => { projectsLoading.value = false })
+  }
+  if (productsStore.items.length === 0) {
+    productsLoading.value = true
+    productsStore.fetchAll().finally(() => { productsLoading.value = false })
+  }
   if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll()
   // Needed for CrmAddProjectModal's optional Deal picker once a Company is chosen.
   if (canManageProjects.value && dealsStore.items.length === 0) dealsStore.fetchAll()

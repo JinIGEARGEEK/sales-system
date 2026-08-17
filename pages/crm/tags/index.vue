@@ -44,6 +44,7 @@
       :total="filteredTags.length"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @view-detail="onViewDetail"
@@ -73,8 +74,16 @@ const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const tagsStore = useTagsStore()
 
-onMounted(() => {
-  if (tagsStore.items.length === 0) tagsStore.fetchAll()
+const loading = ref(false)
+onMounted(async () => {
+  if (tagsStore.items.length === 0) {
+    loading.value = true
+    try {
+      await tagsStore.fetchAll()
+    } finally {
+      loading.value = false
+    }
+  }
 })
 
 const search = ref('')

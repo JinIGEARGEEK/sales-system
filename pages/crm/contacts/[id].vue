@@ -26,7 +26,7 @@
                 <InputText v-model="form.tags" :label="t('crm.contacts.detail.tags')" :placeholder="t('crm.contacts.detail.tagsPlaceholder')" name="tags" />
               </div>
               <div class="mt-4 flex gap-3">
-                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" />
+                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" />
                 <TableCardLink :items="{ path: `/crm/companies/${contact.company_id}`, label: t('crm.contacts.detail.viewCompany') }" />
               </div>
             </Form>
@@ -207,7 +207,9 @@ watch(contact, (value) => {
   form.tags = value.tags.join(', ')
 }, { immediate: true })
 
-const onSave = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSave = guard(async () => {
   if (!contact.value) return
   try {
     await contactsStore.update(contact.value.id, {
@@ -222,5 +224,5 @@ const onSave = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

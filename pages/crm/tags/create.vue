@@ -43,7 +43,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" />
+          <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="navigateTo('/crm/tags')" />
         </div>
       </Form>
@@ -69,7 +69,9 @@ const form = reactive({
   description: '',
 })
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   await tagsStore.add({
     name: form.name,
     category: form.category as TagCategory,
@@ -78,5 +80,5 @@ const onSubmit = async () => {
   })
   success(t('crm.tags.create.createSuccess'))
   navigateTo('/crm/tags')
-}
+})
 </script>

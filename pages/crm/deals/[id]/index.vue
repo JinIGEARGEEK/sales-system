@@ -44,7 +44,7 @@
             />
           </div>
           <div class="mt-4 flex gap-3">
-            <ButtonPrimary :label="t('crm.deals.detail.saveChanges')" type="submit" />
+            <ButtonPrimary :label="t('crm.deals.detail.saveChanges')" type="submit" :loading="loading" />
           </div>
         </Form>
       </ContainerTemplate>
@@ -233,7 +233,9 @@ watch(() => form.stage, (newStage) => {
   if (!isLostStage(newStage)) form.lost_reason = ''
 })
 
-const onSave = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSave = guard(async () => {
   if (!deal.value) return
   const wasWon = deal.value.status === 'won'
   try {
@@ -254,5 +256,5 @@ const onSave = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

@@ -35,7 +35,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addProjectModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addProjectModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addProjectModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -113,7 +113,7 @@ const emptyForm = () => ({
   notes: props.project?.notes ?? '',
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 // A Deal picked before switching companies would otherwise belong to the
 // wrong company and get submitted anyway — clear it so the field always
@@ -124,7 +124,7 @@ watch(() => form.company_id, () => {
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   if (productionEditor.value) {
     emit('submit', {
       status: form.status,
@@ -144,7 +144,7 @@ const onSubmit = () => {
     ...(!props.project ? { deal_id: form.deal_id ? Number(form.deal_id) : null } : {}),
   })
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

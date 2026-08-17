@@ -10,7 +10,7 @@
         <AdminUserForm v-model:form="form" />
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" />
+          <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="navigateTo('/admin/users')" />
         </div>
       </Form>
@@ -69,7 +69,9 @@ watch(user, (value) => {
   form.notes = value.notes
 }, { immediate: true })
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   if (user.value) {
     await usersStore.update(user.value.id, {
       first_name: form.first_name,
@@ -84,5 +86,5 @@ const onSubmit = async () => {
   }
   success(t('admin.users.detail.updateSuccess'))
   navigateTo('/admin/users')
-}
+})
 </script>

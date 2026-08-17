@@ -37,7 +37,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addAttachmentModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -77,7 +77,7 @@ const emptyForm = () => ({
   external_url: '',
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 watch(() => props.open, (value) => {
   if (value) {
@@ -109,7 +109,7 @@ const onFileChange = (event: Event) => {
   fileName.value = file.name
 }
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   if (mode.value === 'file') {
     if (!selectedFile.value) {
       fileError.value = t('crm.components.addAttachmentModal.fileRequired')
@@ -120,7 +120,7 @@ const onSubmit = () => {
     emit('submit', { category: form.category, fileName: form.file_name, externalUrl: form.external_url })
   }
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

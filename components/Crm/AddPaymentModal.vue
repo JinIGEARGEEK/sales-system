@@ -16,7 +16,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addPaymentModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -44,11 +44,11 @@ const emptyForm = () => ({
   note: '',
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   emit('submit', {
     amount: form.amount,
     paid_at: new Date(form.paid_at),
@@ -56,7 +56,7 @@ const onSubmit = () => {
     note: form.note,
   })
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

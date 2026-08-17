@@ -52,7 +52,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.deals.create.createDeal')" type="submit" />
+          <ButtonPrimary :label="t('crm.deals.create.createDeal')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('crm.deals.create.cancel')" cancel @click="navigateTo('/crm/deals')" />
         </div>
       </Form>
@@ -135,7 +135,9 @@ watch(() => form.company_id, () => {
   form.contact_id = ''
 })
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   try {
     // Shared by both branches below — only company_id/contact_id/status/
     // lead_id differ between a plain create and a Lead-originated one.
@@ -180,5 +182,5 @@ const onSubmit = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

@@ -42,6 +42,7 @@
         :total-page="1"
         :per-page="stageRows.length || 1"
         :page="1"
+        :loading="stagesLoading"
         @edit="onEditStage"
         @delete="requestDeactivateStage"
       />
@@ -62,7 +63,7 @@
             rules="required"
           />
         </Form>
-        <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content @click="onSaveSalesQuota" />
+        <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content :loading="salesQuotaLoading" @click="onSaveSalesQuota" />
       </div>
       <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
     </UCard>
@@ -88,6 +89,7 @@
         :total-page="1"
         :per-page="sourceRows.length || 1"
         :page="1"
+        :loading="sourcesLoading"
         @edit="onEditSource"
         @delete="requestDeactivateSource"
       />
@@ -141,9 +143,14 @@ const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const appSettingsStore = useAppSettingsStore()
 
+const stagesLoading = ref(false)
+const sourcesLoading = ref(false)
+
 onMounted(async () => {
-  pipelineStagesStore.fetchAll()
-  leadSourcesStore.fetchAll()
+  stagesLoading.value = true
+  pipelineStagesStore.fetchAll().finally(() => { stagesLoading.value = false })
+  sourcesLoading.value = true
+  leadSourcesStore.fetchAll().finally(() => { sourcesLoading.value = false })
   const settings = await appSettingsStore.fetchAll()
   salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
 })
@@ -154,19 +161,19 @@ onMounted(async () => {
 // useModalForm's formRef typing + validateThenSubmit dance rather than
 // re-declaring the same ref<{ validate }> boilerplate — isOpen is a
 // constant `false` since the initial value is set once via fetchAll above.
-const { form: salesQuotaForm, formRef: salesQuotaFormRef, validateThenSubmit } = useModalForm(
+const { form: salesQuotaForm, formRef: salesQuotaFormRef, validateThenSubmit, loading: salesQuotaLoading, guard: guardSalesQuota } = useModalForm(
   () => false,
   () => ({ quarterly_sales_target: 0 }),
 )
 
-const onSubmitSalesQuota = async () => {
+const onSubmitSalesQuota = guardSalesQuota(async () => {
   try {
     await appSettingsStore.update({ quarterly_sales_target: salesQuotaForm.quarterly_sales_target })
     success(t('admin.pipelineConfig.salesQuota.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 const onSaveSalesQuota = () => validateThenSubmit(onSubmitSalesQuota)
 
 // ── Pipeline stages ──────────────────────────────────────────────

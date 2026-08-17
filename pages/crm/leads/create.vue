@@ -51,7 +51,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.leads.create.createLead')" type="submit" />
+          <ButtonPrimary :label="t('crm.leads.create.createLead')" type="submit" :loading="loading" />
           <ButtonPrimary :label="t('crm.leads.create.cancel')" cancel @click="navigateTo('/crm/leads')" />
         </div>
       </Form>
@@ -89,7 +89,9 @@ const form = reactive({
 
 const duplicateLeads = computed(() => findDuplicateLeads(leadsStore.items, form.email, form.phone))
 
-const onSubmit = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSubmit = guard(async () => {
   try {
     await leadsStore.add({
       name: form.name,
@@ -108,5 +110,5 @@ const onSubmit = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 </script>

@@ -26,7 +26,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -53,7 +53,7 @@ const emptyForm = () => ({
   status: 'draft' as ContractStatus,
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => ({
   label: t('crm.contracts.detail.linkedQuote', { id: quote.id }),
@@ -62,13 +62,13 @@ const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => 
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+const onSubmit = guard(async () => {
   emit('submit', {
     status: form.status,
     quote_id: form.quote_id === '' ? undefined : Number(form.quote_id),
   })
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

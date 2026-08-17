@@ -44,6 +44,7 @@
       :total="filteredUsers.length"
       :total-page="totalPage"
       :per-page="perPage"
+      :loading="loading"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @view-detail="onViewDetail"
@@ -73,8 +74,16 @@ const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const usersStore = useUsersStore()
 
-onMounted(() => {
-  if (usersStore.items.length === 0) usersStore.fetchAll()
+const loading = ref(false)
+onMounted(async () => {
+  if (usersStore.items.length === 0) {
+    loading.value = true
+    try {
+      await usersStore.fetchAll()
+    } finally {
+      loading.value = false
+    }
+  }
 })
 
 const search = ref('')

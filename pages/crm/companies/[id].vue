@@ -16,7 +16,7 @@
           </UBadge>
           <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
-        <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" @click="onSave" />
+        <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
       </div>
 
       <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
@@ -386,7 +386,9 @@ watch(company, (value) => {
   form.notes = value.notes
 }, { immediate: true })
 
-const onSave = async () => {
+const { loading, guard } = useSubmitGuard()
+
+const onSave = guard(async () => {
   if (!company.value) return
   try {
     await companiesStore.update(company.value.id, {
@@ -405,7 +407,7 @@ const onSave = async () => {
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
-}
+})
 
 const addAttachmentOpen = ref(false)
 const companyAttachments = computed(() => attachmentsStore.forRelated('company', companyId))

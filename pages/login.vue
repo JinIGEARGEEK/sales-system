@@ -150,10 +150,10 @@ const state = reactive({
   password: '',
 })
 
-const loading = ref(false)
-const onSubmit = async () => {
-  loading.value = true
-
+// Guarded so the <Form @submit> (fires on Enter-key) and the submit
+// button's click can never both trigger an in-flight login request.
+const { loading, guard } = useSubmitGuard()
+const onSubmit = guard(async () => {
   try {
     // Dev-only mock login so the app is usable without a running backend.
     if (import.meta.dev && state.email === MOCK_DEV_CREDENTIALS.email && state.password === MOCK_DEV_CREDENTIALS.password) {
@@ -171,8 +171,6 @@ const onSubmit = async () => {
     await navigateTo('/')
   } catch {
     error(t('global.auth.loginFailed'))
-  } finally {
-    loading.value = false
   }
-}
+})
 </script>

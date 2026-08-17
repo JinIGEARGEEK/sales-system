@@ -6,6 +6,7 @@
     :disabled="disabled"
     :color="buttonColor"
     :variant="buttonVariant"
+    :loading-auto="props.loadingAuto"
     :class="[
       'min-w-24 justify-center rounded-full px-6',
       { 'w-full': props.block },
@@ -63,6 +64,17 @@ const props = defineProps({
   small: {
     type: Boolean,
     default: false,
+  },
+  // Nuxt UI's UButton wraps its own @click handler and shows a spinner +
+  // auto-disables while that handler's returned promise is pending — every
+  // async onSave/onDelete/onSubmit handler in this app already returns a
+  // promise, so this gives every button loading feedback (and prevents
+  // double-submit) for free, with zero changes needed at each call site.
+  // Pass :loading-auto="false" on the rare button that shouldn't do this
+  // (e.g. one whose @click is synchronous but kicks off unrelated async work).
+  loadingAuto: {
+    type: Boolean,
+    default: true,
   },
 })
 
