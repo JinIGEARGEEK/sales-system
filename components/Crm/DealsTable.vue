@@ -63,7 +63,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { priceFormat, dateFormat, toBadge } = useFormatter()
+const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
@@ -127,7 +127,7 @@ watch([page, () => buildParams()], () => { selected.value = [] })
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
-  valueDisplay: priceFormat(deal.value),
+  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
   createdDate: dateFormat(deal.created_at.toISOString()),

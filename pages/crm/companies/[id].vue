@@ -59,7 +59,7 @@
             <div class="flex flex-col gap-3 text-sm">
               <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
               <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
-              <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ priceFormat(openDealsValue) }}</span></div>
+              <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
               <div class="flex justify-between">
                 <span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.lastContact') }}</span>
                 <UBadge :color="lastContact.color" variant="subtle">{{ lastContact.label }}</UBadge>
@@ -113,7 +113,7 @@
             >
               <div>
                 <p class="text-sm font-medium">{{ deal.title }}</p>
-                <p class="text-xs text-[var(--color-gray)]">{{ deal.stage }} · {{ priceFormat(deal.value) }}</p>
+                <p class="text-xs text-[var(--color-gray)]">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-[var(--color-gray)]" />
             </NuxtLink>
@@ -256,7 +256,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat, parseTags, dateFormat } = useFormatter()
+const { priceFormatCompact, parseTags, dateFormat } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { hasRole } = useRole()

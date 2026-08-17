@@ -94,7 +94,7 @@
             <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-[var(--color-primary)]">
-            {{ priceFormat(item.value) }} {{ t('crm.dashboard.currencyUnit') }}
+            {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
           </p>
           <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
@@ -141,7 +141,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const { priceFormat } = useFormatter()
+const { priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()

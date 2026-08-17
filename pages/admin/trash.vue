@@ -83,7 +83,7 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.trash.title') })
 
-const { dateFormat, priceFormat } = useFormatter()
+const { dateFormat, priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
@@ -153,7 +153,7 @@ const {
 const dealsRows = computed(() => dealsStore.trashItems.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
-  valueDisplay: priceFormat(deal.value),
+  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
   deletedAtDisplay: deal.deleted_at ? dateFormat(deal.deleted_at) : '-',
 })))
 

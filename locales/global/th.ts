@@ -2,6 +2,7 @@ export default {
   noData: 'ไม่มีข้อมูล',
   loading: 'Loading...',
   genericError: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+  currencySymbol: '฿',
   previous: 'ก่อนหน้า',
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',

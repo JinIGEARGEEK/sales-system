@@ -65,7 +65,14 @@
       />
 
       <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <CrmStatCard v-for="row in rows" :key="row.source" :label="row.source">
+        <CrmStatCard
+          v-for="(row, index) in rows"
+          :key="row.source"
+          :label="row.source"
+          icon="material-symbols:campaign-outline"
+          :icon-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconClass"
+          :icon-bg-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconBgClass"
+        >
           {{ row.conversion_rate.toFixed(1) }}%
           <template #hint>
             {{ t('crm.reports.leadSource.columns.qualified') }}: {{ row.qualified }} / {{ row.total }}
@@ -95,7 +102,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { GLASS_PANEL_UI } from '~/constants/ui'
+import { GLASS_PANEL_UI, CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 
 const { t } = useI18n()
 

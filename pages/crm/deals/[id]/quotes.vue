@@ -84,7 +84,7 @@
               <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
                 <td class="py-1">{{ item.description }}</td>
                 <td class="py-1 text-right">x{{ item.qty }}</td>
-                <td class="py-1 text-right">{{ priceFormat(item.price * item.qty) }}</td>
+                <td class="py-1 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
               </tr>
             </tbody>
           </table>

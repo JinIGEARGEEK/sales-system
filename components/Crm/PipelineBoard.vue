@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-stretch gap-4 overflow-x-auto pb-2">
+  <div class="flex items-stretch gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
     <div
       v-for="column in columns"
       :key="column.value"

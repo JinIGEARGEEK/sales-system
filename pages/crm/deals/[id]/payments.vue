@@ -14,12 +14,12 @@
       <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
           <p class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.totalPaid') }}</p>
-          <p class="text-lg font-semibold">{{ priceFormat(totalPaid) }}</p>
+          <p class="text-lg font-semibold">{{ t('global.currencySymbol') }}{{ priceFormat(totalPaid) }}</p>
         </div>
         <div class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
           <p class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.remainingBalance') }}</p>
           <p class="text-lg font-semibold">
-            {{ remainingBalance > 0 ? priceFormat(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
+            {{ remainingBalance > 0 ? `${t('global.currencySymbol')}${priceFormat(remainingBalance)}` : t('crm.deals.detail.fullyPaid') }}
           </p>
         </div>
       </div>
@@ -40,7 +40,7 @@
         <tbody>
           <tr v-for="payment in dealPayments" :key="payment.id" class="border-b border-[var(--color-light-gray-2)]">
             <td class="py-2">{{ dateFormat(payment.paid_at) }}</td>
-            <td class="py-2">{{ priceFormat(payment.amount) }}</td>
+            <td class="py-2">{{ t('global.currencySymbol') }}{{ priceFormat(payment.amount) }}</td>
             <td class="py-2 capitalize">{{ payment.method }}</td>
             <td class="py-2 text-[var(--color-gray)]">{{ payment.note || '-' }}</td>
             <td class="py-2 text-right">

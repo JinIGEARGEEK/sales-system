@@ -109,7 +109,7 @@
         icon-bg-class="bg-[var(--color-accent-green)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-accent-green)]/20 to-transparent"
       >
-        {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
+        {{ t('global.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.forecastedRevenue')"
@@ -118,7 +118,7 @@
         icon-bg-class="bg-[var(--color-info-toast)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
-        {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
+        {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
         <template #hint>{{ t('crm.dashboard.forecastedRevenueHint') }}</template>
       </CrmStatCard>
       <CrmStatCard
@@ -150,7 +150,7 @@
         icon-bg-class="bg-[var(--color-success-toast)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
       >
-        {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
+        {{ t('global.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.avgDealSize')"
@@ -159,7 +159,7 @@
         icon-bg-class="bg-[var(--color-chart-violet)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-chart-violet)]/20 to-transparent"
       >
-        {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
+        {{ t('global.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.avgSalesCycle')"
@@ -180,7 +180,7 @@
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
         <template #hint>
-          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${priceFormat(quarterlySalesTarget)} ${t('crm.dashboard.currencyUnit')}` }) }}
+          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${t('global.currencySymbol')}${priceFormatCompact(quarterlySalesTarget)}` }) }}
         </template>
       </CrmStatCard>
     </div>
@@ -202,9 +202,9 @@
           </div>
           <div v-for="bucket in revenueTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-[var(--color-black)]' : 'text-[var(--color-gray)]'">
-              {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('crm.dashboard.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-[var(--color-light-gray-2)]">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -234,9 +234,9 @@
           </div>
           <div v-for="bucket in forecastTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-[var(--color-black)]' : 'text-[var(--color-gray)]'">
-              {{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('crm.dashboard.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-[var(--color-light-gray-2)]">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -272,9 +272,9 @@
               :label="row.stage"
               :percent="row.percent"
               :bar-class="row.barClass"
-              :tooltip="`${row.stage}: ${t('crm.dashboard.currencySymbol')}${priceFormatCompact(row.value)} · ${row.count} ${t('crm.dashboard.dealsUnit')}`"
+              :tooltip="`${row.stage}: ${t('global.currencySymbol')}${priceFormatCompact(row.value)} · ${row.count} ${t('crm.dashboard.dealsUnit')}`"
             >
-              <span class="w-24 shrink-0 text-right text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
+              <span class="w-24 shrink-0 text-right text-sm text-[var(--color-gray)]">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
               <span class="w-20 shrink-0 text-right text-xs text-[var(--color-gray)]">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
             </CrmMetricBar>
           </div>
@@ -406,7 +406,7 @@
                   <p class="text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.dealsWon', { count: member.wonCount }) }} · {{ member.winRate }}%</p>
                 </div>
               </div>
-              <span class="text-sm font-medium">{{ t('crm.dashboard.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
+              <span class="text-sm font-medium">{{ t('global.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
             </div>
           </div>
         </UCard>
@@ -421,7 +421,7 @@ import {
   BUSINESS_UNIT_FILTER_OPTIONS,
   isTaskOverdue,
 } from '~/constants/mockData'
-import { GLASS_PANEL_UI } from '~/constants/ui'
+import { GLASS_PANEL_UI, CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 
 const { t } = useI18n()
 
@@ -442,7 +442,7 @@ const channelFilterOptions = computed(() => [
 ])
 
 const { $api } = useNuxtApp()
-const { priceFormat, priceFormatCompact, dateFormat } = useFormatter()
+const { priceFormatCompact, dateFormat } = useFormatter()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
@@ -570,18 +570,6 @@ const upsellGroups = computed(() => [
   { tier: 'tier3', label: t('crm.dashboard.upsellTier120'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
 ])
 
-// Fixed categorical order, validated together (light mode, all 6 checks pass)
-// via the dataviz skill's validate_palette.js — never cycled within one chart,
-// a 5th+ open stage or industry falls back to neutral gray instead of reusing
-// a hue. Kept in this file (not global.css) since it's chart-assignment
-// order, not a token value.
-const CHART_CATEGORICAL_CLASSES = [
-  'bg-[var(--color-accent-green)]',
-  'bg-[var(--color-info-toast)]',
-  'bg-[var(--color-warning-hover)]',
-  'bg-[var(--color-chart-violet)]',
-]
-const CHART_FALLBACK_CLASS = 'bg-[var(--color-gray)]/50'
 
 // Every stage always renders a bar (even at zero) — the backend only returns rows for
 // stages with at least one deal, so missing stages are filled in at zero here.
@@ -600,7 +588,7 @@ const stageBreakdown = computed(() => {
       ? 'bg-[var(--color-success-toast)]'
       : row?.is_lost_stage
         ? 'bg-[var(--color-chart-lost)]'
-        : CHART_CATEGORICAL_CLASSES[openIndex++] ?? CHART_FALLBACK_CLASS
+        : (CHART_CATEGORICAL_COLORS[openIndex++] ?? CHART_FALLBACK_COLOR).bar
     return {
       stage: stage.label,
       value: stat.value,
@@ -627,7 +615,7 @@ const industryBreakdown = computed(() => {
   return (summary.value?.industry_breakdown ?? [])
     .map(row => ({ industry: row.industry, wonCount: row.won_count, winRate: Math.round(row.win_rate) }))
     .sort((a, b) => b.winRate - a.winRate)
-    .map((row, index) => ({ ...row, barClass: CHART_CATEGORICAL_CLASSES[index] ?? CHART_FALLBACK_CLASS }))
+    .map((row, index) => ({ ...row, barClass: (CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).bar }))
 })
 
 const teamPerformance = computed(() => {
