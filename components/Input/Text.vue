@@ -17,6 +17,7 @@
       :type="props.type"
       :disabled="props.disable"
       :maxlength="props.maxlength"
+      :size="props.size"
       autocomplete="off"
       :class="['w-full', { 'text-sm': props.small }]"
       @keypress="onInput($event)"
@@ -57,9 +58,20 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Legacy font-size-only tweak (adds `text-sm`) — does NOT change the
+  // input's height/padding. Prefer `size` for new call sites; `small` is
+  // kept only because many existing forms rely on the font-only look
+  // without touching height. Don't pass both on the same input — pair
+  // `size="sm"` with a `text-sm` value already built into that variant.
   small: {
     type: Boolean,
     default: false,
+  },
+  // Real Nuxt UI size variant (`2xs`|`xs`|`sm`|`md`|`lg`|`xl`), forwarded
+  // to the underlying UInput — controls height/padding as well as font size.
+  size: {
+    type: String,
+    default: 'md',
   },
   type: {
     type: String,

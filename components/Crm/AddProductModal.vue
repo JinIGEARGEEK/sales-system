@@ -8,6 +8,13 @@
         <div class="grid grid-cols-1 gap-3">
           <InputText v-model="form.name" :label="t('crm.components.addProductModal.name')" name="name" rules="required" />
           <InputText v-model="form.category" :label="t('crm.components.addProductModal.category')" name="category" />
+          <InputText
+            v-model.number="form.price"
+            type="number"
+            :label="t('crm.components.addProductModal.price')"
+            name="price"
+            rules="min_value:0"
+          />
           <InputTextarea v-model="form.description" :label="t('crm.components.addProductModal.description')" name="description" />
         </div>
       </Form>
@@ -36,13 +43,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [product: { name: string, category: string, description: string }]
+  submit: [product: { name: string, category: string, description: string, price: number }]
 }>()
 
 const emptyForm = () => ({
   name: props.product?.name ?? '',
   category: props.product?.category ?? '',
   description: props.product?.description ?? '',
+  price: props.product?.price ?? 0,
 })
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)

@@ -130,6 +130,14 @@ interface LeadSourceOption {
   created_at: Date
 }
 
+// The Admin-configurable app-wide settings singleton — GET/PATCH /admin/settings.
+// Currently holds only the quarterly sales quota (FR-CRM-058), previously
+// hardcoded in the dashboard summary handler.
+interface AppSettings {
+  id: number
+  quarterly_sales_target: number
+}
+
 interface Activity {
   id: number
   type: ActivityType
@@ -154,6 +162,12 @@ interface QuoteItem {
   description: string
   qty: number
   price: number
+  // Optional link to the Product catalog. When set, the backend snapshots
+  // that Product's current name/price into description/price at save
+  // time (not a live reference) — later Product edits never retroactively
+  // change a saved quote's line item. Left unset, the item is pure free
+  // text, exactly as before this field existed.
+  product_id?: number | null
 }
 
 interface Quote {
@@ -189,6 +203,7 @@ interface Product {
   name: string
   category: string
   description: string
+  price: number
   is_active: boolean
 }
 

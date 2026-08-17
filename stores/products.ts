@@ -20,7 +20,7 @@ export const useProductsStore = defineStore('products', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: { name: string, category: string, description: string }): Promise<Product> {
+    async update (id: number, changes: { name: string, category: string, description: string, price: number }): Promise<Product> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Product>>(`/products/${id}`, changes)
       const updated = response.data.data

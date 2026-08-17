@@ -77,6 +77,20 @@ summary {
   /* Accent green — used for "other" non-semantic hover/shadow/gradient tones */
   --color-accent-green: #1F9D6B;
 
+  /*
+   * Chart-only categorical accents (Pipeline by Stage, Win Rate by Industry,
+   * dashboard stat-card icon chips). Validated together with the existing
+   * accent/info/warning/success tokens above via the dataviz skill's
+   * validate_palette.js (light mode, all 6 checks pass in display order:
+   * accent-green, info-toast, warning-hover, chart-violet, success-toast,
+   * chart-lost). --color-chart-lost is a hue-shifted rust-red, not
+   * --color-danger-toast — plain green-vs-coral fails CVD separation
+   * (ΔE 5.5, below the safe floor) when a Won bar sits directly next to a
+   * Lost bar in a stage-ordered list, which is exactly how these render.
+   */
+  --color-chart-violet: #6B5CA5;
+  --color-chart-lost: #C65D3B;
+
   /* Computed Primary Color Kit - True Inversion */
   --color-inverted-primary: #FFFFFF;
   --color-inverted-secondary: color-mix(in oklab, #1B2233 93%, #A9B9EE 7%);

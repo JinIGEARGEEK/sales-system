@@ -282,7 +282,7 @@ const openEditProduct = (product: Product) => {
   addProductOpen.value = true
 }
 
-const onSaveProduct = async (product: { name: string, category: string, description: string }) => {
+const onSaveProduct = async (product: { name: string, category: string, description: string, price: number }) => {
   try {
     if (editingProduct.value) {
       await productsStore.update(editingProduct.value.id, product)

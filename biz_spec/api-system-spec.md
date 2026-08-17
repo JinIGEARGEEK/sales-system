@@ -324,7 +324,7 @@ Backs `components/Crm/ImportContactsModal.vue` — currently a **client-side-onl
 | `POST` | `/companies/import` | 🟢 | Body: `file` (CSV/XLS/XLSX, FlowAccount export layout — see `ImportContactsModal.vue` for the exact column mapping it currently expects client-side). Response: `{ data: { created: number, updated: number, skipped: number, errors: { row: number, message: string }[] } }`. |
 | `POST` | `/contacts/import` | 🟢 | Same shape, for the Contacts half of the same import file. |
 
-> `FR-CRM-014` specifies dedup by email/domain; the current frontend parser dedupes by company **name** instead. Implement the backend against email/domain per the spec — this is a deliberate improvement over, not a mirror of, today's frontend behavior.
+> `FR-CRM-014` specifies dedup by email/domain; the current frontend parser dedupes by company **name** instead. The backend (`internal/handlers/import.go`) now implements this per-spec for Companies: `findExistingCompany` dedupes primarily by normalized Website domain (`extractDomain`), falling back to a case-insensitive/whitespace-trimmed name match when either side has no website — Company has no dedicated email field, so this is domain-based rather than literally email. Contact import dedupes by email only. This remains a deliberate improvement over, not a mirror of, the frontend-only parser's name-only behavior.
 
 ---
 
@@ -436,6 +436,11 @@ interface QuoteItem {
   description: string
   qty: number
   price: number
+  product_id?: number   // optional — set by AddQuoteModal's Product picker; the handler snapshots
+                          // that Product's current name/price into description/price at save time
+                          // (not a live reference), then the item behaves like any other row.
+                          // Left unset, the item is pure free-text, unchanged from before this field
+                          // existed. FR-CRM-062.
 }
 
 interface Quote {
@@ -694,6 +699,22 @@ interface LeadSourceOption {
 
 Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants (`constants/mockData/deals.ts`, `leads.ts`) were removed — these two stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
 
+### 8.7a Admin app settings (`FR-CRM-058`)
+
+```ts
+interface AppSettings {
+  id: number                    // always 1 — singleton row
+  quarterly_sales_target: number
+}
+```
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/settings` | Admin | Loads the singleton `AppSettings` row (`id: 1`), falling back to the seeded default rather than erroring if it's somehow missing. |
+| `PATCH` | `/admin/settings` | Admin | Updates it — currently just `quarterly_sales_target` (required, must be `>= 0`). |
+
+Backend: `internal/models/settings.go` (`AppSettings`, seeded via `DefaultAppSettings` the same way `PipelineStage`/`LeadSourceOption` seed), `internal/handlers/settings.go`. `internal/handlers/dashboard.go`'s `quarterlySalesTarget()` reads this row instead of the old hardcoded `QUARTERLY_SALES_TARGET`-style constant (§9 below). Frontend: a "Sales Quota" card on `pages/admin/pipeline-config.vue`, backed by `stores/appSettings.ts`.
+
 ### 8.8 CSV export (`FR-CRM-083`)
 
 | Method | Path | Auth | Description |
@@ -739,7 +760,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
 }
 ```
 
-`quarterly_sales_target` should move server-side from the frontend's hardcoded `QUARTERLY_SALES_TARGET` constant once Admin-configurable quotas exist (`FR-CRM-058`, currently 🚧) — expose it as a value in this response either way so the frontend stops hardcoding it the moment the backend is live, even before an Admin settings UI for it exists.
+`quarterly_sales_target` is now sourced server-side from the `AppSettings` singleton row (§8.7a, `FR-CRM-058` — Admin-configurable via `GET`/`PATCH /admin/settings`) rather than a hardcoded frontend constant.
 
 ---
 

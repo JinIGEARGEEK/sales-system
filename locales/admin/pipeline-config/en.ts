@@ -42,6 +42,13 @@ export default {
     saveSuccess: 'Source saved',
     deactivateSuccess: 'Source deactivated',
   },
+  salesQuota: {
+    heading: 'Sales Quota',
+    label: 'Quarterly Sales Target',
+    help: 'Used to compute the Pipeline Coverage Ratio on the Dashboard.',
+    save: 'Save',
+    saveSuccess: 'Sales quota saved',
+  },
   statusActive: 'Active',
   statusInactive: 'Inactive',
   edit: 'Edit',

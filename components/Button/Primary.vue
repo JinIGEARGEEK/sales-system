@@ -11,6 +11,10 @@
       { 'w-full': props.block },
       { '!min-w-fit': props.fitContent },
       { 'text-sm py-1': props.small },
+      // Nuxt UI's default outline ring is a 50%-opacity ring/50, which reads
+      // as barely-there against this app's pastel content background —
+      // bump it to a solid, full-opacity ring in the button's own color.
+      outlineRingClass,
     ]"
   >
     <slot />
@@ -70,4 +74,21 @@ const buttonVariant = computed(() => {
 })
 
 const buttonColor = computed(() => props.cancel ? 'error' : props.color)
+
+// Full literal class names (not a template-string interpolation) so Tailwind's
+// static scanner can actually find and generate them — one per Nuxt UI
+// semantic color this app uses `outline` with.
+const OUTLINE_RING_CLASSES: Record<string, string> = {
+  primary: 'bg-white ring-2 ring-primary',
+  secondary: 'bg-white ring-2 ring-secondary',
+  success: 'bg-white ring-2 ring-success',
+  info: 'bg-white ring-2 ring-info',
+  warning: 'bg-white ring-2 ring-warning',
+  error: 'bg-white ring-2 ring-error',
+  neutral: 'bg-white ring-2 ring-neutral',
+}
+const outlineRingClass = computed(() => {
+  if (buttonVariant.value !== 'outline') return ''
+  return OUTLINE_RING_CLASSES[buttonColor.value] ?? OUTLINE_RING_CLASSES.neutral
+})
 </script>

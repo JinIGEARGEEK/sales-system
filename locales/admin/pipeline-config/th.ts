@@ -42,6 +42,13 @@ export default {
     saveSuccess: 'บันทึกแหล่งที่มาแล้ว',
     deactivateSuccess: 'ปิดใช้งานแหล่งที่มาแล้ว',
   },
+  salesQuota: {
+    heading: 'เป้าหมายยอดขาย',
+    label: 'เป้าหมายยอดขายรายไตรมาส',
+    help: 'ใช้คำนวณ Pipeline Coverage Ratio บนหน้า Dashboard',
+    save: 'บันทึก',
+    saveSuccess: 'บันทึกเป้าหมายยอดขายแล้ว',
+  },
   statusActive: 'ใช้งานอยู่',
   statusInactive: 'ปิดใช้งาน',
   edit: 'แก้ไข',

@@ -20,6 +20,12 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
       .sort((a, b) => a.sort_order - b.sort_order)
       .map(s => ({ label: s.name, value: s.name })),
     byName: state => (name: string) => state.items.find(s => s.name === name),
+    // Resolves the actual won/lost-flagged stage's configured `name` (an Admin
+    // can rename these away from the literal "Won"/"Lost") — falls back to the
+    // literal name only if no row is flagged yet (e.g. store hasn't loaded),
+    // matching the same store-then-fallback pattern as useDealStageColor.ts.
+    wonStageName: (state): string => state.items.find(s => s.is_won_stage)?.name ?? 'Won',
+    lostStageName: (state): string => state.items.find(s => s.is_lost_stage)?.name ?? 'Lost',
   },
   actions: {
     async fetchAll () {

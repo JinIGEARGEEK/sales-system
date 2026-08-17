@@ -19,6 +19,10 @@ export const useFormatter = () => {
   const numberFormat = (value: number) => numeric(value).format('0,0')
   const priceFormat = (value: number) => numeric(value).format('0,0.00')
 
+  // Abbreviated form (77.8M, 1.6K) for dashboard-style at-a-glance figures —
+  // exact precision belongs in a detail view/export, not a stat tile.
+  const priceFormatCompact = (value: number) => numeric(value).format('0,0.[0]a').toUpperCase()
+
   const mbToBytes = (mb: number) => mb * 1024 * 1024
 
   const toBadge = (title: string, color = 'neutral') => ({ title, color, isNoData: false })
@@ -36,6 +40,7 @@ export const useFormatter = () => {
     idCardFormat,
     numberFormat,
     priceFormat,
+    priceFormatCompact,
     mbToBytes,
     toBadge,
     parseTags,

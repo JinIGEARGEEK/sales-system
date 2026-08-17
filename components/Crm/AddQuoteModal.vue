@@ -25,27 +25,36 @@
           <p v-if="items.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.components.addQuoteModal.noItems') }}</p>
 
           <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
-            <div class="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
-              <InputText
-                v-model="item.description"
-                :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
-                :name="`item-description-${item.key}`"
-                rules="required"
+            <div class="grid flex-1 grid-cols-1 gap-2">
+              <InputSelect
+                :model-value="item.product_id"
+                :options="productOptions"
+                :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
+                :name="`item-product-${item.key}`"
+                @update:model-value="onItemProductChange(item, $event)"
               />
-              <InputText
-                v-model.number="item.qty"
-                type="number"
-                :placeholder="t('crm.components.addQuoteModal.itemQtyPlaceholder')"
-                :name="`item-qty-${item.key}`"
-                rules="required|min_value:1"
-              />
-              <InputText
-                v-model.number="item.price"
-                type="number"
-                :placeholder="t('crm.components.addQuoteModal.itemPricePlaceholder')"
-                :name="`item-price-${item.key}`"
-                rules="required|min_value:0"
-              />
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
+                <InputText
+                  v-model="item.description"
+                  :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
+                  :name="`item-description-${item.key}`"
+                  rules="required"
+                />
+                <InputText
+                  v-model.number="item.qty"
+                  type="number"
+                  :placeholder="t('crm.components.addQuoteModal.itemQtyPlaceholder')"
+                  :name="`item-qty-${item.key}`"
+                  rules="required|min_value:1"
+                />
+                <InputText
+                  v-model.number="item.price"
+                  type="number"
+                  :placeholder="t('crm.components.addQuoteModal.itemPricePlaceholder')"
+                  :name="`item-price-${item.key}`"
+                  rules="required|min_value:0"
+                />
+              </div>
             </div>
             <UButton
               icon="material-symbols:close"
@@ -90,29 +99,54 @@ const emptyForm = () => ({
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
 
+// Optional Product picker per line item — additive on top of the existing
+// free-text flow, not a replacement for it. Selecting a product just
+// prefills description/price (still editable afterward); leaving it unset
+// ("none") behaves exactly as before this field existed.
+const productsStore = useProductsStore()
+const productOptions = computed(() => productsStore.items
+  .filter(p => p.is_active)
+  .map(p => ({ label: p.name, value: String(p.id) })))
+
 let nextItemKey = 0
-const items = ref<{ key: number, description: string, qty: number, price: number }[]>([])
+const items = ref<{ key: number, description: string, qty: number, price: number, product_id: string | null }[]>([])
 
 const addItemRow = () => {
-  items.value.push({ key: nextItemKey++, description: '', qty: 1, price: 0 })
+  items.value.push({ key: nextItemKey++, description: '', qty: 1, price: 0, product_id: null })
 }
 
 const removeItemRow = (index: number) => {
   items.value.splice(index, 1)
 }
 
+const onItemProductChange = (item: { description: string, price: number, product_id: string | null }, value: string | number | null) => {
+  item.product_id = value === null ? null : String(value)
+  const product = productsStore.items.find(p => String(p.id) === item.product_id)
+  if (!product) return
+  item.description = product.name
+  item.price = product.price
+}
+
 // items isn't part of `form` (it's a dynamic list, not a fixed field set), so
 // it needs its own reset-on-open alongside useModalForm's — same "reset on
 // open, not close" rule.
 watch(() => props.open, (value) => {
-  if (value) items.value = []
+  if (value) {
+    items.value = []
+    if (productsStore.items.length === 0) productsStore.fetchAll()
+  }
 })
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
 const onSubmit = () => {
   emit('submit', {
-    items: items.value.map(({ description, qty, price }) => ({ description, qty, price })),
+    items: items.value.map(({ description, qty, price, product_id }) => ({
+      description,
+      qty,
+      price,
+      product_id: product_id ? Number(product_id) : null,
+    })),
     validity_date: form.validity_date ? new Date(form.validity_date) : null,
     status: form.status,
   })

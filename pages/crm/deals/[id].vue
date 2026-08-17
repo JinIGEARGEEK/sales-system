@@ -98,7 +98,7 @@ const onMarkWon = async () => {
   if (!deal.value) return
   const wasWon = deal.value.status === 'won'
   try {
-    await dealsStore.updateStage(deal.value.id, 'Won')
+    await dealsStore.updateStage(deal.value.id, pipelineStagesStore.wonStageName as DealStage)
     if (!wasWon) createWonFollowUpTask()
     success(t('crm.deals.detail.markWonSuccess'))
     wonModal.value = true

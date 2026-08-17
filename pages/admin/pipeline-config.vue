@@ -31,6 +31,26 @@
       />
     </UCard>
 
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+      <template #header>
+        <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.salesQuota.heading') }}</h3>
+      </template>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <Form ref="salesQuotaFormRef" class="flex-1" @submit="onSubmitSalesQuota">
+          <InputText
+            v-model.number="salesQuotaForm.quarterly_sales_target"
+            type="number"
+            :label="t('admin.pipelineConfig.salesQuota.label')"
+            name="quarterly_sales_target"
+            rules="required"
+          />
+        </Form>
+        <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content @click="onSaveSalesQuota" />
+      </div>
+      <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
+    </UCard>
+
     <UCard :ui="GLASS_PANEL_UI">
       <template #header>
         <div class="flex items-center justify-between">
@@ -103,11 +123,35 @@ const { success, error } = useNotify()
 const { toBadge } = useFormatter()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
+const appSettingsStore = useAppSettingsStore()
 
-onMounted(() => {
+onMounted(async () => {
   pipelineStagesStore.fetchAll()
   leadSourcesStore.fetchAll()
+  const settings = await appSettingsStore.fetchAll()
+  salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
 })
+
+// ── Sales quota ──────────────────────────────────────────────────
+
+// Not a modal (no "reset on reopen" behavior needed here), but reuses
+// useModalForm's formRef typing + validateThenSubmit dance rather than
+// re-declaring the same ref<{ validate }> boilerplate — isOpen is a
+// constant `false` since the initial value is set once via fetchAll above.
+const { form: salesQuotaForm, formRef: salesQuotaFormRef, validateThenSubmit } = useModalForm(
+  () => false,
+  () => ({ quarterly_sales_target: 0 }),
+)
+
+const onSubmitSalesQuota = async () => {
+  try {
+    await appSettingsStore.update({ quarterly_sales_target: salesQuotaForm.quarterly_sales_target })
+    success(t('admin.pipelineConfig.salesQuota.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+const onSaveSalesQuota = () => validateThenSubmit(onSubmitSalesQuota)
 
 // ── Pipeline stages ──────────────────────────────────────────────
 

@@ -2,37 +2,52 @@
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black [-webkit-text-stroke:0.6px_currentColor]">{{ t('crm.deals.index.heading') }}</h2>
-      <div class="flex items-center gap-2">
-        <ButtonPrimary
-          :outline="viewMode !== 'kanban'"
-          small
-          fit-content
-          icon="material-symbols:view-kanban-outline"
-          :label="t('crm.deals.index.viewKanban')"
-          @click="viewMode = 'kanban'"
-        />
-        <ButtonPrimary
-          :outline="viewMode !== 'list'"
-          small
-          fit-content
-          icon="material-symbols:view-list"
-          :label="t('crm.deals.index.viewList')"
-          @click="viewMode = 'list'"
-        />
-        <ButtonPrimary
-          v-if="canExport"
-          outline
-          small
-          fit-content
-          :label="t('crm.deals.index.exportCsv')"
-          icon="material-symbols:download"
-          @click="onExport"
-        />
-        <ButtonPrimary
-          :label="t('crm.deals.index.addDeal')"
-          icon="material-symbols:add"
-          @click="navigateTo('/crm/deals/create')"
-        />
+      <div class="flex items-center gap-3">
+        <!-- View switcher: one joined segmented control, not two standalone
+             buttons — kept visually distinct from the Export/Add actions so
+             it doesn't read as a third/fourth action in the row. -->
+        <div class="flex items-center gap-0.5 rounded-full bg-[var(--color-light-gray-1)] p-1">
+          <UTooltip :text="t('crm.deals.index.viewKanban')">
+            <button
+              type="button"
+              class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
+              :class="viewMode === 'kanban' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :aria-label="t('crm.deals.index.viewKanban')"
+              @click="viewMode = 'kanban'"
+            >
+              <UIcon name="material-symbols:view-kanban-outline" class="size-4" />
+            </button>
+          </UTooltip>
+          <UTooltip :text="t('crm.deals.index.viewList')">
+            <button
+              type="button"
+              class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
+              :class="viewMode === 'list' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :aria-label="t('crm.deals.index.viewList')"
+              @click="viewMode = 'list'"
+            >
+              <UIcon name="material-symbols:view-list" class="size-4" />
+            </button>
+          </UTooltip>
+        </div>
+
+        <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
+          <ButtonPrimary
+            v-if="canExport"
+            outline
+            fit-content
+            :ui="{ base: 'h-9' }"
+            :label="t('crm.deals.index.exportCsv')"
+            icon="material-symbols:download"
+            @click="onExport"
+          />
+          <ButtonPrimary
+            :ui="{ base: 'h-9' }"
+            :label="t('crm.deals.index.addDeal')"
+            icon="material-symbols:add"
+            @click="navigateTo('/crm/deals/create')"
+          />
+        </div>
       </div>
     </div>
 
@@ -179,21 +194,32 @@ const filteredLeads = computed(() => {
 
 // A Lead has no `stage` — this maps its status onto the board's DealStage lanes:
 // New/Contacted share the "Lead" column, Qualified gets its own column, and
-// Disqualified lands in "Lost" alongside real lost Deals (see the card badge).
+// Disqualified lands in the lost-flagged column alongside real lost Deals (see
+// the card badge). The "Lost" column is resolved through the PipelineStage
+// row's is_lost_stage flag (via pipelineStagesStore.lostStageName, same store
+// added for the Mark Won fix) instead of the literal name "Lost", since an
+// Admin can rename that stage. "Lead" has no equivalent flag on PipelineStage
+// (only is_won_stage/is_lost_stage exist) so it stays the literal default
+// stage name — same for the `lead.status === 'Qualified'` comparisons below,
+// which check the fixed (non-admin-configurable) Lead.Status enum, not a Deal
+// pipeline stage; it's coincidence, not a lookup, that the enum value and the
+// default "Qualified" stage name are spelled the same.
 const leadLane = (lead: Lead): string => {
-  if (lead.status === 'Disqualified') return 'Lost'
+  if (lead.status === 'Disqualified') return pipelineStagesStore.lostStageName
   if (lead.status === 'Qualified') return 'Qualified'
   return 'Lead'
 }
 
 // Status a Lead should take when dropped directly on one of its own lanes.
 // Dropping past "Qualified" (Proposal Sent/Negotiation/Won) instead triggers
-// a real conversion — see the `else` branch of onMove below.
-const LEAD_STATUS_FOR_LANE: Record<string, LeadStatus> = {
+// a real conversion — see the `else` branch of onMove below. Keyed by the
+// same lane values leadLane() returns, so the lost-flagged column's key must
+// also track pipelineStagesStore.lostStageName rather than a hardcoded "Lost".
+const LEAD_STATUS_FOR_LANE = computed<Record<string, LeadStatus>>(() => ({
   Lead: 'New',
   Qualified: 'Qualified',
-  Lost: 'Disqualified',
-}
+  [pipelineStagesStore.lostStageName]: 'Disqualified',
+}))
 
 const pipelineItems = computed(() => [
   ...filteredDeals.value.map(deal => ({ ...deal, _type: 'deal' as const, _lane: deal.stage })),
@@ -219,7 +245,7 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
   const lead = leadsStore.items.find(l => l.id === item.id)
   if (!lead) return
 
-  const newStatus = LEAD_STATUS_FOR_LANE[newStage]
+  const newStatus = LEAD_STATUS_FOR_LANE.value[newStage]
   if (newStatus) {
     if (lead.status === newStatus) return
     try {

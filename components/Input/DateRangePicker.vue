@@ -15,6 +15,7 @@
         :placeholder="placeholder"
         :model-value="rangeLabel"
         :disabled="disable"
+        :size="size"
         :ui="{ base: 'truncate pr-8' }"
         class="w-full cursor-pointer"
         style="text-align: left"
@@ -62,6 +63,10 @@ const props = defineProps({
   disable: {
     type: Boolean,
     default: false,
+  },
+  size: {
+    type: String,
+    default: 'md',
   },
 })
 
