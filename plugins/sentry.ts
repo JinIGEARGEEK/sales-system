@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/vue'
+import { isAxiosError } from 'axios'
 
 export default defineNuxtPlugin((nuxtApp) => {
   Sentry.init({
@@ -8,11 +9,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     environment: nuxtApp.$config.public.APP_ENV,
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sentryError = (message: string, error: unknown|any) => {
-    if (error?.response) {
-      if (error?.response?.status >= 500) {
-        const errorMessage = error?.response ? `${error?.response?.status}: ${error?.response?.data?.message}` : error
+  const sentryError = (message: string, error: unknown) => {
+    if (isAxiosError(error) && error.response) {
+      if (error.response.status >= 500) {
+        const errorMessage = `${error.response.status}: ${error.response.data?.message}`
         Sentry.captureEvent({ message: `${message}: ${errorMessage}`, level: 'error' })
       }
     } else {

@@ -34,26 +34,7 @@ const props = defineProps({
     type: [String, Number],
     default: '',
   },
-  name: {
-    type: String,
-    default: '',
-  },
-  rules: {
-    type: String,
-    default: '',
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  dataCy: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
+  ...useInputBaseProps(),
   disable: {
     type: Boolean,
     default: false,

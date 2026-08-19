@@ -39,7 +39,6 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/test-utils/module',
     '@nuxt/eslint',
-    '@nuxtjs/device',
     '@nuxtjs/i18n',
   ],
 

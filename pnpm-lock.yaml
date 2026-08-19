@@ -17,9 +17,6 @@ importers:
       '@nuxt/ui':
         specifier: ^3
         version: 3.3.7(@babel/parser@7.29.0)(axios@1.7.9)(db0@0.3.4)(embla-carousel@8.6.0)(ioredis@5.10.0)(magicast@0.5.2)(typescript@5.7.3)(vite@7.3.1(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))(vue-router@4.6.4(vue@3.5.29(typescript@5.7.3)))(vue@3.5.29(typescript@5.7.3))
-      '@nuxtjs/device':
-        specifier: 3.2.4
-        version: 3.2.4
       '@nuxtjs/i18n':
         specifier: 10.1.2
         version: 10.1.2(@vue/compiler-dom@3.5.29)(db0@0.3.4)(eslint@9.39.5(jiti@2.6.1))(ioredis@5.10.0)(magicast@0.5.2)(rollup@4.59.0)(vue@3.5.29(typescript@5.7.3))
@@ -1093,9 +1090,6 @@ packages:
 
   '@nuxtjs/color-mode@3.5.2':
     resolution: {integrity: sha512-cC6RfgZh3guHBMLLjrBB2Uti5eUoGM9KyauOaYS9ETmxNWBMTvpgjvSiSJp1OFljIXPIqVTJ3xtJpSNZiO3ZaA==}
-
-  '@nuxtjs/device@3.2.4':
-    resolution: {integrity: sha512-jIvN6QeodBNrUrL/1FCHk4bebsiLsGHlJd8c/m2ksLrGY4IZ0npA8IYhDTdYV92epGxoe8+3iZOzCjav+6TshQ==}
 
   '@nuxtjs/i18n@10.1.2':
     resolution: {integrity: sha512-3OY8eozqNRiaZaMcmZPfLK1cqe5nUg8ADpGct3iSS6JPIkp8lHhBV6e9PFAMd9u0gz2QlMILySCRV0fNcGLCIA==}
@@ -7396,10 +7390,6 @@ snapshots:
       semver: 7.7.4
     transitivePeerDependencies:
       - magicast
-
-  '@nuxtjs/device@3.2.4':
-    dependencies:
-      defu: 6.1.4
 
   '@nuxtjs/i18n@10.1.2(@vue/compiler-dom@3.5.29)(db0@0.3.4)(eslint@9.39.5(jiti@2.6.1))(ioredis@5.10.0)(magicast@0.5.2)(rollup@4.59.0)(vue@3.5.29(typescript@5.7.3))':
     dependencies:

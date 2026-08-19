@@ -8,6 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
   },
@@ -28,7 +30,6 @@
   "dependencies": {
     "@internationalized/date": "3.12.0",
     "@nuxt/ui": "^3",
-    "@nuxtjs/device": "3.2.4",
     "@nuxtjs/i18n": "10.1.2",
     "@pinia/nuxt": "0.11.2",
     "@sentry/vue": "8.46.0",

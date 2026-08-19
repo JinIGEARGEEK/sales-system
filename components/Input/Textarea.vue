@@ -48,26 +48,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  name: {
-    type: String,
-    default: '',
-  },
-  rules: {
-    type: String,
-    default: '',
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  dataCy: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
+  ...useInputBaseProps(),
   rows: {
     type: String,
     default: '10',

@@ -39,26 +39,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  name: {
-    type: String,
-    default: '',
-  },
-  rules: {
-    type: String,
-    default: '',
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: 'DD/MM/YYYY',
-  },
-  dataCy: {
-    type: String,
-    default: '',
-  },
+  ...useInputBaseProps({ placeholder: 'DD/MM/YYYY' }),
   disable: {
     type: Boolean,
     default: false,

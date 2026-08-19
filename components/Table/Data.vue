@@ -174,8 +174,7 @@ const prop = defineProps({
     default: () => [],
   },
   rows: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: Array as PropType<any[]>,
+    type: Array as PropType<TableRowData[]>,
     default: () => [],
   },
   loading: {
@@ -277,8 +276,7 @@ const onSelectAll = (val: boolean) => {
   selected.value = val ? [...prop.rows] : []
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toggleRowSelection = (row: any) => {
+const toggleRowSelection = (row: TableRowData) => {
   const index = selected.value.indexOf(row)
   if (index > -1) {
     selected.value.splice(index, 1)
@@ -295,8 +293,7 @@ const getColumAction = ():TableDataColumn => {
   return prop.columns.find(e => e.type === TABLE_CARD_TYPE.ACTION) as TableDataColumn
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getActionMenuItems = (col: TableDataColumn, row: any, _rowIndex: number) => {
+const getActionMenuItems = (col: TableDataColumn, row: TableRowData, _rowIndex: number) => {
   if (!col.actions) return []
   return col.actions
     .filter(action => !action.hideIf || !action.hideIf(row))
