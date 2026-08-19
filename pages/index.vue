@@ -274,8 +274,8 @@
               :bar-class="row.barClass"
               :tooltip="`${row.stage}: ${t('global.currencySymbol')}${priceFormatCompact(row.value)} · ${row.count} ${t('crm.dashboard.dealsUnit')}`"
             >
-              <span class="w-24 shrink-0 text-right text-sm text-[var(--color-gray)]">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
-              <span class="w-20 shrink-0 text-right text-xs text-[var(--color-gray)]">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
+              <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
+              <span class="min-w-20 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
             </CrmMetricBar>
           </div>
         </UCard>
@@ -375,8 +375,8 @@
               :bar-class="row.barClass"
               :tooltip="`${row.industry}: ${row.winRate}% · ${t('crm.dashboard.dealsWon', { count: row.wonCount })}`"
             >
-              <span class="w-14 shrink-0 text-right text-sm text-[var(--color-gray)]">{{ row.winRate }}%</span>
-              <span class="w-16 shrink-0 text-right text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.dealsWon', { count: row.wonCount }) }}</span>
+              <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.winRate }}%</span>
+              <span class="min-w-16 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.dealsWon', { count: row.wonCount }) }}</span>
             </CrmMetricBar>
           </div>
         </UCard>

@@ -31,7 +31,7 @@
                   />
                 </td>
                 <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION" :class="`py-1 ${prop.mobileColumnWidth}`">
-                  <span class="text-sm text-[var(--color-black)] pr-5"><b>{{ column.label }}</b></span>
+                  <span class="block truncate text-sm text-[var(--color-black)] pr-5"><b>{{ column.label }}</b></span>
                 </td>
                 <td v-if="column.type === TABLE_CARD_TYPE.SELECTED" />
                 <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION">

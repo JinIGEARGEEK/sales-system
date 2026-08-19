@@ -91,8 +91,8 @@
             :label="row.source"
             :percent="Math.round(row.conversion_rate)"
           >
-            <span class="w-24 shrink-0 text-right text-sm text-[var(--color-gray)]">{{ row.qualified }} / {{ row.total }}</span>
-            <span class="w-14 shrink-0 text-right text-xs text-[var(--color-gray)]">{{ row.conversion_rate.toFixed(1) }}%</span>
+            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.qualified }} / {{ row.total }}</span>
+            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.conversion_rate.toFixed(1) }}%</span>
           </CrmMetricBar>
         </div>
       </UCard>
