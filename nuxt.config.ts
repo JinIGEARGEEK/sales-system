@@ -4,6 +4,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       API_URL: process.env.API_URL,
+      // Read by plugins/sentry.ts. Declaring them here (even with an empty
+      // default) is required for Nuxt to expose them on $config.public at
+      // all — an undeclared key isn't just "unset", it's absent from the
+      // typed config object entirely, so Sentry.init() previously always
+      // ran with `dsn: undefined` (silently disabling error reporting) no
+      // matter what the deploy environment actually set.
+      SENTRY_DSN: process.env.SENTRY_DSN || '',
+      APP_ENV: process.env.APP_ENV || 'development',
     },
   },
 
