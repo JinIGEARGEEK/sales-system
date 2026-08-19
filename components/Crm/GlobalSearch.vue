@@ -47,6 +47,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -56,10 +57,10 @@ const leadsStore = useLeadsStore()
 // convenient single place to warm all four stores instead of only relying on
 // each CRM page's own on-mount fetch.
 onMounted(() => {
-  if (dealsStore.items.length === 0) dealsStore.fetchAll()
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (contactsStore.items.length === 0) contactsStore.fetchAll()
-  if (leadsStore.items.length === 0) leadsStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
 })
 
 const RESULT_LIMIT = 5

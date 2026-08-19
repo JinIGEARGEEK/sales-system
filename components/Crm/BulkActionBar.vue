@@ -73,10 +73,11 @@ const emit = defineEmits<{
 }>()
 
 const { parseTags } = useFormatter()
+const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 const reassignOpen = ref(false)

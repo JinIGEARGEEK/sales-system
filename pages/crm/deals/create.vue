@@ -70,6 +70,7 @@ useHead({ title: t('crm.deals.create.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
@@ -79,13 +80,13 @@ const productsStore = useProductsStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (contactsStore.items.length === 0) contactsStore.fetchAll()
-  if (leadsStore.items.length === 0) leadsStore.fetchAll()
-  if (dealsStore.items.length === 0) dealsStore.fetchAll()
-  if (projectsStore.items.length === 0) projectsStore.fetchAll()
-  if (productsStore.items.length === 0) productsStore.fetchAll()
-  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (projectsStore.items.length === 0) projectsStore.fetchAll().catch(notifyApiError)
+  if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
 })
 
 // leadsStore.items is fetched asynchronously (onMounted), so on a fresh page

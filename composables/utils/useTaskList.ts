@@ -11,6 +11,7 @@ interface TaskFormPayload {
 export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, addedMessageKey: string) => {
   const { t } = useI18n()
   const { success } = useNotify()
+  const { notifyApiError } = useApiErrorNotifier()
   const tasksStore = useTasksStore()
 
   const addTaskOpen = ref(false)
@@ -21,12 +22,16 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
   }
 
   const onSubmitTask = async (payload: TaskFormPayload) => {
-    await tasksStore.add({ related_type: relatedType, related_id: relatedId, ...payload })
-    success(t(addedMessageKey))
+    try {
+      await tasksStore.add({ related_type: relatedType, related_id: relatedId, ...payload })
+      success(t(addedMessageKey))
+    } catch (err) {
+      notifyApiError(err)
+    }
   }
 
-  const onToggleTask = (id: number) => tasksStore.toggleDone(id)
-  const onRemoveTask = (id: number) => tasksStore.remove(id)
+  const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
+  const onRemoveTask = (id: number) => tasksStore.remove(id).catch(notifyApiError)
 
   return { tasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask }
 }

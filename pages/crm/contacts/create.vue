@@ -67,12 +67,13 @@ useHead({ title: t('crm.contacts.create.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
 })
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))

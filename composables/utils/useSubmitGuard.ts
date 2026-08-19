@@ -7,6 +7,7 @@
 // which trigger (Enter-key native form submit, or the button click) started it.
 export const useSubmitGuard = () => {
   const loading = ref(false)
+  const { notifyApiError } = useApiErrorNotifier()
 
   const guard = <Args extends unknown[]>(fn: (...args: Args) => Promise<void> | void) => {
     return async (...args: Args) => {
@@ -14,6 +15,13 @@ export const useSubmitGuard = () => {
       loading.value = true
       try {
         await fn(...args)
+      } catch (err) {
+        // Safety net only — most callers already catch their own errors inside
+        // `fn` (to show a specific message), so this never fires for those.
+        // It exists for the handful that didn't wrap their submit body in its
+        // own try/catch, where a failure would otherwise be an unhandled
+        // rejection with zero user-facing feedback.
+        notifyApiError(err)
       } finally {
         loading.value = false
       }

@@ -72,6 +72,7 @@ useHead({ title: t('admin.users.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
 
 const loading = ref(false)
@@ -80,6 +81,8 @@ onMounted(async () => {
     loading.value = true
     try {
       await usersStore.fetchAll()
+    } catch (err) {
+      notifyApiError(err)
     } finally {
       loading.value = false
     }
@@ -151,10 +154,15 @@ const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagi
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<AdminUser>()
 
 const confirmDelete = async () => {
-  if (target.value) {
-    await usersStore.remove(target.value.id)
-    success(t('admin.users.index.deleteSuccess'))
+  try {
+    if (target.value) {
+      await usersStore.remove(target.value.id)
+      success(t('admin.users.index.deleteSuccess'))
+    }
+  } catch (err) {
+    notifyApiError(err)
+  } finally {
+    closeDelete()
   }
-  closeDelete()
 }
 </script>

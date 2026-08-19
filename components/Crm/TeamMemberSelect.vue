@@ -13,10 +13,11 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 defineProps<{

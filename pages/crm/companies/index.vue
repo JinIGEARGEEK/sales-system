@@ -103,6 +103,7 @@ useHead({ title: t('crm.companies.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
@@ -124,7 +125,7 @@ onMounted(() => {
   // A full (up to 200) fetch is kept purely to derive the tag filter's option
   // list below — there's no "distinct tags" endpoint, so this stays separate
   // from the server-paginated `rows` that the table itself renders.
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
 })
 
 const tagOptions = computed(() => [...new Set(companiesStore.items.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))

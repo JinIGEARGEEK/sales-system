@@ -44,10 +44,11 @@ useHead({ title: t('crm.tasks.index.pageTitle') })
 const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
 const { resolveRelated } = useRelatedRecord()
+const { notifyApiError } = useApiErrorNotifier()
 
 onMounted(() => {
-  if (tasksStore.items.length === 0) tasksStore.fetchAll()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyApiError)
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 const search = ref('')
@@ -72,6 +73,6 @@ const filteredTasks = computed(() => {
     })
 })
 
-const onToggleTask = (id: number) => tasksStore.toggleDone(id)
-const onRemoveTask = (id: number) => tasksStore.remove(id)
+const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
+const onRemoveTask = (id: number) => tasksStore.remove(id).catch(notifyApiError)
 </script>

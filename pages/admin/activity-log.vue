@@ -93,6 +93,7 @@ useHead({ title: t('admin.activityLog.title') })
 
 const { dateFormat, dateTimeFormat, toBadge } = useFormatter()
 const { error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const auditLogStore = useAuditLogStore()
 const usersStore = useUsersStore()
@@ -150,7 +151,7 @@ const onChangePerPage = (value: number) => {
 
 onMounted(() => {
   if (!canAccess.value) return
-  if (usersStore.items.length === 0) usersStore.fetchAll()
+  if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
   fetchEntries()
 })
 

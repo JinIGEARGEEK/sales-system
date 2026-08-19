@@ -11,12 +11,13 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const route = useRoute()
+const { notifyApiError } = useApiErrorNotifier()
 const activitiesStore = useActivitiesStore()
 
 const dealId = Number(route.params.id)
 const dealActivity = computed(() => activitiesStore.forRelated('deal', dealId))
 
 onMounted(() => {
-  activitiesStore.fetchForRelated('deal', dealId)
+  activitiesStore.fetchForRelated('deal', dealId).catch(notifyApiError)
 })
 </script>

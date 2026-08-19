@@ -31,10 +31,11 @@ useHead({ title: t('admin.users.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
 
 onMounted(() => {
-  if (usersStore.items.length === 0) usersStore.fetchAll()
+  if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
 const userId = Number(route.params.id)

@@ -50,6 +50,7 @@ useHead({ title: t('crm.deals.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 const projectsStore = useProjectsStore()
@@ -58,8 +59,8 @@ const pipelineStagesStore = usePipelineStagesStore()
 const { dealId, deal } = useCurrentDeal()
 
 onMounted(() => {
-  if (dealsStore.items.length === 0) dealsStore.fetchAll()
-  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
 })
 
 // Tab navigation is route-driven: "overview" lives at the base `/crm/deals/:id`

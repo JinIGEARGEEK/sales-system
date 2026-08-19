@@ -28,6 +28,7 @@ const { t } = useI18n()
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const attachmentsStore = useAttachmentsStore()
 
@@ -38,7 +39,7 @@ const dealId = Number(route.params.id)
 const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
 onMounted(() => {
-  attachmentsStore.fetchForRelated('deal', dealId)
+  attachmentsStore.fetchForRelated('deal', dealId).catch(notifyApiError)
 })
 
 const addAttachmentOpen = ref(false)

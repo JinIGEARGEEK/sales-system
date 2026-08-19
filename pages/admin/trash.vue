@@ -85,6 +85,7 @@ useHead({ title: t('admin.trash.title') })
 
 const { dateFormat, priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
 const leadsStore = useLeadsStore()
@@ -317,7 +318,7 @@ const onRestoreContact = async (row: Contact) => {
 
 onMounted(() => {
   if (!canAccess.value) return
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   fetchDealsTrash()
   fetchLeadsTrash()
   fetchCompaniesTrash()

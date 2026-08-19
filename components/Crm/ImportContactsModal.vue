@@ -52,6 +52,7 @@ import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
 
 const { t } = useI18n()
+const { notifyApiError } = useApiErrorNotifier()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
@@ -239,45 +240,54 @@ const onConfirm = async () => {
   let companiesCreated = 0
   let contactsCreated = 0
 
-  for (const row of parsedRows.value) {
-    const tag = RECORD_TYPE_TAG[row.recordType] || row.recordType
+  try {
+    for (const row of parsedRows.value) {
+      const tag = RECORD_TYPE_TAG[row.recordType] || row.recordType
 
-    let company = companiesStore.findByName(row.name)
-    if (!company) {
-      company = await companiesStore.add({
-        name: row.name,
-        industry: '',
-        size: '',
-        website: '',
-        tags: tag ? [tag] : [],
-        notes: buildNotes(row),
-        status: 'active',
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
-      companiesCreated += 1
-    } else if (tag) {
-      companiesStore.addTag(company.id, tag)
-    }
-
-    if (row.contactName && company) {
-      const alreadyLinked = contactsStore.items.some(
-        c => c.company_id === company!.id && c.name.trim().toLowerCase() === row.contactName.trim().toLowerCase(),
-      )
-      if (!alreadyLinked) {
-        await contactsStore.add({
-          company_id: company.id,
-          name: row.contactName,
-          email: row.email,
-          phone: row.mobile || row.officePhone,
-          role_title: '',
-          tags: [],
+      let company = companiesStore.findByName(row.name)
+      if (!company) {
+        company = await companiesStore.add({
+          name: row.name,
+          industry: '',
+          size: '',
+          website: '',
+          tags: tag ? [tag] : [],
+          notes: buildNotes(row),
           status: 'active',
           created_at: new Date(),
+          updated_at: new Date(),
         })
-        contactsCreated += 1
+        companiesCreated += 1
+      } else if (tag) {
+        companiesStore.addTag(company.id, tag)
+      }
+
+      if (row.contactName && company) {
+        const alreadyLinked = contactsStore.items.some(
+          c => c.company_id === company!.id && c.name.trim().toLowerCase() === row.contactName.trim().toLowerCase(),
+        )
+        if (!alreadyLinked) {
+          await contactsStore.add({
+            company_id: company.id,
+            name: row.contactName,
+            email: row.email,
+            phone: row.mobile || row.officePhone,
+            role_title: '',
+            tags: [],
+            status: 'active',
+            created_at: new Date(),
+          })
+          contactsCreated += 1
+        }
       }
     }
+  } catch (err) {
+    // A failure mid-loop still leaves whatever was already created — surface
+    // the error, but don't discard the partial progress by closing silently
+    // or re-throwing; the modal stays open so the user can see what happened
+    // and retry (re-running is safe: findByName/alreadyLinked skip repeats).
+    notifyApiError(err)
+    return
   }
 
   emit('imported', { companies: companiesCreated, contacts: contactsCreated })

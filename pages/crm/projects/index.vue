@@ -121,6 +121,7 @@ useHead({ title: t('crm.projects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const projectsStore = useProjectsStore()
@@ -143,15 +144,15 @@ const productsLoading = ref(false)
 onMounted(async () => {
   if (projectsStore.items.length === 0) {
     projectsLoading.value = true
-    projectsStore.fetchAll().finally(() => { projectsLoading.value = false })
+    projectsStore.fetchAll().catch(notifyApiError).finally(() => { projectsLoading.value = false })
   }
   if (productsStore.items.length === 0) {
     productsLoading.value = true
-    productsStore.fetchAll().finally(() => { productsLoading.value = false })
+    productsStore.fetchAll().catch(notifyApiError).finally(() => { productsLoading.value = false })
   }
-  if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // Needed for CrmAddProjectModal's optional Deal picker once a Company is chosen.
-  if (canManageProjects.value && dealsStore.items.length === 0) dealsStore.fetchAll()
+  if (canManageProjects.value && dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
 })
 
 const activeTab = ref('projects')

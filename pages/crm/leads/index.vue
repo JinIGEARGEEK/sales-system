@@ -85,6 +85,7 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
@@ -135,8 +136,8 @@ const {
 
 onMounted(() => {
   fetch()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
 watch(search, () => refetchDebounced())

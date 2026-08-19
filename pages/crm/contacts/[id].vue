@@ -136,6 +136,7 @@ useHead({ title: t('crm.contacts.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { parseTags, dateFormat } = useFormatter()
 const { hasRole } = useRole()
 const companiesStore = useCompaniesStore()
@@ -148,10 +149,10 @@ const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
 
 onMounted(() => {
-  if (contactsStore.items.length === 0) contactsStore.fetchAll()
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (dealsStore.items.length === 0) dealsStore.fetchAll()
-  activitiesStore.fetchForRelated('contact', contactId)
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  activitiesStore.fetchForRelated('contact', contactId).catch(notifyApiError)
 })
 
 // Project has no contact_id of its own — it only relates to a Company (and
@@ -159,7 +160,7 @@ onMounted(() => {
 // the Company the contact belongs to. Fetched once that company id is known,
 // since the contact itself loads asynchronously.
 watch(() => contact.value?.company_id, (companyId) => {
-  if (companyId) projectsStore.fetchForCompany(companyId)
+  if (companyId) projectsStore.fetchForCompany(companyId).catch(notifyApiError)
 }, { immediate: true })
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))

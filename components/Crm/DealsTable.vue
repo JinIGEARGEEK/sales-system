@@ -65,6 +65,7 @@ const props = defineProps<{
 const { t } = useI18n()
 const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
@@ -72,8 +73,8 @@ const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
   fetch()
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.

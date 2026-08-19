@@ -72,6 +72,7 @@ useHead({ title: t('crm.tags.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const tagsStore = useTagsStore()
 
 const loading = ref(false)
@@ -80,6 +81,8 @@ onMounted(async () => {
     loading.value = true
     try {
       await tagsStore.fetchAll()
+    } catch (err) {
+      notifyApiError(err)
     } finally {
       loading.value = false
     }
@@ -138,10 +141,15 @@ const onEdit = (row: Tag) => {
 }
 
 const confirmDelete = async () => {
-  if (target.value) {
-    await tagsStore.remove(target.value.id)
-    success(t('crm.tags.index.deleteSuccess'))
+  try {
+    if (target.value) {
+      await tagsStore.remove(target.value.id)
+      success(t('crm.tags.index.deleteSuccess'))
+    }
+  } catch (err) {
+    notifyApiError(err)
+  } finally {
+    closeDelete()
   }
-  closeDelete()
 }
 </script>

@@ -110,13 +110,14 @@ useHead({ title: t('crm.reports.leadSource.pageTitle') })
 
 const { $api } = useNuxtApp()
 const { error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const teamMembersStore = useTeamMembersStore()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 onMounted(() => {
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 const salesRepOptions = computed(() => [
