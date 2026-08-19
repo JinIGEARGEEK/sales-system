@@ -39,20 +39,3 @@ export const useMutateApi = <T, D>(path: string) => {
   }
 }
 
-// READ transactions
-export const useFetchApi = <T, D>(url: string, config?: AxiosRequestConfig<D>) => {
-  const { $api } = useNuxtApp()
-  const data = ref<D>()
-  const fetch = async (newParams?: T) => {
-    const response = await $api.get(url, {
-      params: newParams || config?.params,
-    })
-    data.value = response.data
-  }
-  onBeforeMount(() => {
-    fetch()
-  })
-  return {
-    fetch,
-  }
-}
