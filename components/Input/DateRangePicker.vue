@@ -1,6 +1,6 @@
 <template>
   <InputFormField
-    v-slot="{ field }"
+    v-slot="{ field, errors, fieldId, errorId }"
     :model-value="props.modelValue?.start"
     :name="props.name"
     :rules="props.rules"
@@ -9,6 +9,7 @@
   >
     <UPopover>
       <UInput
+        :id="fieldId"
         readonly
         v-bind="field"
         :data-cy="dataCy"
@@ -16,6 +17,8 @@
         :model-value="rangeLabel"
         :disabled="disable"
         :size="size"
+        :aria-invalid="errors.length > 0"
+        :aria-describedby="errors.length ? errorId : undefined"
         :ui="{ base: 'truncate pr-8' }"
         class="w-full cursor-pointer"
         style="text-align: left"
