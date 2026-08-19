@@ -1,6 +1,6 @@
 <template>
   <InputFormField
-    v-slot="{ field }"
+    v-slot="{ field, errors, fieldId, errorId }"
     :model-value="props.modelValue"
     :name="props.name"
     :rules="props.rules"
@@ -10,12 +10,15 @@
   >
     <UPopover>
       <UInput
+        :id="fieldId"
         readonly
         v-bind="field"
         :data-cy="dataCy"
         :placeholder="placeholder"
         :model-value="dateOnlyFormat"
         :disabled="disable"
+        :aria-invalid="errors.length > 0"
+        :aria-describedby="errors.length ? errorId : undefined"
         class="w-full cursor-pointer"
         style="text-align: left"
       >

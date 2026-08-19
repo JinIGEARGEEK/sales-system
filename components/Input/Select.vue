@@ -1,7 +1,7 @@
 <template>
   <div :class="$attrs.class">
     <InputFormField
-      v-slot="{ field }"
+      v-slot="{ field, errors, fieldId, errorId }"
       :model-value="props.modelValue"
       :name="props.name"
       :rules="props.rules"
@@ -11,6 +11,7 @@
     >
       <USelect
         v-bind="field"
+        :id="fieldId"
         :model-value="props.modelValue"
         :data-cy="dataCy"
         :placeholder="placeholder || undefined"
@@ -18,6 +19,8 @@
         :loading="props.loading"
         :disabled="props.disable"
         :size="props.size"
+        :aria-invalid="errors.length > 0"
+        :aria-describedby="errors.length ? errorId : undefined"
         value-key="value"
         label-key="label"
         class="w-full"

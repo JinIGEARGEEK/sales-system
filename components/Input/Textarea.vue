@@ -8,14 +8,17 @@
       :data-cy="props.dataCy"
       @update:model-value="emit('update:model-value', $event)"
     >
-      <template #default="{ field }">
+      <template #default="{ field, errors, fieldId, errorId }">
         <UTextarea
+          :id="fieldId"
           :model-value="props.modelValue"
           v-bind="field"
           :data-cy="props.dataCy"
           :placeholder="props.placeholder"
           :rows="Number(props.rows)"
           :maxlength="props.maxlength"
+          :aria-invalid="errors.length > 0"
+          :aria-describedby="errors.length ? errorId : undefined"
           class="w-full"
           :ui="{ base: 'text-base' }"
         >
@@ -23,14 +26,14 @@
         </UTextarea>
       </template>
 
-      <template #footer="{ errors }">
+      <template #footer="{ errors, errorId }">
         <div
           :class="[
             'flex items-center',
             errors.length ? 'justify-between' : 'justify-end'
           ]"
         >
-          <div v-if="errors.length" class="text-xs text-[var(--color-danger-toast)]" :data-cy="`error-input-${props.dataCy}`">
+          <div v-if="errors.length" :id="errorId" class="text-xs text-[var(--color-danger-toast)]" :data-cy="`error-input-${props.dataCy}`">
             {{ errors[0] }}
           </div>
           <div v-if="props.counter" class="text-xs text-[var(--color-dark-gray)]">

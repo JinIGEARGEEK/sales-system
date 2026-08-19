@@ -1,6 +1,6 @@
 <template>
   <InputFormField
-    v-slot="{ field }"
+    v-slot="{ field, errors, fieldId, errorId }"
     :model-value="props.modelValue"
     :name="props.name"
     :rules="props.rules"
@@ -9,11 +9,14 @@
     @update:model-value="emit('update:model-value', $event)"
   >
     <UInput
+      :id="fieldId"
       :model-value="props.modelValue"
       v-bind="field"
       :type="showPassword ? 'password' : 'text'"
       :data-cy="dataCy"
       :placeholder="props.placeholder"
+      :aria-invalid="errors.length > 0"
+      :aria-describedby="errors.length ? errorId : undefined"
       autocomplete="off"
       :class="['w-full', { 'text-sm': props.small }]"
     >
