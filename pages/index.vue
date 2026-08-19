@@ -424,14 +424,21 @@ import {
 import { GLASS_PANEL_UI, CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 
 const { t } = useI18n()
+const { error } = useNotify()
+// Every fire-and-forget fetch below is a bare `if (...) store.fetchAll()` (no
+// `await`, no caller-side try/catch) — this dashboard has none of the loading
+// components' own error handling, so a failed request would otherwise be a
+// silent unhandled rejection with no user-facing feedback. Route every one
+// through this so a network/API failure at least surfaces a toast.
+const notifyFetchError = (err: unknown) => error(getApiErrorMessage(err, t('global.genericError')))
 
 useHead({ title: t('crm.dashboard.pageTitle') })
 
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 onMounted(() => {
-  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyFetchError)
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyFetchError)
 })
 
 // Admin-configurable stage/source lists (replaces the previously hardcoded
@@ -449,10 +456,10 @@ const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (dealsStore.items.length === 0) dealsStore.fetchAll()
-  if (tasksStore.items.length === 0) tasksStore.fetchAll()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
+  if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyFetchError)
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyFetchError)
 })
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
@@ -518,17 +525,21 @@ const filteredDeals = computed(() => {
 const summary = ref<DashboardSummary | null>(null)
 
 const fetchSummary = async () => {
-  const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
-    params: {
-      date_from: dateRange.value?.start,
-      date_to: dateRange.value?.end,
-      business_unit: businessUnitFilter.value !== 'all' ? businessUnitFilter.value : undefined,
-      channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
-      assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
-      company_tag: companyTagFilter.value || undefined,
-    },
-  })
-  summary.value = response.data.data
+  try {
+    const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
+      params: {
+        date_from: dateRange.value?.start,
+        date_to: dateRange.value?.end,
+        business_unit: businessUnitFilter.value !== 'all' ? businessUnitFilter.value : undefined,
+        channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
+        assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
+        company_tag: companyTagFilter.value || undefined,
+      },
+    })
+    summary.value = response.data.data
+  } catch (err) {
+    notifyFetchError(err)
+  }
 }
 
 onMounted(fetchSummary)
