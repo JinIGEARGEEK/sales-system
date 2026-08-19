@@ -20,6 +20,7 @@
       <template #trailing>
         <UButton
           :icon="showPassword ? 'material-symbols:visibility-off-outline' : 'material-symbols:visibility-outline'"
+          :aria-label="showPassword ? t('global.input.showPassword') : t('global.input.hidePassword')"
           variant="ghost"
           color="neutral"
           size="xs"
@@ -31,37 +32,21 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 const props = defineProps({
   modelValue: {
     type: String,
     default: '',
   },
-  name: {
-    type: String,
-    default: '',
-  },
-  rules: {
-    type: String,
-    default: '',
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  dataCy: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
+  ...useInputBaseProps(),
   small: {
     type: Boolean,
     default: false,
   },
 })
 
+const { t } = useI18n()
 const showPassword = ref(true)
 const emit = defineEmits(['update:model-value'])
 </script>

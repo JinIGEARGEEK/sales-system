@@ -34,6 +34,10 @@ const prop = defineProps({
     type: String,
     default: '',
   },
+  // Genuinely polymorphic: this prop's value flows as-is into whichever child
+  // component `type` selects (TableCardMultiLine/Status/UpdatedAt/Link each
+  // expect their own concrete shape), so it can't be narrowed here without
+  // breaking every one of those call sites.
   item: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: [Object, Array, String, Number, Boolean] as PropType<any>,

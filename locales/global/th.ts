@@ -37,4 +37,8 @@ export default {
       rowPerPage: 'แถวต่อหน้า',
     },
   },
+  input: {
+    showPassword: 'แสดงรหัสผ่าน',
+    hidePassword: 'ซ่อนรหัสผ่าน',
+  },
 }

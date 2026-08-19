@@ -1,32 +1,38 @@
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-Light.ttf') format('truetype');
+  src: url('/fonts/Prompt-Light.woff2') format('woff2');
   font-weight: 300;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-Regular.ttf') format('truetype');
+  src: url('/fonts/Prompt-Regular.woff2') format('woff2');
   font-weight: 400;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-Medium.ttf') format('truetype');
+  src: url('/fonts/Prompt-Medium.woff2') format('woff2');
   font-weight: 500;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-SemiBold.ttf') format('truetype');
+  src: url('/fonts/Prompt-SemiBold.woff2') format('woff2');
   font-weight: 600;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-Bold.ttf') format('truetype');
+  src: url('/fonts/Prompt-Bold.woff2') format('woff2');
   font-weight: 700;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Prompt';
-  src: url('/fonts/Prompt-Black.ttf') format('truetype');
+  src: url('/fonts/Prompt-Black.woff2') format('woff2');
   font-weight: 900;
+  font-display: swap;
 }
 
 /* Responsive Title Utilities (mobile-first, desktop at md breakpoint) */

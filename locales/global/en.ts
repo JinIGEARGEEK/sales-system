@@ -37,6 +37,10 @@ const lang = {
       rowPerPage: 'Rows per page',
     },
   },
+  input: {
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+  },
 }
 
 export default lang

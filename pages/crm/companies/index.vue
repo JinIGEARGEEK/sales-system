@@ -83,7 +83,7 @@
       @confirm="confirmDelete"
     />
 
-    <CrmImportContactsModal
+    <LazyCrmImportContactsModal
       v-model:open="showImport"
       @imported="onImported"
     />

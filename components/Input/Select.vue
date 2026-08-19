@@ -36,22 +36,7 @@ const props = defineProps({
     type: [String, Number] as PropType<number | string | null>,
     default: null,
   },
-  name: {
-    type: String,
-    default: '',
-  },
-  rules: {
-    type: String,
-    default: '',
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  dataCy: {
-    type: String,
-    default: '',
-  },
+  ...useInputBaseProps(),
   options: {
     type: Array as PropType<Select[]>,
     default: () => ([]),
@@ -63,10 +48,6 @@ const props = defineProps({
   disable: {
     type: Boolean,
     default: false,
-  },
-  placeholder: {
-    type: String,
-    default: '',
   },
   // Legacy font-size-only tweak (adds `text-sm`) — does NOT change the
   // select's height/padding. Prefer `size` for new call sites; `small` is
