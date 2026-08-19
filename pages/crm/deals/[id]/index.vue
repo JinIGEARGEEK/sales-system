@@ -112,6 +112,7 @@ import { BUSINESS_UNIT_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDe
 const { t } = useI18n()
 
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
@@ -139,13 +140,13 @@ const { dealId, deal } = useCurrentDeal()
 const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (contactsStore.items.length === 0) contactsStore.fetchAll()
-  if (productsStore.items.length === 0) productsStore.fetchAll()
-  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
   if (canViewOwnerHistory.value) {
-    if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
-    if (usersStore.items.length === 0) usersStore.fetchAll()
+    if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
+    if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
     // auditLogStore.fetchAll defaults to per_page: 20 (sized for the paginated
     // admin/activity-log.vue list view). This call wants every audit-log row
     // for one Deal so client-side filtering below doesn't miss older
@@ -153,7 +154,7 @@ onMounted(() => {
     // them past row 20 — there's no server-side `action` filter to narrow this
     // to just reassignments (api-system-spec.md §8.5), so bump the bound
     // instead, same 200-row convention used elsewhere for "fetch it all" cases.
-    auditLogStore.fetchAll({ entity_type: 'deal', entity_id: dealId, per_page: 200 })
+    auditLogStore.fetchAll({ entity_type: 'deal', entity_id: dealId, per_page: 200 }).catch(notifyApiError)
   }
 })
 
@@ -172,7 +173,7 @@ const actorName = (actorId: number) => {
 // company_id isn't known yet at onMounted — fetch this company's projects once
 // the deal resolves.
 watch(deal, (value) => {
-  if (value) projectsStore.fetchForCompany(value.company_id)
+  if (value) projectsStore.fetchForCompany(value.company_id).catch(notifyApiError)
 }, { immediate: true })
 
 const companyName = computed(() => deal.value ? companiesStore.nameById(deal.value.company_id) : '-')

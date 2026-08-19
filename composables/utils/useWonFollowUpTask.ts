@@ -9,6 +9,7 @@ const WON_FOLLOWUP_DUE_DAYS = 3
 export const useWonFollowUpTask = (dealId: number, deal: Ref<Deal | null>) => {
   const { t } = useI18n()
   const { info } = useNotify()
+  const { notifyApiError } = useApiErrorNotifier()
   const tasksStore = useTasksStore()
 
   const createWonFollowUpTask = () => {
@@ -21,8 +22,9 @@ export const useWonFollowUpTask = (dealId: number, deal: Ref<Deal | null>) => {
       title: t('crm.deals.detail.wonFollowUpTaskTitle'),
       due_date: dueDate,
       assigned_to: deal.value.assigned_to,
-    })
-    info(t('crm.deals.detail.wonFollowUpTaskCreated'))
+    }).then(() => {
+      info(t('crm.deals.detail.wonFollowUpTaskCreated'))
+    }).catch(notifyApiError)
   }
 
   return { createWonFollowUpTask }

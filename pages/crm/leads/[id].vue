@@ -89,6 +89,7 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
@@ -102,9 +103,9 @@ const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 onMounted(() => {
-  if (leadsStore.items.length === 0) leadsStore.fetchAll()
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
-  attachmentsStore.fetchForRelated('lead', leadId)
+  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })
 
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))

@@ -103,6 +103,7 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 // free-text flow, not a replacement for it. Selecting a product just
 // prefills description/price (still editable afterward); leaving it unset
 // ("none") behaves exactly as before this field existed.
+const { notifyApiError } = useApiErrorNotifier()
 const productsStore = useProductsStore()
 const productOptions = computed(() => productsStore.items
   .filter(p => p.is_active)
@@ -133,7 +134,7 @@ const onItemProductChange = (item: { description: string, price: number, product
 watch(() => props.open, (value) => {
   if (value) {
     items.value = []
-    if (productsStore.items.length === 0) productsStore.fetchAll()
+    if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }
 })
 

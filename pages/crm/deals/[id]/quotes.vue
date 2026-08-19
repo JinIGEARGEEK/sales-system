@@ -108,6 +108,7 @@ const { t } = useI18n()
 const route = useRoute()
 const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
@@ -116,7 +117,7 @@ const dealId = Number(route.params.id)
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
-  quotesStore.fetchForDeal(dealId)
+  quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -143,12 +144,20 @@ const onFileSelected = async (event: Event) => {
     return
   }
 
-  await quotesStore.upload(dealId, file)
-  success(t('crm.deals.detail.uploadSuccess'))
+  try {
+    await quotesStore.upload(dealId, file)
+    success(t('crm.deals.detail.uploadSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 
 const onRemoveQuote = async (quote: Quote) => {
-  await quotesStore.remove(quote.id)
+  try {
+    await quotesStore.remove(quote.id)
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 
 const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)
@@ -156,7 +165,11 @@ const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId
 const addQuoteOpen = ref(false)
 
 const onAddQuote = async (quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }) => {
-  await quotesStore.add(dealId, quote)
-  success(t('crm.deals.detail.createQuoteSuccess'))
+  try {
+    await quotesStore.add(dealId, quote)
+    success(t('crm.deals.detail.createQuoteSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 </script>

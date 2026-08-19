@@ -138,6 +138,7 @@ useHead({ title: t('admin.pipelineConfig.pageTitle') })
 // route requiring the Admin-only /admin/pipeline-stages + /admin/lead-sources
 // backend endpoints, which 403 for anyone else).
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { toBadge } = useFormatter()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
@@ -148,11 +149,15 @@ const sourcesLoading = ref(false)
 
 onMounted(async () => {
   stagesLoading.value = true
-  pipelineStagesStore.fetchAll().finally(() => { stagesLoading.value = false })
+  pipelineStagesStore.fetchAll().catch(notifyApiError).finally(() => { stagesLoading.value = false })
   sourcesLoading.value = true
-  leadSourcesStore.fetchAll().finally(() => { sourcesLoading.value = false })
-  const settings = await appSettingsStore.fetchAll()
-  salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
+  leadSourcesStore.fetchAll().catch(notifyApiError).finally(() => { sourcesLoading.value = false })
+  try {
+    const settings = await appSettingsStore.fetchAll()
+    salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
+  } catch (err) {
+    notifyApiError(err)
+  }
 })
 
 // ── Sales quota ──────────────────────────────────────────────────

@@ -102,6 +102,7 @@ useHead({ title: t('crm.contacts.index.pageTitle') })
 
 const { toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
@@ -112,11 +113,11 @@ const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
 
 onMounted(() => {
   fetch()
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // A full (up to 200) fetch is kept purely to derive the tag filter's option
   // list below — there's no "distinct tags" endpoint, so this stays separate
   // from the server-paginated `rows` that the table itself renders.
-  if (contactsStore.items.length === 0) contactsStore.fetchAll()
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
 })
 
 const search = ref('')

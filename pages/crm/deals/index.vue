@@ -143,6 +143,7 @@ useHead({ title: t('crm.deals.index.pageTitle') })
 
 const { priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
@@ -242,12 +243,16 @@ const loadMoreDeals = async (stageName: string) => {
 }
 
 onMounted(async () => {
-  if (pipelineStagesStore.items.length === 0) await pipelineStagesStore.fetchAll()
-  loadAllStageDeals()
-  leadsStore.fetchAll({ exclude_converted: true })
-  if (companiesStore.items.length === 0) companiesStore.fetchAll()
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+  try {
+    if (pipelineStagesStore.items.length === 0) await pipelineStagesStore.fetchAll()
+    await loadAllStageDeals()
+  } catch (err) {
+    notifyApiError(err)
+  }
+  leadsStore.fetchAll({ exclude_converted: true }).catch(notifyApiError)
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
 const viewMode = ref<'kanban' | 'list'>('kanban')

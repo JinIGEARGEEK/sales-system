@@ -68,12 +68,13 @@ const { t } = useI18n()
 useHead({ title: t('crm.leads.create.pageTitle') })
 
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const leadsStore = useLeadsStore()
 const leadSourcesStore = useLeadSourcesStore()
 
 onMounted(() => {
-  if (leadsStore.items.length === 0) leadsStore.fetchAll()
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll()
+  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
+  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
 const form = reactive({

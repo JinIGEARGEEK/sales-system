@@ -52,10 +52,11 @@ useHead({ title: t('crm.tags.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const tagsStore = useTagsStore()
 
 onMounted(() => {
-  if (tagsStore.items.length === 0) tagsStore.fetchAll()
+  if (tagsStore.items.length === 0) tagsStore.fetchAll().catch(notifyApiError)
 })
 
 const tagId = Number(route.params.id)

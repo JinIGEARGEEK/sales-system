@@ -72,12 +72,13 @@ const { t } = useI18n()
 
 const { priceFormat, dateFormat } = useFormatter()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const paymentsStore = usePaymentsStore()
 
 const { dealId, deal } = useCurrentDeal()
 
 onMounted(() => {
-  paymentsStore.fetchForDeal(dealId)
+  paymentsStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 
 const addPaymentOpen = ref(false)
@@ -86,12 +87,20 @@ const totalPaid = computed(() => paymentsStore.totalForDeal(dealId))
 const remainingBalance = computed(() => (deal.value ? deal.value.value - totalPaid.value : 0))
 
 const onAddPayment = async (payment: { amount: number, paid_at: Date, method: PaymentMethod, note: string }) => {
-  await paymentsStore.add(dealId, payment)
-  success(t('crm.deals.detail.addPaymentSuccess'))
+  try {
+    await paymentsStore.add(dealId, payment)
+    success(t('crm.deals.detail.addPaymentSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 
 const onRemovePayment = async (id: number) => {
-  await paymentsStore.remove(id)
-  success(t('crm.deals.detail.removePaymentSuccess'))
+  try {
+    await paymentsStore.remove(id)
+    success(t('crm.deals.detail.removePaymentSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 </script>

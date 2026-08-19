@@ -16,6 +16,8 @@ export const useServerListPage = <T>(
   const perPage = ref(initialPerPage)
   const loading = ref(false)
 
+  const { notifyApiError } = useApiErrorNotifier()
+
   const fetch = async () => {
     loading.value = true
     try {
@@ -23,6 +25,11 @@ export const useServerListPage = <T>(
       rows.value = result.items
       total.value = result.total
       totalPage.value = result.totalPage
+    } catch (err) {
+      // Every caller (onMounted, page/per-page change, debounced search) invokes
+      // `fetch()` fire-and-forget with no `.catch()` of its own — handle it once
+      // here instead of requiring every call site to remember to.
+      notifyApiError(err)
     } finally {
       loading.value = false
     }

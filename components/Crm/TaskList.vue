@@ -69,10 +69,11 @@ import { isTaskOverdue } from '~/constants/mockData'
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
 const { success } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
 
 onMounted(() => {
-  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll()
+  if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
 defineProps<{

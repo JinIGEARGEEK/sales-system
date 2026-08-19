@@ -88,6 +88,7 @@ const { t } = useI18n()
 const route = useRoute()
 const { dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
@@ -100,8 +101,8 @@ const dealContracts = computed(() => contractsStore.forDeal(dealId))
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
-  contractsStore.fetchForDeal(dealId)
-  quotesStore.fetchForDeal(dealId)
+  contractsStore.fetchForDeal(dealId).catch(notifyApiError)
+  quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 
 const addContractOpen = ref(false)
@@ -143,8 +144,12 @@ const onContractFileSelected = async (event: Event) => {
     return
   }
 
-  await contractsStore.upload(contractId, file)
-  success(t('crm.contracts.detail.uploadSuccess'))
+  try {
+    await contractsStore.upload(contractId, file)
+    success(t('crm.contracts.detail.uploadSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
 }
 
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)

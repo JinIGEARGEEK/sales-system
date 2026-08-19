@@ -88,6 +88,7 @@ useHead({ title: t('crm.reports.customerProductStatus.pageTitle') })
 
 const { $api } = useNuxtApp()
 const { error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const { dateFormat, toBadge } = useFormatter()
 const productsStore = useProductsStore()
@@ -95,7 +96,7 @@ const productsStore = useProductsStore()
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 onMounted(() => {
-  if (productsStore.items.length === 0) productsStore.fetchAll()
+  if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
 })
 
 const productOptions = computed(() => [
