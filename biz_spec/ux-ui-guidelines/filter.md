@@ -1,5 +1,7 @@
 # Filter — กฎการออกแบบ
 
+> ⚠️ **This doc was written for a different app** (React + shadcn/ui Popover-based filter chrome) — this repo's list-page filters are plain `UCard` + `InputText`/`InputSelect`/`CrmStatusPill` (see `design-system.md` §5.3-5.4). Read for the underlying principle (filters near the trigger, results visible without closing anything) only.
+
 ## หลักการ
 
 Filter ควรอยู่ **ใกล้กับปุ่มที่กด** ที่สุด เพื่อให้ผู้ใช้ไม่ต้องย้ายสายตาหรือมือไกลจากจุดที่เริ่มต้น และควรเห็น **ผลลัพธ์บนตารางได้ทันที** โดยไม่ต้องปิดหน้าต่างใดก่อน

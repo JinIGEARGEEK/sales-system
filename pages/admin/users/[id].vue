@@ -1,8 +1,15 @@
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <UBreadcrumb :items="breadcrumbs" />
-      <h2 class="mt-2 text-xl font-black">{{ t('admin.users.detail.heading') }}</h2>
+    <div class="mb-4 flex items-center gap-3">
+      <UButton
+        icon="material-symbols:arrow-back"
+        variant="ghost"
+        color="neutral"
+        class="cursor-pointer p-0 hover:bg-transparent"
+        :aria-label="t('global.back')"
+        @click="navigateTo('/admin/users')"
+      />
+      <h2 class="text-xl font-black">{{ user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading') }}</h2>
     </div>
 
     <ContainerTemplate v-if="user">
@@ -40,11 +47,6 @@ onMounted(() => {
 
 const userId = Number(route.params.id)
 const user = computed(() => usersStore.items.find(u => u.id === userId))
-
-const breadcrumbs = computed(() => [
-  { label: t('admin.users.detail.breadcrumbStaff'), to: '/admin/users' },
-  { label: user.value ? `${user.value.first_name} ${user.value.last_name}` : t('admin.users.detail.breadcrumbEdit') },
-])
 
 const form = reactive({
   first_name: user.value?.first_name || '',

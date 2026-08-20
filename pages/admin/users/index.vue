@@ -10,38 +10,34 @@
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <div class="flex-1">
-          <InputText
-            v-model="search"
-            :placeholder="t('admin.users.index.searchPlaceholder')"
-            name="search"
-          />
-        </div>
-        <div class="w-full sm:w-40">
-          <InputSelect
-            v-model="roleFilter"
-            :options="ROLE_OPTIONS"
-            :placeholder="t('admin.users.index.rolePlaceholder')"
-            name="roleFilter"
-          />
-        </div>
-        <div class="w-full sm:w-40">
-          <InputSelect
-            v-model="statusFilter"
-            :options="STATUS_OPTIONS"
-            :placeholder="t('admin.users.index.statusPlaceholder')"
-            name="statusFilter"
-          />
+      <div class="flex flex-col gap-3">
+        <CrmStatusPill v-model="statusFilter" :options="STATUS_OPTIONS" />
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <div class="flex-1">
+            <InputText
+              v-model="search"
+              :placeholder="t('admin.users.index.searchPlaceholder')"
+              name="search"
+            />
+          </div>
+          <div class="w-full sm:w-40">
+            <InputSelect
+              v-model="roleFilter"
+              :options="ROLE_OPTIONS"
+              :placeholder="t('admin.users.index.rolePlaceholder')"
+              name="roleFilter"
+            />
+          </div>
         </div>
       </div>
     </UCard>
 
     <TableData
       v-model:page="page"
+      server-paginated
       :columns="columns"
-      :rows="filteredUsers"
-      :total="filteredUsers.length"
+      :rows="displayUsers"
+      :total="total"
       :total-page="totalPage"
       :per-page="perPage"
       :loading="loading"
@@ -75,51 +71,59 @@ const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
 
-const loading = ref(false)
-onMounted(async () => {
-  if (usersStore.items.length === 0) {
-    loading.value = true
-    try {
-      await usersStore.fetchAll()
-    } catch (err) {
-      notifyApiError(err)
-    } finally {
-      loading.value = false
-    }
-  }
+// Kept as a full (up to 1000) background cache purely to resolve the
+// "updated by" column's name below — there's no per-row "updated by name"
+// field on the list endpoint, so this stays separate from the server-paginated
+// `rows` the table itself renders, same pattern as Contacts' tag-options fetch.
+onMounted(() => {
+  if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
 const search = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
 
-const filteredUsers = computed(() => {
-  return usersStore.items.filter((user) => {
-    const matchSearch = !search.value
-      || `${user.first_name} ${user.last_name}`.toLowerCase().includes(search.value.toLowerCase())
-      || user.email.toLowerCase().includes(search.value.toLowerCase())
-    const matchRole = roleFilter.value === 'all' || user.role === roleFilter.value
-    const matchStatus = statusFilter.value === 'all'
-      || (statusFilter.value === 'active' && user.is_active)
-      || (statusFilter.value === 'inactive' && !user.is_active)
-    return matchSearch && matchRole && matchStatus
-  }).map((user) => {
-    const updater = usersStore.items.find(u => u.id === user.updated_by)
-    return {
-      ...user,
-      name: `${user.first_name} ${user.last_name}`,
-      status: toBadge(user.is_active ? t('admin.users.index.statusActive') : t('admin.users.index.statusInactive'), user.is_active ? 'success' : 'neutral'),
-      roleBadge: toBadge(user.role),
-      createdDate: user.created_at ? dateFormat(user.created_at.toISOString()) : '-',
-      updatedAtCell: {
-        updatedAt: user.updated_at ? user.updated_at.toISOString() : '',
-        updatedById: user.updated_by,
-        path: `/admin/users/${user.updated_by}`,
-        updatedByName: updater ? `${updater.first_name} ${updater.last_name}`.trim() : '-',
-      },
-    }
-  })
+const buildParams = () => ({
+  search: search.value || undefined,
+  role: roleFilter.value !== 'all' ? roleFilter.value : undefined,
+  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
 })
+
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<AdminUser>(params => usersStore.fetchList(params), buildParams)
+
+onMounted(fetch)
+
+watch(search, () => refetchDebounced())
+watch([roleFilter, statusFilter], () => refetchFromStart())
+
+const displayUsers = computed(() => rows.value.map((user) => {
+  const updater = usersStore.items.find(u => u.id === user.updated_by)
+  return {
+    ...user,
+    name: `${user.first_name} ${user.last_name}`,
+    status: toBadge(user.is_active ? t('admin.users.index.statusActive') : t('admin.users.index.statusInactive'), user.is_active ? 'success' : 'neutral'),
+    roleBadge: toBadge(user.role),
+    createdDate: user.created_at ? dateFormat(user.created_at.toISOString()) : '-',
+    updatedAtCell: {
+      updatedAt: user.updated_at ? user.updated_at.toISOString() : '',
+      updatedById: user.updated_by,
+      path: `/admin/users/${user.updated_by}`,
+      updatedByName: updater ? `${updater.first_name} ${updater.last_name}`.trim() : '-',
+    },
+  }
+}))
 
 const columns: TableDataColumn[] = [
   { label: t('admin.users.index.columns.name'), align: 'left', field: 'name' },
@@ -132,11 +136,10 @@ const columns: TableDataColumn[] = [
     label: t('admin.users.index.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.users.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('admin.users.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('admin.users.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('admin.users.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -150,7 +153,6 @@ const onEdit = (row: AdminUser) => {
   navigateTo(`/admin/users/${row.id}`)
 }
 
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredUsers.value.length)
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<AdminUser>()
 
 const confirmDelete = async () => {
@@ -158,6 +160,7 @@ const confirmDelete = async () => {
     if (target.value) {
       await usersStore.remove(target.value.id)
       success(t('admin.users.index.deleteSuccess'))
+      await fetch()
     }
   } catch (err) {
     notifyApiError(err)

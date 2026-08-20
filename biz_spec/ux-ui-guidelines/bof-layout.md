@@ -1,5 +1,7 @@
 # BOF Layout Guidelines
 
+> ⚠️ **This doc was written for a different app.** Its examples (`DialogContent`, `TableRow`, `DropdownMenuItem`, `text-muted-foreground`, etc.) are React + shadcn/ui + lucide-react — not this repo's Nuxt 4 + Nuxt UI 3 + Material Symbols stack. Treat every concrete class name/component name here as illustrative of the *principle* only; `design-system.md` (verified against this actual codebase) is the authoritative reference for how things are really built here. See also its empty-state note conflicting with `table.md` §12.2/§~771 — resolved in favor of this app's actual single-message behavior (§ below).
+
 ## Cursor / Pointer
 
 - **ทุก element ที่กดได้** (ปุ่ม, ลิงก์, dropdown trigger, row ที่ clickable, icon action) ต้องแสดง `cursor: pointer` เสมอ

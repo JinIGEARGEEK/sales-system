@@ -6,6 +6,7 @@ const lang = {
   previous: 'Previous',
   next: 'Next',
   backToHome: 'Back To Home',
+  back: 'Back',
   updated: {
     updatedBy: 'Updated by',
   },

@@ -8,6 +8,7 @@
             variant="ghost"
             color="neutral"
             class="cursor-pointer p-0 hover:bg-transparent"
+            :aria-label="t('global.back')"
             @click="navigateTo('/crm/companies')"
           />
           <h2 class="text-xl font-black">{{ company.name }}</h2>

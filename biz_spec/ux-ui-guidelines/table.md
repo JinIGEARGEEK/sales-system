@@ -1,5 +1,7 @@
 # UX/UI Guideline สำหรับ Table
 
+> ⚠️ **This doc was written for a different app** (React + shadcn/ui `TableRow`/`DropdownMenuItem`, `table-fixed` + per-column `w-[...]`) — this repo's shared table is `components/Table/Data.vue` (Nuxt UI `UDropdownMenu`, plain `<table>`). Read for the underlying principle only. Note: §12.2 and the later "แยกให้ชัดว่า" section below both ask for a differentiated "no data yet" vs. "no search/filter results" empty state — this directly contradicts `bof-layout.md`'s own explicit "use the same message for both" rule, and this app's actual implementation follows the single-message rule (`global.noData`, `components/Table/Data.vue`). Until product actually wants two distinct messages, treat `bof-layout.md`'s rule as the one in effect here.
+
 # DESKTOP #
 ## 1. วัตถุประสงค์
 Table ใช้สำหรับแสดงข้อมูลที่มีโครงสร้างเป็นแถวและคอลัมน์ เพื่อช่วยให้ผู้ใช้เรียงลำดับ อ่านค่า ค้นหา และดำเนินการกับข้อมูลได้อย่างรวดเร็ว โดยควรออกแบบให้รองรับทั้งการอ่านตามแนวสายตา (scan), การตัดสินใจ, และการทำงานต่อเนื่องกัน

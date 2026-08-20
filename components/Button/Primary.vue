@@ -52,7 +52,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // Shorthand for the app's standard "Cancel" button: red outline, regardless of `color`/`outline`.
+  // Shorthand for the app's standard "Cancel" button: neutral outline,
+  // regardless of `color`/`outline` — Cancel is a dismissive, non-destructive
+  // action and shouldn't compete visually with an actually destructive
+  // confirm button (see ConfirmDeleteModal).
   cancel: {
     type: Boolean,
     default: false,
@@ -85,7 +88,7 @@ const buttonVariant = computed(() => {
   return 'solid'
 })
 
-const buttonColor = computed(() => props.cancel ? 'error' : props.color)
+const buttonColor = computed(() => props.cancel ? 'neutral' : props.color)
 
 // Full literal class names (not a template-string interpolation) so Tailwind's
 // static scanner can actually find and generate them — one per Nuxt UI

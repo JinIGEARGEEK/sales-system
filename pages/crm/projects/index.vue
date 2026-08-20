@@ -196,7 +196,6 @@ const projectColumns: TableDataColumn[] = [
     label: t('crm.projects.index.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false },
@@ -264,10 +263,9 @@ const productColumns: TableDataColumn[] = [
     label: t('admin.products.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('admin.products.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('admin.products.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('admin.products.deactivate'), emitName: 'deactivate', isBorderBottom: false },
     ],
   },

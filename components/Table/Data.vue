@@ -79,8 +79,11 @@
               <th
                 v-for="col in prop.columns"
                 :key="col.field"
-                class="text-left text-[var(--color-black)] px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg"
-                :style="col.width ? `width: ${col.width}px` : ''"
+                :class="[
+                  'text-[var(--color-black)] px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg',
+                  col.type === TABLE_CARD_TYPE.ACTION ? 'text-center' : 'text-left',
+                ]"
+                :style="columnStyle(col)"
               >
                 <div v-if="col.type === TABLE_CARD_TYPE.SELECTED">
                   <UCheckbox
@@ -108,10 +111,13 @@
               <td
                 v-for="col in prop.columns"
                 :key="col.field"
-                class="px-2 py-2 text-sm text-[var(--color-black)] align-top"
-                :style="col.width ? `width: ${col.width}px` : ''"
+                :class="[
+                  'px-2 py-2 text-sm text-[var(--color-black)] align-top',
+                  { 'text-center': col.type === TABLE_CARD_TYPE.ACTION },
+                ]"
+                :style="columnStyle(col)"
               >
-                <div v-if="col.type === TABLE_CARD_TYPE.ACTION">
+                <div v-if="col.type === TABLE_CARD_TYPE.ACTION" class="flex justify-center">
                   <UDropdownMenu
                     :items="getActionMenuItems(col, row, rowIndex)"
                   >
@@ -139,7 +145,14 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="!prop.loading && paginatedRows.length === 0">
+            <tr v-if="prop.loading">
+              <td :colspan="prop.columns.length">
+                <div class="flex justify-center pt-10 text-[var(--color-black)]">
+                  {{ t('global.loading') }}
+                </div>
+              </td>
+            </tr>
+            <tr v-else-if="paginatedRows.length === 0">
               <td :colspan="prop.columns.length">
                 <div class="flex justify-center pt-10">
                   {{ t('global.noData') }}
@@ -293,14 +306,40 @@ const getColumAction = ():TableDataColumn => {
   return prop.columns.find(e => e.type === TABLE_CARD_TYPE.ACTION) as TableDataColumn
 }
 
+// The Action column doesn't carry an explicit `width` on most pages — default
+// it to one fixed value so the meatball-menu column looks identical (not
+// 100px on one list page and 120px on another) everywhere it's used. Columns
+// with no width at all (the common case for every non-Action column) get no
+// inline style, same as before this default existed.
+const ACTION_COLUMN_WIDTH = 110
+const columnStyle = (col: TableDataColumn): string => {
+  const width = col.width || (col.type === TABLE_CARD_TYPE.ACTION ? ACTION_COLUMN_WIDTH : undefined)
+  return width ? `width: ${width}px` : ''
+}
+
+// `isBorderBottom: true` on an action marks it as the last item in its group —
+// a divider renders after it (e.g. between "View Detail"/"Edit" and a
+// destructive "Delete"/"Deactivate"). Nuxt UI's UDropdownMenu draws that
+// divider automatically when `items` is an array of groups (array of arrays),
+// so split the flat action list into groups at each isBorderBottom boundary.
+type ActionMenuItem = { label: string, onSelect: () => void }
 const getActionMenuItems = (col: TableDataColumn, row: TableRowData, _rowIndex: number) => {
   if (!col.actions) return []
-  return col.actions
-    .filter(action => !action.hideIf || !action.hideIf(row))
-    .map(action => ({
+  const visible = col.actions.filter(action => !action.hideIf || !action.hideIf(row))
+  const groups: ActionMenuItem[][] = []
+  let currentGroup: ActionMenuItem[] = []
+  visible.forEach((action) => {
+    currentGroup.push({
       label: action.label,
       onSelect: () => emit(action.emitName as never, row),
-    }))
+    })
+    if (action.isBorderBottom) {
+      groups.push(currentGroup)
+      currentGroup = []
+    }
+  })
+  if (currentGroup.length > 0) groups.push(currentGroup)
+  return groups
 }
 
 const innerField = ref('')
