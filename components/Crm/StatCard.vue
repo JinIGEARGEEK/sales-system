@@ -1,22 +1,27 @@
 <template>
-  <UCard class="relative overflow-hidden ring-[var(--color-card-border)]">
+  <UCard class="relative overflow-hidden ring-[var(--color-card-border)]" :ui="{ body: 'p-3' }">
     <div
       v-if="accentGlassClass"
       class="absolute inset-y-0 left-0 w-[10%] backdrop-blur-md"
       :class="accentGlassClass"
     />
-    <div class="relative flex items-start justify-between gap-3">
+    <div class="relative flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <p class="text-sm font-medium text-[var(--color-dark-gray)]">{{ label }}</p>
-        <p class="mt-1 text-2xl font-medium" :class="valueClass">
+        <div class="flex items-center gap-1">
+          <p class="truncate text-xs font-medium text-[var(--color-dark-gray)]">{{ label }}</p>
+          <UTooltip v-if="tooltip" :text="tooltip">
+            <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-[var(--color-gray)]" />
+          </UTooltip>
+        </div>
+        <p class="mt-0.5 text-xl font-medium" :class="valueClass">
           <slot />
         </p>
-        <p v-if="$slots.hint" class="mt-1 text-xs" :class="hintClass">
+        <p v-if="$slots.hint" class="mt-0.5 text-[11px] leading-tight" :class="hintClass">
           <slot name="hint" />
         </p>
       </div>
-      <div v-if="icon" class="flex size-9 shrink-0 items-center justify-center rounded-full" :class="iconBgClass">
-        <UIcon :name="icon" class="size-5" :class="iconClass || valueClass" />
+      <div v-if="icon" class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="iconBgClass">
+        <UIcon :name="icon" class="size-4" :class="iconClass || valueClass" />
       </div>
     </div>
   </UCard>
@@ -60,6 +65,15 @@ defineProps({
   hintClass: {
     type: String,
     default: 'text-[var(--color-gray)]',
+  },
+  // Explains how the value is calculated (e.g. "Sum of open deal value ×
+  // win probability.") — shown via an info icon next to the label rather
+  // than inline, so it doesn't compete with the always-visible hint slot
+  // above (used for a dynamic on-track/below-target readout, not the
+  // static calculation description).
+  tooltip: {
+    type: String,
+    default: '',
   },
 })
 </script>
