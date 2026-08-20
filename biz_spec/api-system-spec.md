@@ -609,14 +609,22 @@ interface Project {
 
 Do **not** add sub-resources for tasks/sprints/milestones under `/projects/:id` — `FR-CRM-071` explicitly rules this out; a Project here is a summary record, never a delivery-management tool.
 
-### 8.4 Reports (`FR-CRM-054`, `056`)
+### 8.4 Reports (`FR-CRM-054`, `056`, `093`–`098`)
 
-Both report endpoints are Admin/Sales-Manager only (`RequireRoles`) and have real frontend pages under `pages/crm/reports/` (a small landing page linking to each, gated the same way):
+All eight report endpoints are Admin/Sales-Manager only (`RequireRoles`) and have real frontend pages under `pages/crm/reports/` (a small landing page linking to each, gated the same way):
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/reports/lead-source-conversion?assigned_to=&date_from=&date_to=` | Conversion rate by `Lead.source` (`FR-CRM-054`). `assigned_to`/date-range filters are `FR-CRM-055`. No `company_tag` filter — `Lead` has no Company foreign key (only a free-text `company_name`), so tag-filtering by company doesn't apply here. |
 | `GET` | `/reports/customers-by-product-status?product_id=&status=&company_tag=` | "Which customers use Product X" / "have a Project in status Y" (`FR-CRM-056`) — do not confuse with the `business_unit`/`channel` filters in §9, which are lightweight Deal tags, not this real relationship query. `company_tag` (`FR-CRM-055`) filters to Companies whose `tags` array contains the given value. |
+| `GET` | `/reports/win-loss-reasons?date_from=&date_to=&assigned_to=` | `FR-CRM-093`. Every closed Deal (won or lost), grouped by `"won"` or its `lost_reason` code. |
+| `GET` | `/reports/stalled-deals?min_days=&assigned_to=` | `FR-CRM-094`. Open Deals with no logged Activity for at least `min_days` (default 14) — `last_activity_at` is `COALESCE(MAX(activities.created_at), deals.created_at)`. |
+| `GET` | `/reports/outstanding-balance?company_tag=&assigned_to=` | `FR-CRM-095`. Won Deals whose recorded Payments sum to less than the Deal's value. Not date-bucketed 30/60/90-day aging — `Payment` has no `due_date` field, only `paid_at` (when actually received) — this is a flat "who still owes what" list until that field exists. |
+| `GET` | `/reports/quotes-expiring-soon?within_days=` | `FR-CRM-096`. Sent quotes whose `validity_date` falls within the next `within_days` (default 7) — the forward-looking mirror of `Quote.EffectiveStatus`'s already-expired check, same dual-format (RFC3339 / bare date) parsing. |
+| `GET` | `/reports/contracts-stuck?min_days=` | `FR-CRM-097`. Draft/Sent contracts unsigned for at least `min_days` (default 14) — `Contract` has no start/end date, only `signed_date`, so this tracks staleness before signature, not true expiration. |
+| `GET` | `/reports/projects-at-risk` | `FR-CRM-098`. Projects past `target_end_date` that aren't `Completed` or `Cancelled`. |
+
+All six new endpoints return `[]` (never `null`) for an empty result — a real bug hit while building them: a `var rows []T` Go destination that `Scan` never touches (zero matching rows) stays a nil slice, and `encoding/json` marshals a nil slice as `null`, which crashes the frontend calling `.map()`/`.length` on the response body. Every new handler in `internal/handlers/reports.go` initializes its result slice as `rows := []T{}` specifically to avoid this — keep that pattern for any report added after these.
 
 ### 8.5 Audit log (`FR-CRM-082`)
 
