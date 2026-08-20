@@ -26,15 +26,27 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputText
             v-model.number="withinDays"
             type="number"
             :label="t('crm.reports.quotesExpiringSoon.filterWithinDays')"
             name="withinDays"
+            size="xs"
             class="w-40"
           />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.quotesExpiringSoon.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
         </div>
       </UCard>
 
@@ -71,6 +83,12 @@ const { priceFormatCompact, dateFormat } = useFormatter()
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const withinDays = ref(7)
+
+const hasActiveFilters = computed(() => withinDays.value !== 7)
+
+const clearFilters = () => {
+  withinDays.value = 7
+}
 
 const results = ref<QuoteExpiringSoonRow[]>([])
 const loading = ref(false)

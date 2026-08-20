@@ -26,38 +26,43 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputSelect
             v-model="productFilter"
             :options="productOptions"
-            :placeholder="t('crm.reports.customerProductStatus.filterProduct')"
+            :label="t('crm.reports.customerProductStatus.filterProduct')"
             name="productFilter"
+            size="xs"
             class="w-48"
           />
           <InputSelect
             v-model="statusFilter"
             :options="statusOptions"
-            :placeholder="t('crm.reports.customerProductStatus.filterStatus')"
+            :label="t('crm.reports.customerProductStatus.filterStatus')"
             name="statusFilter"
+            size="xs"
             class="w-40"
           />
           <InputText
             v-model="companyTagFilter"
+            :label="t('crm.reports.customerProductStatus.filterCompanyTag')"
             :placeholder="t('crm.reports.customerProductStatus.filterCompanyTagPlaceholder')"
             name="companyTagFilter"
+            size="xs"
             class="w-48"
           />
-          <UButton
-            v-if="hasActiveFilters"
-            icon="material-symbols:filter-alt-off-outline"
-            variant="outline"
-            color="neutral"
-            size="xs"
-            square
-            :aria-label="t('crm.reports.customerProductStatus.clearFilters')"
-            @click="clearFilters"
-          />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.customerProductStatus.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
         </div>
       </UCard>
 

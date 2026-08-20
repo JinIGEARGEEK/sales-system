@@ -26,15 +26,27 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputText
             v-model.number="minDays"
             type="number"
             :label="t('crm.reports.contractsStuck.filterMinDays')"
             name="minDays"
-            class="w-40"
+            size="xs"
+            class="w-72"
           />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.contractsStuck.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
         </div>
       </UCard>
 
@@ -71,6 +83,12 @@ const { toBadge } = useFormatter()
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const minDays = ref(14)
+
+const hasActiveFilters = computed(() => minDays.value !== 14)
+
+const clearFilters = () => {
+  minDays.value = 14
+}
 
 const results = ref<ContractStuckRow[]>([])
 const loading = ref(false)

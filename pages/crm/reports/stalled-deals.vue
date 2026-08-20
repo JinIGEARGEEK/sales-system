@@ -26,22 +26,35 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputText
             v-model.number="minDays"
             type="number"
             :label="t('crm.reports.stalledDeals.filterMinDays')"
             name="minDays"
-            class="w-40"
+            size="xs"
+            class="w-80"
           />
           <InputSelect
             v-model="salesRepFilter"
             :options="salesRepOptions"
-            :placeholder="t('crm.reports.stalledDeals.filterSalesRep')"
+            :label="t('crm.reports.stalledDeals.filterSalesRep')"
             name="salesRepFilter"
+            size="xs"
             class="w-56"
           />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.stalledDeals.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
         </div>
       </UCard>
 
@@ -90,6 +103,13 @@ const salesRepOptions = computed(() => [
 
 const minDays = ref(14)
 const salesRepFilter = ref('all')
+
+const hasActiveFilters = computed(() => minDays.value !== 14 || salesRepFilter.value !== 'all')
+
+const clearFilters = () => {
+  minDays.value = 14
+  salesRepFilter.value = 'all'
+}
 
 const results = ref<StalledDealRow[]>([])
 const loading = ref(false)

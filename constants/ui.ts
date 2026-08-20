@@ -1,7 +1,10 @@
 // Shared glass-panel look for filter bars across list pages (Leads/Deals/Companies/
 // Contacts/Tags/Users/Activity Log/Dashboard) — centralized so the 8 call sites can't
 // drift out of sync the way the ad-hoc per-page classes did before.
-export const GLASS_PANEL_UI = { root: 'bg-white/65 backdrop-blur-2xl border border-white/90 ring-0 shadow-xl' }
+// Border tint matches the sidebar nav item's active/focus blue glow
+// (layouts/default.vue's `.sidebar-nav-link.is-active`/`:focus-visible` ring,
+// rgba(96,165,250,...)) so glass panels read as part of the same visual system.
+export const GLASS_PANEL_UI = { root: 'bg-white/65 backdrop-blur-2xl border border-[rgba(96,165,250,0.45)] ring-0 shadow-xl' }
 
 // Fixed categorical color order for chart bars / stat-card icon chips that
 // need to distinguish several same-shaped items (pipeline stages, lead

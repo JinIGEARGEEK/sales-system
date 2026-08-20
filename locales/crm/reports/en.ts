@@ -5,6 +5,7 @@ export default {
   accessDeniedTitle: 'Access restricted',
   accessDeniedMessage: 'Only Admins and Sales Managers can view reports.',
   backToReports: 'Back to Reports',
+  dateRangePlaceholder: 'Select date range',
   leadSource: {
     cardTitle: 'Lead Source Conversion',
     cardDescription: 'See which lead sources qualify best, filtered by rep or date range.',
@@ -33,7 +34,7 @@ export default {
     allProducts: 'All Products',
     filterStatus: 'Status',
     allStatuses: 'All Statuses',
-    filterCompanyTag: 'Company Tag',
+    filterCompanyTag: 'Tag',
     filterCompanyTagPlaceholder: 'e.g. Tier 1',
     clearFilters: 'Clear all',
     noData: 'No customers match the selected filters.',
@@ -66,6 +67,7 @@ export default {
     filterMinDays: 'Min. Days Inactive',
     filterSalesRep: 'Sales Rep',
     allSalesReps: 'All Sales Reps',
+    clearFilters: 'Clear all',
     daysStalled: '{days} days',
     viewDeal: 'View Deal',
     columns: {
@@ -87,6 +89,7 @@ export default {
     subheading: 'Won deals whose recorded payments are less than the deal value.',
     filterSalesRep: 'Sales Rep',
     allSalesReps: 'All Sales Reps',
+    filterCompanyTag: 'Tag',
     filterCompanyTagPlaceholder: 'e.g. Tier 1',
     clearFilters: 'Clear all',
     totalOutstanding: 'Total outstanding: {amount}',
@@ -107,6 +110,7 @@ export default {
     heading: 'Quotes Expiring Soon',
     subheading: 'Sent quotes whose validity date falls within the selected window.',
     filterWithinDays: 'Within Days',
+    clearFilters: 'Clear all',
     viewDeal: 'View Deal',
     columns: {
       dealTitle: 'Deal',
@@ -123,6 +127,7 @@ export default {
     heading: 'Contracts Stuck',
     subheading: 'Draft or Sent contracts that have gone unsigned for a while.',
     filterMinDays: 'Min. Days Unsigned',
+    clearFilters: 'Clear all',
     daysInStatus: '{days} days',
     viewDeal: 'View Deal',
     columns: {
