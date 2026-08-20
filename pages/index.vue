@@ -105,8 +105,10 @@
         {{ t('crm.dashboard.sectionPipelineOverview') }}
       </h3>
 
-    <!-- Primary: the numbers that answer "how's the pipeline doing right now" -->
-    <div class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+    <!-- All 9 KPI cards in one grid: lg:grid-cols-3 divides evenly into 3
+         full rows. (Previously split into two 4-col grids — 4 + 5 cards —
+         which always left 3 empty trailing cells in the second row.) -->
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
       <CrmStatCard
         :label="t('crm.dashboard.openPipelineValue')"
         :tooltip="t('crm.dashboard.openPipelineValueTooltip')"
@@ -147,10 +149,6 @@
       >
         {{ openDealsCount }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
-    </div>
-
-    <!-- Secondary: deeper diagnostics, one deliberate row instead of a leftover single card -->
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <CrmStatCard
         :label="t('crm.dashboard.wonThisPeriod')"
         :tooltip="t('crm.dashboard.wonThisPeriodTooltip')"

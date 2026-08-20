@@ -34,6 +34,7 @@
                   :options="productOptions"
                   :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
                   :name="`item-product-${item.key}`"
+                  :disable="productOptions.length === 0"
                   @update:model-value="onItemProductChange(item, $event)"
                 />
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">

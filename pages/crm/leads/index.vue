@@ -7,6 +7,7 @@
           v-if="canBulkManage"
           outline
           :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
+          :disabled="!isSelectMode && displayRows.length === 0"
           @click="toggleSelectMode"
         />
         <ButtonPrimary

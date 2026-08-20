@@ -20,7 +20,7 @@
             <Form @submit="onSave">
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <InputText v-model="form.name" :label="t('crm.contacts.detail.fullName')" name="name" rules="required" />
-                <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.contacts.detail.company')" name="company_id" rules="required" />
+                <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.contacts.detail.company')" name="company_id" :disable="companyOptions.length === 0" rules="required" />
                 <InputText v-model="form.role_title" :label="t('crm.contacts.detail.roleTitle')" name="role_title" />
                 <InputText v-model="form.email" :label="t('crm.contacts.detail.email')" name="email" />
                 <InputText v-model="form.phone" :label="t('crm.contacts.detail.phone')" name="phone" />
