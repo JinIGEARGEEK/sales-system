@@ -730,7 +730,11 @@ Backend: `internal/models/settings.go` (`AppSettings`, seeded via `DefaultAppSet
 interface SalesTarget {
   id: number
   year: number
-  quarter: 1 | 2 | 3 | 4
+  quarter: number         // valid range 1-4, enforced server-side (§8.7b's
+                          // validation below) — modeled as a plain number in
+                          // interfaces/crm.d.ts, not a 1|2|3|4 literal union,
+                          // since TS can't narrow a plain form-payload number
+                          // down to a literal union without an assertion
   target_value: number   // the true quarterly figure directly — NOT divided
                           // by 4 the way quarterly_sales_target is derived
   created_at: string
