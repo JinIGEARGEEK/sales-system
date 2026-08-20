@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/crm/tags')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ t('crm.tags.create.heading') }}</h2>
       </div>
@@ -54,7 +54,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="navigateTo('/crm/tags')" />
+          <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -71,6 +71,7 @@ useHead({ title: t('crm.tags.create.pageTitle') })
 
 const { success } = useNotify()
 const tagsStore = useTagsStore()
+const goBack = useBackNavigation('/crm/tags')
 
 const form = reactive({
   name: '',

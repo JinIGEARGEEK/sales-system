@@ -105,7 +105,7 @@
     </aside>
 
     <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
-      <div ref="headerRef" class="sticky top-0 z-10 hidden items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 py-2.5 backdrop-blur-2xl md:flex">
+      <div ref="headerRef" class="sticky top-0 z-10 hidden h-14 items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 backdrop-blur-2xl md:flex">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />

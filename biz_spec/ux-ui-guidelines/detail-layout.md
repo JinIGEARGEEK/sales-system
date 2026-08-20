@@ -192,9 +192,11 @@ Tab ที่แสดงรายการข้อมูล (เช่น ร�
 
 | การกระทำ | ปลายทาง |
 |---|---|
-| กดปุ่ม "กลับ" | หน้า list ของ menu นั้น (`/[menu]`) |
+| กดปุ่ม "กลับ" | หน้าก่อนหน้าจริงใน in-app history (เช่น มาจาก Deal detail → กลับไป Deal detail) ถ้าไม่มี history ใน app (เปิดลิงก์ตรง, refresh หน้า) → fallback ไปหน้า list ของ menu นั้น (`/[menu]`) — ใช้ `useBackNavigation('/[menu]')` |
 | กดปุ่ม "แก้ไข" | หน้า edit (`/[menu]/[id]/edit`) |
 | กด "ดูรายละเอียด" ใน dropdown (cross-link) | หน้า detail ของ menu อื่น (`/[other-menu]/[id]`) |
+
+> **เหตุผลของการเปลี่ยนจาก "กลับ = list เสมอ":** เมื่อ record หนึ่งลิงก์ไปยัง record อื่น cross-menu (เช่น Deal detail → Company detail), ปุ่ม "กลับ" ที่ไป list เสมอจะทำให้ผู้ใช้หลุดจาก context เดิม (ต้องหา Deal นั้นใหม่ในหน้า list) ปุ่ม "ยกเลิก" ในหน้า create/edit ก็ใช้ pattern เดียวกัน
 
 ---
 

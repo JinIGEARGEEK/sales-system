@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/crm/contacts')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ t('crm.contacts.create.heading') }}</h2>
       </div>
@@ -61,7 +61,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.contacts.create.createContact')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.contacts.create.cancel')" cancel @click="navigateTo('/crm/contacts')" />
+          <ButtonPrimary :label="t('crm.contacts.create.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -81,6 +81,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const goBack = useBackNavigation('/crm/contacts')
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)

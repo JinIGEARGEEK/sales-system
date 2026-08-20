@@ -9,7 +9,7 @@
             color="neutral"
             class="cursor-pointer p-0 hover:bg-transparent"
             :aria-label="t('global.back')"
-            @click="navigateTo('/crm/deals')"
+            @click="goBack()"
           />
           <h2 class="text-xl font-black">{{ deal.title }}</h2>
           <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
@@ -58,6 +58,7 @@ const projectsStore = useProjectsStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal } = useCurrentDeal()
+const goBack = useBackNavigation('/crm/deals')
 
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)

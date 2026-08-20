@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/admin/users')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ t('admin.users.create.heading') }}</h2>
       </div>
@@ -21,7 +21,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('admin.users.create.createStaff')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="navigateTo('/admin/users')" />
+          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -37,6 +37,7 @@ useHead({ title: t('admin.users.create.pageTitle') })
 
 const { success } = useNotify()
 const usersStore = useUsersStore()
+const goBack = useBackNavigation('/admin/users')
 
 const form = reactive({
   first_name: '',

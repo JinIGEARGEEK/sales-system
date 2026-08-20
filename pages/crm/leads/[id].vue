@@ -9,7 +9,7 @@
             color="neutral"
             class="cursor-pointer p-0 hover:bg-transparent"
             :aria-label="t('global.back')"
-            @click="navigateTo('/crm/leads')"
+            @click="goBack()"
           />
           <h2 class="text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
@@ -95,6 +95,7 @@ const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
 const leadSourcesStore = useLeadSourcesStore()
+const goBack = useBackNavigation('/crm/leads')
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go.

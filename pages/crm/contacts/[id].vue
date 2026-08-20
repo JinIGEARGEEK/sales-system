@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/crm/contacts')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ contact.name }}</h2>
         <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
@@ -148,6 +148,7 @@ const activitiesStore = useActivitiesStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
+const goBack = useBackNavigation('/crm/contacts')
 
 onMounted(() => {
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)

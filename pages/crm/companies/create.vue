@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/crm/companies')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ t('crm.companies.create.heading') }}</h2>
       </div>
@@ -148,7 +148,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.companies.create.createCompany')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.companies.create.cancel')" cancel @click="navigateTo('/crm/companies')" />
+          <ButtonPrimary :label="t('crm.companies.create.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -167,6 +167,7 @@ const { success, error } = useNotify()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const goBack = useBackNavigation('/crm/companies')
 
 const form = reactive({
   name: '',

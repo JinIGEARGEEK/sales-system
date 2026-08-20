@@ -7,7 +7,7 @@
         color="neutral"
         class="cursor-pointer p-0 hover:bg-transparent"
         :aria-label="t('global.back')"
-        @click="navigateTo('/admin/users')"
+        @click="goBack()"
       />
       <h2 class="text-xl font-black">{{ user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading') }}</h2>
     </div>
@@ -18,7 +18,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="navigateTo('/admin/users')" />
+          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -40,6 +40,7 @@ const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
+const goBack = useBackNavigation('/admin/users')
 
 onMounted(() => {
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
