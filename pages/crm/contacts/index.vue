@@ -95,7 +95,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.contacts.index.pageTitle') })
 
-const { toBadge } = useFormatter()
+const { toBadge, phoneFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -167,6 +167,7 @@ watch([companyFilter, statusFilter, tagFilter], () => refetchFromStart())
 const displayContacts = computed(() => rows.value.map(contact => ({
   ...contact,
   companyName: companiesStore.nameById(contact.company_id),
+  phone: contact.phone ? phoneFormat(contact.phone) : contact.phone,
   statusBadge: contact.status === 'active'
     ? toBadge(t('crm.contacts.index.statusActive'), 'success')
     : toBadge(t('crm.contacts.index.statusArchived')),
