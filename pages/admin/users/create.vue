@@ -1,7 +1,17 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black">{{ t('admin.users.create.heading') }}</h2>
+      <div class="flex items-center gap-3">
+        <UButton
+          icon="material-symbols:arrow-back"
+          variant="ghost"
+          color="neutral"
+          class="cursor-pointer p-0 hover:bg-transparent"
+          :aria-label="t('global.back')"
+          @click="navigateTo('/admin/users')"
+        />
+        <h2 class="text-xl font-black">{{ t('admin.users.create.heading') }}</h2>
+      </div>
       <p class="text-sm text-[var(--color-gray)]">{{ t('admin.users.create.subheading') }}</p>
     </div>
 
