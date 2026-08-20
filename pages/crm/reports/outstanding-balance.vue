@@ -26,31 +26,35 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputSelect
             v-model="salesRepFilter"
             :options="salesRepOptions"
-            :placeholder="t('crm.reports.outstandingBalance.filterSalesRep')"
+            :label="t('crm.reports.outstandingBalance.filterSalesRep')"
             name="salesRepFilter"
+            size="xs"
             class="w-56"
           />
           <InputText
             v-model="companyTagFilter"
+            :label="t('crm.reports.outstandingBalance.filterCompanyTag')"
             :placeholder="t('crm.reports.outstandingBalance.filterCompanyTagPlaceholder')"
             name="companyTagFilter"
+            size="xs"
             class="w-48"
           />
-          <UButton
-            v-if="hasActiveFilters"
-            icon="material-symbols:filter-alt-off-outline"
-            variant="outline"
-            color="neutral"
-            size="xs"
-            square
-            :aria-label="t('crm.reports.outstandingBalance.clearFilters')"
-            @click="clearFilters"
-          />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.outstandingBalance.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
           <span v-if="rows.length > 0" class="ml-auto text-xs text-[var(--color-gray)]">
             {{ t('crm.reports.outstandingBalance.totalOutstanding', { amount: `${t('global.currencySymbol')}${priceFormatCompact(totalOutstanding)}` }) }}
           </span>

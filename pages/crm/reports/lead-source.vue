@@ -26,31 +26,35 @@
 
     <template v-else>
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+        <div class="flex flex-wrap items-end gap-2">
           <InputDateRangePicker
             v-model="dateRange"
-            :placeholder="t('crm.reports.leadSource.filterDateRange')"
+            :label="t('crm.reports.leadSource.filterDateRange')"
+            :placeholder="t('crm.reports.dateRangePlaceholder')"
             name="dateRange"
+            size="xs"
             class="w-64"
           />
           <InputSelect
             v-model="salesRepFilter"
             :options="salesRepOptions"
-            :placeholder="t('crm.reports.leadSource.filterSalesRep')"
+            :label="t('crm.reports.leadSource.filterSalesRep')"
             name="salesRepFilter"
+            size="xs"
             class="w-56"
           />
-          <UButton
-            v-if="hasActiveFilters"
-            icon="material-symbols:filter-alt-off-outline"
-            variant="outline"
-            color="neutral"
-            size="xs"
-            square
-            :aria-label="t('crm.reports.leadSource.clearFilters')"
-            @click="clearFilters"
-          />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.leadSource.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
         </div>
       </UCard>
 
