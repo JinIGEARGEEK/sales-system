@@ -12,7 +12,7 @@
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
               :class="{ 'bg-[var(--color-primary-bg)] text-[var(--color-primary)]': isActive(menuItem.path) }"
               @click="drawer = false"
             >
@@ -64,8 +64,8 @@
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-white hover:bg-white/10"
-              :class="{ 'bg-white/10 font-medium': isActive(menuItem.path) }"
+              class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-white"
+              :class="{ 'is-active font-medium': isActive(menuItem.path) }"
             >
               <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
               <span class="truncate">{{ menuItem.label }}</span>
@@ -84,7 +84,7 @@
           </div>
         </div>
         <div class="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5 text-white">
-          <SwitchLang />
+          <SwitchLang glass />
           <div class="flex items-center gap-1">
             <UButton
               v-for="action in footerActions"
@@ -93,7 +93,9 @@
               variant="ghost"
               color="neutral"
               size="xs"
-              class="text-white/70 hover:bg-white/10 hover:text-white"
+              :class="action.danger
+                ? 'text-red-300/80 hover:bg-red-500/15 hover:text-red-300 hover:shadow-[0_0_10px_rgba(248,113,113,0.35)] focus-visible:bg-red-500/15 focus-visible:text-red-300'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'"
               :aria-label="action.ariaLabel"
               @click="action.onClick"
             />
@@ -168,8 +170,8 @@ const menuList = computed(() => {
 })
 
 const footerActions = computed(() => [
-  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password') },
-  { icon: 'material-symbols:logout', ariaLabel: t('layout.logout'), onClick: logout },
+  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
+  { icon: 'material-symbols:logout', ariaLabel: t('layout.logout'), onClick: logout, danger: true },
 ])
 
 // Shows the current page's <h2> title in the header once it scrolls up
@@ -212,3 +214,51 @@ const isActive = (path: string) => {
   return route.path.startsWith(path)
 }
 </script>
+
+<style scoped>
+/*
+ * Sidebar nav item glow: a 1px yellow-to-blue gradient ring drawn via a
+ * mask-clipped pseudo-element (border-color can't take a gradient), plus a
+ * soft glass tint + glow on hover/focus/active. Kept scoped to this layout
+ * since it's the only place this treatment is used.
+ */
+.sidebar-nav-link {
+  position: relative;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-nav-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.9), rgba(96, 165, 250, 0.9));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.sidebar-nav-link:hover,
+.sidebar-nav-link:focus-visible {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.14), rgba(96, 165, 250, 0.14));
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
+}
+
+.sidebar-nav-link:hover::before,
+.sidebar-nav-link:focus-visible::before,
+.sidebar-nav-link.is-active::before {
+  opacity: 1;
+}
+
+.sidebar-nav-link.is-active {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(96, 165, 250, 0.1));
+}
+
+.sidebar-nav-link:focus-visible {
+  outline: none;
+}
+</style>
