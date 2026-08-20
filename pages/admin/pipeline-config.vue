@@ -5,23 +5,9 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.subheading') }}</p>
     </div>
 
-    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.relatedConfig.heading') }}</h3>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
-        </div>
-        <ButtonPrimary
-          :label="t('admin.pipelineConfig.relatedConfig.manageTags')"
-          icon="material-symbols:sell-outline"
-          outline
-          fit-content
-          @click="navigateTo('/crm/tags')"
-        />
-      </div>
-    </UCard>
+    <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
 
-    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+    <UCard v-if="activeTab === 'stages'" :ui="GLASS_PANEL_UI">
       <template #header>
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.stages.heading') }}</h3>
@@ -48,7 +34,7 @@
       />
     </UCard>
 
-    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+    <UCard v-else-if="activeTab === 'salesQuota'" :ui="GLASS_PANEL_UI">
       <template #header>
         <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.salesQuota.heading') }}</h3>
       </template>
@@ -81,7 +67,7 @@
       </p>
     </UCard>
 
-    <UCard :ui="GLASS_PANEL_UI">
+    <UCard v-else-if="activeTab === 'sources'" :ui="GLASS_PANEL_UI">
       <template #header>
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.sources.heading') }}</h3>
@@ -163,6 +149,13 @@ const { settings: appSettings } = storeToRefs(appSettingsStore)
 // in February) going unnoticed. Reactive off the store so it updates the
 // instant a save succeeds, not just on the next page load.
 const salesQuotaUpdatedAt = computed(() => appSettings.value?.updated_at ?? null)
+
+const activeTab = ref('stages')
+const tabItems = computed(() => [
+  { label: t('admin.pipelineConfig.stages.heading'), value: 'stages' },
+  { label: t('admin.pipelineConfig.salesQuota.heading'), value: 'salesQuota' },
+  { label: t('admin.pipelineConfig.sources.heading'), value: 'sources' },
+])
 
 const stagesLoading = ref(false)
 const sourcesLoading = ref(false)
