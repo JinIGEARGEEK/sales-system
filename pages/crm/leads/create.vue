@@ -8,7 +8,7 @@
           color="neutral"
           class="cursor-pointer p-0 hover:bg-transparent"
           :aria-label="t('global.back')"
-          @click="navigateTo('/crm/leads')"
+          @click="goBack()"
         />
         <h2 class="text-xl font-black">{{ t('crm.leads.create.heading') }}</h2>
       </div>
@@ -62,7 +62,7 @@
 
         <div class="mt-4 flex gap-3">
           <ButtonPrimary :label="t('crm.leads.create.createLead')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.leads.create.cancel')" cancel @click="navigateTo('/crm/leads')" />
+          <ButtonPrimary :label="t('crm.leads.create.cancel')" cancel @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
@@ -81,6 +81,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const leadsStore = useLeadsStore()
 const leadSourcesStore = useLeadSourcesStore()
+const goBack = useBackNavigation('/crm/leads')
 
 onMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
