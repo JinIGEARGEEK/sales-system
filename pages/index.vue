@@ -391,6 +391,45 @@
         </UCard>
       </div>
     </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <UCard class="ring-[var(--color-card-border)]">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-info-toast)]/15">
+              <UIcon name="material-symbols:filter-alt-outline" class="size-4 text-[var(--color-info-toast)]" />
+            </div>
+            <h3 class="text-lg font-medium">{{ t('crm.dashboard.salesFunnel') }}</h3>
+          </div>
+          <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.salesFunnelHint') }}</p>
+        </template>
+        <div v-if="funnelStages.every(stage => stage.value === 0)" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          {{ t('crm.dashboard.noPipelineStages') }}
+        </div>
+        <CrmFunnelChart v-else :stages="funnelStages" />
+      </UCard>
+
+      <UCard class="ring-[var(--color-card-border)]">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-success-toast)]/15">
+              <UIcon name="material-symbols:donut-large-outline" class="size-4 text-[var(--color-success-toast)]" />
+            </div>
+            <h3 class="text-lg font-medium">{{ t('crm.dashboard.outcomeSplit') }}</h3>
+          </div>
+          <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.outcomeSplitHint') }}</p>
+        </template>
+        <div v-if="outcomeDonutSegments.every(seg => seg.value === 0)" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          {{ t('crm.dashboard.noPipelineStages') }}
+        </div>
+        <CrmDonutChart
+          v-else
+          :segments="outcomeDonutSegments"
+          :total-label="`${t('global.currencySymbol')}${priceFormatCompact(outcomeTotal)}`"
+          :total-sub-label="t('crm.dashboard.outcomeSplitTotal')"
+        />
+      </UCard>
+    </div>
     </div>
 
     <div>
@@ -707,6 +746,55 @@ const stageBreakdown = computed(() => {
     }
   })
 })
+
+// Reuses stageBreakdown's already-built {stage, value, count, barClass} rows
+// rather than re-deriving from summary.stage_breakdown a second time —
+// funnelStages just drops the Lost-flagged stage(s) (a funnel shows forward
+// progression; Lost is an exit, not a step in it) and switches from $ value
+// to deal count, since a funnel's job is showing where deals drop off, not
+// how much money sits in each stage (that's what the bar chart above is for).
+const funnelStages = computed(() => stageBreakdown.value
+  .filter(row => !pipelineStagesStore.byName(row.stage)?.is_lost_stage)
+  .map(row => ({ label: row.stage, value: row.count, barClass: row.barClass })))
+
+// lostValue isn't in DashboardSummary directly — it's exactly the Lost-flagged
+// stage's `value` in stage_breakdown (every deal in a terminal Lost stage is,
+// by definition, closed-lost), summed in case more than one stage is flagged
+// is_lost_stage. Reduces a second query round-trip to zero: stage_breakdown
+// already has this, it just needed picking out.
+const lostValue = computed(() => stageBreakdown.value
+  .filter(row => pipelineStagesStore.byName(row.stage)?.is_lost_stage)
+  .reduce((sum, row) => sum + row.value, 0))
+
+const outcomeTotal = computed(() => wonValue.value + lostValue.value + openPipelineValue.value)
+
+// Won/Lost/Open are states, not identity — colored with the app's existing
+// status tokens (success/danger/gray, already used for e.g. isPipelineHealthy)
+// rather than the categorical chart palette, and each carries an icon +
+// label in the legend so the state never reads from color alone.
+const outcomeDonutSegments = computed(() => [
+  {
+    label: t('crm.dashboard.outcomeWon'),
+    value: wonValue.value,
+    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(wonValue.value)}`,
+    colorVar: 'var(--color-success-toast)',
+    icon: 'material-symbols:check-circle-outline',
+  },
+  {
+    label: t('crm.dashboard.outcomeLost'),
+    value: lostValue.value,
+    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(lostValue.value)}`,
+    colorVar: 'var(--color-danger-toast)',
+    icon: 'material-symbols:cancel-outline',
+  },
+  {
+    label: t('crm.dashboard.outcomeOpen'),
+    value: openPipelineValue.value,
+    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(openPipelineValue.value)}`,
+    colorVar: 'var(--color-gray)',
+    icon: 'material-symbols:radio-button-unchecked',
+  },
+])
 
 const revenueTrend = computed(() => {
   const points = summary.value?.revenue_trend ?? []
