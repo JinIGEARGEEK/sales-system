@@ -35,6 +35,16 @@
             name="minDays"
             class="w-40"
           />
+          <UButton
+            v-if="hasActiveFilters"
+            icon="material-symbols:filter-alt-off-outline"
+            variant="outline"
+            color="neutral"
+            size="xs"
+            square
+            :aria-label="t('crm.reports.contractsStuck.clearFilters')"
+            @click="clearFilters"
+          />
         </div>
       </UCard>
 
@@ -71,6 +81,12 @@ const { toBadge } = useFormatter()
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const minDays = ref(14)
+
+const hasActiveFilters = computed(() => minDays.value !== 14)
+
+const clearFilters = () => {
+  minDays.value = 14
+}
 
 const results = ref<ContractStuckRow[]>([])
 const loading = ref(false)

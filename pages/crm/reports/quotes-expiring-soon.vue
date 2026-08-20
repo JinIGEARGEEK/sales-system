@@ -35,6 +35,16 @@
             name="withinDays"
             class="w-40"
           />
+          <UButton
+            v-if="hasActiveFilters"
+            icon="material-symbols:filter-alt-off-outline"
+            variant="outline"
+            color="neutral"
+            size="xs"
+            square
+            :aria-label="t('crm.reports.quotesExpiringSoon.clearFilters')"
+            @click="clearFilters"
+          />
         </div>
       </UCard>
 
@@ -71,6 +81,12 @@ const { priceFormatCompact, dateFormat } = useFormatter()
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
 const withinDays = ref(7)
+
+const hasActiveFilters = computed(() => withinDays.value !== 7)
+
+const clearFilters = () => {
+  withinDays.value = 7
+}
 
 const results = ref<QuoteExpiringSoonRow[]>([])
 const loading = ref(false)

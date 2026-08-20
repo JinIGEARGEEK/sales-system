@@ -66,6 +66,7 @@ export default {
     filterMinDays: 'Min. Days Inactive',
     filterSalesRep: 'Sales Rep',
     allSalesReps: 'All Sales Reps',
+    clearFilters: 'Clear all',
     daysStalled: '{days} days',
     viewDeal: 'View Deal',
     columns: {
@@ -107,6 +108,7 @@ export default {
     heading: 'Quotes Expiring Soon',
     subheading: 'Sent quotes whose validity date falls within the selected window.',
     filterWithinDays: 'Within Days',
+    clearFilters: 'Clear all',
     viewDeal: 'View Deal',
     columns: {
       dealTitle: 'Deal',
@@ -123,6 +125,7 @@ export default {
     heading: 'Contracts Stuck',
     subheading: 'Draft or Sent contracts that have gone unsigned for a while.',
     filterMinDays: 'Min. Days Unsigned',
+    clearFilters: 'Clear all',
     daysInStatus: '{days} days',
     viewDeal: 'View Deal',
     columns: {

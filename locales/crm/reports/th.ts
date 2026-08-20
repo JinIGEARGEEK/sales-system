@@ -66,6 +66,7 @@ export default {
     filterMinDays: 'จำนวนวันที่ไม่มีความเคลื่อนไหว (อย่างน้อย)',
     filterSalesRep: 'พนักงานขาย',
     allSalesReps: 'พนักงานขายทั้งหมด',
+    clearFilters: 'ล้างตัวกรอง',
     daysStalled: '{days} วัน',
     viewDeal: 'ดู Deal',
     columns: {
@@ -107,6 +108,7 @@ export default {
     heading: 'ใบเสนอราคาใกล้หมดอายุ',
     subheading: 'ใบเสนอราคาที่ส่งแล้วและวันหมดอายุอยู่ในช่วงที่เลือก',
     filterWithinDays: 'ภายในกี่วัน',
+    clearFilters: 'ล้างตัวกรอง',
     viewDeal: 'ดู Deal',
     columns: {
       dealTitle: 'Deal',
@@ -123,6 +125,7 @@ export default {
     heading: 'สัญญาที่ค้างอยู่',
     subheading: 'สัญญาสถานะร่างหรือส่งแล้วที่ยังไม่ได้ลงนามมาสักระยะ',
     filterMinDays: 'จำนวนวันที่ยังไม่ลงนาม (อย่างน้อย)',
+    clearFilters: 'ล้างตัวกรอง',
     daysInStatus: '{days} วัน',
     viewDeal: 'ดู Deal',
     columns: {

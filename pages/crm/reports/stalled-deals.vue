@@ -42,6 +42,16 @@
             name="salesRepFilter"
             class="w-56"
           />
+          <UButton
+            v-if="hasActiveFilters"
+            icon="material-symbols:filter-alt-off-outline"
+            variant="outline"
+            color="neutral"
+            size="xs"
+            square
+            :aria-label="t('crm.reports.stalledDeals.clearFilters')"
+            @click="clearFilters"
+          />
         </div>
       </UCard>
 
@@ -90,6 +100,13 @@ const salesRepOptions = computed(() => [
 
 const minDays = ref(14)
 const salesRepFilter = ref('all')
+
+const hasActiveFilters = computed(() => minDays.value !== 14 || salesRepFilter.value !== 'all')
+
+const clearFilters = () => {
+  minDays.value = 14
+  salesRepFilter.value = 'all'
+}
 
 const results = ref<StalledDealRow[]>([])
 const loading = ref(false)
