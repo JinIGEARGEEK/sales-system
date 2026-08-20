@@ -152,7 +152,7 @@ summary {
    */
   --color-app-shell-gradient-from: #C3D3F2;
   --color-app-shell-gradient-via: #A9C0EC;
-  --color-app-shell-gradient-to: #8FADE3;
+  --color-app-shell-gradient-to: #C5D6EF;
 
   /* Opacity Color Kit */
   --color-primary-opacity: color-mix(in srgb, var(--color-primary) 10%, transparent);
