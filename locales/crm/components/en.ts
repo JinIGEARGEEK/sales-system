@@ -153,6 +153,10 @@ export default {
   addTaskModal: {
     title: 'Add Task',
     editTitle: 'Edit Task',
+    relatesToType: 'Relates To',
+    relatesToTypePlaceholder: 'Select type',
+    relatesToRecord: 'Record',
+    relatesToRecordPlaceholder: 'Select record',
     taskTitle: 'Task',
     dueDate: 'Due Date',
     dueToday: 'Today',
