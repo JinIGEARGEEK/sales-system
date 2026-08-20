@@ -4,11 +4,25 @@
       {{ t('crm.components.taskList.noTasks') }}
     </div>
     <div v-else class="flex flex-col gap-2">
+      <div v-if="selectable" class="flex items-center gap-3 px-4 py-1">
+        <UCheckbox
+          :model-value="isAllSelected"
+          :aria-label="t('crm.components.taskList.selectAll')"
+          @update:model-value="toggleSelectAll"
+        />
+        <span class="text-xs text-[var(--color-gray)]">{{ t('crm.components.taskList.selectAll') }}</span>
+      </div>
       <div
         v-for="task in tasks"
         :key="task.id"
         class="flex items-center gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
       >
+        <UCheckbox
+          v-if="selectable"
+          :model-value="selectedIds.includes(task.id)"
+          :aria-label="t('crm.components.taskList.selectTask')"
+          @update:model-value="toggleSelect(task.id)"
+        />
         <UButton
           :icon="task.status === 'done' ? 'material-symbols:check-circle' : 'material-symbols:radio-button-unchecked'"
           :label="t(task.status === 'done' ? 'crm.components.taskList.markPending' : 'crm.components.taskList.markDone')"
@@ -76,17 +90,37 @@ onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
 })
 
-defineProps<{
+const props = defineProps<{
   // Callers that already know how to link back to the related record (e.g. the
   // all-tasks list or the dashboard widget) can enrich tasks with these before
   // passing them in — the detail-page call sites just pass plain Task[].
   tasks: (Task & { relatedLabel?: string, path?: string })[]
+  // Bulk-select checkboxes, used only by the all-tasks page — the per-record
+  // Tasks tabs (Deal/Contact/Company detail pages) never pass these.
+  selectable?: boolean
+  selectedIds?: number[]
 }>()
 
 const emit = defineEmits<{
   toggle: [id: number]
   remove: [id: number]
+  'update:selectedIds': [ids: number[]]
 }>()
+
+const selectedIds = computed(() => props.selectedIds ?? [])
+
+const toggleSelect = (id: number) => {
+  const next = selectedIds.value.includes(id)
+    ? selectedIds.value.filter(selectedId => selectedId !== id)
+    : [...selectedIds.value, id]
+  emit('update:selectedIds', next)
+}
+
+const isAllSelected = computed(() => props.tasks.length > 0 && props.tasks.every(task => selectedIds.value.includes(task.id)))
+
+const toggleSelectAll = () => {
+  emit('update:selectedIds', isAllSelected.value ? [] : props.tasks.map(task => task.id))
+}
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Task>()
 

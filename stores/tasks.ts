@@ -1,6 +1,7 @@
 // Real API-backed store. Only wraps what the backend supports: create, list,
-// toggle pending<->done, and delete — there's no endpoint to edit a task's
-// fields or reassign it, so those actions don't exist here.
+// toggle pending<->done, delete, and bulk mark-done/reassign — there's still
+// no endpoint to edit a task's other fields or reassign a single task
+// outside of a bulk call, so those actions don't exist here.
 const parseDates = (task: Task): Task => ({
   ...task,
   due_date: new Date(task.due_date),
@@ -44,6 +45,24 @@ export const useTasksStore = defineStore('tasks', {
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(t => t.id === id)
       if (index !== -1) this.items[index] = updated
+    },
+    // Bulk mark-done/reassign mirror stores/helpers.ts' createBulkResourceActions
+    // pattern (update `items` locally instead of refetching) but are declared
+    // directly here rather than spread from that helper, since Task has no
+    // `tags` field and so doesn't fit that helper's generic constraint.
+    async bulkMarkDone (ids: number[]) {
+      const { $api } = useNuxtApp()
+      await $api.patch('/tasks/bulk-mark-done', { ids })
+      this.items.forEach((task) => {
+        if (ids.includes(task.id)) task.status = 'done'
+      })
+    },
+    async bulkReassign (ids: number[], assignedTo: number | null) {
+      const { $api } = useNuxtApp()
+      await $api.patch('/tasks/bulk-reassign', { ids, assigned_to: assignedTo })
+      this.items.forEach((task) => {
+        if (ids.includes(task.id)) task.assigned_to = assignedTo
+      })
     },
   },
 })

@@ -1,7 +1,7 @@
 export default {
-  pageTitle: 'Pipeline Configuration',
-  heading: 'Pipeline Configuration',
-  subheading: 'Manage the pipeline stages and lead/deal sources used across Leads and Deals.',
+  pageTitle: 'CRM Settings',
+  heading: 'CRM Settings',
+  subheading: 'Manage the pipeline stages, lead/deal sources, and sales/revenue goals used across the system.',
   cancel: 'Cancel',
   save: 'Save',
   relatedConfig: {

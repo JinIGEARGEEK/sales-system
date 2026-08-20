@@ -153,6 +153,10 @@ export default {
   addTaskModal: {
     title: 'เพิ่มงานติดตาม',
     editTitle: 'แก้ไขงานติดตาม',
+    relatesToType: 'เกี่ยวข้องกับ',
+    relatesToTypePlaceholder: 'เลือกประเภท',
+    relatesToRecord: 'รายการ',
+    relatesToRecordPlaceholder: 'เลือกรายการ',
     taskTitle: 'งานที่ต้องทำ',
     dueDate: 'วันที่ครบกำหนด',
     dueToday: 'วันนี้',
