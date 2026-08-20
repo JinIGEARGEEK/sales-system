@@ -48,9 +48,12 @@ export default {
     deactivateSuccess: 'ปิดใช้งานแหล่งที่มาแล้ว',
   },
   salesQuota: {
-    heading: 'เป้าหมายยอดขาย',
+    heading: 'เป้าหมายยอดขายและรายได้',
     label: 'เป้าหมายยอดขายรายไตรมาส',
     help: 'ใช้คำนวณ Pipeline Coverage Ratio บนหน้า Dashboard',
+    annualGoalLabel: 'เป้าหมายรายได้รายปี',
+    annualGoalHelp: 'ใช้คำนวณความคืบหน้าของเป้าหมายรายได้รายปีบนหน้า Dashboard',
+    lastUpdated: 'อัปเดตล่าสุดเมื่อ {date}',
     save: 'บันทึก',
     saveSuccess: 'บันทึกเป้าหมายยอดขายสำเร็จ',
   },

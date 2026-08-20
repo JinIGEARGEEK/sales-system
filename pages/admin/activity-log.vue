@@ -102,9 +102,9 @@ const usersStore = useUsersStore()
 const canAccess = computed(() => hasRole('Admin'))
 
 // Known entity_type values written by the backend (internal/utils/bulk.go and
-// SaveWithAudit callers in deals.go, leads.go, projects.go, products.go):
-// deal, lead, project, customer_product.
-const KNOWN_ENTITY_TYPES = ['deal', 'lead', 'project', 'customer_product']
+// SaveWithAudit callers in deals.go, leads.go, projects.go, products.go,
+// settings.go): deal, lead, project, customer_product, settings.
+const KNOWN_ENTITY_TYPES = ['deal', 'lead', 'project', 'customer_product', 'settings']
 
 const entityTypeFilter = ref('all')
 const entityTypeOptions = computed(() => [
