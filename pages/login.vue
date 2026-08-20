@@ -135,11 +135,10 @@ definePageMeta({
   layout: 'blank',
 })
 
-useHead({
-  title: 'ลงชื่อเข้าใช้',
-})
-
 const { t } = useI18n()
+
+useHead({ title: t('global.auth.signIn') })
+
 const { setAccessToken } = useAuth()
 const { success, error } = useNotify()
 const userStore = useUserStore()

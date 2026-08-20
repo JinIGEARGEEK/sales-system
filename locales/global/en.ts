@@ -14,7 +14,7 @@ const lang = {
     signIn: 'Sign in',
     forgotPassword: 'Forgot Password?',
     loginSuccess: 'Logged in successfully',
-    loginFailed: 'Invalid email or password',
+    loginFailed: 'Invalid email or password.',
     emailLabel: 'Email',
     emailPlaceholder: 'Email',
     passwordLabel: 'Password',

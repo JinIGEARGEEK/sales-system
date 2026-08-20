@@ -53,7 +53,7 @@ export default {
     pageTitle: 'สร้างพนักงาน',
     heading: 'สร้างพนักงานใหม่',
     subheading: 'กรอกรายละเอียดเพื่อสร้างบัญชีพนักงานใหม่',
-    createStaff: 'สร้างพนักงาน',
+    createStaff: 'บันทึกพนักงาน',
     createSuccess: 'สร้างพนักงานสำเร็จ',
   },
   detail: {

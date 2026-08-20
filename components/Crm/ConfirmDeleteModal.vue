@@ -4,12 +4,12 @@
       <h3 class="text-lg font-medium">{{ title || t('crm.components.confirmDeleteModal.title') }}</h3>
     </template>
     <template #body>
-      <p class="text-sm">
+      <p class="text-sm text-center">
         <template v-if="body">{{ body }}</template>
-        <template v-else>
-          {{ t('crm.components.confirmDeleteModal.confirmQuestion') }} <strong>{{ name }}</strong>?
-          {{ t('crm.components.confirmDeleteModal.cannotBeUndone') }}
-        </template>
+        <i18n-t v-else-if="name" keypath="crm.components.confirmDeleteModal.confirmBody" tag="span">
+          <template #name><strong>{{ name }}</strong></template>
+        </i18n-t>
+        <template v-else>{{ t('crm.components.confirmDeleteModal.confirmBodyFallback') }}</template>
       </p>
     </template>
     <template #footer>
