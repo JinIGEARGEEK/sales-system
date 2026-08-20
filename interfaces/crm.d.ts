@@ -145,6 +145,20 @@ interface AppSettings {
   updated_at: Date
 }
 
+// An Admin-configurable target for one specific (year, quarter) period —
+// GET/POST/PATCH/DELETE /admin/sales-targets, FR-CRM-092. Overrides
+// AppSettings.quarterly_sales_target/4 for its period in the dashboard's
+// pipeline_coverage_ratio calc; a period with no row here just falls back to
+// that flat quarterly figure, so this is purely additive on top of it.
+interface SalesTarget {
+  id: number
+  year: number
+  quarter: 1 | 2 | 3 | 4
+  target_value: number
+  created_at: Date
+  updated_at: Date
+}
+
 interface Activity {
   id: number
   type: ActivityType

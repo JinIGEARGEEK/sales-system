@@ -48,6 +48,7 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | A-4 | As an Admin, I want to view an audit log of key changes (deal stage, won/lost, project/product status), so that I can investigate mistakes or disputes. | FR-CRM-082 | ✅ `/admin/activity-log` now consumes the real `GET /audit-log` endpoint via `stores/auditLog.ts`, filterable by entity type/date range, with a before/after diff view |
 | A-5 | As an Admin, I want to export Companies, Contacts, Deals, Products, and Projects to CSV, so that I can analyze data outside the system or back it up. | FR-CRM-083 | ✅ `GET /{companies,contacts,deals,products,projects}/export` (Admin/Sales Manager only) + a frontend export button on each list page |
 | A-6 | As an Admin, I want to configure email notification settings, so that the team receives timely alerts. | FR-CRM-084 | ⬜ |
+| A-7 | As an Admin, I want to set a specific sales target for an individual quarter — including future quarters and future years — instead of only one flat number always applied to "right now", so that I can plan targets ahead of time and have them take effect automatically when that quarter arrives. | FR-CRM-092 | ✅ new "Quarterly Sales Targets" card on `pages/admin/pipeline-config.vue` (`stores/salesTargets.ts`), full CRUD via `/admin/sales-targets`; a quarter with no explicit target falls back to the existing flat quota (A-2/M-10's FR-CRM-058) |
 
 ---
 

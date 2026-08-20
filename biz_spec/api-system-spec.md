@@ -722,6 +722,33 @@ interface AppSettings {
 
 Backend: `internal/models/settings.go` (`AppSettings`, seeded via `DefaultAppSettings` the same way `PipelineStage`/`LeadSourceOption` seed), `internal/handlers/settings.go` (its `Update` handler uses `utils.SaveWithAudit`, the same helper `deals.go`'s stage-change/reassign endpoints use, rather than a plain `db.Save` — this was a gap until FR-CRM-091 added it, since app settings changes previously left no audit trail unlike every other Admin-configurable resource; on a real change it also calls `dashboard.go`'s `InvalidateDashboardCache()`). `internal/handlers/dashboard.go`'s `appSettings()` reads this row instead of the old hardcoded `QUARTERLY_SALES_TARGET`-style constant (§9 below), feeding both `quarterlySalesTarget` (FR-CRM-058) and `annualRevenueGoal` (FR-CRM-091). Frontend: a "Sales Quota & Revenue Goals" card on `pages/admin/pipeline-config.vue`, backed by `stores/appSettings.ts`, showing a "last updated" hint sourced from `updated_at`.
 
+### 8.7b Per-quarter/per-year sales targets (`FR-CRM-092`)
+
+`quarterly_sales_target` above (`FR-CRM-058`) is one flat figure, always treated as "whatever the current quarter is" — an Admin who wants Q4's target to differ from Q3's had to remember to edit the singleton the moment Q4 started, and there was no way to pre-set a future year's targets in advance. This section adds a separate, additive CRUD resource on top of it rather than changing §8.7a's fixed two-required-field PATCH contract.
+
+```ts
+interface SalesTarget {
+  id: number
+  year: number
+  quarter: 1 | 2 | 3 | 4
+  target_value: number   // the true quarterly figure directly — NOT divided
+                          // by 4 the way quarterly_sales_target is derived
+  created_at: string
+  updated_at: string
+}
+```
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/sales-targets` | Admin | List every `SalesTarget` row, oldest-to-newest by `(year, quarter)`. Optional `?year=2026` filters to one year. |
+| `POST` | `/admin/sales-targets` | Admin | Create a row for one `(year, quarter)` — any year 2000–2100, quarter 1–4, past/current/future. Rejected (`422`) if a row for that exact period already exists (`PATCH` it instead) or `target_value < 0`. |
+| `PATCH` | `/admin/sales-targets/:id` | Admin | Update an existing row's `year`/`quarter`/`target_value`. Same period-collision check as `POST` if `year`/`quarter` change. |
+| `DELETE` | `/admin/sales-targets/:id` | Admin | Hard-deletes the row (unlike `PipelineStage`'s soft `is_active` flip — nothing else references a `SalesTarget` row by ID). That period reverts to the flat `quarterly_sales_target / 4` fallback; re-adding a row for the same period restores the override. |
+
+Every write (`POST`/`PATCH`/`DELETE`) writes an `audit_log_entries` row (`entity_type: "sales_target"`, action `created`/`updated`/`deleted`) via the same `utils.SaveWithAudit` helper §8.7a uses, and calls `dashboard.go`'s `InvalidateDashboardCache()` on success — identical plumbing to the `AppSettings` PATCH, since a `SalesTarget` change also silently changes `GET /dashboard/summary`'s `pipeline_coverage_ratio` without touching the `deals` table.
+
+Backend: `internal/models/sales_target.go` (`SalesTarget`, unique index on `(year, quarter)`), `internal/handlers/sales_targets.go`. `internal/handlers/dashboard.go`'s new `currentQuarterTarget()` resolves the actual figure `pipeline_coverage_ratio` divides `open_pipeline_value` by: a `SalesTarget` row for *today's* calendar `(year, quarter)` if one exists, else `quarterly_sales_target / 4` (§9 below, unchanged). Frontend: a "Quarterly Sales Targets" card on `pages/admin/pipeline-config.vue` below the existing quota card, backed by `stores/salesTargets.ts` and `components/Crm/SalesTargetModal.vue` — a Year/Quarter/Target table with add/edit/delete, each row badged Current/Upcoming/Past relative to today's date so an Admin can see at a glance which period is live.
+
 ### 8.8 CSV export (`FR-CRM-083`)
 
 | Method | Path | Auth | Description |
@@ -744,7 +771,7 @@ Backend: `internal/handlers/export.go`'s `ExportHandler`, gated by the same `bul
 |---|---|---|---|
 | `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`, `assigned_to` (Sales Rep user id, `FR-CRM-055`), `company_tag` (`FR-CRM-055`). Returns every stat card + chart the page renders in one response (shape below). |
 
-The response is cached process-wide for 30s per exact querystring (`internal/handlers/dashboard.go`'s `summaryCache`/`summaryCacheTTL`) — the ~11 underlying aggregate queries are too expensive to repeat on every dashboard refresh under concurrent viewers, and Deal data doesn't need to be second-fresh. `internal/handlers/settings.go`'s `PATCH /admin/settings` (§8.7a) is the one write path that changes this response's data (`quarterly_sales_target`/`annual_revenue_goal`) without touching the `deals` table the cache is otherwise implicitly kept fresh against, so it explicitly calls `dashboard.go`'s exported `InvalidateDashboardCache()` on a real change — without that call, an Admin who just edited a goal would see their own stale pre-PATCH value reflected back for up to the 30s TTL.
+The response is cached process-wide for 30s per exact querystring (`internal/handlers/dashboard.go`'s `summaryCache`/`summaryCacheTTL`) — the ~11 underlying aggregate queries are too expensive to repeat on every dashboard refresh under concurrent viewers, and Deal data doesn't need to be second-fresh. `internal/handlers/settings.go`'s `PATCH /admin/settings` (§8.7a) and `internal/handlers/sales_targets.go`'s `POST`/`PATCH`/`DELETE /admin/sales-targets` (§8.7b) are the write paths that change this response's data (`quarterly_sales_target`/`annual_revenue_goal`/`pipeline_coverage_ratio`) without touching the `deals` table the cache is otherwise implicitly kept fresh against, so each explicitly calls `dashboard.go`'s exported `InvalidateDashboardCache()` on a real change — without that call, an Admin who just edited a goal or target would see their own stale pre-write value reflected back for up to the 30s TTL.
 
 Response shape (one object covering every widget on `pages/index.vue`):
 
@@ -774,7 +801,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
 }
 ```
 
-`quarterly_sales_target` and `annual_revenue_goal` are both sourced server-side from the same `AppSettings` singleton row (§8.7a, `FR-CRM-058`/`FR-CRM-091` — Admin-configurable via `GET`/`PATCH /admin/settings`) rather than a hardcoded frontend constant. `annual_revenue_actual` is the sum of Won Deal value since Jan 1 of the current calendar year — a fixed company-wide figure that deliberately ignores this endpoint's own filter params (`business_unit`/`channel`/`assigned_to`/`company_tag`/date range), the same convention `revenue_trend`/`forecast_trend` already follow, since the annual goal tracks the whole company against one company-wide target rather than a filtered slice. `annual_revenue_progress_ratio` is `annual_revenue_actual ÷ annual_revenue_goal` (0 if the goal is 0). The frontend's on-track indicator for this stat compares that ratio against how far through the calendar year it currently is (pro-rated), not a flat 100% bar — unlike `pipeline_coverage_ratio`'s on-track threshold, which is a flat `>= 1`.
+`quarterly_sales_target` and `annual_revenue_goal` are both sourced server-side from the same `AppSettings` singleton row (§8.7a, `FR-CRM-058`/`FR-CRM-091` — Admin-configurable via `GET`/`PATCH /admin/settings`) rather than a hardcoded frontend constant. `pipeline_coverage_ratio` itself, however, divides `open_pipeline_value` by `currentQuarterTarget()` (§8.7b, `FR-CRM-092`) rather than `quarterly_sales_target / 4` directly: it first checks for a `SalesTarget` row matching *today's* calendar `(year, quarter)`, and only falls back to the flat `quarterly_sales_target / 4` if no such row exists — so the `quarterly_sales_target` value returned in this same response is always the flat singleton figure, which may or may not be what `pipeline_coverage_ratio` was actually computed against for the current quarter. `annual_revenue_actual` is the sum of Won Deal value since Jan 1 of the current calendar year — a fixed company-wide figure that deliberately ignores this endpoint's own filter params (`business_unit`/`channel`/`assigned_to`/`company_tag`/date range), the same convention `revenue_trend`/`forecast_trend` already follow, since the annual goal tracks the whole company against one company-wide target rather than a filtered slice. `annual_revenue_progress_ratio` is `annual_revenue_actual ÷ annual_revenue_goal` (0 if the goal is 0). The frontend's on-track indicator for this stat compares that ratio against how far through the calendar year it currently is (pro-rated), not a flat 100% bar — unlike `pipeline_coverage_ratio`'s on-track threshold, which is a flat `>= 1`.
 
 `annual_revenue_trend` (`internal/handlers/dashboard.go`'s `annualRevenueTrend()`) is the same annual-goal figure broken out by month instead of one snapshot ratio: one point per elapsed month (Jan through the current month), each `actual` a *cumulative* running total (not that month's own delta) and each `goal_pace` a straight-line `annual_revenue_goal × months-elapsed/12` for the same point — lets the "Annual Goal Pace" chart on `pages/index.vue` show whether the company is ahead of or behind pace over the year, not just infer it from today's single ratio. Its last point's `actual` is also where `annual_revenue_actual` above comes from — one grouped query, not a duplicate `SUM`.
 
