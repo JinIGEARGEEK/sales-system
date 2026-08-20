@@ -29,7 +29,7 @@ export default {
     wonBadge: 'Won',
     lostBadge: 'Lost',
     deactivateConfirm: 'ปิดใช้งานขั้นตอนนี้? Deal ที่มีอยู่จะยังคงอยู่ในขั้นตอนนี้ แต่จะไม่สามารถเลือกใหม่ได้',
-    saveSuccess: 'บันทึกขั้นตอนไปป์ไลน์แล้ว',
+    saveSuccess: 'บันทึกขั้นตอนไปป์ไลน์สำเร็จ',
     deactivateSuccess: 'ปิดใช้งานขั้นตอนไปป์ไลน์แล้ว',
   },
   sources: {
@@ -44,7 +44,7 @@ export default {
       action: 'การจัดการ',
     },
     deactivateConfirm: 'ปิดใช้งานแหล่งที่มานี้? Lead/Deal ที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
-    saveSuccess: 'บันทึกแหล่งที่มาแล้ว',
+    saveSuccess: 'บันทึกแหล่งที่มาสำเร็จ',
     deactivateSuccess: 'ปิดใช้งานแหล่งที่มาแล้ว',
   },
   salesQuota: {
@@ -52,7 +52,7 @@ export default {
     label: 'เป้าหมายยอดขายรายไตรมาส',
     help: 'ใช้คำนวณ Pipeline Coverage Ratio บนหน้า Dashboard',
     save: 'บันทึก',
-    saveSuccess: 'บันทึกเป้าหมายยอดขายแล้ว',
+    saveSuccess: 'บันทึกเป้าหมายยอดขายสำเร็จ',
   },
   statusActive: 'ใช้งานอยู่',
   statusInactive: 'ปิดใช้งาน',

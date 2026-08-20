@@ -36,7 +36,7 @@ export default {
     descriptionPlaceholder: 'Explain what this tag means and when to use it',
     status: 'Status',
     statusPlaceholder: 'Select status',
-    createTag: 'Create Tag',
+    createTag: 'Save Tag',
     cancel: 'Cancel',
     createSuccess: 'Tag created successfully',
   },

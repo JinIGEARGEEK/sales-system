@@ -22,7 +22,7 @@ export default {
       noQuote: 'No quote',
       status: 'Status',
       cancel: 'Cancel',
-      save: 'Create',
+      save: 'Save',
     },
   },
 }

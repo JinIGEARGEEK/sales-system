@@ -29,7 +29,7 @@ export default {
     wonBadge: 'Won',
     lostBadge: 'Lost',
     deactivateConfirm: 'Deactivate this stage? Existing Deals keep their stage, but it will no longer be selectable.',
-    saveSuccess: 'Pipeline stage saved',
+    saveSuccess: 'Pipeline stage saved successfully',
     deactivateSuccess: 'Pipeline stage deactivated',
   },
   sources: {
@@ -44,7 +44,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this source? Existing Leads/Deals keep it, but it will no longer be selectable.',
-    saveSuccess: 'Source saved',
+    saveSuccess: 'Source saved successfully',
     deactivateSuccess: 'Source deactivated',
   },
   salesQuota: {
@@ -52,7 +52,7 @@ export default {
     label: 'Quarterly Sales Target',
     help: 'Used to compute the Pipeline Coverage Ratio on the Dashboard.',
     save: 'Save',
-    saveSuccess: 'Sales quota saved',
+    saveSuccess: 'Sales quota saved successfully',
   },
   statusActive: 'Active',
   statusInactive: 'Inactive',

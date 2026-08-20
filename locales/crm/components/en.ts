@@ -16,10 +16,10 @@ export default {
   },
   confirmDeleteModal: {
     title: 'Confirm Delete',
-    confirmQuestion: 'Are you sure you want to delete',
-    cannotBeUndone: 'This action cannot be undone.',
+    confirmBody: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
+    confirmBodyFallback: 'Are you sure you want to delete this item? This action cannot be undone.',
     cancel: 'Cancel',
-    delete: 'Delete',
+    delete: 'Confirm',
   },
   lastContact: {
     never: 'Never contacted',
@@ -65,7 +65,7 @@ export default {
     itemDescriptionPlaceholder: 'Description',
     itemQtyPlaceholder: 'Qty',
     itemPricePlaceholder: 'Unit Price',
-    removeItem: 'Remove this item',
+    removeItem: 'Delete this item',
     cancel: 'Cancel',
     save: 'Save Quote',
   },
@@ -127,7 +127,7 @@ export default {
   },
   attachmentList: {
     noAttachments: 'No attachments yet.',
-    remove: 'Remove attachment',
+    remove: 'Delete attachment',
     categories: {
       quotation: 'Quotation',
       proposal: 'Proposal',
@@ -144,8 +144,8 @@ export default {
     markDone: 'Mark as done',
     markPending: 'Mark as not done',
     editTask: 'Edit task',
-    removeTask: 'Remove task',
-    removeSuccess: 'Task removed',
+    removeTask: 'Delete task',
+    removeSuccess: 'Task removed successfully',
     confirmDoneTitle: 'Mark task as done?',
     confirmDoneBody: 'Mark "{title}" as done?',
     confirmDoneButton: 'Mark as Done',

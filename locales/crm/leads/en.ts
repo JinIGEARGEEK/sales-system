@@ -45,7 +45,7 @@ export default {
     assignedToPlaceholder: 'Leave blank to auto-assign (round robin)',
     notes: 'Notes',
     notesPlaceholder: 'Enter any additional notes',
-    createLead: 'Create Lead',
+    createLead: 'Save Lead',
     cancel: 'Cancel',
     createSuccess: 'Lead created successfully',
     duplicateWarningTitle: 'Possible duplicate lead',
@@ -66,7 +66,7 @@ export default {
     updateSuccess: 'Lead updated successfully',
     attachmentsHeading: 'Attachments',
     addAttachment: 'Add Attachment',
-    addAttachmentSuccess: 'Attachment added',
-    removeAttachmentSuccess: 'Attachment removed',
+    addAttachmentSuccess: 'Attachment added successfully',
+    removeAttachmentSuccess: 'Attachment removed successfully',
   },
 }

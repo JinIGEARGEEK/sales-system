@@ -11,8 +11,8 @@ export default {
     allStatuses: 'All Statuses',
     addProject: 'Add Project',
     exportCsv: 'Export CSV',
-    addProjectSuccess: 'Project added',
-    updateProjectSuccess: 'Project updated',
+    addProjectSuccess: 'Project added successfully',
+    updateProjectSuccess: 'Project updated successfully',
     columns: {
       name: 'Name',
       company: 'Company',

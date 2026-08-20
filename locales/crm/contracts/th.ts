@@ -22,7 +22,7 @@ export default {
       noQuote: 'ไม่มีใบเสนอราคา',
       status: 'สถานะ',
       cancel: 'ยกเลิก',
-      save: 'สร้าง',
+      save: 'บันทึก',
     },
   },
 }

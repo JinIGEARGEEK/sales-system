@@ -16,10 +16,10 @@ export default {
   },
   confirmDeleteModal: {
     title: 'ยืนยันการลบ',
-    confirmQuestion: 'คุณแน่ใจหรือไม่ว่าต้องการลบ',
-    cannotBeUndone: 'การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+    confirmBody: 'คุณต้องการจะลบ "{name}" ใช่หรือไม่ การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+    confirmBodyFallback: 'คุณต้องการจะลบรายการนี้ใช่หรือไม่ การดำเนินการนี้ไม่สามารถย้อนกลับได้',
     cancel: 'ยกเลิก',
-    delete: 'ลบ',
+    delete: 'ยืนยัน',
   },
   lastContact: {
     never: 'ยังไม่เคยติดต่อ',
@@ -145,7 +145,7 @@ export default {
     markPending: 'ทำเครื่องหมายว่ายังไม่เสร็จ',
     editTask: 'แก้ไขงาน',
     removeTask: 'ลบงาน',
-    removeSuccess: 'ลบงานติดตามแล้ว',
+    removeSuccess: 'ลบงานติดตามสำเร็จ',
     confirmDoneTitle: 'ทำเครื่องหมายว่าเสร็จแล้วหรือไม่?',
     confirmDoneBody: 'ต้องการทำเครื่องหมาย "{title}" ว่าเสร็จแล้วหรือไม่?',
     confirmDoneButton: 'ทำเครื่องหมายว่าเสร็จแล้ว',

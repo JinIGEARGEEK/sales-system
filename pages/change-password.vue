@@ -53,11 +53,10 @@ definePageMeta({
   layout: 'blank',
 })
 
-useHead({
-  title: 'เปลี่ยนรหัสผ่าน',
-})
-
 const { t } = useI18n()
+
+useHead({ title: t('global.auth.changePasswordTitle') })
+
 const { logout } = useAuth()
 const { state, loading, submit } = useChangePasswordForm(() => navigateTo('/'))
 </script>

@@ -11,8 +11,8 @@ export default {
     allStatuses: 'สถานะทั้งหมด',
     addProject: 'เพิ่ม Project',
     exportCsv: 'ส่งออก CSV',
-    addProjectSuccess: 'เพิ่ม Project แล้ว',
-    updateProjectSuccess: 'แก้ไข Project แล้ว',
+    addProjectSuccess: 'เพิ่ม Project สำเร็จ',
+    updateProjectSuccess: 'แก้ไข Project สำเร็จ',
     columns: {
       name: 'ชื่อ',
       company: 'บริษัท',

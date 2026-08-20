@@ -53,7 +53,7 @@ export default {
     pageTitle: 'Create Staff',
     heading: 'Create New Staff',
     subheading: 'Fill in the details to create a new staff account.',
-    createStaff: 'Create Staff',
+    createStaff: 'Save Staff',
     createSuccess: 'Staff created successfully',
   },
   detail: {

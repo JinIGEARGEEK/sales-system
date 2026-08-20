@@ -36,7 +36,7 @@ export default {
     descriptionPlaceholder: 'อธิบายความหมายและวิธีใช้งาน Tag นี้',
     status: 'สถานะ',
     statusPlaceholder: 'เลือกสถานะ',
-    createTag: 'สร้าง Tag',
+    createTag: 'บันทึก Tag',
     cancel: 'ยกเลิก',
     createSuccess: 'สร้าง Tag สำเร็จ',
   },

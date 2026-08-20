@@ -45,7 +45,7 @@ export default {
     assignedToPlaceholder: 'เว้นว่างเพื่อมอบหมายอัตโนมัติ (round robin)',
     notes: 'บันทึกเพิ่มเติม',
     notesPlaceholder: 'กรอกบันทึกเพิ่มเติม (ถ้ามี)',
-    createLead: 'เพิ่ม Lead',
+    createLead: 'บันทึก Lead',
     cancel: 'ยกเลิก',
     createSuccess: 'เพิ่ม Lead สำเร็จ',
     duplicateWarningTitle: 'อาจมี Lead นี้อยู่แล้ว',
@@ -66,7 +66,7 @@ export default {
     updateSuccess: 'แก้ไข Lead สำเร็จ',
     attachmentsHeading: 'ไฟล์แนบ',
     addAttachment: 'เพิ่มไฟล์แนบ',
-    addAttachmentSuccess: 'เพิ่มไฟล์แนบแล้ว',
-    removeAttachmentSuccess: 'ลบไฟล์แนบแล้ว',
+    addAttachmentSuccess: 'เพิ่มไฟล์แนบสำเร็จ',
+    removeAttachmentSuccess: 'ลบไฟล์แนบสำเร็จ',
   },
 }
