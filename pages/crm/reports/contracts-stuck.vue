@@ -33,7 +33,7 @@
             type="number"
             :label="t('crm.reports.contractsStuck.filterMinDays')"
             name="minDays"
-            class="w-40"
+            class="w-72"
           />
           <UButton
             v-if="hasActiveFilters"

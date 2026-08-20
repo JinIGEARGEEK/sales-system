@@ -33,7 +33,7 @@
             type="number"
             :label="t('crm.reports.stalledDeals.filterMinDays')"
             name="minDays"
-            class="w-40"
+            class="w-80"
           />
           <InputSelect
             v-model="salesRepFilter"
