@@ -53,19 +53,32 @@
         <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.salesQuota.heading') }}</h3>
       </template>
 
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <Form ref="salesQuotaFormRef" class="flex-1" @submit="onSubmitSalesQuota">
+      <Form ref="salesQuotaFormRef" @submit="onSubmitSalesQuota">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
           <InputText
             v-model.number="salesQuotaForm.quarterly_sales_target"
             type="number"
             :label="t('admin.pipelineConfig.salesQuota.label')"
             name="quarterly_sales_target"
             rules="required"
+            class="flex-1"
           />
-        </Form>
-        <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content :loading="salesQuotaLoading" @click="onSaveSalesQuota" />
-      </div>
+          <InputText
+            v-model.number="salesQuotaForm.annual_revenue_goal"
+            type="number"
+            :label="t('admin.pipelineConfig.salesQuota.annualGoalLabel')"
+            name="annual_revenue_goal"
+            rules="required"
+            class="flex-1"
+          />
+          <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content :loading="salesQuotaLoading" @click="onSaveSalesQuota" />
+        </div>
+      </Form>
       <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
+      <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.annualGoalHelp') }}</p>
+      <p v-if="salesQuotaUpdatedAt" class="mt-2 text-xs text-[var(--color-gray)]">
+        {{ t('admin.pipelineConfig.salesQuota.lastUpdated', { date: dateTimeFormat(salesQuotaUpdatedAt) }) }}
+      </p>
     </UCard>
 
     <UCard :ui="GLASS_PANEL_UI">
@@ -139,10 +152,17 @@ useHead({ title: t('admin.pipelineConfig.pageTitle') })
 // backend endpoints, which 403 for anyone else).
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { toBadge } = useFormatter()
+const { toBadge, dateTimeFormat } = useFormatter()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const appSettingsStore = useAppSettingsStore()
+const { settings: appSettings } = storeToRefs(appSettingsStore)
+// Neither the quarterly quota nor the annual goal resets itself on a new
+// quarter/year — surfacing when it was last touched is the cheapest guard
+// against a stale figure (e.g. last year's annual goal still sitting there
+// in February) going unnoticed. Reactive off the store so it updates the
+// instant a save succeeds, not just on the next page load.
+const salesQuotaUpdatedAt = computed(() => appSettings.value?.updated_at ?? null)
 
 const stagesLoading = ref(false)
 const sourcesLoading = ref(false)
@@ -155,6 +175,7 @@ onMounted(async () => {
   try {
     const settings = await appSettingsStore.fetchAll()
     salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
+    salesQuotaForm.annual_revenue_goal = settings.annual_revenue_goal
   } catch (err) {
     notifyApiError(err)
   }
@@ -168,12 +189,15 @@ onMounted(async () => {
 // constant `false` since the initial value is set once via fetchAll above.
 const { form: salesQuotaForm, formRef: salesQuotaFormRef, validateThenSubmit, loading: salesQuotaLoading, guard: guardSalesQuota } = useModalForm(
   () => false,
-  () => ({ quarterly_sales_target: 0 }),
+  () => ({ quarterly_sales_target: 0, annual_revenue_goal: 0 }),
 )
 
 const onSubmitSalesQuota = guardSalesQuota(async () => {
   try {
-    await appSettingsStore.update({ quarterly_sales_target: salesQuotaForm.quarterly_sales_target })
+    await appSettingsStore.update({
+      quarterly_sales_target: salesQuotaForm.quarterly_sales_target,
+      annual_revenue_goal: salesQuotaForm.annual_revenue_goal,
+    })
     success(t('admin.pipelineConfig.salesQuota.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

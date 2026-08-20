@@ -48,9 +48,12 @@ export default {
     deactivateSuccess: 'Source deactivated',
   },
   salesQuota: {
-    heading: 'Sales Quota',
+    heading: 'Sales Quota & Revenue Goals',
     label: 'Quarterly Sales Target',
     help: 'Used to compute the Pipeline Coverage Ratio on the Dashboard.',
+    annualGoalLabel: 'Annual Revenue Goal',
+    annualGoalHelp: 'Used to compute the Annual Revenue Goal progress on the Dashboard.',
+    lastUpdated: 'Last updated {date}',
     save: 'Save',
     saveSuccess: 'Sales quota saved successfully',
   },

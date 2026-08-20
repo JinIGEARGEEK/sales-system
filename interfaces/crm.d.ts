@@ -133,11 +133,16 @@ interface LeadSourceOption {
 }
 
 // The Admin-configurable app-wide settings singleton — GET/PATCH /admin/settings.
-// Currently holds only the quarterly sales quota (FR-CRM-058), previously
-// hardcoded in the dashboard summary handler.
+// Holds the quarterly sales quota (FR-CRM-058) and the annual revenue goal
+// (FR-CRM-091), both previously hardcoded in the dashboard summary handler.
 interface AppSettings {
   id: number
   quarterly_sales_target: number
+  annual_revenue_goal: number
+  // Neither figure resets itself on a new quarter/year — this is surfaced in
+  // the Admin config UI as a "last updated" hint so a stale value (e.g. last
+  // year's annual goal still sitting there in February) doesn't go unnoticed.
+  updated_at: Date
 }
 
 interface Activity {
@@ -295,6 +300,18 @@ interface DashboardSummary {
   avg_sales_cycle_days: number
   pipeline_coverage_ratio: number
   quarterly_sales_target: number
+  // Company-wide annual revenue goal (FR-CRM-091), Admin-configurable via
+  // AppSettings above — annual_revenue_actual is Won Deal value since Jan 1
+  // of the current calendar year, ignoring the dashboard's own filter bar
+  // (same convention as revenue_trend/forecast_trend below).
+  annual_revenue_goal: number
+  annual_revenue_actual: number
+  annual_revenue_progress_ratio: number
+  // Cumulative Won value by month, Jan through the current month, alongside
+  // a straight-line goal_pace (annual_revenue_goal × months-elapsed/12) for
+  // the same point — lets the dashboard chart whether the company is ahead
+  // of or behind pace over the year, not just infer it from today's ratio.
+  annual_revenue_trend: { label: string, actual: number, goal_pace: number }[]
   revenue_trend: { label: string, value: number }[]
   // Forward-looking counterpart to revenue_trend: probability-weighted value of
   // open deals bucketed by ExpectedCloseDate month (next 6 months). Deals with no

@@ -183,6 +183,19 @@
           {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${t('global.currencySymbol')}${priceFormatCompact(quarterlySalesTarget)}` }) }}
         </template>
       </CrmStatCard>
+      <CrmStatCard
+        :label="t('crm.dashboard.annualRevenueGoal')"
+        :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
+        :icon-bg-class="isAnnualGoalOnTrack ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
+        :value-class="isAnnualGoalOnTrack ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
+        :hint-class="isAnnualGoalOnTrack ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
+        :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
+      >
+        {{ annualGoalProgressPercent }}%
+        <template #hint>
+          {{ t(isAnnualGoalOnTrack ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.annualRevenueGoalHint', { actual: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueActual)}`, goal: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueGoal)}` }) }}
+        </template>
+      </CrmStatCard>
     </div>
 
     <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -250,6 +263,42 @@
         </div>
       </UCard>
     </div>
+
+    <UCard class="mb-6 ring-[var(--color-card-border)]">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-success-toast)]/15">
+            <UIcon name="material-symbols:flag-outline" class="size-4 text-[var(--color-success-toast)]" />
+          </div>
+          <h3 class="text-lg font-medium">{{ t('crm.dashboard.annualRevenueTrend') }}</h3>
+        </div>
+        <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.annualRevenueTrendHint') }}</p>
+      </template>
+      <div class="relative flex h-40 items-end gap-3 px-2">
+        <div class="pointer-events-none absolute inset-x-2 top-0 flex h-28 flex-col justify-between">
+          <div v-for="line in 4" :key="line" class="border-t border-dashed border-[var(--color-light-gray-2)]" />
+        </div>
+        <div v-for="bucket in annualRevenueTrendChart" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
+          <span class="text-xs font-medium" :class="bucket.actual > 0 ? 'text-[var(--color-black)]' : 'text-[var(--color-gray)]'">
+            {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.actual) }}
+          </span>
+          <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.actual)} (${t('crm.dashboard.annualRevenueTrendPaceLabel', { pace: `${t('global.currencySymbol')}${priceFormatCompact(bucket.goal_pace)}` })})`">
+            <div class="relative flex h-28 w-full items-end overflow-hidden rounded-t-md bg-[var(--color-light-gray-2)]">
+              <div
+                class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
+                :class="bucket.actual >= bucket.goal_pace ? 'bg-[var(--color-success-toast)]' : 'bg-[var(--color-danger-toast)]'"
+                :style="`height: ${Math.max(bucket.actualPercent, 4)}%`"
+              />
+              <div
+                class="pointer-events-none absolute inset-x-0 border-t-2 border-dashed border-[var(--color-black)]/40"
+                :style="`bottom: ${bucket.goalPacePercent}%`"
+              />
+            </div>
+          </UTooltip>
+          <span class="text-xs text-[var(--color-gray)]">{{ bucket.label }}</span>
+        </div>
+      </div>
+    </UCard>
 
     <div class="mb-6 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
@@ -561,6 +610,23 @@ const avgSalesCycleDays = computed(() => summary.value?.avg_sales_cycle_days ?? 
 const pipelineCoverageRatio = computed(() => summary.value?.pipeline_coverage_ratio ?? 0)
 const quarterlySalesTarget = computed(() => summary.value?.quarterly_sales_target ?? 0)
 const isPipelineHealthy = computed(() => pipelineCoverageRatio.value >= 1)
+const annualRevenueGoal = computed(() => summary.value?.annual_revenue_goal ?? 0)
+const annualRevenueActual = computed(() => summary.value?.annual_revenue_actual ?? 0)
+const annualRevenueProgressRatio = computed(() => summary.value?.annual_revenue_progress_ratio ?? 0)
+const annualGoalProgressPercent = computed(() => Math.round(annualRevenueProgressRatio.value * 100))
+const annualRevenueTrend = computed(() => summary.value?.annual_revenue_trend ?? [])
+// On track = this year's cumulative actual has kept pace with a straight-line
+// goal_pace for the months elapsed so far (dashboard.go's annualRevenueTrend(),
+// annualGoal × monthsElapsed/12) — not a flat >= 100% bar like isPipelineHealthy,
+// since the annual goal isn't expected to be fully met until December. Reads
+// the trend's own last point rather than re-deriving a pro-rated expectation
+// client-side (e.g. from today's day-of-year), so this indicator can never
+// disagree with the "Annual Goal Pace" chart below, which colors its bars
+// against that exact same actual-vs-goal_pace comparison.
+const isAnnualGoalOnTrack = computed(() => {
+  const latest = annualRevenueTrend.value[annualRevenueTrend.value.length - 1]
+  return latest ? latest.actual >= latest.goal_pace : false
+})
 
 const UPCOMING_TASKS_LIMIT = 6
 const { resolveRelated } = useRelatedRecord()
@@ -620,6 +686,19 @@ const forecastTrend = computed(() => {
   const points = summary.value?.forecast_trend ?? []
   const maxValue = Math.max(...points.map(p => p.value), 1)
   return points.map(p => ({ ...p, percent: Math.round((p.value / maxValue) * 100) }))
+})
+
+// Scaled against the full-year goal (not just this year's tallest month) so
+// the bars visibly grow toward the goal_pace line as the year progresses,
+// rather than each bucket being re-scaled to its own neighbors.
+const annualRevenueTrendChart = computed(() => {
+  const points = annualRevenueTrend.value
+  const maxValue = Math.max(annualRevenueGoal.value, ...points.map(p => p.actual), 1)
+  return points.map(p => ({
+    ...p,
+    actualPercent: Math.round((p.actual / maxValue) * 100),
+    goalPacePercent: Math.round((p.goal_pace / maxValue) * 100),
+  }))
 })
 
 const industryBreakdown = computed(() => {
