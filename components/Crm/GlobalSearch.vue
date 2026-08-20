@@ -4,12 +4,12 @@
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/20 via-white/5 to-transparent" />
       <UInput
         v-model="query"
-        size="lg"
+        size="md"
         icon="material-symbols:search"
         :placeholder="t('crm.components.globalSearch.placeholder')"
         class="w-full"
         :ui="{
-          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15 py-3',
+          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15 py-1.5',
           leadingIcon: 'text-yellow-400',
         }"
         @focus="open = true"
