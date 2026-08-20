@@ -153,7 +153,14 @@ interface AppSettings {
 interface SalesTarget {
   id: number
   year: number
-  quarter: 1 | 2 | 3 | 4
+  // Plain number, not a 1|2|3|4 literal union: the backend sends/accepts a
+  // bare int with no compile-time narrowing, and the literal union caused a
+  // real typecheck failure at the one call site that actually constructs
+  // this shape from a form payload (pages/admin/pipeline-config.vue's
+  // onSubmitTarget) — TS can't narrow a plain `number` down to the literal
+  // union without an explicit assertion. Runtime validity (1-4) is enforced
+  // server-side (internal/handlers/sales_targets.go's salesTargetForm.validate).
+  quarter: number
   target_value: number
   created_at: Date
   updated_at: Date
