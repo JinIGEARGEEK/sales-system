@@ -54,7 +54,7 @@
     <aside class="relative hidden overflow-hidden border-r border-white/15 bg-[var(--color-sidebar-bg)]/90 text-white backdrop-blur-2xl md:flex md:w-44 md:flex-col">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
 
-      <NuxtLink to="/" class="relative flex h-14 items-center gap-2 px-4 border-b border-white/15">
+      <NuxtLink to="/" class="relative flex h-(--layout-header-height) items-center gap-2 px-4 border-b border-white/15">
         <UIcon name="material-symbols:hub-outline" class="size-6 text-yellow-400" />
         <span class="text-lg font-medium">CRM System</span>
       </NuxtLink>
@@ -105,7 +105,7 @@
     </aside>
 
     <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
-      <div ref="headerRef" class="sticky top-0 z-10 hidden h-14 items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 backdrop-blur-2xl md:flex">
+      <div ref="headerRef" class="sticky top-0 z-10 hidden h-(--layout-header-height) items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 backdrop-blur-2xl md:flex">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />

@@ -100,10 +100,16 @@
       </template>
     </UAlert>
 
+    <div class="mb-8">
+      <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+        {{ t('crm.dashboard.sectionPipelineOverview') }}
+      </h3>
+
     <!-- Primary: the numbers that answer "how's the pipeline doing right now" -->
-    <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <CrmStatCard
         :label="t('crm.dashboard.openPipelineValue')"
+        :tooltip="t('crm.dashboard.openPipelineValueTooltip')"
         icon="material-symbols:account-balance-wallet-outline"
         icon-class="text-[var(--color-accent-green)]"
         icon-bg-class="bg-[var(--color-accent-green)]/25"
@@ -113,16 +119,17 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.forecastedRevenue')"
+        :tooltip="t('crm.dashboard.forecastedRevenueHint')"
         icon="material-symbols:query-stats"
         icon-class="text-[var(--color-info-toast)]"
         icon-bg-class="bg-[var(--color-info-toast)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
-        <template #hint>{{ t('crm.dashboard.forecastedRevenueHint') }}</template>
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.winRate')"
+        :tooltip="t('crm.dashboard.winRateTooltip')"
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
         :icon-bg-class="winRate >= 50 ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-gray)]/25'"
         :value-class="winRate >= 50 ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-black)]'"
@@ -132,6 +139,7 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.openDeals')"
+        :tooltip="t('crm.dashboard.openDealsTooltip')"
         icon="material-symbols:work-outline"
         icon-class="text-[var(--color-warning-hover)]"
         icon-bg-class="bg-[var(--color-warning-hover)]/25"
@@ -142,9 +150,10 @@
     </div>
 
     <!-- Secondary: deeper diagnostics, one deliberate row instead of a leftover single card -->
-    <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <CrmStatCard
         :label="t('crm.dashboard.wonThisPeriod')"
+        :tooltip="t('crm.dashboard.wonThisPeriodTooltip')"
         icon="material-symbols:workspace-premium-outline"
         icon-class="text-[var(--color-success-toast)]"
         icon-bg-class="bg-[var(--color-success-toast)]/25"
@@ -154,6 +163,7 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.avgDealSize')"
+        :tooltip="t('crm.dashboard.avgDealSizeTooltip')"
         icon="material-symbols:payments-outline"
         icon-class="text-[var(--color-chart-violet)]"
         icon-bg-class="bg-[var(--color-chart-violet)]/25"
@@ -163,6 +173,7 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.avgSalesCycle')"
+        :tooltip="t('crm.dashboard.avgSalesCycleTooltip')"
         icon="material-symbols:schedule-outline"
         icon-class="text-[var(--color-info-toast)]"
         icon-bg-class="bg-[var(--color-info-toast)]/25"
@@ -172,6 +183,7 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.pipelineCoverage')"
+        :tooltip="t('crm.dashboard.pipelineCoverageTooltip')"
         :icon="isPipelineHealthy ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
         :icon-bg-class="isPipelineHealthy ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
         :value-class="isPipelineHealthy ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
@@ -185,6 +197,7 @@
       </CrmStatCard>
       <CrmStatCard
         :label="t('crm.dashboard.annualRevenueGoal')"
+        :tooltip="t('crm.dashboard.annualRevenueGoalTooltip')"
         :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
         :icon-bg-class="isAnnualGoalOnTrack ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
         :value-class="isAnnualGoalOnTrack ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
@@ -197,8 +210,14 @@
         </template>
       </CrmStatCard>
     </div>
+    </div>
 
-    <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div class="mb-8">
+      <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+        {{ t('crm.dashboard.sectionTrends') }}
+      </h3>
+
+    <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <UCard class="ring-[var(--color-card-border)]">
         <template #header>
           <div class="flex items-center gap-2">
@@ -264,7 +283,7 @@
       </UCard>
     </div>
 
-    <UCard class="mb-6 ring-[var(--color-card-border)]">
+    <UCard class="ring-[var(--color-card-border)]">
       <template #header>
         <div class="flex items-center gap-2">
           <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-success-toast)]/15">
@@ -299,8 +318,14 @@
         </div>
       </div>
     </UCard>
+    </div>
 
-    <div class="mb-6 grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
+    <div class="mb-8">
+      <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+        {{ t('crm.dashboard.sectionPipelineOpportunities') }}
+      </h3>
+
+    <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
@@ -366,6 +391,12 @@
         </UCard>
       </div>
     </div>
+    </div>
+
+    <div>
+      <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+        {{ t('crm.dashboard.sectionFollowUpsTeam') }}
+      </h3>
 
     <div class="mb-6">
       <UCard class="ring-[var(--color-card-border)]">
@@ -460,6 +491,7 @@
           </div>
         </UCard>
       </div>
+    </div>
     </div>
   </div>
 </template>

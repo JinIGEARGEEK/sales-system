@@ -107,6 +107,16 @@ summary {
   --color-sidebar-bg: color-mix(in oklab, var(--color-black) 93%, var(--color-primary) 7%);
 
   /*
+   * Shared row height for the sidebar's brand header (layouts/default.vue's
+   * aside brand NuxtLink) and the topbar (layouts/default.vue's <main> header
+   * div). Both sit side by side at the top of the app shell and their
+   * border-bottom lines must land on the same pixel row — reference this
+   * token via `h-(--layout-header-height)` in both places instead of
+   * hardcoding `h-14` twice, so they can't drift out of sync if one changes.
+   */
+  --layout-header-height: 3.5rem;
+
+  /*
    * Authenticated-app content background (layouts/default.vue's <main>). Kept as
    * its own token — not --color-light-gray-1 — because it's been hand-tuned
    * lighter/darker several times on request and shouldn't drag that shared
