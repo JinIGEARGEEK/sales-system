@@ -14,6 +14,7 @@
             :label="t('crm.components.addProjectModal.company')"
             :placeholder="t('crm.components.addProjectModal.companyPlaceholder')"
             name="company_id"
+            :disable="companyOptions.length === 0"
             rules="required"
           />
           <InputSelect
@@ -23,6 +24,7 @@
             :label="t('crm.components.addProjectModal.deal')"
             :placeholder="t('crm.components.addProjectModal.dealPlaceholder')"
             name="deal_id"
+            :disable="dealOptions.length === 0"
           />
           <InputText v-if="!productionEditor" v-model="form.name" :label="t('crm.components.addProjectModal.name')" name="name" rules="required" />
           <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />

@@ -12,6 +12,7 @@
             :label="t('crm.contracts.components.addContractModal.quote')"
             :placeholder="t('crm.contracts.components.addContractModal.quotePlaceholder')"
             name="quote_id"
+            :disable="quoteOptions.length === 0"
           />
           <InputSelect
             v-model="form.status"

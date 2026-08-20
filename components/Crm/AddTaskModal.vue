@@ -21,25 +21,12 @@
               :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
               name="related_id"
               :options="relatedRecordOptions"
-              :disable="!form.related_type"
+              :disable="!form.related_type || relatedRecordOptions.length === 0"
               rules="required"
             />
           </template>
           <InputText v-model="form.title" :label="t('crm.components.addTaskModal.taskTitle')" name="title" rules="required" />
-          <div>
-            <InputDatePicker v-model="form.due_date" :label="t('crm.components.addTaskModal.dueDate')" name="due_date" rules="required" />
-            <div class="mt-1.5 flex gap-1.5">
-              <UButton
-                v-for="preset in DUE_DATE_PRESETS"
-                :key="preset.days"
-                :label="t(`crm.components.addTaskModal.${preset.labelKey}`)"
-                size="xs"
-                variant="outline"
-                color="neutral"
-                @click="applyDueDatePreset(preset.days)"
-              />
-            </div>
-          </div>
+          <InputDatePicker v-model="form.due_date" :label="t('crm.components.addTaskModal.dueDate')" name="due_date" rules="required" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
         </div>
       </Form>
@@ -73,12 +60,6 @@ const emit = defineEmits<{
   submit: [task: { title: string, due_date: Date, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }]
 }>()
 
-const DUE_DATE_PRESETS = [
-  { labelKey: 'dueToday', days: 0 },
-  { labelKey: 'dueTomorrow', days: 1 },
-  { labelKey: 'dueNextWeek', days: 7 },
-]
-
 // Plain hardcoded labels, matching this codebase's convention for
 // enum-value option lists (e.g. PROJECT_STATUS_OPTIONS) — not localized.
 const RELATED_TYPE_OPTIONS: Select[] = [
@@ -107,14 +88,6 @@ const relatedRecordOptions = computed<Select[]>(() => {
   if (form.related_type === 'company') return companiesStore.items.map(c => ({ label: c.name, value: String(c.id) }))
   return []
 })
-
-const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10)
-
-const applyDueDatePreset = (days: number) => {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  form.due_date = toDateInputValue(date)
-}
 
 const emptyForm = () => ({
   title: '',

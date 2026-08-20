@@ -9,6 +9,11 @@
     :loading-auto="props.loadingAuto"
     :class="[
       'min-w-24 justify-center rounded-full px-6',
+      // Nuxt UI's disabled state only dims opacity — it doesn't stop :hover
+      // from still swapping in the hover background/ring, so a disabled
+      // button visibly (and confusingly) reacts to mouseover. Kill pointer
+      // interaction entirely so hover styles never trigger while disabled.
+      'disabled:pointer-events-none',
       { 'w-full': props.block },
       { '!min-w-fit': props.fitContent },
       { 'text-sm py-1': props.small },
@@ -16,6 +21,13 @@
       // as barely-there against this app's pastel content background —
       // bump it to a solid, full-opacity ring in the button's own color.
       outlineRingClass,
+      // Disabled state dims via opacity alone, so an outline button's ring
+      // and label just fade to a washed-out version of their own color
+      // (still reads as bluish/reddish) instead of looking neutrally
+      // switched off — force both to the app's disabled gray, faded further
+      // so the whole button reads as quietly switched off rather than
+      // drawing the eye.
+      'disabled:ring-(--color-gray)/30 disabled:text-(--color-gray)/40',
     ]"
   >
     <slot />

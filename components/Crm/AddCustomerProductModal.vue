@@ -13,6 +13,7 @@
             :label="t('crm.components.addCustomerProductModal.product')"
             :placeholder="t('crm.components.addCustomerProductModal.productPlaceholder')"
             name="product_id"
+            :disable="productOptions.length === 0"
             rules="required"
           />
           <div v-else>

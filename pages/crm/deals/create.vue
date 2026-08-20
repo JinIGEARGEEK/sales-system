@@ -38,8 +38,8 @@
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <InputText v-model="form.title" :label="t('crm.deals.create.dealTitle')" :placeholder="t('crm.deals.create.dealTitlePlaceholder')" name="title" rules="required" />
-          <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" rules="required" />
-          <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" />
+          <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" :disable="companyOptions.length === 0" rules="required" />
+          <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
           <InputText v-model.number="form.value" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" type="number" rules="required" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
@@ -58,6 +58,7 @@
             :label="form.business_unit === 'Project' ? t('crm.deals.create.project') : t('crm.deals.create.product')"
             :placeholder="t('crm.deals.create.businessUnitItemPlaceholder')"
             name="business_unit_item"
+            :disable="businessUnitItemOptions.length === 0"
           />
         </div>
 

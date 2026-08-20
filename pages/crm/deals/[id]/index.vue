@@ -32,6 +32,7 @@
               :label="form.business_unit === 'Project' ? t('crm.deals.detail.project') : t('crm.deals.detail.product')"
               :placeholder="t('crm.deals.detail.businessUnitItemPlaceholder')"
               name="business_unit_item"
+              :disable="businessUnitItemOptions.length === 0"
             />
             <InputSelect
               v-if="isLostStage(form.stage)"

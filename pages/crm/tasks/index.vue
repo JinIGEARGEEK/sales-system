@@ -9,6 +9,7 @@
         <ButtonPrimary
           outline
           :label="isSelectMode ? t('crm.tasks.index.cancelSelectMode') : t('crm.tasks.index.enterSelectMode')"
+          :disabled="!isSelectMode && filteredTasks.length === 0"
           @click="toggleSelectMode"
         />
         <ButtonPrimary

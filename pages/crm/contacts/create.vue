@@ -31,6 +31,7 @@
             :label="t('crm.contacts.create.company')"
             :placeholder="t('crm.contacts.create.companyPlaceholder')"
             name="company_id"
+            :disable="companyOptions.length === 0"
             rules="required"
           />
           <InputText
