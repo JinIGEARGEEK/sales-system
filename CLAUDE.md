@@ -2,19 +2,22 @@
 
 ## Project Overview
 
-This is the **I GEAR GEEK Frontend Starter** — a Nuxt 4 SPA starter template built with **Nuxt UI 3**, **Tailwind CSS v4**, **Pinia**, **Vee-Validate**, and **i18n (EN/TH)**.
+This is the **I GEAR GEEK Sales System** — a Nuxt 4 SPA (a CRM covering leads, contacts, companies, deals, quotes, contracts, payments, projects, and tasks) built with **Nuxt UI 3**, **Tailwind CSS v4**, **Pinia**, **Vee-Validate**, and **i18n (EN/TH)**. It originated from the I GEAR GEEK frontend starter template; the structure below reflects how the project actually evolved, not the starter's original layout.
 
-## Important: Always Read Spec Files
+## Important: Read These First
 
-Before modifying any component or composable, **always read the corresponding `.spec` files** in the `tests/` directory first. Test files follow the pattern `tests/<ComponentPath>/<ComponentName>.nuxt.spec.ts`. Understanding existing tests ensures changes don't break expected behavior.
+- **Business/UX specs** — before implementing a feature or changing behavior, check `biz_spec/`: `feature-spec.md`, `user-story.md`, `api-system-spec.md`, `design-system.md`, and `ux-ui-guidelines/` (layout, filter, modal, table conventions). These are the source of truth for business rules and UX patterns, and won't be evident from the code alone.
+- **Spec files** — before modifying any component or composable, check for a corresponding test in `tests/`, pattern `tests/<ComponentPath>/<ComponentName>.nuxt.spec.ts`. Coverage is currently sparse (most of the codebase has no spec yet), so absence of a test isn't a signal — but if one exists, read it first.
 
 ## Tech Stack
 
-- **Framework**: Nuxt 4 (`ssr: false`, SPA mode)
+- **Framework**: Nuxt 4 (`ssr: false`, SPA mode; no `app/` srcDir remap — top-level `components/`, `pages/`, `stores/`, etc. are the Nuxt convention here)
 - **UI Library**: Nuxt UI 3 (built on Reka UI + Tailwind CSS v4)
 - **State Management**: Pinia (stores in `stores/`)
 - **Form Validation**: Vee-Validate with `<Field v-slot>` pattern
-- **HTTP Client**: Axios (via `composables/util/useAPI.ts`)
+- **HTTP Client**: Axios (`plugins/axios.ts`, via `composables/utils/useAPI.ts`)
+- **Error Tracking**: Sentry (`plugins/sentry.ts`, configured via `SENTRY_DSN`/`APP_ENV` runtime config)
+- **Auth**: `middleware/auth.global.ts` route guard + `plugins/hydrate-auth.client.ts`
 - **i18n**: `@nuxtjs/i18n` with Thai (default) and English locales
 - **Icons**: Google Material Symbols via Iconify (`material-symbols:icon-name`)
 - **Package Manager**: pnpm
@@ -22,30 +25,44 @@ Before modifying any component or composable, **always read the corresponding `.
 ## Project Structure
 
 ```
-app/                        # Nuxt 4 app directory
-├── components/
-│   ├── Button/             # ButtonPrimary, ButtonOutline
-│   ├── Input/              # Text, Password, Select, DatePicker, etc.
-│   ├── Table/              # TableData, TablePagination, Card types
-│   └── Container/          # ContainerTemplate
-├── composables/
-│   ├── service/            # API service composables
-│   └── util/               # useAPI, useFormatter, useNotify, useAuth, useValidate
-├── layouts/                # default (admin), ecommerce, landing, blank
-├── pages/
-│   ├── admin/              # Dashboard + User CRUD
-│   ├── shop/               # Product listing, detail, cart
-│   ├── landing/            # Marketing landing page
-│   └── example/            # Component showcases (button, input, table, store)
-├── stores/                 # Pinia stores (user, loading, cart)
-├── constants/              # Mock data, table card types
-├── interfaces/             # TypeScript interfaces
-├── locales/                # i18n translations (en, th)
-├── assets/styles/          # global.css (design tokens), typography.css
-├── app.vue                 # Root component (UApp wrapper)
-├── app.config.ts           # Nuxt UI theme config
-└── nuxt.config.ts          # Nuxt configuration
-tests/                      # Test files (*.nuxt.spec.ts)
+components/
+├── Admin/                  # Admin/user-management components
+├── Auth/                   # Login, change-password, auth-related components
+├── Button/                 # ButtonPrimary, ButtonOutline
+├── Container/              # ContainerTemplate
+├── Crm/                    # Deal, lead, contact, company, quote, task components
+├── Input/                  # Text, Password, Select, DatePicker, etc.
+├── Table/                  # TableData, TablePagination, Card types
+└── SwitchLang.vue
+composables/
+└── utils/                  # useAPI, useAuth, useNotify, useFormatter, useRole,
+                             # useSubmitGuard, useDealMetrics, useCsvExport,
+                             # usePdfExport, useServerListPage, and other
+                             # domain/utility composables (flat, no subfolders)
+stores/                     # Pinia stores — CRM domain: deals, quotes, contracts,
+                             # payments, leads, contacts, companies, tasks, projects,
+                             # activities, tags, auditLog, teamMembers, user, etc.
+pages/
+├── admin/                  # Users CRUD, pipeline-config, activity-log, trash
+├── crm/                    # leads, deals, contacts, companies, tags, tasks,
+                             # projects, reports
+├── account/
+├── login.vue
+└── change-password.vue
+layouts/                    # default, blank
+middleware/                 # auth.global.ts
+plugins/                    # axios, sentry, vee-validate, hydrate-auth.client
+constants/                  # Mock data, table card types, ui constants
+interfaces/                 # admin.d.ts, auth.d.ts, api.d.ts, crm.d.ts,
+                             # reports.d.ts, tableData.d.ts, component.d.ts
+locales/                    # i18n translations (en.ts, th.ts, admin/, crm/, global/, layout/)
+biz_spec/                   # Business & UX source of truth — feature-spec, user-story,
+                             # api-system-spec, design-system, ux-ui-guidelines/
+assets/styles/               # global.css (design tokens), typography.css
+app.vue                      # Root component (UApp wrapper)
+app.config.ts                 # Nuxt UI theme config
+nuxt.config.ts                 # Nuxt configuration
+tests/                       # Test files (*.nuxt.spec.ts) — currently sparse coverage
 ```
 
 ## Key Conventions
@@ -100,4 +117,5 @@ pnpm lint             # Lint code
 - Keep form validation using Vee-Validate `<Field>` pattern
 - Use Material Symbols icons, not Lucide or other icon sets
 - All new components should follow existing patterns in `components/`
-- Read test files before modifying components they cover
+- Read `biz_spec/` docs before implementing features or changing business behavior
+- Read matching test files before modifying components/composables they cover

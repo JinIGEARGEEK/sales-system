@@ -25,37 +25,32 @@
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <div class="flex-1 sm:min-w-48">
-          <InputText
-            v-model="search"
-            :placeholder="t('crm.contacts.index.searchPlaceholder')"
-            name="search"
-          />
-        </div>
-        <div class="w-full sm:w-48">
-          <InputSelect
-            v-model="companyFilter"
-            :options="[{ label: t('crm.contacts.index.allCompanies'), value: 'all' }, ...companyOptions]"
-            :placeholder="t('crm.contacts.index.companyPlaceholder')"
-            name="companyFilter"
-          />
-        </div>
-        <div class="w-full sm:w-40">
-          <InputSelect
-            v-model="statusFilter"
-            :options="COMPANY_STATUS_OPTIONS"
-            :placeholder="t('crm.contacts.index.statusPlaceholder')"
-            name="statusFilter"
-          />
-        </div>
-        <div class="w-full sm:w-40">
-          <InputSelect
-            v-model="tagFilter"
-            :options="[{ label: t('crm.contacts.index.allTags'), value: 'all' }, ...tagOptions]"
-            :placeholder="t('crm.contacts.index.tagPlaceholder')"
-            name="tagFilter"
-          />
+      <div class="flex flex-col gap-3">
+        <CrmStatusPill v-model="statusFilter" :options="COMPANY_STATUS_OPTIONS" />
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div class="flex-1 sm:min-w-48">
+            <InputText
+              v-model="search"
+              :placeholder="t('crm.contacts.index.searchPlaceholder')"
+              name="search"
+            />
+          </div>
+          <div class="w-full sm:w-48">
+            <InputSelect
+              v-model="companyFilter"
+              :options="[{ label: t('crm.contacts.index.allCompanies'), value: 'all' }, ...companyOptions]"
+              :placeholder="t('crm.contacts.index.companyPlaceholder')"
+              name="companyFilter"
+            />
+          </div>
+          <div class="w-full sm:w-40">
+            <InputSelect
+              v-model="tagFilter"
+              :options="[{ label: t('crm.contacts.index.allTags'), value: 'all' }, ...tagOptions]"
+              :placeholder="t('crm.contacts.index.tagPlaceholder')"
+              name="tagFilter"
+            />
+          </div>
         </div>
       </div>
     </UCard>
@@ -188,11 +183,10 @@ const columns: TableDataColumn[] = [
     label: t('crm.contacts.index.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.contacts.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.contacts.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('crm.contacts.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('crm.contacts.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },

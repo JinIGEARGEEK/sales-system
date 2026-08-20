@@ -167,7 +167,6 @@ const dealsColumns: TableDataColumn[] = [
     label: t('admin.trash.columns.deals.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
@@ -211,7 +210,6 @@ const leadsColumns: TableDataColumn[] = [
     label: t('admin.trash.columns.leads.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
@@ -254,7 +252,6 @@ const companiesColumns: TableDataColumn[] = [
     label: t('admin.trash.columns.companies.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
@@ -299,7 +296,6 @@ const contactsColumns: TableDataColumn[] = [
     label: t('admin.trash.columns.contacts.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },

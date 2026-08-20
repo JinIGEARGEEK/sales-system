@@ -6,6 +6,7 @@ export default {
   previous: 'ก่อนหน้า',
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
+  back: 'ย้อนกลับ',
   updated: {
     updatedBy: 'แก้ไขโดย ',
   },

@@ -146,11 +146,10 @@ const columns = computed<TableDataColumn[]>(() => [
     label: t('crm.deals.table.columns.action'),
     align: 'left',
     field: 'action',
-    width: 120,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.deals.table.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.deals.table.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('crm.deals.table.actions.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('crm.deals.table.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },

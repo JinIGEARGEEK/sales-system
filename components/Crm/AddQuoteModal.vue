@@ -24,46 +24,50 @@
 
           <p v-if="items.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.components.addQuoteModal.noItems') }}</p>
 
-          <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
-            <div class="grid flex-1 grid-cols-1 gap-2">
-              <InputSelect
-                :model-value="item.product_id"
-                :options="productOptions"
-                :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
-                :name="`item-product-${item.key}`"
-                @update:model-value="onItemProductChange(item, $event)"
-              />
-              <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
-                <InputText
-                  v-model="item.description"
-                  :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
-                  :name="`item-description-${item.key}`"
-                  rules="required"
+          <!-- Capped + internally scrolling: an arbitrary number of line items
+          shouldn't be able to push the modal's header/footer off-screen. -->
+          <div class="max-h-[40vh] overflow-y-auto pr-1">
+            <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
+              <div class="grid flex-1 grid-cols-1 gap-2">
+                <InputSelect
+                  :model-value="item.product_id"
+                  :options="productOptions"
+                  :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
+                  :name="`item-product-${item.key}`"
+                  @update:model-value="onItemProductChange(item, $event)"
                 />
-                <InputText
-                  v-model.number="item.qty"
-                  type="number"
-                  :placeholder="t('crm.components.addQuoteModal.itemQtyPlaceholder')"
-                  :name="`item-qty-${item.key}`"
-                  rules="required|min_value:1"
-                />
-                <InputText
-                  v-model.number="item.price"
-                  type="number"
-                  :placeholder="t('crm.components.addQuoteModal.itemPricePlaceholder')"
-                  :name="`item-price-${item.key}`"
-                  rules="required|min_value:0"
-                />
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
+                  <InputText
+                    v-model="item.description"
+                    :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
+                    :name="`item-description-${item.key}`"
+                    rules="required"
+                  />
+                  <InputText
+                    v-model.number="item.qty"
+                    type="number"
+                    :placeholder="t('crm.components.addQuoteModal.itemQtyPlaceholder')"
+                    :name="`item-qty-${item.key}`"
+                    rules="required|min_value:1"
+                  />
+                  <InputText
+                    v-model.number="item.price"
+                    type="number"
+                    :placeholder="t('crm.components.addQuoteModal.itemPricePlaceholder')"
+                    :name="`item-price-${item.key}`"
+                    rules="required|min_value:0"
+                  />
+                </div>
               </div>
+              <UButton
+                icon="material-symbols:close"
+                variant="ghost"
+                color="error"
+                size="xs"
+                :aria-label="t('crm.components.addQuoteModal.removeItem')"
+                @click="removeItemRow(index)"
+              />
             </div>
-            <UButton
-              icon="material-symbols:close"
-              variant="ghost"
-              color="error"
-              size="xs"
-              :aria-label="t('crm.components.addQuoteModal.removeItem')"
-              @click="removeItemRow(index)"
-            />
           </div>
         </div>
       </Form>

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
     <InputText
       v-model="form.first_name"
       :label="t('admin.users.form.firstName')"

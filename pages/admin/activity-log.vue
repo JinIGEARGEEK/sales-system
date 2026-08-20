@@ -182,7 +182,6 @@ const columns: TableDataColumn[] = [
     label: t('admin.activityLog.columns.action2'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('admin.activityLog.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },

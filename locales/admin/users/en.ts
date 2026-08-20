@@ -59,8 +59,6 @@ export default {
   detail: {
     pageTitle: 'Edit Staff',
     heading: 'Edit Staff',
-    breadcrumbStaff: 'Staff',
-    breadcrumbEdit: 'Edit',
     saveChanges: 'Save Changes',
     staffNotFound: 'Staff not found.',
     updateSuccess: 'Staff updated successfully',

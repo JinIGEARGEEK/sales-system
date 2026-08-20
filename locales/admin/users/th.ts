@@ -59,8 +59,6 @@ export default {
   detail: {
     pageTitle: 'แก้ไขพนักงาน',
     heading: 'แก้ไขพนักงาน',
-    breadcrumbStaff: 'พนักงาน',
-    breadcrumbEdit: 'แก้ไข',
     saveChanges: 'บันทึกการเปลี่ยนแปลง',
     staffNotFound: 'ไม่พบพนักงาน',
     updateSuccess: 'แก้ไขพนักงานสำเร็จ',

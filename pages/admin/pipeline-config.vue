@@ -243,10 +243,9 @@ const stageColumns: TableDataColumn[] = [
     label: t('admin.pipelineConfig.stages.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -306,10 +305,9 @@ const sourceColumns: TableDataColumn[] = [
     label: t('admin.pipelineConfig.sources.columns.action'),
     align: 'left',
     field: 'action',
-    width: 100,
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },

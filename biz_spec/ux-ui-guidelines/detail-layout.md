@@ -1,5 +1,7 @@
 # Detail Page Layout Guidelines
 
+> ⚠️ **This doc was written for a different app** — the `/courses/[code]` canonical example below is a React + shadcn/ui LMS backoffice, not this repo. This is a Nuxt 4 + Nuxt UI 3 CRM (`pages/crm/*/[id].vue`, `pages/admin/users/[id].vue`); none of the component names below exist here. Read this only for the underlying layout principle, not the literal markup — `design-system.md` §5.4-adjacent conventions (back-arrow + inline `<h2>` header, consistent across all detail pages) reflect what's actually built.
+
 อ้างอิงจากหน้า `/courses/[code]` เป็น canonical example  
 ใช้เป็น guideline สำหรับทุกหน้า detail ในระบบ backoffice นี้
 

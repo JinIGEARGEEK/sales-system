@@ -34,6 +34,19 @@ export const useUsersStore = defineStore('users', {
       this.items = response.data.data.map(parseDates)
       return this.items
     },
+    // Server-paginated fetch used by the Users list page (search/filter/page
+    // all round-trip to GET /users), same pattern as Leads/Companies/Contacts'
+    // fetchList — deliberately doesn't touch `items` above (that cache stays
+    // the "up to 1000, everything" list the updated-by name lookup relies on).
+    async fetchList (params?: Record<string, unknown>) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<AdminUser[]>>('/users', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        totalPage: response.data.total_page,
+      }
+    },
     async add (form: UserForm): Promise<AdminUser> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<AdminUser>>('/users', form)
