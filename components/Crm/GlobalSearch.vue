@@ -1,6 +1,6 @@
 <template>
   <div ref="rootRef" class="relative">
-    <div class="relative overflow-hidden rounded-full">
+    <div class="global-search-glow relative overflow-hidden rounded-full">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/20 via-white/5 to-transparent" />
       <UInput
         v-model="query"
@@ -9,8 +9,8 @@
         :placeholder="t('crm.components.globalSearch.placeholder')"
         class="w-full"
         :ui="{
-          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15',
-          leadingIcon: 'text-white/70',
+          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15 py-3',
+          leadingIcon: 'text-yellow-400',
         }"
         @focus="open = true"
         @keydown.escape="open = false"
@@ -31,7 +31,7 @@
             v-for="item in group.items"
             :key="item.path"
             :to="item.path"
-            class="flex items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-white/60"
+            class="global-search-result flex items-center justify-between gap-3 px-4 py-2 text-sm"
             @click="onSelect"
           >
             <span class="truncate">{{ item.label }}</span>
@@ -120,3 +120,29 @@ const onClickOutside = (event: MouseEvent) => {
 onMounted(() => document.addEventListener('mousedown', onClickOutside))
 onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
+
+<style scoped>
+/*
+ * Mirrors the sidebar nav-link treatment in layouts/default.vue: the same
+ * yellow-to-blue accent glow on focus, so the search bar reads as part of
+ * the same sidebar/topbar system rather than a generic input.
+ */
+.global-search-glow:has(input:focus-visible) {
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
+}
+
+.global-search-result {
+  position: relative;
+  color: var(--color-black);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.global-search-result:hover,
+.global-search-result:focus-visible {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.14), rgba(96, 165, 250, 0.14));
+}
+
+.global-search-result:focus-visible {
+  outline: none;
+}
+</style>
