@@ -21,7 +21,7 @@
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <InputText v-model="form.name" :label="t('crm.contacts.detail.fullName')" name="name" rules="required" />
                 <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.contacts.detail.company')" name="company_id" :disable="companyOptions.length === 0" rules="required" />
-                <InputText v-model="form.role_title" :label="t('crm.contacts.detail.roleTitle')" name="role_title" />
+                <InputSelect v-model="form.role_title" :options="roleTitleOptions" :label="t('crm.contacts.detail.roleTitle')" name="role_title" />
                 <InputText v-model="form.email" :label="t('crm.contacts.detail.email')" name="email" />
                 <InputText v-model="form.phone" :label="t('crm.contacts.detail.phone')" name="phone" />
                 <InputText v-model="form.tags" :label="t('crm.contacts.detail.tags')" :placeholder="t('crm.contacts.detail.tagsPlaceholder')" name="tags" />
@@ -145,6 +145,7 @@ const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
 const activitiesStore = useActivitiesStore()
+const jobTitleOptionsStore = useJobTitleOptionsStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
@@ -154,7 +155,19 @@ onMounted(() => {
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (jobTitleOptionsStore.items.length === 0) jobTitleOptionsStore.fetchAll().catch(notifyApiError)
   activitiesStore.fetchForRelated('contact', contactId).catch(notifyApiError)
+})
+
+// A Contact row may hold a role_title value that's since been deactivated (or
+// inherited from data written before this feature existed) — keep it
+// selectable so opening an existing Contact for edit never silently blanks
+// the field, even though it won't appear for new Contacts going forward.
+const roleTitleOptions = computed<Select[]>(() => {
+  const current = contact.value?.role_title
+  const active = jobTitleOptionsStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
 })
 
 // Project has no contact_id of its own — it only relates to a Company (and

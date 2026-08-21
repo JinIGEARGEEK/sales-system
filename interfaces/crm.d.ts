@@ -150,6 +150,43 @@ interface LeadSourceOption {
   created_at: Date
 }
 
+// An Admin-configurable Company industry option — GET/POST/PATCH/DELETE
+// /admin/industries. Replaces the previously hardcoded INDUSTRY_OPTIONS
+// constant as the source of truth for what industries exist.
+interface IndustryOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Company size option — GET/POST/PATCH/DELETE
+// /admin/company-sizes. Replaces the previously free-text Company.size field.
+interface CompanySizeOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Contact job title/role option — GET/POST/PATCH/DELETE
+// /admin/job-titles. Replaces the previously free-text Contact.role_title field.
+interface JobTitleOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Product category option — GET/POST/PATCH/DELETE
+// /admin/product-categories. Replaces the previously free-text Product.category field.
+interface ProductCategoryOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
 // An Admin-configurable lead-scoring rule — GET/POST/PATCH/DELETE
 // /admin/lead-scoring-criteria (FR-CRM-006/007). Each active criterion whose
 // `field` matches a Lead (against `match_value`, where applicable) adds

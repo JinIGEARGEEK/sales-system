@@ -38,7 +38,7 @@
           <div class="w-full sm:w-48">
             <InputSelect
               v-model="industryFilter"
-              :options="[{ label: t('crm.companies.index.allIndustries'), value: 'all' }, ...INDUSTRY_OPTIONS]"
+              :options="[{ label: t('crm.companies.index.allIndustries'), value: 'all' }, ...industryOptionsStore.activeOptions]"
               :placeholder="t('crm.companies.index.industryPlaceholder')"
               name="industryFilter"
             />
@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { INDUSTRY_OPTIONS, COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
+import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -103,6 +103,7 @@ const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const activitiesStore = useActivitiesStore()
+const industryOptionsStore = useIndustryOptionsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
@@ -121,6 +122,7 @@ onMounted(() => {
   // list below — there's no "distinct tags" endpoint, so this stays separate
   // from the server-paginated `rows` that the table itself renders.
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
 })
 
 const tagOptions = computed(() => [...new Set(companiesStore.items.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))

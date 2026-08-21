@@ -34,8 +34,9 @@
             :disable="companyOptions.length === 0"
             rules="required"
           />
-          <InputText
+          <InputSelect
             v-model="form.role_title"
+            :options="jobTitleOptionsStore.activeOptions"
             :label="t('crm.contacts.create.roleTitle')"
             :placeholder="t('crm.contacts.create.roleTitlePlaceholder')"
             name="role_title"
@@ -82,10 +83,12 @@ const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const jobTitleOptionsStore = useJobTitleOptionsStore()
 const goBack = useBackNavigation('/crm/contacts')
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (jobTitleOptionsStore.items.length === 0) jobTitleOptionsStore.fetchAll().catch(notifyApiError)
 })
 
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))

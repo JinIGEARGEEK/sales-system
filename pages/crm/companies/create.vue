@@ -27,14 +27,15 @@
           />
           <InputSelect
             v-model="form.industry"
-            :options="INDUSTRY_OPTIONS"
+            :options="industryOptionsStore.activeOptions"
             :label="t('crm.companies.create.industry')"
             :placeholder="t('crm.companies.create.industryPlaceholder')"
             name="industry"
             rules="required"
           />
-          <InputText
+          <InputSelect
             v-model="form.size"
+            :options="companySizeOptionsStore.activeOptions"
             :label="t('crm.companies.create.companySize')"
             :placeholder="t('crm.companies.create.companySizePlaceholder')"
             name="size"
@@ -157,17 +158,25 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.companies.create.pageTitle') })
 
 const { success, error } = useNotify()
+const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
+const industryOptionsStore = useIndustryOptionsStore()
+const companySizeOptionsStore = useCompanySizeOptionsStore()
 const goBack = useBackNavigation('/crm/companies')
+
+onMounted(() => {
+  if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
+  if (companySizeOptionsStore.items.length === 0) companySizeOptionsStore.fetchAll().catch(notifyApiError)
+})
 
 const form = reactive({
   name: '',

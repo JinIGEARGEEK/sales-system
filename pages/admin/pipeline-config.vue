@@ -183,6 +183,116 @@
       </UCard>
     </div>
 
+    <div v-else-if="activeTab === 'company'">
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.industries.heading') }}</h3>
+            <ButtonPrimary
+              :label="t('admin.pipelineConfig.industries.addIndustry')"
+              icon="material-symbols:add"
+              small
+              fit-content
+              @click="openAddIndustry"
+            />
+          </div>
+        </template>
+
+        <TableData
+          :columns="industryColumns"
+          :rows="industryRows"
+          :total="industryRows.length"
+          :total-page="1"
+          :per-page="industryRows.length || 1"
+          :page="1"
+          :loading="industriesLoading"
+          @edit="onEditIndustry"
+          @delete="requestDeactivateIndustry"
+        />
+      </UCard>
+
+      <UCard :ui="GLASS_PANEL_UI">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.companySizes.heading') }}</h3>
+            <ButtonPrimary
+              :label="t('admin.pipelineConfig.companySizes.addSize')"
+              icon="material-symbols:add"
+              small
+              fit-content
+              @click="openAddCompanySize"
+            />
+          </div>
+        </template>
+
+        <TableData
+          :columns="companySizeColumns"
+          :rows="companySizeRows"
+          :total="companySizeRows.length"
+          :total-page="1"
+          :per-page="companySizeRows.length || 1"
+          :page="1"
+          :loading="companySizesLoading"
+          @edit="onEditCompanySize"
+          @delete="requestDeactivateCompanySize"
+        />
+      </UCard>
+
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.jobTitles.heading') }}</h3>
+            <ButtonPrimary
+              :label="t('admin.pipelineConfig.jobTitles.addJobTitle')"
+              icon="material-symbols:add"
+              small
+              fit-content
+              @click="openAddJobTitle"
+            />
+          </div>
+        </template>
+
+        <TableData
+          :columns="jobTitleColumns"
+          :rows="jobTitleRows"
+          :total="jobTitleRows.length"
+          :total-page="1"
+          :per-page="jobTitleRows.length || 1"
+          :page="1"
+          :loading="jobTitlesLoading"
+          @edit="onEditJobTitle"
+          @delete="requestDeactivateJobTitle"
+        />
+      </UCard>
+
+      <UCard :ui="GLASS_PANEL_UI">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.productCategories.heading') }}</h3>
+            <ButtonPrimary
+              :label="t('admin.pipelineConfig.productCategories.addCategory')"
+              icon="material-symbols:add"
+              small
+              fit-content
+              @click="openAddProductCategory"
+            />
+          </div>
+        </template>
+
+        <TableData
+          :columns="productCategoryColumns"
+          :rows="productCategoryRows"
+          :total="productCategoryRows.length"
+          :total-page="1"
+          :per-page="productCategoryRows.length || 1"
+          :page="1"
+          :loading="productCategoriesLoading"
+          @edit="onEditProductCategory"
+          @delete="requestDeactivateProductCategory"
+        />
+      </UCard>
+    </div>
+
     <div v-else-if="activeTab === 'notifications'">
       <UCard :ui="GLASS_PANEL_UI">
         <template #header>
@@ -239,6 +349,26 @@
       :rule="editingRule"
       @submit="onSubmitRule"
     />
+    <CrmIndustryOptionModal
+      v-model:open="industryModalOpen"
+      :industry="editingIndustry"
+      @submit="onSubmitIndustry"
+    />
+    <CrmCompanySizeOptionModal
+      v-model:open="companySizeModalOpen"
+      :size="editingCompanySize"
+      @submit="onSubmitCompanySize"
+    />
+    <CrmJobTitleOptionModal
+      v-model:open="jobTitleModalOpen"
+      :job-title="editingJobTitle"
+      @submit="onSubmitJobTitle"
+    />
+    <CrmProductCategoryOptionModal
+      v-model:open="productCategoryModalOpen"
+      :category="editingProductCategory"
+      @submit="onSubmitProductCategory"
+    />
 
     <CrmConfirmDeleteModal
       v-model:open="deleteTargetOpen"
@@ -280,6 +410,38 @@
       confirm-color="warning"
       @confirm="confirmDeactivateRule"
     />
+    <CrmConfirmDeleteModal
+      v-model:open="deactivateIndustryOpen"
+      :title="t('admin.pipelineConfig.deactivate')"
+      :body="t('admin.pipelineConfig.industries.deactivateConfirm')"
+      :confirm-label="t('admin.pipelineConfig.deactivate')"
+      confirm-color="warning"
+      @confirm="confirmDeactivateIndustry"
+    />
+    <CrmConfirmDeleteModal
+      v-model:open="deactivateCompanySizeOpen"
+      :title="t('admin.pipelineConfig.deactivate')"
+      :body="t('admin.pipelineConfig.companySizes.deactivateConfirm')"
+      :confirm-label="t('admin.pipelineConfig.deactivate')"
+      confirm-color="warning"
+      @confirm="confirmDeactivateCompanySize"
+    />
+    <CrmConfirmDeleteModal
+      v-model:open="deactivateJobTitleOpen"
+      :title="t('admin.pipelineConfig.deactivate')"
+      :body="t('admin.pipelineConfig.jobTitles.deactivateConfirm')"
+      :confirm-label="t('admin.pipelineConfig.deactivate')"
+      confirm-color="warning"
+      @confirm="confirmDeactivateJobTitle"
+    />
+    <CrmConfirmDeleteModal
+      v-model:open="deactivateProductCategoryOpen"
+      :title="t('admin.pipelineConfig.deactivate')"
+      :body="t('admin.pipelineConfig.productCategories.deactivateConfirm')"
+      :confirm-label="t('admin.pipelineConfig.deactivate')"
+      confirm-color="warning"
+      @confirm="confirmDeactivateProductCategory"
+    />
   </div>
 </template>
 
@@ -304,6 +466,10 @@ const appSettingsStore = useAppSettingsStore()
 const salesTargetsStore = useSalesTargetsStore()
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
 const notificationRulesStore = useNotificationRulesStore()
+const industryOptionsStore = useIndustryOptionsStore()
+const companySizeOptionsStore = useCompanySizeOptionsStore()
+const jobTitleOptionsStore = useJobTitleOptionsStore()
+const productCategoryOptionsStore = useProductCategoryOptionsStore()
 const { settings: appSettings } = storeToRefs(appSettingsStore)
 // Neither the quarterly quota nor the annual goal resets itself on a new
 // quarter/year — surfacing when it was last touched is the cheapest guard
@@ -321,6 +487,7 @@ const tabItems = computed(() => [
   { label: t('admin.pipelineConfig.tabs.stages'), value: 'stages' },
   { label: t('admin.pipelineConfig.tabs.revenue'), value: 'revenue' },
   { label: t('admin.pipelineConfig.tabs.leads'), value: 'leads' },
+  { label: t('admin.pipelineConfig.tabs.company'), value: 'company' },
   { label: t('admin.pipelineConfig.tabs.notifications'), value: 'notifications' },
 ])
 
@@ -329,6 +496,10 @@ const sourcesLoading = ref(false)
 const targetsLoading = ref(false)
 const criteriaLoading = ref(false)
 const rulesLoading = ref(false)
+const industriesLoading = ref(false)
+const companySizesLoading = ref(false)
+const jobTitlesLoading = ref(false)
+const productCategoriesLoading = ref(false)
 
 onMounted(async () => {
   stagesLoading.value = true
@@ -341,6 +512,14 @@ onMounted(async () => {
   leadScoringCriteriaStore.fetchAll().catch(notifyApiError).finally(() => { criteriaLoading.value = false })
   rulesLoading.value = true
   notificationRulesStore.fetchAll().catch(notifyApiError).finally(() => { rulesLoading.value = false })
+  industriesLoading.value = true
+  industryOptionsStore.fetchAll().catch(notifyApiError).finally(() => { industriesLoading.value = false })
+  companySizesLoading.value = true
+  companySizeOptionsStore.fetchAll().catch(notifyApiError).finally(() => { companySizesLoading.value = false })
+  jobTitlesLoading.value = true
+  jobTitleOptionsStore.fetchAll().catch(notifyApiError).finally(() => { jobTitlesLoading.value = false })
+  productCategoriesLoading.value = true
+  productCategoryOptionsStore.fetchAll().catch(notifyApiError).finally(() => { productCategoriesLoading.value = false })
   try {
     const settings = await appSettingsStore.fetchAll()
     salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
@@ -725,6 +904,254 @@ const ruleColumns: TableDataColumn[] = [
   { label: t('admin.pipelineConfig.notificationRules.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.notificationRules.columns.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
+    ],
+  },
+]
+
+// ── Company Industry options ──────────────────────────────────────
+
+const industryModalOpen = ref(false)
+const editingIndustry = ref<IndustryOption | null>(null)
+
+const openAddIndustry = () => {
+  editingIndustry.value = null
+  industryModalOpen.value = true
+}
+const onEditIndustry = (row: IndustryOption) => {
+  editingIndustry.value = industryOptionsStore.items.find(i => i.id === row.id) || null
+  industryModalOpen.value = true
+}
+
+const onSubmitIndustry = async (payload: { name: string, is_active: boolean }) => {
+  try {
+    if (editingIndustry.value) {
+      await industryOptionsStore.update(editingIndustry.value.id, payload)
+    } else {
+      await industryOptionsStore.add(payload)
+    }
+    success(t('admin.pipelineConfig.industries.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const { open: deactivateIndustryOpen, target: industryTarget, requestDelete: requestDeactivateIndustry, closeDelete: closeDeactivateIndustry } = useDeleteConfirm<IndustryOption>()
+const confirmDeactivateIndustry = async () => {
+  if (industryTarget.value) {
+    try {
+      await industryOptionsStore.remove(industryTarget.value.id)
+      success(t('admin.pipelineConfig.industries.deactivateSuccess'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+  closeDeactivateIndustry()
+}
+
+const industryRows = computed(() => industryOptionsStore.items.map(industry => ({
+  ...industry,
+  statusBadge: industry.is_active
+    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
+    : toBadge(t('admin.pipelineConfig.statusInactive')),
+})))
+
+const industryColumns: TableDataColumn[] = [
+  { label: t('admin.pipelineConfig.industries.columns.name'), align: 'left', field: 'name' },
+  { label: t('admin.pipelineConfig.industries.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('admin.pipelineConfig.industries.columns.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
+    ],
+  },
+]
+
+// ── Company Size options ──────────────────────────────────────────
+
+const companySizeModalOpen = ref(false)
+const editingCompanySize = ref<CompanySizeOption | null>(null)
+
+const openAddCompanySize = () => {
+  editingCompanySize.value = null
+  companySizeModalOpen.value = true
+}
+const onEditCompanySize = (row: CompanySizeOption) => {
+  editingCompanySize.value = companySizeOptionsStore.items.find(s => s.id === row.id) || null
+  companySizeModalOpen.value = true
+}
+
+const onSubmitCompanySize = async (payload: { name: string, is_active: boolean }) => {
+  try {
+    if (editingCompanySize.value) {
+      await companySizeOptionsStore.update(editingCompanySize.value.id, payload)
+    } else {
+      await companySizeOptionsStore.add(payload)
+    }
+    success(t('admin.pipelineConfig.companySizes.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const { open: deactivateCompanySizeOpen, target: companySizeTarget, requestDelete: requestDeactivateCompanySize, closeDelete: closeDeactivateCompanySize } = useDeleteConfirm<CompanySizeOption>()
+const confirmDeactivateCompanySize = async () => {
+  if (companySizeTarget.value) {
+    try {
+      await companySizeOptionsStore.remove(companySizeTarget.value.id)
+      success(t('admin.pipelineConfig.companySizes.deactivateSuccess'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+  closeDeactivateCompanySize()
+}
+
+const companySizeRows = computed(() => companySizeOptionsStore.items.map(size => ({
+  ...size,
+  statusBadge: size.is_active
+    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
+    : toBadge(t('admin.pipelineConfig.statusInactive')),
+})))
+
+const companySizeColumns: TableDataColumn[] = [
+  { label: t('admin.pipelineConfig.companySizes.columns.name'), align: 'left', field: 'name' },
+  { label: t('admin.pipelineConfig.companySizes.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('admin.pipelineConfig.companySizes.columns.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
+    ],
+  },
+]
+
+// ── Contact Job Title options ─────────────────────────────────────
+
+const jobTitleModalOpen = ref(false)
+const editingJobTitle = ref<JobTitleOption | null>(null)
+
+const openAddJobTitle = () => {
+  editingJobTitle.value = null
+  jobTitleModalOpen.value = true
+}
+const onEditJobTitle = (row: JobTitleOption) => {
+  editingJobTitle.value = jobTitleOptionsStore.items.find(j => j.id === row.id) || null
+  jobTitleModalOpen.value = true
+}
+
+const onSubmitJobTitle = async (payload: { name: string, is_active: boolean }) => {
+  try {
+    if (editingJobTitle.value) {
+      await jobTitleOptionsStore.update(editingJobTitle.value.id, payload)
+    } else {
+      await jobTitleOptionsStore.add(payload)
+    }
+    success(t('admin.pipelineConfig.jobTitles.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const { open: deactivateJobTitleOpen, target: jobTitleTarget, requestDelete: requestDeactivateJobTitle, closeDelete: closeDeactivateJobTitle } = useDeleteConfirm<JobTitleOption>()
+const confirmDeactivateJobTitle = async () => {
+  if (jobTitleTarget.value) {
+    try {
+      await jobTitleOptionsStore.remove(jobTitleTarget.value.id)
+      success(t('admin.pipelineConfig.jobTitles.deactivateSuccess'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+  closeDeactivateJobTitle()
+}
+
+const jobTitleRows = computed(() => jobTitleOptionsStore.items.map(jobTitle => ({
+  ...jobTitle,
+  statusBadge: jobTitle.is_active
+    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
+    : toBadge(t('admin.pipelineConfig.statusInactive')),
+})))
+
+const jobTitleColumns: TableDataColumn[] = [
+  { label: t('admin.pipelineConfig.jobTitles.columns.name'), align: 'left', field: 'name' },
+  { label: t('admin.pipelineConfig.jobTitles.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('admin.pipelineConfig.jobTitles.columns.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
+    ],
+  },
+]
+
+// ── Product Category options ──────────────────────────────────────
+
+const productCategoryModalOpen = ref(false)
+const editingProductCategory = ref<ProductCategoryOption | null>(null)
+
+const openAddProductCategory = () => {
+  editingProductCategory.value = null
+  productCategoryModalOpen.value = true
+}
+const onEditProductCategory = (row: ProductCategoryOption) => {
+  editingProductCategory.value = productCategoryOptionsStore.items.find(c => c.id === row.id) || null
+  productCategoryModalOpen.value = true
+}
+
+const onSubmitProductCategory = async (payload: { name: string, is_active: boolean }) => {
+  try {
+    if (editingProductCategory.value) {
+      await productCategoryOptionsStore.update(editingProductCategory.value.id, payload)
+    } else {
+      await productCategoryOptionsStore.add(payload)
+    }
+    success(t('admin.pipelineConfig.productCategories.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const { open: deactivateProductCategoryOpen, target: productCategoryTarget, requestDelete: requestDeactivateProductCategory, closeDelete: closeDeactivateProductCategory } = useDeleteConfirm<ProductCategoryOption>()
+const confirmDeactivateProductCategory = async () => {
+  if (productCategoryTarget.value) {
+    try {
+      await productCategoryOptionsStore.remove(productCategoryTarget.value.id)
+      success(t('admin.pipelineConfig.productCategories.deactivateSuccess'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+  closeDeactivateProductCategory()
+}
+
+const productCategoryRows = computed(() => productCategoryOptionsStore.items.map(category => ({
+  ...category,
+  statusBadge: category.is_active
+    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
+    : toBadge(t('admin.pipelineConfig.statusInactive')),
+})))
+
+const productCategoryColumns: TableDataColumn[] = [
+  { label: t('admin.pipelineConfig.productCategories.columns.name'), align: 'left', field: 'name' },
+  { label: t('admin.pipelineConfig.productCategories.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('admin.pipelineConfig.productCategories.columns.action'),
     align: 'left',
     field: 'action',
     type: TABLE_CARD_TYPE.ACTION,
