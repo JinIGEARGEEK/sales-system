@@ -1,21 +1,8 @@
 <template>
   <div class="p-5">
-    <!-- Same title-row pattern as every other page (companies/deals index,
-         detail pages, etc.): plain heading+subheading on the left, one
-         piece of status/action on the right of the same flex row — not
-         wrapped in its own card. The live total (still the one number that
-         matters most) moves to a badge here instead of a boxed hero. -->
-    <div class="mb-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
-        <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
-      </div>
-      <div v-if="canViewReports" class="hidden sm:block">
-        <USkeleton v-if="totalAttentionCount === undefined" class="h-6 w-32 rounded-full" />
-        <UBadge v-else :color="totalAttentionCount ? 'warning' : 'neutral'" variant="subtle" size="lg">
-          {{ t('crm.reports.summaryBadge', { count: totalAttentionCount }) }}
-        </UBadge>
-      </div>
+    <div class="mb-4">
+      <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
+      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
     </div>
 
     <UAlert
@@ -47,25 +34,23 @@
             class="h-full border border-white/70 border-l-4 border-l-[rgba(198,158,82,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(198,158,82,0.6)' }"
           >
-            <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.4)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
-                <UIcon :name="card.icon" class="size-5 text-[var(--color-warning-hover)]" />
+            <div class="flex items-start gap-2.5">
+              <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.4)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
+                <UIcon :name="card.icon" class="size-4 text-[var(--color-warning-hover)]" />
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
-                  <h3 class="min-w-0 truncate text-lg font-medium">{{ card.title }}</h3>
+                  <h3 class="min-w-0 truncate text-sm font-medium">{{ card.title }}</h3>
                   <UBadge
-                    v-if="counts[card.key] !== undefined"
-                    class="shrink-0"
+                    class="shrink-0 font-semibold"
                     :color="badgeColor(counts[card.key])"
-                    variant="subtle"
+                    :variant="counts[card.key] ? 'solid' : 'subtle'"
                     size="sm"
                   >
                     {{ counts[card.key] }}
                   </UBadge>
-                  <USkeleton v-else class="h-5 w-10 shrink-0 rounded-full" />
                 </div>
-                <p class="mt-1 text-sm text-[var(--color-gray)]">{{ card.description }}</p>
+                <p class="mt-0.5 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
               </div>
             </div>
           </UCard>
@@ -84,13 +69,13 @@
             class="h-full border border-white/70 border-l-4 border-l-[rgba(45,114,167,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(45,114,167,0.6)' }"
           >
-            <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
-                <UIcon :name="card.icon" class="size-5 text-[var(--color-info-toast)]" />
+            <div class="flex items-start gap-2.5">
+              <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
+                <UIcon :name="card.icon" class="size-4 text-[var(--color-info-toast)]" />
               </div>
               <div>
-                <h3 class="text-lg font-medium">{{ card.title }}</h3>
-                <p class="mt-1 text-sm text-[var(--color-gray)]">{{ card.description }}</p>
+                <h3 class="text-sm font-medium">{{ card.title }}</h3>
+                <p class="mt-0.5 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
               </div>
             </div>
           </UCard>
@@ -138,22 +123,13 @@ const ATTENTION_ENDPOINTS: Record<string, string> = {
   projectsAtRisk: '/reports/projects-at-risk',
 }
 
-// undefined = still loading (renders a skeleton) so the badges don't all
-// flash "0" before their real count arrives.
-const counts = ref<Record<string, number | undefined>>({})
+// Starts every count at 0 so the badges render immediately instead of a
+// loading skeleton, then each climbs as its request resolves.
+const counts = ref<Record<string, number>>(
+  Object.fromEntries(Object.keys(ATTENTION_ENDPOINTS).map(key => [key, 0])),
+)
 
-// Sum of every resolved count — undefined until every one of the 5 requests
-// below has answered, so the hero number never flashes a partial total.
-const totalAttentionCount = computed(() => {
-  const values = Object.values(counts.value)
-  if (values.length < Object.keys(ATTENTION_ENDPOINTS).length || values.some(v => v === undefined)) return undefined
-  return values.reduce((sum: number, v) => sum + (v ?? 0), 0)
-})
-
-// Takes `number | undefined` (rather than narrowing via the template's
-// `v-if="counts[card.key] !== undefined"`) since vue-tsc doesn't carry that
-// narrowing through an indexed-access expression into the bound prop.
-const badgeColor = (count: number | undefined) => {
+const badgeColor = (count: number) => {
   if (!count) return 'neutral'
   if (count >= 5) return 'error'
   return 'warning'
@@ -164,7 +140,7 @@ onMounted(() => {
   for (const [key, path] of Object.entries(ATTENTION_ENDPOINTS)) {
     $api.get<ApiResponse<unknown[]>>(path)
       .then((response) => { counts.value[key] = response.data.data.length })
-      .catch(() => { /* leave as loading — a failed count isn't worth a toast on a landing page */ })
+      .catch(() => { /* leave at 0 — a failed count isn't worth a toast on a landing page */ })
   }
 })
 </script>
