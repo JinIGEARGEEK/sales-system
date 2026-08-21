@@ -19,14 +19,20 @@
            which ones actually need a look is visible without opening every
            card — the previous flat grid gave every report equal visual
            weight regardless of whether it had anything to report. -->
-      <h3 class="mb-2 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+      <h3 class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+        <span class="size-2 rounded-full bg-[var(--color-warning-hover)]" aria-hidden="true" />
         {{ t('crm.reports.sectionNeedsAttention') }}
       </h3>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
-          <UCard class="h-full ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
+          <!-- Warm accent (left border + icon chip) ties every card in this
+               section back to the amber dot in its header — colour carries
+               the grouping, not just the section label text. -->
+          <UCard class="h-full border-l-4 border-l-[var(--color-warning-hover)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
             <div class="flex items-start gap-3">
-              <UIcon :name="card.icon" class="mt-1 size-6 shrink-0 text-[var(--color-primary)]" />
+              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-hover)]/15">
+                <UIcon :name="card.icon" class="size-5 text-[var(--color-warning-hover)]" />
+              </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
                   <h3 class="truncate text-lg font-medium">{{ card.title }}</h3>
@@ -47,14 +53,21 @@
         </NuxtLink>
       </div>
 
-      <h3 class="mb-2 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+      <h3 class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+        <span class="size-2 rounded-full bg-[var(--color-info-toast)]" aria-hidden="true" />
         {{ t('crm.reports.sectionAnalytics') }}
       </h3>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">
-          <UCard class="h-full ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
+          <!-- Cool accent, deliberately distinct from the warm "Needs
+               Attention" one above — these are breakdowns to read, not
+               problems to act on, and the color says so before the label
+               does. -->
+          <UCard class="h-full border-l-4 border-l-[var(--color-info-toast)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
             <div class="flex items-start gap-3">
-              <UIcon :name="card.icon" class="mt-1 size-6 shrink-0 text-[var(--color-primary)]" />
+              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-info-toast)]/15">
+                <UIcon :name="card.icon" class="size-5 text-[var(--color-info-toast)]" />
+              </div>
               <div>
                 <h3 class="text-lg font-medium">{{ card.title }}</h3>
                 <p class="mt-1 text-sm text-[var(--color-gray)]">{{ card.description }}</p>
