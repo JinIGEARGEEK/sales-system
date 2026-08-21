@@ -13,6 +13,7 @@ export default {
     tasks: 'Tasks',
     reports: 'Reports',
     trash: 'Trash',
+    guideline: 'Guideline',
   },
   logout: 'Logout',
   changePassword: 'Change Password',

@@ -84,6 +84,21 @@ export default {
     saveSuccess: 'Company size saved successfully',
     deactivateSuccess: 'Company size deactivated',
   },
+  revenueSizes: {
+    heading: 'Revenue Sizes',
+    addSize: 'Add Size',
+    addTitle: 'Add Revenue Size',
+    editTitle: 'Edit Revenue Size',
+    name: 'Size Name',
+    columns: {
+      name: 'Name',
+      status: 'Status',
+      action: 'Action',
+    },
+    deactivateConfirm: 'Deactivate this revenue size? Existing Companies keep it, but it will no longer be selectable.',
+    saveSuccess: 'Revenue size saved successfully',
+    deactivateSuccess: 'Revenue size deactivated',
+  },
   jobTitles: {
     heading: 'Contact Job Titles',
     addJobTitle: 'Add Job Title',

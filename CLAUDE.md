@@ -43,7 +43,7 @@ stores/                     # Pinia stores — CRM domain: deals, quotes, contra
                              # payments, leads, contacts, companies, tasks, projects,
                              # activities, tags, auditLog, teamMembers, user, etc.
 pages/
-├── admin/                  # Users CRUD, pipeline-config, activity-log, trash
+├── admin/                  # Users CRUD, pipeline-config, activity-log, trash, guideline
 ├── crm/                    # leads, deals, contacts, companies, tags, tasks,
                              # projects, reports
 ├── account/

@@ -13,6 +13,7 @@ export default {
     tasks: 'งานติดตาม',
     reports: 'รายงาน',
     trash: 'ถังขยะ',
+    guideline: 'คู่มือการใช้งาน',
   },
   logout: 'ออกจากระบบ',
   changePassword: 'เปลี่ยนรหัสผ่าน',
