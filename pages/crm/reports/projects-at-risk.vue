@@ -5,14 +5,24 @@
         <h2 class="text-xl font-black">{{ t('crm.reports.projectsAtRisk.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.projectsAtRisk.subheading') }}</p>
       </div>
-      <UButton
-        :label="t('crm.reports.backToReports')"
-        icon="material-symbols:arrow-back"
-        variant="outline"
-        color="neutral"
-        size="sm"
-        @click="navigateTo('/crm/reports')"
-      />
+      <div class="flex gap-2">
+        <UButton
+          :label="t('crm.reports.exportCsv')"
+          icon="material-symbols:download"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="onExport"
+        />
+        <UButton
+          :label="t('crm.reports.backToReports')"
+          icon="material-symbols:arrow-back"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="navigateTo('/crm/reports')"
+        />
+      </div>
     </div>
 
     <UAlert
@@ -25,6 +35,31 @@
     />
 
     <template v-else>
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <div class="flex flex-wrap items-end gap-2">
+          <InputText
+            v-model="companyTagFilter"
+            :label="t('crm.reports.projectsAtRisk.filterCompanyTag')"
+            :placeholder="t('crm.reports.projectsAtRisk.filterCompanyTagPlaceholder')"
+            name="companyTagFilter"
+            size="xs"
+            class="w-48"
+          />
+          <div v-if="hasActiveFilters" class="flex flex-col">
+            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
+            <UButton
+              icon="material-symbols:filter-alt-off-outline"
+              variant="outline"
+              color="neutral"
+              size="xs"
+              square
+              :aria-label="t('crm.reports.projectsAtRisk.clearFilters')"
+              @click="clearFilters"
+            />
+          </div>
+        </div>
+      </UCard>
+
       <TableData
         v-model:page="page"
         :columns="columns"
@@ -43,6 +78,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
@@ -52,18 +88,25 @@ useHead({ title: t('crm.reports.projectsAtRisk.pageTitle') })
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { hasRole } = useRole()
-const { dateFormat, toBadge } = useFormatter()
+const { dateFormat, toBadge, severityColor } = useFormatter()
+const downloadCsvBlob = useDownloadCsvBlob()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
+const companyTagFilter = ref('')
+const hasActiveFilters = computed(() => Boolean(companyTagFilter.value))
+const clearFilters = () => { companyTagFilter.value = '' }
+
 const results = ref<ProjectAtRiskRow[]>([])
 const loading = ref(false)
+
+const reportParams = () => ({ company_tag: companyTagFilter.value || undefined })
 
 const fetchReport = async () => {
   if (!canViewReports.value) return
   loading.value = true
   try {
-    const response = await $api.get<ApiResponse<ProjectAtRiskRow[]>>('/reports/projects-at-risk')
+    const response = await $api.get<ApiResponse<ProjectAtRiskRow[]>>('/reports/projects-at-risk', { params: reportParams() })
     results.value = response.data.data
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -74,11 +117,26 @@ const fetchReport = async () => {
 
 onMounted(fetchReport)
 
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
+watch(companyTagFilter, () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(fetchReport, 400)
+})
+
+const onExport = () => downloadCsvBlob('/reports/projects-at-risk/export', 'projects-at-risk.csv', reportParams())
+
+// No configurable threshold on this report (unlike Stalled Deals/Contracts
+// Stuck, which escalate relative to their own min_days filter) — every row
+// here is already overdue by definition, so fixed 30/60-day bands are used
+// instead.
 const rows = computed(() => results.value.map(row => ({
   ...row,
   statusBadge: toBadge(row.status),
   targetEndDateDisplay: dateFormat(row.target_end_date),
-  daysOverdueDisplay: t('crm.reports.projectsAtRisk.daysOverdue', { days: row.days_overdue }),
+  daysOverdueBadge: toBadge(
+    t('crm.reports.projectsAtRisk.daysOverdue', { days: row.days_overdue }),
+    severityColor(row.days_overdue, 30, 60),
+  ),
 })))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)
@@ -92,7 +150,7 @@ const columns: TableDataColumn[] = [
   { label: t('crm.reports.projectsAtRisk.columns.companyName'), align: 'left', field: 'company_name' },
   { label: t('crm.reports.projectsAtRisk.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.reports.projectsAtRisk.columns.targetEndDate'), align: 'left', field: 'targetEndDateDisplay' },
-  { label: t('crm.reports.projectsAtRisk.columns.daysOverdue'), align: 'left', field: 'daysOverdueDisplay' },
+  { label: t('crm.reports.projectsAtRisk.columns.daysOverdue'), align: 'left', field: 'daysOverdueBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('crm.reports.projectsAtRisk.columns.action'),
     align: 'left',

@@ -5,14 +5,24 @@
         <h2 class="text-xl font-black">{{ t('crm.reports.winLoss.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.winLoss.subheading') }}</p>
       </div>
-      <UButton
-        :label="t('crm.reports.backToReports')"
-        icon="material-symbols:arrow-back"
-        variant="outline"
-        color="neutral"
-        size="sm"
-        @click="navigateTo('/crm/reports')"
-      />
+      <div class="flex gap-2">
+        <UButton
+          :label="t('crm.reports.exportCsv')"
+          icon="material-symbols:download"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="onExport"
+        />
+        <UButton
+          :label="t('crm.reports.backToReports')"
+          icon="material-symbols:arrow-back"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="navigateTo('/crm/reports')"
+        />
+      </div>
     </div>
 
     <UAlert
@@ -42,6 +52,14 @@
             name="salesRepFilter"
             size="xs"
             class="w-56"
+          />
+          <InputText
+            v-model="companyTagFilter"
+            :label="t('crm.reports.winLoss.filterCompanyTag')"
+            :placeholder="t('crm.reports.winLoss.filterCompanyTagPlaceholder')"
+            name="companyTagFilter"
+            size="xs"
+            class="w-40"
           />
           <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
@@ -100,6 +118,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const { priceFormatCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
+const downloadCsvBlob = useDownloadCsvBlob()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
@@ -114,28 +133,31 @@ const salesRepOptions = computed(() => [
 
 const dateRange = ref<{ start: string, end: string } | null>(null)
 const salesRepFilter = ref('all')
+const companyTagFilter = ref('')
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all')
+const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
 
 const clearFilters = () => {
   dateRange.value = null
   salesRepFilter.value = 'all'
+  companyTagFilter.value = ''
 }
 
 const rows = ref<WinLossReasonRow[]>([])
 const loading = ref(false)
 
+const reportParams = () => ({
+  date_from: dateRange.value?.start,
+  date_to: dateRange.value?.end,
+  assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
+  company_tag: companyTagFilter.value || undefined,
+})
+
 const fetchReport = async () => {
   if (!canViewReports.value) return
   loading.value = true
   try {
-    const response = await $api.get<ApiResponse<WinLossReasonRow[]>>('/reports/win-loss-reasons', {
-      params: {
-        date_from: dateRange.value?.start,
-        date_to: dateRange.value?.end,
-        assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
-      },
-    })
+    const response = await $api.get<ApiResponse<WinLossReasonRow[]>>('/reports/win-loss-reasons', { params: reportParams() })
     rows.value = response.data.data
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -146,6 +168,14 @@ const fetchReport = async () => {
 
 onMounted(fetchReport)
 watch([dateRange, salesRepFilter], fetchReport)
+
+let debounceTimer: ReturnType<typeof setTimeout> | undefined
+watch(companyTagFilter, () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(fetchReport, 400)
+})
+
+const onExport = () => downloadCsvBlob('/reports/win-loss-reasons/export', 'win-loss-reasons.csv', reportParams())
 
 // "won" is a virtual bucket the backend adds alongside the real LostReason
 // values — reuses the same LOST_REASON_OPTIONS labels the Deal detail page's

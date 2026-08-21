@@ -5,14 +5,24 @@
         <h2 class="text-xl font-black">{{ t('crm.reports.customerProductStatus.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.customerProductStatus.subheading') }}</p>
       </div>
-      <UButton
-        :label="t('crm.reports.backToReports')"
-        icon="material-symbols:arrow-back"
-        variant="outline"
-        color="neutral"
-        size="sm"
-        @click="navigateTo('/crm/reports')"
-      />
+      <div class="flex gap-2">
+        <UButton
+          :label="t('crm.reports.exportCsv')"
+          icon="material-symbols:download"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="onExport"
+        />
+        <UButton
+          :label="t('crm.reports.backToReports')"
+          icon="material-symbols:arrow-back"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="navigateTo('/crm/reports')"
+        />
+      </div>
     </div>
 
     <UAlert
@@ -97,6 +107,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const { dateFormat, toBadge } = useFormatter()
 const productsStore = useProductsStore()
+const downloadCsvBlob = useDownloadCsvBlob()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
@@ -131,17 +142,17 @@ const clearFilters = () => {
 const results = ref<CustomerByProductStatusRow[]>([])
 const loading = ref(false)
 
+const reportParams = () => ({
+  product_id: productFilter.value !== 'all' ? productFilter.value : undefined,
+  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  company_tag: companyTagFilter.value || undefined,
+})
+
 const fetchReport = async () => {
   if (!canViewReports.value) return
   loading.value = true
   try {
-    const response = await $api.get<ApiResponse<CustomerByProductStatusRow[]>>('/reports/customers-by-product-status', {
-      params: {
-        product_id: productFilter.value !== 'all' ? productFilter.value : undefined,
-        status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
-        company_tag: companyTagFilter.value || undefined,
-      },
-    })
+    const response = await $api.get<ApiResponse<CustomerByProductStatusRow[]>>('/reports/customers-by-product-status', { params: reportParams() })
     results.value = response.data.data
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -158,6 +169,8 @@ watch(companyTagFilter, () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(fetchReport, 400)
 })
+
+const onExport = () => downloadCsvBlob('/reports/customers-by-product-status/export', 'customers-by-product-status.csv', reportParams())
 
 const productName = (productId: number) => productsStore.items.find(p => p.id === productId)?.name ?? '-'
 

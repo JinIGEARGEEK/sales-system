@@ -5,14 +5,24 @@
         <h2 class="text-xl font-black">{{ t('crm.reports.outstandingBalance.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.outstandingBalance.subheading') }}</p>
       </div>
-      <UButton
-        :label="t('crm.reports.backToReports')"
-        icon="material-symbols:arrow-back"
-        variant="outline"
-        color="neutral"
-        size="sm"
-        @click="navigateTo('/crm/reports')"
-      />
+      <div class="flex gap-2">
+        <UButton
+          :label="t('crm.reports.exportCsv')"
+          icon="material-symbols:download"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="onExport"
+        />
+        <UButton
+          :label="t('crm.reports.backToReports')"
+          icon="material-symbols:arrow-back"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="navigateTo('/crm/reports')"
+        />
+      </div>
     </div>
 
     <UAlert
@@ -92,6 +102,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const { priceFormatCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
+const downloadCsvBlob = useDownloadCsvBlob()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
@@ -117,16 +128,16 @@ const clearFilters = () => {
 const results = ref<OutstandingBalanceRow[]>([])
 const loading = ref(false)
 
+const reportParams = () => ({
+  assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
+  company_tag: companyTagFilter.value || undefined,
+})
+
 const fetchReport = async () => {
   if (!canViewReports.value) return
   loading.value = true
   try {
-    const response = await $api.get<ApiResponse<OutstandingBalanceRow[]>>('/reports/outstanding-balance', {
-      params: {
-        assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
-        company_tag: companyTagFilter.value || undefined,
-      },
-    })
+    const response = await $api.get<ApiResponse<OutstandingBalanceRow[]>>('/reports/outstanding-balance', { params: reportParams() })
     results.value = response.data.data
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -143,6 +154,8 @@ watch(companyTagFilter, () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(fetchReport, 400)
 })
+
+const onExport = () => downloadCsvBlob('/reports/outstanding-balance/export', 'outstanding-balance.csv', reportParams())
 
 const totalOutstanding = computed(() => results.value.reduce((sum, row) => sum + row.outstanding_amount, 0))
 
