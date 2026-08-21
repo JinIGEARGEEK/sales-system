@@ -30,6 +30,7 @@
                 <InputText v-model="form.name" :label="t('crm.companies.detail.companyName')" name="name" rules="required" />
                 <InputSelect v-model="form.industry" :options="industryOptions" :label="t('crm.companies.detail.industry')" name="industry" rules="required" />
                 <InputSelect v-model="form.size" :options="companySizeOptions" :label="t('crm.companies.detail.companySize')" name="size" />
+                <InputSelect v-model="form.revenue_size" :options="revenueSizeOptions" :label="t('crm.companies.detail.revenueSize')" name="revenue_size" />
                 <InputText v-model="form.website" :label="t('crm.companies.detail.website')" name="website" />
                 <InputText v-model="form.tags" :label="t('crm.companies.detail.tags')" :placeholder="t('crm.companies.detail.tagsPlaceholder')" name="tags" />
                 <InputSelect
@@ -278,6 +279,7 @@ const projectsStore = useProjectsStore()
 const attachmentsStore = useAttachmentsStore()
 const industryOptionsStore = useIndustryOptionsStore()
 const companySizeOptionsStore = useCompanySizeOptionsStore()
+const revenueSizeOptionsStore = useRevenueSizeOptionsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -289,6 +291,7 @@ onMounted(() => {
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
   if (companySizeOptionsStore.items.length === 0) companySizeOptionsStore.fetchAll().catch(notifyApiError)
+  if (revenueSizeOptionsStore.items.length === 0) revenueSizeOptionsStore.fetchAll().catch(notifyApiError)
   activitiesStore.fetchForRelated('company', companyId).catch(notifyApiError)
   customerProductsStore.fetchForCompany(companyId).catch(notifyApiError)
   projectsStore.fetchForCompany(companyId).catch(notifyApiError)
@@ -309,6 +312,12 @@ const industryOptions = computed<Select[]>(() => {
 const companySizeOptions = computed<Select[]>(() => {
   const current = company.value?.size
   const active = companySizeOptionsStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
+})
+const revenueSizeOptions = computed<Select[]>(() => {
+  const current = company.value?.revenue_size
+  const active = revenueSizeOptionsStore.activeOptions
   if (!current || active.some(o => o.value === current)) return active
   return [...active, { label: current, value: current }]
 })
@@ -385,6 +394,7 @@ const form = reactive({
   name: company.value?.name || '',
   industry: company.value?.industry || '',
   size: company.value?.size || '',
+  revenue_size: company.value?.revenue_size || '',
   website: company.value?.website || '',
   tags: company.value?.tags.join(', ') || '',
   status: company.value?.status || 'active',
@@ -401,6 +411,7 @@ watch(company, (value) => {
   form.name = value.name
   form.industry = value.industry
   form.size = value.size
+  form.revenue_size = value.revenue_size
   form.website = value.website
   form.tags = value.tags.join(', ')
   form.status = value.status
@@ -419,6 +430,7 @@ const onSave = guard(async () => {
       name: form.name,
       industry: form.industry,
       size: form.size,
+      revenue_size: form.revenue_size,
       website: form.website,
       tags: parseTags(form.tags),
       status: form.status as ActiveArchivedStatus,

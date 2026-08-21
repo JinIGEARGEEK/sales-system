@@ -45,6 +45,7 @@ interface Company {
   name: string
   industry: string
   size: string
+  revenue_size: string
   website: string
   tags: string[]
   notes: string
@@ -163,6 +164,15 @@ interface IndustryOption {
 // An Admin-configurable Company size option — GET/POST/PATCH/DELETE
 // /admin/company-sizes. Replaces the previously free-text Company.size field.
 interface CompanySizeOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Company revenue size option — GET/POST/PATCH/DELETE
+// /admin/revenue-sizes. Replaces the previously free-text Company.revenue_size field.
+interface RevenueSizeOption {
   id: number
   name: string
   is_active: boolean

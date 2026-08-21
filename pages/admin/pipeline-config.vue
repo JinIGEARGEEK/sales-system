@@ -211,7 +211,7 @@
         />
       </UCard>
 
-      <UCard :ui="GLASS_PANEL_UI">
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.companySizes.heading') }}</h3>
@@ -235,6 +235,33 @@
           :loading="companySizesLoading"
           @edit="onEditCompanySize"
           @delete="requestDeactivateCompanySize"
+        />
+      </UCard>
+
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.revenueSizes.heading') }}</h3>
+            <ButtonPrimary
+              :label="t('admin.pipelineConfig.revenueSizes.addSize')"
+              icon="material-symbols:add"
+              small
+              fit-content
+              @click="openAddRevenueSize"
+            />
+          </div>
+        </template>
+
+        <TableData
+          :columns="revenueSizeColumns"
+          :rows="revenueSizeRows"
+          :total="revenueSizeRows.length"
+          :total-page="1"
+          :per-page="revenueSizeRows.length || 1"
+          :page="1"
+          :loading="revenueSizesLoading"
+          @edit="onEditRevenueSize"
+          @delete="requestDeactivateRevenueSize"
         />
       </UCard>
 
@@ -359,6 +386,11 @@
       :size="editingCompanySize"
       @submit="onSubmitCompanySize"
     />
+    <CrmRevenueSizeOptionModal
+      v-model:open="revenueSizeModalOpen"
+      :revenue-size="editingRevenueSize"
+      @submit="onSubmitRevenueSize"
+    />
     <CrmJobTitleOptionModal
       v-model:open="jobTitleModalOpen"
       :job-title="editingJobTitle"
@@ -427,6 +459,14 @@
       @confirm="confirmDeactivateCompanySize"
     />
     <CrmConfirmDeleteModal
+      v-model:open="deactivateRevenueSizeOpen"
+      :title="t('admin.pipelineConfig.deactivate')"
+      :body="t('admin.pipelineConfig.revenueSizes.deactivateConfirm')"
+      :confirm-label="t('admin.pipelineConfig.deactivate')"
+      confirm-color="warning"
+      @confirm="confirmDeactivateRevenueSize"
+    />
+    <CrmConfirmDeleteModal
       v-model:open="deactivateJobTitleOpen"
       :title="t('admin.pipelineConfig.deactivate')"
       :body="t('admin.pipelineConfig.jobTitles.deactivateConfirm')"
@@ -468,6 +508,7 @@ const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
 const notificationRulesStore = useNotificationRulesStore()
 const industryOptionsStore = useIndustryOptionsStore()
 const companySizeOptionsStore = useCompanySizeOptionsStore()
+const revenueSizeOptionsStore = useRevenueSizeOptionsStore()
 const jobTitleOptionsStore = useJobTitleOptionsStore()
 const productCategoryOptionsStore = useProductCategoryOptionsStore()
 const { settings: appSettings } = storeToRefs(appSettingsStore)
@@ -498,6 +539,7 @@ const criteriaLoading = ref(false)
 const rulesLoading = ref(false)
 const industriesLoading = ref(false)
 const companySizesLoading = ref(false)
+const revenueSizesLoading = ref(false)
 const jobTitlesLoading = ref(false)
 const productCategoriesLoading = ref(false)
 
@@ -516,6 +558,8 @@ onMounted(async () => {
   industryOptionsStore.fetchAll().catch(notifyApiError).finally(() => { industriesLoading.value = false })
   companySizesLoading.value = true
   companySizeOptionsStore.fetchAll().catch(notifyApiError).finally(() => { companySizesLoading.value = false })
+  revenueSizesLoading.value = true
+  revenueSizeOptionsStore.fetchAll().catch(notifyApiError).finally(() => { revenueSizesLoading.value = false })
   jobTitlesLoading.value = true
   jobTitleOptionsStore.fetchAll().catch(notifyApiError).finally(() => { jobTitlesLoading.value = false })
   productCategoriesLoading.value = true
@@ -1028,6 +1072,68 @@ const companySizeColumns: TableDataColumn[] = [
   { label: t('admin.pipelineConfig.companySizes.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.companySizes.columns.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.pipelineConfig.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
+    ],
+  },
+]
+
+// ── Revenue Size options ──────────────────────────────────────────
+
+const revenueSizeModalOpen = ref(false)
+const editingRevenueSize = ref<RevenueSizeOption | null>(null)
+
+const openAddRevenueSize = () => {
+  editingRevenueSize.value = null
+  revenueSizeModalOpen.value = true
+}
+const onEditRevenueSize = (row: RevenueSizeOption) => {
+  editingRevenueSize.value = revenueSizeOptionsStore.items.find(s => s.id === row.id) || null
+  revenueSizeModalOpen.value = true
+}
+
+const onSubmitRevenueSize = async (payload: { name: string, is_active: boolean }) => {
+  try {
+    if (editingRevenueSize.value) {
+      await revenueSizeOptionsStore.update(editingRevenueSize.value.id, payload)
+    } else {
+      await revenueSizeOptionsStore.add(payload)
+    }
+    success(t('admin.pipelineConfig.revenueSizes.saveSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const { open: deactivateRevenueSizeOpen, target: revenueSizeTarget, requestDelete: requestDeactivateRevenueSize, closeDelete: closeDeactivateRevenueSize } = useDeleteConfirm<RevenueSizeOption>()
+const confirmDeactivateRevenueSize = async () => {
+  if (revenueSizeTarget.value) {
+    try {
+      await revenueSizeOptionsStore.remove(revenueSizeTarget.value.id)
+      success(t('admin.pipelineConfig.revenueSizes.deactivateSuccess'))
+    } catch (err) {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+  closeDeactivateRevenueSize()
+}
+
+const revenueSizeRows = computed(() => revenueSizeOptionsStore.items.map(size => ({
+  ...size,
+  statusBadge: size.is_active
+    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
+    : toBadge(t('admin.pipelineConfig.statusInactive')),
+})))
+
+const revenueSizeColumns: TableDataColumn[] = [
+  { label: t('admin.pipelineConfig.revenueSizes.columns.name'), align: 'left', field: 'name' },
+  { label: t('admin.pipelineConfig.revenueSizes.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('admin.pipelineConfig.revenueSizes.columns.action'),
     align: 'left',
     field: 'action',
     type: TABLE_CARD_TYPE.ACTION,

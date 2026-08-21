@@ -164,7 +164,8 @@ const menuList = computed(() => {
     { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },
-    { icon: 'material-symbols:delete-outline', label: t('layout.nav.trash'), path: '/admin/trash', separator: false, roles: ['Admin', 'Sales Manager'] },
+    { icon: 'material-symbols:delete-outline', label: t('layout.nav.trash'), path: '/admin/trash', separator: true, roles: ['Admin', 'Sales Manager'] },
+    { icon: 'material-symbols:menu-book-outline', label: t('layout.nav.guideline'), path: '/admin/guideline', separator: false },
   ]
   return items.filter(item => !item.roles || hasRole(...item.roles))
 })

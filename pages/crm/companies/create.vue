@@ -40,6 +40,13 @@
             :placeholder="t('crm.companies.create.companySizePlaceholder')"
             name="size"
           />
+          <InputSelect
+            v-model="form.revenue_size"
+            :options="revenueSizeOptionsStore.activeOptions"
+            :label="t('crm.companies.create.revenueSize')"
+            :placeholder="t('crm.companies.create.revenueSizePlaceholder')"
+            name="revenue_size"
+          />
           <InputText
             v-model="form.website"
             :label="t('crm.companies.create.website')"
@@ -171,17 +178,20 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const industryOptionsStore = useIndustryOptionsStore()
 const companySizeOptionsStore = useCompanySizeOptionsStore()
+const revenueSizeOptionsStore = useRevenueSizeOptionsStore()
 const goBack = useBackNavigation('/crm/companies')
 
 onMounted(() => {
   if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
   if (companySizeOptionsStore.items.length === 0) companySizeOptionsStore.fetchAll().catch(notifyApiError)
+  if (revenueSizeOptionsStore.items.length === 0) revenueSizeOptionsStore.fetchAll().catch(notifyApiError)
 })
 
 const form = reactive({
   name: '',
   industry: '',
   size: '',
+  revenue_size: '',
   website: '',
   tags: '',
   status: 'active',
@@ -210,6 +220,7 @@ const onSubmit = guard(async () => {
       name: form.name,
       industry: form.industry,
       size: form.size,
+      revenue_size: form.revenue_size,
       website: form.website,
       tags: parseTags(form.tags),
       notes: form.notes,
