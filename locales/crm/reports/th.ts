@@ -4,7 +4,6 @@ export default {
   subheading: 'การแปลง Lead และการใช้งานผลิตภัณฑ์ของลูกค้า แยกตามหมวดหมู่เพื่อการวิเคราะห์',
   accessDeniedTitle: 'จำกัดการเข้าถึง',
   accessDeniedMessage: 'เฉพาะ Admin และ Sales Manager เท่านั้นที่สามารถดูรายงานได้',
-  backToReports: 'กลับไปหน้ารายงาน',
   exportCsv: 'ส่งออก CSV',
   dateRangePlaceholder: 'เลือกช่วงวันที่',
   leadSource: {

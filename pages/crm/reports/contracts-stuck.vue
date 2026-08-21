@@ -1,28 +1,21 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-black">{{ t('crm.reports.contractsStuck.heading') }}</h2>
-        <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.contractsStuck.subheading') }}</p>
-      </div>
-      <div class="flex gap-2">
+      <div class="flex items-center gap-3">
         <UButton
-          :label="t('crm.reports.exportCsv')"
-          icon="material-symbols:download"
-          variant="outline"
-          color="neutral"
-          size="sm"
-          @click="onExport"
-        />
-        <UButton
-          :label="t('crm.reports.backToReports')"
           icon="material-symbols:arrow-back"
-          variant="outline"
+          variant="ghost"
           color="neutral"
-          size="sm"
-          @click="navigateTo('/crm/reports')"
+          class="cursor-pointer p-0 hover:bg-transparent"
+          :aria-label="t('global.back')"
+          @click="goBack()"
         />
+        <div>
+          <h2 class="text-xl font-black">{{ t('crm.reports.contractsStuck.heading') }}</h2>
+          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.contractsStuck.subheading') }}</p>
+        </div>
       </div>
+      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
     </div>
 
     <UAlert
@@ -109,6 +102,8 @@ import TABLE_CARD_TYPE from '~/constants/tableCardType'
 const { t } = useI18n()
 
 useHead({ title: t('crm.reports.contractsStuck.pageTitle') })
+
+const goBack = useBackNavigation('/crm/reports')
 
 const { $api } = useNuxtApp()
 const { error } = useNotify()

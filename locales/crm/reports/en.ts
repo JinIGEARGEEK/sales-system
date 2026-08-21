@@ -4,7 +4,6 @@ export default {
   subheading: 'Lead conversion and customer product adoption, broken down for analysis.',
   accessDeniedTitle: 'Access restricted',
   accessDeniedMessage: 'Only Admins and Sales Managers can view reports.',
-  backToReports: 'Back to Reports',
   exportCsv: 'Export CSV',
   dateRangePlaceholder: 'Select date range',
   leadSource: {
