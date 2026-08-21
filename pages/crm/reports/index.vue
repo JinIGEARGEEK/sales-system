@@ -31,7 +31,7 @@
                warm border + glow, and a frosted icon chip. Lifts slightly
                and brightens on hover for tactile feedback. -->
           <UCard
-            class="h-full border border-white/70 border-l-4 border-l-[rgba(198,158,82,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
+            class="relative h-full border border-white/70 border-l-4 border-l-[rgba(198,158,82,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(198,158,82,0.6)' }"
           >
             <div class="flex items-start gap-2.5">
@@ -50,9 +50,10 @@
                     {{ counts[card.key] }}
                   </UBadge>
                 </div>
-                <p class="mt-0.5 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
+                <p class="mt-0.5 pr-4 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
               </div>
             </div>
+            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-[var(--color-gray)]/50" aria-hidden="true" />
           </UCard>
         </NuxtLink>
       </div>
@@ -66,18 +67,19 @@
           <!-- Cool glass variant, same treatment as above just a different
                hue — these are breakdowns to read, not problems to act on. -->
           <UCard
-            class="h-full border border-white/70 border-l-4 border-l-[rgba(45,114,167,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
+            class="relative h-full border border-white/70 border-l-4 border-l-[rgba(45,114,167,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(45,114,167,0.6)' }"
           >
             <div class="flex items-start gap-2.5">
               <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-4 text-[var(--color-info-toast)]" />
               </div>
-              <div>
+              <div class="pr-4">
                 <h3 class="text-sm font-medium">{{ card.title }}</h3>
                 <p class="mt-0.5 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
               </div>
             </div>
+            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-[var(--color-gray)]/50" aria-hidden="true" />
           </UCard>
         </NuxtLink>
       </div>
