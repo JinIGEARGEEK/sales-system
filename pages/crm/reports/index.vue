@@ -41,7 +41,7 @@
            names it. -->
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(198,158,82,0.35)] bg-[rgba(198,158,82,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-[var(--color-warning-hover)]" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-[var(--color-warning-hover)] uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
+        <span class="text-xs font-semibold tracking-wide text-[var(--color-black)] uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
       </div>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
@@ -59,9 +59,10 @@
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
-                  <h3 class="truncate text-lg font-medium">{{ card.title }}</h3>
+                  <h3 class="min-w-0 truncate text-lg font-medium">{{ card.title }}</h3>
                   <UBadge
                     v-if="counts[card.key] !== undefined"
+                    class="shrink-0"
                     :color="badgeColor(counts[card.key])"
                     variant="subtle"
                     size="sm"
@@ -79,7 +80,7 @@
 
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(45,114,167,0.35)] bg-[rgba(45,114,167,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-[var(--color-info-toast)]" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-[var(--color-info-toast)] uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
+        <span class="text-xs font-semibold tracking-wide text-[var(--color-black)] uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
       </div>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">
