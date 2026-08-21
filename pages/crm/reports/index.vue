@@ -1,28 +1,22 @@
 <template>
   <div class="p-5">
-    <!-- Glass hero: same bg/blur/border vocabulary as GLASS_PANEL_UI (used
-         by every filter bar in the app), so this page's very first element
-         already reads as "glass" rather than a plain heading. Surfaces the
-         one number that matters most — total items needing a look across
-         every "Needs Attention" report — before anyone scrolls to the cards. -->
-    <UCard class="mb-5" :ui="GLASS_PANEL_UI">
-      <div class="flex items-center gap-4">
-        <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.35)] to-[rgba(45,114,167,0.25)] ring-1 ring-white/50 backdrop-blur-sm">
-          <UIcon name="material-symbols:insights" class="size-6 text-[var(--color-primary)]" />
-        </div>
-        <div class="min-w-0 flex-1">
-          <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
-        </div>
-        <div v-if="canViewReports" class="hidden shrink-0 text-right sm:block">
-          <p class="text-2xl font-black" :class="totalAttentionCount ? 'text-[var(--color-warning-hover)]' : 'text-[var(--color-gray)]'">
-            <USkeleton v-if="totalAttentionCount === undefined" class="ml-auto h-7 w-10" />
-            <template v-else>{{ totalAttentionCount }}</template>
-          </p>
-          <p class="text-xs text-[var(--color-gray)]">{{ t('crm.reports.summaryHint') }}</p>
-        </div>
+    <!-- Same title-row pattern as every other page (companies/deals index,
+         detail pages, etc.): plain heading+subheading on the left, one
+         piece of status/action on the right of the same flex row — not
+         wrapped in its own card. The live total (still the one number that
+         matters most) moves to a badge here instead of a boxed hero. -->
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
+        <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
       </div>
-    </UCard>
+      <div v-if="canViewReports" class="hidden sm:block">
+        <USkeleton v-if="totalAttentionCount === undefined" class="h-6 w-32 rounded-full" />
+        <UBadge v-else :color="totalAttentionCount ? 'warning' : 'neutral'" variant="subtle" size="lg">
+          {{ t('crm.reports.summaryBadge', { count: totalAttentionCount }) }}
+        </UBadge>
+      </div>
+    </div>
 
     <UAlert
       v-if="!canViewReports"
@@ -108,7 +102,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
