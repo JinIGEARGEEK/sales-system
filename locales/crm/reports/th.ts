@@ -4,7 +4,6 @@ export default {
   subheading: 'การแปลง Lead และการใช้งานผลิตภัณฑ์ของลูกค้า แยกตามหมวดหมู่เพื่อการวิเคราะห์',
   sectionNeedsAttention: 'ต้องดำเนินการ',
   sectionAnalytics: 'การวิเคราะห์และแบ่งกลุ่ม',
-  allClear: 'ไม่มีปัญหา',
   accessDeniedTitle: 'จำกัดการเข้าถึง',
   accessDeniedMessage: 'เฉพาะ Admin และ Sales Manager เท่านั้นที่สามารถดูรายงานได้',
   exportCsv: 'ส่งออก CSV',

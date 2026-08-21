@@ -4,7 +4,6 @@ export default {
   subheading: 'Lead conversion and customer product adoption, broken down for analysis.',
   sectionNeedsAttention: 'Needs Attention',
   sectionAnalytics: 'Analytics & Breakdown',
-  allClear: 'All clear',
   accessDeniedTitle: 'Access restricted',
   accessDeniedMessage: 'Only Admins and Sales Managers can view reports.',
   exportCsv: 'Export CSV',

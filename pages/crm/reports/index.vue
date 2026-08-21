@@ -25,12 +25,17 @@
       </h3>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
-          <!-- Warm accent (left border + icon chip) ties every card in this
-               section back to the amber dot in its header — colour carries
-               the grouping, not just the section label text. -->
-          <UCard class="h-full border-l-4 border-l-[var(--color-warning-hover)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
+          <!-- Warm accent (glowing glass edge + frosted icon chip) ties
+               every card in this section back to the amber dot in its
+               header — colour carries the grouping, not just the section
+               label text. Same blur+glow vocabulary as GLASS_PANEL_UI and
+               the sidebar nav's own hover glow, not a flat solid line. -->
+          <UCard
+            class="h-full border-l-4 border-l-[rgba(198,158,82,0.75)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]"
+            :style="{ boxShadow: '-3px 0 18px -4px rgba(198,158,82,0.6)' }"
+          >
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-hover)]/15">
+              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.35)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-5 text-[var(--color-warning-hover)]" />
               </div>
               <div class="min-w-0 flex-1">
@@ -42,7 +47,7 @@
                     variant="subtle"
                     size="sm"
                   >
-                    {{ counts[card.key] === 0 ? t('crm.reports.allClear') : counts[card.key] }}
+                    {{ counts[card.key] }}
                   </UBadge>
                   <USkeleton v-else class="h-5 w-10 shrink-0 rounded-full" />
                 </div>
@@ -59,13 +64,17 @@
       </h3>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">
-          <!-- Cool accent, deliberately distinct from the warm "Needs
+          <!-- Cool glass accent, deliberately distinct from the warm "Needs
                Attention" one above — these are breakdowns to read, not
                problems to act on, and the color says so before the label
-               does. -->
-          <UCard class="h-full border-l-4 border-l-[var(--color-info-toast)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]">
+               does. Same glowing-edge/frosted-chip vocabulary as that
+               section, just a different hue. -->
+          <UCard
+            class="h-full border-l-4 border-l-[rgba(45,114,167,0.75)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]"
+            :style="{ boxShadow: '-3px 0 18px -4px rgba(45,114,167,0.6)' }"
+          >
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-info-toast)]/15">
+              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.35)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-5 text-[var(--color-info-toast)]" />
               </div>
               <div>
