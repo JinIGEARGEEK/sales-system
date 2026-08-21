@@ -26,14 +26,24 @@
       </div>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
-          <!-- Real glass card: translucent white + heavy blur (matching
-               GLASS_PANEL_UI) instead of an opaque white tile, a translucent
-               warm border + glow, and a frosted icon chip. Lifts slightly
-               and brightens on hover for tactile feedback. -->
+          <!-- Real glass card: translucent white + heavy blur + saturation
+               (matching GLASS_PANEL_UI, pushed further) instead of an opaque
+               white tile, a wide warm accent border + glow, an inset sheen
+               ring for a liquid highlight, and a frosted icon chip. Lifts
+               slightly and brightens on hover for tactile feedback. -->
           <UCard
-            class="relative h-full border border-white/70 border-l-4 border-l-[rgba(198,158,82,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
-            :style="{ boxShadow: '-3px 0 18px -4px rgba(198,158,82,0.6)' }"
+            class="relative h-full overflow-hidden border border-white/70 bg-linear-to-br from-white/80 to-white/45 ring-1 ring-white/50 ring-inset backdrop-blur-2xl backdrop-saturate-150 transition duration-200 hover:-translate-y-0.5 hover:to-white/60"
+            :style="{ boxShadow: '-4px 0 20px -4px rgba(198,158,82,0.65)' }"
           >
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 w-3"
+              :style="{
+                background: 'linear-gradient(to bottom, rgba(198,158,82,0.32), rgba(198,158,82,0.12) 50%, rgba(198,158,82,0.28))',
+                maskImage: 'linear-gradient(to right, rgba(0,0,0,0.9), transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0.9), transparent)',
+              }"
+              aria-hidden="true"
+            />
             <div class="flex items-start gap-2.5">
               <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.4)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-4 text-[var(--color-warning-hover)]" />
@@ -67,9 +77,18 @@
           <!-- Cool glass variant, same treatment as above just a different
                hue — these are breakdowns to read, not problems to act on. -->
           <UCard
-            class="relative h-full border border-white/70 border-l-4 border-l-[rgba(45,114,167,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
-            :style="{ boxShadow: '-3px 0 18px -4px rgba(45,114,167,0.6)' }"
+            class="relative h-full overflow-hidden border border-white/70 bg-linear-to-br from-white/80 to-white/45 ring-1 ring-white/50 ring-inset backdrop-blur-2xl backdrop-saturate-150 transition duration-200 hover:-translate-y-0.5 hover:to-white/60"
+            :style="{ boxShadow: '-4px 0 20px -4px rgba(45,114,167,0.65)' }"
           >
+            <div
+              class="pointer-events-none absolute inset-y-0 left-0 w-3"
+              :style="{
+                background: 'linear-gradient(to bottom, rgba(45,114,167,0.32), rgba(45,114,167,0.12) 50%, rgba(45,114,167,0.28))',
+                maskImage: 'linear-gradient(to right, rgba(0,0,0,0.9), transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0.9), transparent)',
+              }"
+              aria-hidden="true"
+            />
             <div class="flex items-start gap-2.5">
               <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-4 text-[var(--color-info-toast)]" />
