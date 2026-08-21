@@ -62,6 +62,7 @@ export default {
   detail: {
     pageTitle: 'รายละเอียด Deal',
     markWon: 'ปิดสำเร็จ',
+    noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
     tabs: {
       overview: 'ภาพรวม',
       quotes: 'ใบเสนอราคา',

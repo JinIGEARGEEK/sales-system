@@ -2,6 +2,8 @@ export default {
   pageTitle: 'Sales Dashboard',
   heading: 'Sales Pipeline Dashboard',
   subheading: 'Deal value per stage, win rate, and forecasted revenue.',
+  productionFallbackMessage: 'Revenue and pipeline figures aren\'t shown for your role.',
+  productionFallbackLink: 'Go to Projects',
   sectionPipelineOverview: 'Pipeline Overview',
   sectionTrends: 'Trends',
   sectionPipelineOpportunities: 'Pipeline & Opportunities',

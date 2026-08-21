@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.contacts.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black">{{ t('crm.contacts.index.heading') }}</h2>
       <div class="flex gap-2">
@@ -82,6 +86,7 @@
       v-model:open="showImport"
       @imported="onImported"
     />
+    </template>
   </div>
 </template>
 
@@ -106,7 +111,12 @@ const contactsStore = useContactsStore()
 // Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
 
+// Contacts aren't part of Production's job (per user-story.md) — matches GET /contacts'
+// RBAC (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
 onMounted(() => {
+  if (!canAccess.value) return
   fetch()
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // A full (up to 200) fetch is kept purely to derive the tag filter's option

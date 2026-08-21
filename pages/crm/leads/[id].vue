@@ -1,6 +1,9 @@
 <template>
   <div class="p-5">
-    <div v-if="lead">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.leads.noAccess') }}
+    </div>
+    <div v-else-if="lead">
       <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <UButton
@@ -114,10 +117,15 @@ const goBack = useBackNavigation('/crm/leads')
 // not Production) — internal/routes/routes.go.
 const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
+// Leads aren't part of Production's job (per user-story.md) — matches GET /leads' RBAC
+// (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 onMounted(() => {
+  if (!canAccess.value) return
   if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)

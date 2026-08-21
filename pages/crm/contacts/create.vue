@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.contacts.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4">
       <div class="flex items-center gap-3">
         <UButton
@@ -67,6 +71,7 @@
         </div>
       </Form>
     </ContainerTemplate>
+    </template>
   </div>
 </template>
 
@@ -81,12 +86,18 @@ const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
+const { hasRole } = useRole()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const jobTitleOptionsStore = useJobTitleOptionsStore()
 const goBack = useBackNavigation('/crm/contacts')
 
+// Contacts aren't part of Production's job (per user-story.md) — matches POST /contacts'
+// RBAC (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
 onMounted(() => {
+  if (!canAccess.value) return
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (jobTitleOptionsStore.items.length === 0) jobTitleOptionsStore.fetchAll().catch(notifyApiError)
 })

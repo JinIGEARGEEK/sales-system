@@ -2,6 +2,7 @@ export default {
   pageTitle: 'CRM Settings',
   heading: 'CRM Settings',
   subheading: 'Manage the pipeline stages, lead/deal sources, and sales/revenue goals used across the system.',
+  noAccess: 'You do not have permission to view this page.',
   cancel: 'Cancel',
   save: 'Save',
   tabs: {

@@ -1,6 +1,7 @@
 export default {
   detail: {
     title: 'Contracts',
+    noAccess: 'You do not have permission to view this page.',
     createContract: 'Create Contract',
     createSuccess: 'Contract created successfully',
     noContracts: 'No contracts created for this deal yet.',

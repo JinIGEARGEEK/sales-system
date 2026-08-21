@@ -62,6 +62,7 @@ export default {
   detail: {
     pageTitle: 'Deal Detail',
     markWon: 'Mark Won',
+    noAccess: 'You do not have permission to view this page.',
     tabs: {
       overview: 'Overview',
       quotes: 'Quotes',

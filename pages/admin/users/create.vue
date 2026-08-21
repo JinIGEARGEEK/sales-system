@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('admin.users.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4">
       <div class="flex items-center gap-3">
         <UButton
@@ -25,6 +29,7 @@
         </div>
       </Form>
     </ContainerTemplate>
+    </template>
   </div>
 </template>
 
@@ -36,8 +41,12 @@ const { t } = useI18n()
 useHead({ title: t('admin.users.create.pageTitle') })
 
 const { success } = useNotify()
+const { hasRole } = useRole()
 const usersStore = useUsersStore()
 const goBack = useBackNavigation('/admin/users')
+
+// Staff management is Admin-only, matching POST /users' backend RBAC.
+const canAccess = computed(() => hasRole('Admin'))
 
 const form = reactive({
   first_name: '',

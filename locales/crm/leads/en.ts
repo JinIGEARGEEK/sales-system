@@ -1,4 +1,5 @@
 export default {
+  noAccess: 'You do not have permission to view this page.',
   index: {
     pageTitle: 'Leads',
     heading: 'Leads',

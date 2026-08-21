@@ -1,4 +1,5 @@
 export default {
+  noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
   index: {
     pageTitle: 'Lead',
     heading: 'Lead',

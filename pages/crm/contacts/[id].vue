@@ -1,6 +1,9 @@
 <template>
   <div class="p-5">
-    <div v-if="contact">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.contacts.noAccess') }}
+    </div>
+    <div v-else-if="contact">
       <div class="mb-4 flex items-center gap-3">
         <UButton
           icon="material-symbols:arrow-back"
@@ -151,7 +154,12 @@ const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
 const goBack = useBackNavigation('/crm/contacts')
 
+// Contacts aren't part of Production's job (per user-story.md) — matches GET /contacts'
+// RBAC (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
 onMounted(() => {
+  if (!canAccess.value) return
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)

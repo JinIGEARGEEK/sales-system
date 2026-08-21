@@ -1,6 +1,7 @@
 export default {
   detail: {
     title: 'สัญญา',
+    noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
     createContract: 'สร้างสัญญา',
     createSuccess: 'สร้างสัญญาสำเร็จ',
     noContracts: 'ยังไม่มีสัญญาที่สร้างสำหรับ Deal นี้',

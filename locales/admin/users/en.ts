@@ -1,4 +1,5 @@
 export default {
+  noAccess: 'You do not have permission to view this page.',
   index: {
     pageTitle: 'Staff Management',
     heading: 'Staff Management',

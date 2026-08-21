@@ -5,6 +5,15 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
+    <!-- Production only needs Deal/Project status for context, not revenue/forecast/quota
+         figures — this whole dashboard (filters + every section below) is Admin/Sales
+         Rep/Sales Manager only, matching GET /dashboard/summary's backend RBAC. -->
+    <div v-if="!canViewDashboard" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      <p class="mb-3">{{ t('crm.dashboard.productionFallbackMessage') }}</p>
+      <NuxtLink to="/crm/projects" class="text-[var(--color-primary)] hover:underline">{{ t('crm.dashboard.productionFallbackLink') }}</NuxtLink>
+    </div>
+
+    <template v-else>
     <!-- Sticks below the layout's own sticky header (which only appears at
          md+, hence the same breakpoint here) so the filters stay reachable
          on this long, scroll-heavy dashboard instead of scrolling out of
@@ -602,6 +611,7 @@
       </div>
     </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -615,6 +625,11 @@ import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 
 const { t } = useI18n()
 const { error } = useNotify()
+const { hasRole } = useRole()
+
+// Production only needs Deal/Project status for context, not revenue/forecast/quota
+// figures — matches GET /dashboard/summary's backend RBAC (Admin/Sales Rep/Sales Manager).
+const canViewDashboard = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 // Every fire-and-forget fetch below is a bare `if (...) store.fetchAll()` (no
 // `await`, no caller-side try/catch) — this dashboard has none of the loading
 // components' own error handling, so a failed request would otherwise be a
@@ -672,6 +687,7 @@ const filterBarCardUi = computed(() => ({
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 onMounted(() => {
+  if (!canViewDashboard.value) return
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyFetchError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyFetchError)
 })
@@ -692,6 +708,7 @@ const teamMembersStore = useTeamMembersStore()
 const notificationLogStore = useNotificationLogStore()
 
 onMounted(() => {
+  if (!canViewDashboard.value) return
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
   if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyFetchError)
@@ -765,6 +782,7 @@ const filteredDeals = computed(() => {
 const summary = ref<DashboardSummary | null>(null)
 
 const fetchSummary = async () => {
+  if (!canViewDashboard.value) return
   try {
     const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
       params: {

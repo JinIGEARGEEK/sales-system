@@ -1,6 +1,9 @@
 <template>
   <div>
-    <ContainerTemplate>
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.contracts.detail.noAccess') }}
+    </div>
+    <ContainerTemplate v-else>
       <div class="mb-4 flex items-center justify-between">
         <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
         <div class="flex gap-2">
@@ -99,6 +102,11 @@ const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
+const { hasRole } = useRole()
+
+// Contracts carry pricing/terms — Production only needs Deal/Project status, not this.
+// Matches GET /contracts' RBAC (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
 const { dealId, deal } = useCurrentDeal()
 const dealContracts = computed(() => contractsStore.forDeal(dealId))
@@ -108,6 +116,7 @@ const dealContracts = computed(() => contractsStore.forDeal(dealId))
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
+  if (!canAccess.value) return
   contractsStore.fetchForDeal(dealId).catch(notifyApiError)
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })

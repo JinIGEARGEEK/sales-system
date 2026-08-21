@@ -5,6 +5,10 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.subheading') }}</p>
     </div>
 
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('admin.pipelineConfig.noAccess') }}
+    </div>
+    <template v-else>
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex items-center justify-between">
         <div>
@@ -442,6 +446,7 @@
       confirm-color="warning"
       @confirm="confirmDeactivateProductCategory"
     />
+    </template>
   </div>
 </template>
 
@@ -459,6 +464,8 @@ useHead({ title: t('admin.pipelineConfig.pageTitle') })
 // backend endpoints, which 403 for anyone else).
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { hasRole } = useRole()
+const canAccess = computed(() => hasRole('Admin'))
 const { toBadge, dateTimeFormat } = useFormatter()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
@@ -502,6 +509,7 @@ const jobTitlesLoading = ref(false)
 const productCategoriesLoading = ref(false)
 
 onMounted(async () => {
+  if (!canAccess.value) return
   stagesLoading.value = true
   pipelineStagesStore.fetchAll().catch(notifyApiError).finally(() => { stagesLoading.value = false })
   sourcesLoading.value = true

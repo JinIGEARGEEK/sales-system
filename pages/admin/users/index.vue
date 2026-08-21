@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('admin.users.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
       <ButtonPrimary
@@ -53,6 +57,7 @@
       :name="target ? `${target.first_name} ${target.last_name}` : ''"
       @confirm="confirmDelete"
     />
+    </template>
   </div>
 </template>
 
@@ -69,13 +74,18 @@ useHead({ title: t('admin.users.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { hasRole } = useRole()
 const usersStore = useUsersStore()
+
+// Staff management is Admin-only, matching GET /users' backend RBAC.
+const canAccess = computed(() => hasRole('Admin'))
 
 // Kept as a full (up to 1000) background cache purely to resolve the
 // "updated by" column's name below — there's no per-row "updated by name"
 // field on the list endpoint, so this stays separate from the server-paginated
 // `rows` the table itself renders, same pattern as Contacts' tag-options fetch.
 onMounted(() => {
+  if (!canAccess.value) return
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
@@ -103,7 +113,7 @@ const {
   onChangePerPage,
 } = useServerListPage<AdminUser>(params => usersStore.fetchList(params), buildParams)
 
-onMounted(fetch)
+onMounted(() => { if (canAccess.value) fetch() })
 
 watch(search, () => refetchDebounced())
 watch([roleFilter, statusFilter], () => refetchFromStart())

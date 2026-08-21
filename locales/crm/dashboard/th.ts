@@ -2,6 +2,8 @@ export default {
   pageTitle: 'Dashboard ยอดขาย',
   heading: 'Sales Pipeline Dashboard',
   subheading: 'มูลค่า Deal ตามขั้นตอน, อัตราการปิด Deal และรายได้ที่คาดการณ์',
+  productionFallbackMessage: 'ข้อมูลรายได้และไปป์ไลน์ไม่แสดงสำหรับบทบาทของคุณ',
+  productionFallbackLink: 'ไปที่ Project',
   sectionPipelineOverview: 'ภาพรวม Pipeline',
   sectionTrends: 'แนวโน้ม',
   sectionPipelineOpportunities: 'Pipeline และโอกาสในการขาย',

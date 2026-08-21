@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.leads.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-black">{{ t('crm.leads.index.heading') }}</h2>
       <div class="flex items-center gap-2">
@@ -71,6 +75,7 @@
       :name="target?.name || ''"
       @confirm="confirmDelete"
     />
+    </template>
   </div>
 </template>
 
@@ -94,6 +99,10 @@ const leadSourcesStore = useLeadSourcesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
+
+// Leads aren't part of Production's job (per user-story.md) — matches GET /leads' RBAC
+// (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
 const search = ref('')
 const statusFilter = ref('all')
@@ -136,6 +145,7 @@ const {
 } = useServerListPage<Lead>(params => leadsStore.fetchList(params), buildParams)
 
 onMounted(() => {
+  if (!canAccess.value) return
   fetch()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)

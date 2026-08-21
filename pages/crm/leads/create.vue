@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('crm.leads.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4">
       <div class="flex items-center gap-3">
         <UButton
@@ -66,6 +70,7 @@
         </div>
       </Form>
     </ContainerTemplate>
+    </template>
   </div>
 </template>
 
@@ -79,11 +84,17 @@ useHead({ title: t('crm.leads.create.pageTitle') })
 
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const leadSourcesStore = useLeadSourcesStore()
 const goBack = useBackNavigation('/crm/leads')
 
+// Leads aren't part of Production's job (per user-story.md) — matches POST /leads' RBAC
+// (Admin/Sales Rep/Sales Manager).
+const canAccess = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+
 onMounted(() => {
+  if (!canAccess.value) return
   if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })

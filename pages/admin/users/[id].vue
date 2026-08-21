@@ -1,5 +1,9 @@
 <template>
   <div class="p-5">
+    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
+      {{ t('admin.users.noAccess') }}
+    </div>
+    <template v-else>
     <div class="mb-4 flex items-center gap-3">
       <UButton
         icon="material-symbols:arrow-back"
@@ -26,6 +30,7 @@
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
       {{ t('admin.users.detail.staffNotFound') }}
     </div>
+    </template>
   </div>
 </template>
 
@@ -39,10 +44,15 @@ useHead({ title: t('admin.users.detail.pageTitle') })
 const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { hasRole } = useRole()
 const usersStore = useUsersStore()
 const goBack = useBackNavigation('/admin/users')
 
+// Staff management is Admin-only, matching GET/PUT /users' backend RBAC.
+const canAccess = computed(() => hasRole('Admin'))
+
 onMounted(() => {
+  if (!canAccess.value) return
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
