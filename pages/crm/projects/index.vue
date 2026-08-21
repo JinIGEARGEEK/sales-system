@@ -128,6 +128,7 @@ const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
+const productCategoryOptionsStore = useProductCategoryOptionsStore()
 
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — same check as the company detail page's Projects tab.
@@ -153,6 +154,8 @@ onMounted(async () => {
   if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // Needed for CrmAddProjectModal's optional Deal picker once a Company is chosen.
   if (canManageProjects.value && dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  // Needed for CrmAddProductModal's category picker.
+  if (productCategoryOptionsStore.items.length === 0) productCategoryOptionsStore.fetchAll().catch(notifyApiError)
 })
 
 const activeTab = ref('projects')

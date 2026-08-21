@@ -28,8 +28,8 @@
             <Form @submit="onSave">
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <InputText v-model="form.name" :label="t('crm.companies.detail.companyName')" name="name" rules="required" />
-                <InputSelect v-model="form.industry" :options="INDUSTRY_OPTIONS" :label="t('crm.companies.detail.industry')" name="industry" rules="required" />
-                <InputText v-model="form.size" :label="t('crm.companies.detail.companySize')" name="size" />
+                <InputSelect v-model="form.industry" :options="industryOptions" :label="t('crm.companies.detail.industry')" name="industry" rules="required" />
+                <InputSelect v-model="form.size" :options="companySizeOptions" :label="t('crm.companies.detail.companySize')" name="size" />
                 <InputText v-model="form.website" :label="t('crm.companies.detail.website')" name="website" />
                 <InputText v-model="form.tags" :label="t('crm.companies.detail.tags')" :placeholder="t('crm.companies.detail.tagsPlaceholder')" name="tags" />
                 <InputSelect
@@ -250,7 +250,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { INDUSTRY_OPTIONS, COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -276,6 +276,8 @@ const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()
 const projectsStore = useProjectsStore()
 const attachmentsStore = useAttachmentsStore()
+const industryOptionsStore = useIndustryOptionsStore()
+const companySizeOptionsStore = useCompanySizeOptionsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
@@ -285,10 +287,30 @@ onMounted(() => {
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
+  if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
+  if (companySizeOptionsStore.items.length === 0) companySizeOptionsStore.fetchAll().catch(notifyApiError)
   activitiesStore.fetchForRelated('company', companyId).catch(notifyApiError)
   customerProductsStore.fetchForCompany(companyId).catch(notifyApiError)
   projectsStore.fetchForCompany(companyId).catch(notifyApiError)
   attachmentsStore.fetchForRelated('company', companyId).catch(notifyApiError)
+})
+
+// A Company row may hold an industry/size value that's since been
+// deactivated (or inherited from data written before this feature
+// existed) — keep it selectable so opening an existing Company for edit
+// never silently blanks the field, even though it won't appear for new
+// Companies going forward.
+const industryOptions = computed<Select[]>(() => {
+  const current = company.value?.industry
+  const active = industryOptionsStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
+})
+const companySizeOptions = computed<Select[]>(() => {
+  const current = company.value?.size
+  const active = companySizeOptionsStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
 })
 
 const activeTab = ref('overview')

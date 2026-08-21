@@ -1,12 +1,3 @@
-export const INDUSTRY_OPTIONS: Select[] = [
-  { label: 'Technology', value: 'Technology' },
-  { label: 'Retail', value: 'Retail' },
-  { label: 'Manufacturing', value: 'Manufacturing' },
-  { label: 'Healthcare', value: 'Healthcare' },
-  { label: 'Finance', value: 'Finance' },
-  { label: 'Education', value: 'Education' },
-]
-
 export const COMPANY_STATUS_OPTIONS: Select[] = [
   { label: 'All Status', value: 'all' },
   { label: 'Active', value: 'active' },
