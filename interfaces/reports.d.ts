@@ -69,6 +69,7 @@ interface ContractStuckRow {
   deal_title: string
   company_name: string
   status: ContractStatus
+  assigned_to: number | null
   days_in_status: number
 }
 

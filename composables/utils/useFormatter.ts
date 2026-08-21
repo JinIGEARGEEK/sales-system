@@ -30,6 +30,17 @@ export const useFormatter = () => {
 
   const toBadge = (title: string, color = 'neutral') => ({ title, color, isNoData: false })
 
+  // Escalates a day-count based badge color neutral -> warning -> error as it
+  // crosses warnAt/criticalAt — used across the Reports section (Stalled
+  // Deals, Contracts Stuck, Quotes Expiring Soon, Projects at Risk) so how
+  // urgent a "days" figure is reads at a glance instead of every row looking
+  // identical regardless of severity.
+  const severityColor = (days: number, warnAt: number, criticalAt: number) => {
+    if (days >= criticalAt) return 'error'
+    if (days >= warnAt) return 'warning'
+    return 'neutral'
+  }
+
   // Splits a comma-separated tags input (e.g. "Tier 1, Priority") into a clean string[],
   // trimming whitespace and dropping empty entries from trailing/double commas.
   const parseTags = (value: string) => value.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -41,6 +52,7 @@ export const useFormatter = () => {
     priceFormat,
     priceFormatCompact,
     toBadge,
+    severityColor,
     parseTags,
   }
 }

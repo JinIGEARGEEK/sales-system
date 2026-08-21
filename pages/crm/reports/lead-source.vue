@@ -5,14 +5,24 @@
         <h2 class="text-xl font-black">{{ t('crm.reports.leadSource.heading') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.leadSource.subheading') }}</p>
       </div>
-      <UButton
-        :label="t('crm.reports.backToReports')"
-        icon="material-symbols:arrow-back"
-        variant="outline"
-        color="neutral"
-        size="sm"
-        @click="navigateTo('/crm/reports')"
-      />
+      <div class="flex gap-2">
+        <UButton
+          :label="t('crm.reports.exportCsv')"
+          icon="material-symbols:download"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="onExport"
+        />
+        <UButton
+          :label="t('crm.reports.backToReports')"
+          icon="material-symbols:arrow-back"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          @click="navigateTo('/crm/reports')"
+        />
+      </div>
     </div>
 
     <UAlert
@@ -117,6 +127,7 @@ const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const teamMembersStore = useTeamMembersStore()
+const downloadCsvBlob = useDownloadCsvBlob()
 
 const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
 
@@ -142,17 +153,17 @@ const clearFilters = () => {
 const rows = ref<LeadSourceConversionRow[]>([])
 const loading = ref(false)
 
+const reportParams = () => ({
+  date_from: dateRange.value?.start,
+  date_to: dateRange.value?.end,
+  assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
+})
+
 const fetchReport = async () => {
   if (!canViewReports.value) return
   loading.value = true
   try {
-    const response = await $api.get<ApiResponse<LeadSourceConversionRow[]>>('/reports/lead-source-conversion', {
-      params: {
-        date_from: dateRange.value?.start,
-        date_to: dateRange.value?.end,
-        assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
-      },
-    })
+    const response = await $api.get<ApiResponse<LeadSourceConversionRow[]>>('/reports/lead-source-conversion', { params: reportParams() })
     rows.value = response.data.data
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -160,6 +171,8 @@ const fetchReport = async () => {
     loading.value = false
   }
 }
+
+const onExport = () => downloadCsvBlob('/reports/lead-source-conversion/export', 'lead-source-conversion.csv', reportParams())
 
 onMounted(fetchReport)
 watch([dateRange, salesRepFilter], fetchReport)
