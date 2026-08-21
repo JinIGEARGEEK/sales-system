@@ -1,9 +1,28 @@
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
-    </div>
+    <!-- Glass hero: same bg/blur/border vocabulary as GLASS_PANEL_UI (used
+         by every filter bar in the app), so this page's very first element
+         already reads as "glass" rather than a plain heading. Surfaces the
+         one number that matters most — total items needing a look across
+         every "Needs Attention" report — before anyone scrolls to the cards. -->
+    <UCard class="mb-5" :ui="GLASS_PANEL_UI">
+      <div class="flex items-center gap-4">
+        <div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.35)] to-[rgba(45,114,167,0.25)] ring-1 ring-white/50 backdrop-blur-sm">
+          <UIcon name="material-symbols:insights" class="size-6 text-[var(--color-primary)]" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
+          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
+        </div>
+        <div v-if="canViewReports" class="hidden shrink-0 text-right sm:block">
+          <p class="text-2xl font-black" :class="totalAttentionCount ? 'text-[var(--color-warning-hover)]' : 'text-[var(--color-gray)]'">
+            <USkeleton v-if="totalAttentionCount === undefined" class="ml-auto h-7 w-10" />
+            <template v-else>{{ totalAttentionCount }}</template>
+          </p>
+          <p class="text-xs text-[var(--color-gray)]">{{ t('crm.reports.summaryHint') }}</p>
+        </div>
+      </div>
+    </UCard>
 
     <UAlert
       v-if="!canViewReports"
@@ -17,25 +36,25 @@
     <template v-else>
       <!-- Problem-list reports first, each surfacing a live count badge so
            which ones actually need a look is visible without opening every
-           card — the previous flat grid gave every report equal visual
-           weight regardless of whether it had anything to report. -->
-      <h3 class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+           card. The section chip repeats the same warm glass tone as every
+           card beneath it — color carries the grouping, the label just
+           names it. -->
+      <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(198,158,82,0.35)] bg-[rgba(198,158,82,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-[var(--color-warning-hover)]" aria-hidden="true" />
-        {{ t('crm.reports.sectionNeedsAttention') }}
-      </h3>
+        <span class="text-xs font-semibold tracking-wide text-[var(--color-warning-hover)] uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
+      </div>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
-          <!-- Warm accent (glowing glass edge + frosted icon chip) ties
-               every card in this section back to the amber dot in its
-               header — colour carries the grouping, not just the section
-               label text. Same blur+glow vocabulary as GLASS_PANEL_UI and
-               the sidebar nav's own hover glow, not a flat solid line. -->
+          <!-- Real glass card: translucent white + heavy blur (matching
+               GLASS_PANEL_UI) instead of an opaque white tile, a translucent
+               warm border + glow, and a frosted icon chip. Lifts slightly
+               and brightens on hover for tactile feedback. -->
           <UCard
-            class="h-full border-l-4 border-l-[rgba(198,158,82,0.75)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]"
+            class="h-full border border-white/70 border-l-4 border-l-[rgba(198,158,82,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(198,158,82,0.6)' }"
           >
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.35)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
+              <div class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.4)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-5 text-[var(--color-warning-hover)]" />
               </div>
               <div class="min-w-0 flex-1">
@@ -58,23 +77,20 @@
         </NuxtLink>
       </div>
 
-      <h3 class="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-[var(--color-gray)] uppercase">
+      <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(45,114,167,0.35)] bg-[rgba(45,114,167,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-[var(--color-info-toast)]" aria-hidden="true" />
-        {{ t('crm.reports.sectionAnalytics') }}
-      </h3>
+        <span class="text-xs font-semibold tracking-wide text-[var(--color-info-toast)] uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
+      </div>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">
-          <!-- Cool glass accent, deliberately distinct from the warm "Needs
-               Attention" one above — these are breakdowns to read, not
-               problems to act on, and the color says so before the label
-               does. Same glowing-edge/frosted-chip vocabulary as that
-               section, just a different hue. -->
+          <!-- Cool glass variant, same treatment as above just a different
+               hue — these are breakdowns to read, not problems to act on. -->
           <UCard
-            class="h-full border-l-4 border-l-[rgba(45,114,167,0.75)] ring-[var(--color-card-border)] transition hover:bg-[var(--color-light-gray-1)]"
+            class="h-full border border-white/70 border-l-4 border-l-[rgba(45,114,167,0.8)] bg-white/55 backdrop-blur-xl ring-[var(--color-card-border)] transition duration-200 hover:-translate-y-0.5 hover:bg-white/75"
             :style="{ boxShadow: '-3px 0 18px -4px rgba(45,114,167,0.6)' }"
           >
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.35)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
+              <div class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
                 <UIcon :name="card.icon" class="size-5 text-[var(--color-info-toast)]" />
               </div>
               <div>
@@ -91,6 +107,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
@@ -130,6 +147,14 @@ const ATTENTION_ENDPOINTS: Record<string, string> = {
 // undefined = still loading (renders a skeleton) so the badges don't all
 // flash "0" before their real count arrives.
 const counts = ref<Record<string, number | undefined>>({})
+
+// Sum of every resolved count — undefined until every one of the 5 requests
+// below has answered, so the hero number never flashes a partial total.
+const totalAttentionCount = computed(() => {
+  const values = Object.values(counts.value)
+  if (values.length < Object.keys(ATTENTION_ENDPOINTS).length || values.some(v => v === undefined)) return undefined
+  return values.reduce((sum: number, v) => sum + (v ?? 0), 0)
+})
 
 // Takes `number | undefined` (rather than narrowing via the template's
 // `v-if="counts[card.key] !== undefined"`) since vue-tsc doesn't carry that
