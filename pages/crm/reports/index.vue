@@ -133,6 +133,7 @@ const analyticsCards = computed(() => [
   { path: '/crm/reports/lead-source', icon: 'material-symbols:person-search-outline', title: t('crm.reports.leadSource.cardTitle'), description: t('crm.reports.leadSource.cardDescription') },
   { path: '/crm/reports/customer-product-status', icon: 'material-symbols:inventory-2-outline', title: t('crm.reports.customerProductStatus.cardTitle'), description: t('crm.reports.customerProductStatus.cardDescription') },
   { path: '/crm/reports/win-loss', icon: 'material-symbols:balance-outline', title: t('crm.reports.winLoss.cardTitle'), description: t('crm.reports.winLoss.cardDescription') },
+  { path: '/crm/reports/sales-cycle', icon: 'material-symbols:schedule-outline', title: t('crm.reports.salesCycle.cardTitle'), description: t('crm.reports.salesCycle.cardDescription') },
 ])
 
 // key -> report endpoint, for the live count fetch below.

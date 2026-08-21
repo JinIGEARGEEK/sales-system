@@ -90,6 +90,7 @@ const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean
+  deal?: Deal | null
 }>()
 
 const emit = defineEmits<{
@@ -138,7 +139,12 @@ const onItemProductChange = (item: { description: string, price: number, product
 // open, not close" rule.
 watch(() => props.open, (value) => {
   if (value) {
-    items.value = []
+    // Pre-fill a single line item from the parent Deal (FR-CRM-046) so a
+    // simple one-line quote doesn't start from a completely blank form —
+    // still fully editable, and skipped entirely if no Deal was passed in.
+    items.value = props.deal
+      ? [{ key: nextItemKey++, description: props.deal.title, qty: 1, price: props.deal.value, product_id: null }]
+      : []
     if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }
 })

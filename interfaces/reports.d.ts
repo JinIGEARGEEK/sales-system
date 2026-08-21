@@ -84,3 +84,35 @@ interface ProjectAtRiskRow {
   target_end_date: string
   days_overdue: number
 }
+
+// GET /reports/sales-cycle — average time-in-stage and total sales-cycle
+// length, broken out by pipeline stage / Sales Rep / Lead source (FR-CRM-099,
+// extending FR-CRM-057's single running average). `key` is the stage name,
+// the Sales Rep's user id (as a string), or the Lead source name depending on
+// which bucket array it's in — this endpoint returns all three breakdowns of
+// the same underlying stage-transition data, not three separate reports.
+interface SalesCycleBucketRow {
+  key: string
+  avg_days: number
+  count: number
+}
+
+interface SalesCycleReport {
+  by_stage: SalesCycleBucketRow[]
+  by_rep: SalesCycleBucketRow[]
+  by_source: SalesCycleBucketRow[]
+  avg_sales_cycle_days: number
+  closed_deal_count: number
+}
+
+// GET /notification-log — recent NotificationRule firings, in-app (FR-CRM-100/
+// 101/102's previously email-only notifications). Scoped server-side per
+// viewer (a Sales Rep only sees firings for Deals they own).
+interface NotificationFiring {
+  id: number
+  rule_name: string
+  entity_type: NotificationEntityType
+  deal_id: number
+  deal_title: string
+  notified_at: Date
+}

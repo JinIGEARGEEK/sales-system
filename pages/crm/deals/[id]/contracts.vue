@@ -76,6 +76,14 @@
       :quotes="dealQuotes"
       @submit="onAddContract"
     />
+
+    <CrmAddProjectModal
+      v-model:open="projectModal"
+      :title="t('crm.deals.detail.createProjectModalTitle')"
+      :default-name="deal?.title"
+      :description="t('crm.deals.detail.createProjectModalBody')"
+      @submit="onCreateProject"
+    />
   </div>
 </template>
 
@@ -85,7 +93,6 @@ import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils
 
 const { t } = useI18n()
 
-const route = useRoute()
 const { dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -93,7 +100,7 @@ const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 
-const dealId = Number(route.params.id)
+const { dealId, deal } = useCurrentDeal()
 const dealContracts = computed(() => contractsStore.forDeal(dealId))
 // The "create contract" modal offers linking to one of the deal's quotes, so
 // this tab needs the Quotes store populated even if the Quotes tab hasn't
@@ -107,10 +114,20 @@ onMounted(() => {
 
 const addContractOpen = ref(false)
 
+// Mirrors the existing Deal-Won -> Create Project prompt (pages/crm/deals/[id].vue,
+// same composable): signing a Contract is just as much a real "we now have a
+// customer engagement" moment, so it gets the same auto-open-the-project-modal
+// treatment (FR-CRM-048).
+const { projectModal, promptCreateProject, onCreateProject } = useCreateProjectFromDeal(deal)
+const promptProjectIfSigned = (contract: { status: ContractStatus }) => {
+  if (contract.status === 'signed') promptCreateProject()
+}
+
 const onAddContract = async (contract: { status: ContractStatus, quote_id?: number }) => {
   try {
-    await contractsStore.add(dealId, contract)
+    const created = await contractsStore.add(dealId, contract)
     success(t('crm.contracts.detail.createSuccess'))
+    promptProjectIfSigned(created)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
@@ -145,8 +162,9 @@ const onContractFileSelected = async (event: Event) => {
   }
 
   try {
-    await contractsStore.upload(contractId, file)
+    const updated = await contractsStore.upload(contractId, file)
     success(t('crm.contracts.detail.uploadSuccess'))
+    promptProjectIfSigned(updated)
   } catch (err) {
     notifyApiError(err)
   }

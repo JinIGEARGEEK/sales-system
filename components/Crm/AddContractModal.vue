@@ -61,6 +61,16 @@ const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => 
   value: quote.id,
 })))
 
+// Pre-fill the quote link (FR-CRM-047) with the most recently accepted quote,
+// falling back to the most recent quote overall — still changeable via the
+// select, just not starting blank when there's an obvious default.
+watch(() => props.open, (value) => {
+  if (!value) return
+  const quotes = props.quotes ?? []
+  const preferred = quotes.findLast(q => q.status === 'accepted') ?? quotes[quotes.length - 1]
+  if (preferred) form.quote_id = preferred.id
+})
+
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
 const onSubmit = guard(async () => {

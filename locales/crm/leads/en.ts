@@ -12,10 +12,13 @@ export default {
       company: 'Company',
       source: 'Source',
       status: 'Status',
+      classification: 'Score',
       assignedTo: 'Assigned To',
       created: 'Created',
       action: 'Action',
     },
+    mqlBadge: 'MQL',
+    sqlBadge: 'SQL',
     actions: {
       viewDetail: 'View Detail',
       edit: 'Edit',
@@ -54,6 +57,8 @@ export default {
   detail: {
     pageTitle: 'Lead Detail',
     convertToDeal: 'Convert to Deal',
+    markSql: 'Mark Sales Ready',
+    markSqlSuccess: 'Lead marked sales-ready (SQL)',
     fullName: 'Full Name',
     companyName: 'Company Name',
     email: 'Email',

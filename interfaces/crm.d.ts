@@ -1,6 +1,19 @@
 // Shared by Company and Contact — both are simply active or archived.
 type ActiveArchivedStatus = 'active' | 'archived'
 type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Disqualified'
+// Lead Scoring (FR-CRM-006/007) — server-computed from LeadScoringCriterion rows
+// against the Lead's own fields; 'none' means the score is below the configured
+// lead_scoring_mql_threshold (AppSettings.lead_scoring_mql_threshold), 'sql' is
+// reserved for a Lead that has already converted to a Deal.
+type LeadClassification = 'none' | 'mql' | 'sql'
+// The closed set of Lead fields a scoring criterion can match against —
+// mirrors the backend's LeadScoringCriterion.Field validation.
+type LeadScoringCriterionField = 'source' | 'has_company_name' | 'has_phone'
+// Workflow Notification Rules (FR-CRM-100/101/102) — the closed set of record
+// types a rule can watch, and who gets notified when it fires. Mirrors the
+// backend's NotificationRule.EntityType/RecipientRole validation.
+type NotificationEntityType = 'deal' | 'quote' | 'contract'
+type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 // Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
 type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost'
@@ -80,6 +93,11 @@ interface Lead {
   tags?: string[] | null
   // Set once this Lead has been converted into a Deal (see Deal.lead_id) — null until then.
   converted_deal_id: number | null
+  // Server-computed Lead Scoring (FR-CRM-006/007) — sum of matching
+  // LeadScoringCriterion weights, and the resulting MQL/SQL bucket against
+  // AppSettings.lead_scoring_mql_threshold.
+  score: number
+  classification: LeadClassification
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -132,6 +150,39 @@ interface LeadSourceOption {
   created_at: Date
 }
 
+// An Admin-configurable lead-scoring rule — GET/POST/PATCH/DELETE
+// /admin/lead-scoring-criteria (FR-CRM-006/007). Each active criterion whose
+// `field` matches a Lead (against `match_value`, where applicable) adds
+// `weight` to that Lead's score server-side; the resulting total is bucketed
+// into Lead.classification against AppSettings.lead_scoring_mql_threshold.
+interface LeadScoringCriterion {
+  id: number
+  name: string
+  field: LeadScoringCriterionField
+  // Only meaningful when field === 'source' (matched against Lead.source);
+  // ignored server-side for the boolean-shaped fields (has_company_name/has_phone).
+  match_value: string
+  weight: number
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable workflow notification rule — GET/POST/PATCH/DELETE
+// /admin/notification-rules (FR-CRM-100/101/102). Each active rule watches one
+// entity_type for a stale/at-risk condition (an open Deal sitting in its stage,
+// a Sent Quote nearing its validity date, or a Draft/Sent Contract left unsigned)
+// for threshold_days, and notifies either just the Deal owner or the owner plus
+// all active Sales Managers.
+interface NotificationRule {
+  id: number
+  name: string
+  entity_type: NotificationEntityType
+  threshold_days: number
+  recipient_role: NotificationRecipientRole
+  is_active: boolean
+  created_at: Date
+}
+
 // The Admin-configurable app-wide settings singleton — GET/PATCH /admin/settings.
 // Holds the quarterly sales quota (FR-CRM-058) and the annual revenue goal
 // (FR-CRM-091), both previously hardcoded in the dashboard summary handler.
@@ -139,6 +190,9 @@ interface AppSettings {
   id: number
   quarterly_sales_target: number
   annual_revenue_goal: number
+  // MQL threshold for Lead Scoring (FR-CRM-006/007) — a Lead's computed
+  // `score` at or above this value is classified 'mql' rather than 'none'.
+  lead_scoring_mql_threshold: number
   // Neither figure resets itself on a new quarter/year — this is surfaced in
   // the Admin config UI as a "last updated" hint so a stale value (e.g. last
   // year's annual goal still sitting there in February) doesn't go unnoticed.

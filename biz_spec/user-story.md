@@ -139,7 +139,7 @@ The Production team is not a full user of this CRM. Their only interaction is ke
 
 ## 5. Use Cases
 
-> **Status:** all three use cases below are only partially walkable in the current build. Steps 1–3 of UC-1 (Lead → Deal → activity log) work end-to-end today; every step from "builds a Quote using catalog Products" onward (§UC-1 steps 4–9, and all of UC-2/UC-3) depends on Product Catalog, Contract, CustomerProduct, and Project entities that are ⬜ not built yet (see §9 of `feature-spec.md`).
+> **Status (corrected 2026-08-21):** this note was stale — Product Catalog, Quote, Contract, CustomerProduct, and Project are all now built (see §9 of `feature-spec.md`, dated 2026-08-17), so UC-1 steps 1–5 and 7–9 and all of UC-2/UC-3 are walkable today. The one real gap is UC-1 step 6: `feature-spec.md`'s FR-CRM-064 previously overstated the auto-CustomerProduct-on-Won hook as partially built, but `internal/handlers/deals.go`'s `UpdateStage` only has a comment placeholder there — no CustomerProduct is actually auto-created when a Deal is marked Won. That FR-CRM-064 status has been corrected to ⬜ in `feature-spec.md`; today a rep must create the Customer-Product record manually (FR-CRM-065) after a Won Deal.
 
 ### UC-1 — Lead to Won Deal to real Product/Project records (end-to-end)
 1. Sales rep creates a Lead from a web inquiry (source = "Website").

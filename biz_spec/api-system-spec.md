@@ -211,6 +211,8 @@ interface Lead {
   assigned_to: number | null   // User.id
   tags: string[] | null        // free-text array, same convention as Company/Contact.tags
   converted_deal_id: number | null   // Deal.id once converted, else null — see /leads/:id/convert
+  score: number                // FR-CRM-006 — server-computed, sum of matching active LeadScoringCriterion weights; never client-settable
+  classification: 'none' | 'mql' | 'sql'   // FR-CRM-007 — server-computed mql/none from `score` vs the Admin-configurable threshold (§8.7a), unless the request body explicitly sets `classification: 'sql'` (see POST/PUT rows below)
   deleted_at?: string | null   // present only on GET /leads/trash rows
   created_at: string
 }
@@ -221,9 +223,9 @@ interface Lead {
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `search` (name/company_name/email), `exclude_converted=true` (returns only Leads with `converted_deal_id IS NULL` — used by the Deals Pipeline board, see §7.1, so already-converted Leads don't show up as cards alongside their own resulting Deal). Backs `pages/crm/leads/index.vue`. |
-| `POST` | `/leads` | 🟢 | Create. If the request body omits `assigned_to` (or sends `null`), the backend auto-assigns the new Lead via `pickAutoAssignee()` (`internal/handlers/leads.go`) — a least-open-load strategy that picks whichever active Sales Rep currently has the fewest open Leads/Deals, not a literal round-robin index. This only fires on creation with no explicit assignee; bulk-reassign and Kanban-drag reassignment flows are untouched. |
+| `POST` | `/leads` | 🟢 | Create. If the request body omits `assigned_to` (or sends `null`), the backend auto-assigns the new Lead via `pickAutoAssignee()` (`internal/handlers/leads.go`) — a least-open-load strategy that picks whichever active Sales Rep currently has the fewest open Leads/Deals, not a literal round-robin index. This only fires on creation with no explicit assignee; bulk-reassign and Kanban-drag reassignment flows are untouched. `score`/`classification` are computed server-side after create (`computeAndClassify()`) — an optional `classification: 'sql'` in the body is honored as a manual override, any other value is ignored in favor of the auto mql/none result. |
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
-| `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). |
+| `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). **Not a true partial update** — every `leadForm` field (`name`, `company_name`, `email`, `phone`, `source`, `status`, `notes`, `assigned_to`) is overwritten from whatever the request body contains, so a caller must resend the full current record, not just the changed field(s). `score` is always recomputed. `classification` is the one exception with real partial-update semantics: omitting it (or sending anything other than `'sql'`) leaves an existing `'sql'` override in place and otherwise falls through to the auto mql/none result — only an explicit `classification: 'sql'` in the body sets/keeps it. Frontend: `pages/crm/leads/[id].vue`'s "Mark Sales Ready" button. |
 | `DELETE` | `/leads/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`) — recoverable, see below. |
 | `GET` | `/leads/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Leads (same envelope as `GET /leads`). Backs `pages/admin/trash.vue`. |
 | `POST` | `/leads/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
@@ -231,6 +233,29 @@ interface Lead {
 | `PATCH` | `/leads/bulk-tag` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], tags: string[], mode: 'add' \| 'set'}` (`mode` defaults to `add`, which merges without duplicating). |
 | `PATCH` | `/leads/bulk-archive` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[]}`. Soft-deletes every id in one transaction. |
 | `POST` | `/leads/:id/convert` | 🟢 | Converts a Qualified Lead into a Deal (and Company/Contact if new) — `FR-CRM-004`. Body: `{ company_id?: number, contact_id?: number, deal: { title, value, stage, ... } }` — if `company_id`/`contact_id` omitted, backend creates them from the Lead's `company_name`/`email`/`phone`. Sets the new Deal's `lead_id` and the Lead's `converted_deal_id` in the same transaction. Response: `{ data: { deal: Deal, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Lead has already been converted (`converted_deal_id` already set) — guards against a double-fire from the Kanban drag-to-convert flow (§7.1). This is now the **only** path that creates a Deal from a Lead: `pages/crm/deals/create.vue`'s manual "Convert to Deal" form (reached from the Leads list/detail page, letting a rep pick an existing Company/Contact instead of auto-creating new ones) also calls this endpoint rather than plain `POST /deals` — a bug fixed on 2026-08-16 where the manual form created a Deal referencing the Lead without ever marking the Lead converted, leaving it stuck showing "Convert" forever and duplicated on the pipeline board. |
+
+### 3.1 Lead scoring criteria (`FR-CRM-006`)
+
+Admin-configurable weighted rules `computeAndClassify()` sums against a Lead to produce its `score` (§3 above). Same row-per-option config shape as `/admin/pipeline-stages`/`/admin/lead-sources` (§8.7).
+
+```ts
+interface LeadScoringCriterion {
+  id: number
+  name: string
+  field: 'source' | 'has_company_name' | 'has_phone'   // what to match against the Lead — not admin-extensible beyond these 3 today; adding a 4th requires a backend code change to computeLeadScore()
+  match_value: string   // only meaningful when field === 'source' (compared against Lead.source); ignored otherwise
+  weight: number
+  is_active: boolean
+  created_at: string
+}
+```
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` / `POST` | `/admin/lead-scoring-criteria` | 🟢 | Admin only. List (always both active + inactive rows) / create. Seeded with 5 default criteria on first run (referral/website/event source, has-company-name, has-phone). |
+| `PATCH` / `DELETE` | `/admin/lead-scoring-criteria/:id` | 🟢 | Admin only. Update / deactivate (`DELETE` is a soft `is_active: false` flip, same convention as `/admin/pipeline-stages`, not a hard row delete). |
+
+The MQL threshold itself (`score >=` this value → `classification: 'mql'`) lives on the `AppSettings` singleton, not a `LeadScoringCriterion` row — see `lead_scoring_mql_threshold` in §8.7a.
 
 ---
 
@@ -467,6 +492,8 @@ interface Quote {
 
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
+> **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `CrmAddQuoteModal` just pre-fills one `items[]` row (`description: deal.title, qty: 1, price: deal.value`) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one.
+
 ### 7.5 Payments
 
 ```ts
@@ -545,7 +572,9 @@ interface Contract {
 | `POST` | `/contracts/:id/upload` | Upload the signed document (§6.1) → sets `signed_file_url`/`signed_date`, flips status to `signed`. |
 | `GET` | `/contracts/:id/export-pdf` | 🟢 — returns a generated PDF (`github.com/go-pdf/fpdf`, same renderer as the Quote export): party details (Company `legal_name`/`address`/`tax_id`, Contact name/role), Deal info, the linked Quote's line items/total (if `quote_id` is set), status, signed date, and a signature-line placeholder. Read-only, same access level as List (no `CanWrite` check). |
 
-Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id]/contracts.vue`, nested under the `pages/crm/deals/[id].vue` tab-bar parent), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes).
+Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id]/contracts.vue`, nested under the `pages/crm/deals/[id].vue` tab-bar parent), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes, defaulting to the most recently Accepted one — `FR-CRM-047`, frontend-only, no API change).
+
+> **`FR-CRM-048` (auto-create-Project-on-Signed) is also frontend-only.** Whenever `POST /deals/:dealId/contracts` or `POST /contracts/:id/upload` resolves to `status: 'signed'`, `contracts.vue` opens the same `CrmAddProjectModal` the Deal-Won flow uses (via the shared `useCreateProjectFromDeal` composable), which then calls `POST /companies/:companyId/projects` (§8.3) same as any other Project creation — no new backend endpoint. The composable also guards against opening the prompt when `projectsStore` already has a Project for this Deal (`forDeal` getter, one-Project-per-Deal assumption), since the Won and Signed triggers can both fire for the same Deal.
 
 ### 8.2 Product Catalog & Customer-Product tracking (`FR-CRM-060`–`066`)
 
@@ -623,8 +652,9 @@ All eight report endpoints are Admin/Sales-Manager only (`RequireRoles`) and hav
 | `GET` | `/reports/quotes-expiring-soon?within_days=` | `FR-CRM-096`. Sent quotes whose `validity_date` falls within the next `within_days` (default 7) — the forward-looking mirror of `Quote.EffectiveStatus`'s already-expired check, same dual-format (RFC3339 / bare date) parsing. |
 | `GET` | `/reports/contracts-stuck?min_days=` | `FR-CRM-097`. Draft/Sent contracts unsigned for at least `min_days` (default 14) — `Contract` has no start/end date, only `signed_date`, so this tracks staleness before signature, not true expiration. |
 | `GET` | `/reports/projects-at-risk` | `FR-CRM-098`. Projects past `target_end_date` that aren't `Completed` or `Cancelled`. |
+| `GET` | `/reports/sales-cycle?assigned_to=&date_from=&date_to=` | `FR-CRM-099`, extending `FR-CRM-057`'s single average. Response shape (not a bare row array like the others — see below): `{ by_stage: SalesCycleBucketRow[], by_rep: SalesCycleBucketRow[], by_source: SalesCycleBucketRow[], avg_sales_cycle_days: number, closed_deal_count: number }` where `SalesCycleBucketRow = { key: string, avg_days: number, count: number }` (`key` is a stage name, a Sales Rep user id as a string, or a Lead source name depending on which array it's in). Derived entirely from `"deal"` `stage_changed` `audit_log_entries` rows (§8.5) — walks each Deal's transitions in creation order, measuring the gap between consecutive ones (and from `Deal.created_at` to the first one); only completed segments count toward `by_stage`/`by_rep`/`by_source`, not a Deal's current still-open stage. `avg_sales_cycle_days`/`closed_deal_count` cover Won/Lost Deals only, measured from `created_at` to the audit entry where `after.status` first matches the Deal's final resolved status. `fetchSalesCycle` itself takes plain `assignedTo`/`dateFrom`/`dateTo` params (refactored from `*fiber.Ctx` on 2026-08-21) specifically so `GET /dashboard/summary`'s own `avg_sales_cycle_days` (§9) — previously a hardcoded `0` stub — could call the exact same computation rather than duplicating it; see §9's note. |
 
-All six new endpoints return `[]` (never `null`) for an empty result — a real bug hit while building them: a `var rows []T` Go destination that `Scan` never touches (zero matching rows) stays a nil slice, and `encoding/json` marshals a nil slice as `null`, which crashes the frontend calling `.map()`/`.length` on the response body. Every new handler in `internal/handlers/reports.go` initializes its result slice as `rows := []T{}` specifically to avoid this — keep that pattern for any report added after these.
+All seven new endpoints (`sales-cycle` included) return `[]`/an explicit shape (never `null`) for an empty result — a real bug hit while building them: a `var rows []T` Go destination that `Scan` never touches (zero matching rows) stays a nil slice, and `encoding/json` marshals a nil slice as `null`, which crashes the frontend calling `.map()`/`.length` on the response body. Every new handler in `internal/handlers/reports.go` initializes its result slice as `rows := []T{}` specifically to avoid this — keep that pattern for any report added after these.
 
 ### 8.5 Audit log (`FR-CRM-082`)
 
@@ -718,6 +748,7 @@ interface AppSettings {
   id: number                    // always 1 — singleton row
   quarterly_sales_target: number
   annual_revenue_goal: number
+  lead_scoring_mql_threshold: number   // FR-CRM-007 — a Lead's `score` (§3.1) at or above this value classifies it 'mql'
   updated_at: string            // surfaced in the Admin UI as a "last updated" hint —
                                  // neither figure resets itself on a new quarter/year
 }
@@ -726,7 +757,7 @@ interface AppSettings {
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `GET` | `/admin/settings` | Admin | Loads the singleton `AppSettings` row (`id: 1`), falling back to the seeded default rather than erroring if it's somehow missing. |
-| `PATCH` | `/admin/settings` | Admin | Updates it — both `quarterly_sales_target` and `annual_revenue_goal` are required on every PATCH (this is a single singleton row, not a per-field partial-update resource), each must be `>= 0`. Writes an `audit_log_entries` row (`entity_type: "settings"`, `action: "updated"`, before/after values, actor) whenever either value actually changes — a no-op PATCH (identical values) does not write one. A real change also clears `GET /dashboard/summary`'s response cache (§9) immediately, rather than leaving the Admin who just changed a figure looking at their own stale pre-PATCH value for up to that cache's TTL. |
+| `PATCH` | `/admin/settings` | Admin | Updates it — `quarterly_sales_target` and `annual_revenue_goal` are required on every PATCH (this predates `lead_scoring_mql_threshold` and existing callers/tests only ever sent these two), each must be `>= 0`. `lead_scoring_mql_threshold` is **optional** on PATCH — added later, so omitting it just leaves the current value in place rather than 422ing a PATCH that predates the field; when present it must also be `>= 0`. Writes an `audit_log_entries` row (`entity_type: "settings"`, `action: "updated"`, before/after values, actor) whenever any of the three values actually changes — a no-op PATCH (identical values) does not write one. A real change also clears `GET /dashboard/summary`'s response cache (§9) immediately, rather than leaving the Admin who just changed a figure looking at their own stale pre-PATCH value for up to that cache's TTL. |
 
 Backend: `internal/models/settings.go` (`AppSettings`, seeded via `DefaultAppSettings` the same way `PipelineStage`/`LeadSourceOption` seed), `internal/handlers/settings.go` (its `Update` handler uses `utils.SaveWithAudit`, the same helper `deals.go`'s stage-change/reassign endpoints use, rather than a plain `db.Save` — this was a gap until FR-CRM-091 added it, since app settings changes previously left no audit trail unlike every other Admin-configurable resource; on a real change it also calls `dashboard.go`'s `InvalidateDashboardCache()`). `internal/handlers/dashboard.go`'s `appSettings()` reads this row instead of the old hardcoded `QUARTERLY_SALES_TARGET`-style constant (§9 below), feeding both `quarterlySalesTarget` (FR-CRM-058) and `annualRevenueGoal` (FR-CRM-091). Frontend: a "Sales Quota & Revenue Goals" card on `pages/admin/pipeline-config.vue`, backed by `stores/appSettings.ts`, showing a "last updated" hint sourced from `updated_at`.
 
@@ -760,6 +791,47 @@ interface SalesTarget {
 Every write (`POST`/`PATCH`/`DELETE`) writes an `audit_log_entries` row (`entity_type: "sales_target"`, action `created`/`updated`/`deleted`) via the same `utils.SaveWithAudit` helper §8.7a uses, and calls `dashboard.go`'s `InvalidateDashboardCache()` on success — identical plumbing to the `AppSettings` PATCH, since a `SalesTarget` change also silently changes `GET /dashboard/summary`'s `pipeline_coverage_ratio` without touching the `deals` table.
 
 Backend: `internal/models/sales_target.go` (`SalesTarget`, unique index on `(year, quarter)`), `internal/handlers/sales_targets.go`. `internal/handlers/dashboard.go`'s new `currentQuarterTarget()` resolves the actual figure `pipeline_coverage_ratio` divides `open_pipeline_value` by: a `SalesTarget` row for *today's* calendar `(year, quarter)` if one exists, else `quarterly_sales_target / 4` (§9 below, unchanged). Frontend: a "Quarterly Sales Targets" card on `pages/admin/pipeline-config.vue` below the existing quota card, backed by `stores/salesTargets.ts` and `components/Crm/SalesTargetModal.vue` — a Year/Quarter/Target table with add/edit/delete, each row badged Current/Upcoming/Past relative to today's date so an Admin can see at a glance which period is live.
+
+### 8.7c Workflow notification rules (`FR-CRM-100`–`102`)
+
+Admin-configurable rules a new background ticker (`internal/notifier/workflow_rules.go`, same 15-minute cadence as the Task due-date reminder ticker, §7.6, but its own separate goroutine) evaluates and emails on. One fixed condition per `entity_type` — not a free-form condition-expression engine — so adding a rule of an existing entity type is pure config, but a genuinely new condition shape would still need a backend code change (`FR-CRM-102`'s "generic within three supported shapes," not a full rule DSL).
+
+```ts
+type NotificationEntityType = 'deal' | 'quote' | 'contract'
+type NotificationRecipientRole = 'owner' | 'owner_and_managers'
+
+interface NotificationRule {
+  id: number
+  name: string
+  entity_type: NotificationEntityType
+  threshold_days: number
+  recipient_role: NotificationRecipientRole
+  is_active: boolean
+  created_at: string
+}
+```
+
+Per-`entity_type` condition (fixed, not configurable beyond `threshold_days`):
+
+| `entity_type` | Fires when | Reuses the definition from |
+|---|---|---|
+| `deal` | An open Deal (`status: 'open'`) has held its current stage for at least `threshold_days`, measured from its most recent `"deal"`/`"stage_changed"` audit log entry (or `Deal.created_at` if it never changed stage) — `FR-CRM-100`. | New — no prior report matched this exactly. |
+| `quote` | A `sent` Quote's `validity_date` falls within `threshold_days` from now — `FR-CRM-101`. | `GET /reports/quotes-expiring-soon` (`FR-CRM-096`). |
+| `contract` | A `draft`/`sent` Contract has been unsigned for at least `threshold_days` since `created_at` — `FR-CRM-101`. | `GET /reports/contracts-stuck` (`FR-CRM-097`). |
+
+`recipient_role` resolves to the Deal owner's email (`owner`), or the owner plus every currently-active Sales Manager (`owner_and_managers`) — there's no per-rep manager hierarchy in this schema to notify one specific manager. Idempotency is per `(rule_id, entity_id, context)` via a `NotificationLog` row (`context` is the Deal's stage at fire time for `deal` rules, so re-idling in a new stage can re-fire; empty string for `quote`/`contract` rules, which only ever need to fire once per entity). Degrades safely (no-op) with no `SMTP_*` env vars configured, same as the Task reminder ticker.
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` / `POST` | `/admin/notification-rules` | Admin | List (always active + inactive) / create. `threshold_days` must be `> 0`. |
+| `PATCH` / `DELETE` | `/admin/notification-rules/:id` | Admin | Update / deactivate (`DELETE` is a soft `is_active: false` flip, same convention as `/admin/pipeline-stages`). |
+| `GET` | `/notification-log` | any | **Added 2026-08-21.** Recent firings, in-app — previously email-only, so a rep with no/misconfigured SMTP had zero visibility. Not `RequireRoles`-gated; scoping happens per-row inside the handler via the existing `CanWrite(c, assignedTo)` helper (`internal/handlers/ownership.go`, used throughout `leads.go`/`deals.go`) — a Sales Rep only sees firings for Deals they own, Admin/Sales Manager see everything. This approximates `recipientEmails()`'s owner/owner_and_managers resolution without a persisted per-firing recipient list. Response: `{ id, rule_name, entity_type, deal_id, deal_title, notified_at }[]`, newest first, capped at 20 (over-fetches 200 `NotificationLog` rows before per-viewer scoping + the cap, so a Sales Rep still sees a full list of their own even if their relevant firings aren't among the newest 20 company-wide). Quote/Contract firings resolve to their Deal via one extra hop (`Quote.DealID`/`Contract.DealID`), same as `checkQuoteExpiringRule`/`checkContractStuckRule`. Backend: `internal/handlers/notification_log.go`. Frontend: a "Recent Alerts" widget on `pages/index.vue` (dashboard), backed by `stores/notificationLog.ts` — modeled directly on the existing "Upcoming Follow-ups" Task widget rather than a new bell-icon/unread-count UI pattern, since nothing like that exists elsewhere in this app and `NotificationLog` doesn't model per-user read state anyway. |
+
+Backend: `internal/models/notification_rule.go`, `internal/models/notification_log.go`, `internal/handlers/notification_rules.go`, `internal/handlers/notification_log.go`, `internal/notifier/workflow_rules.go`. Frontend: a "Notification Rules" tab on `pages/admin/pipeline-config.vue` (§8.7d), backed by `stores/notificationRules.ts`; the dashboard's "Recent Alerts" widget backed by `stores/notificationLog.ts`.
+
+### 8.7d Admin pipeline-config page layout
+
+`pages/admin/pipeline-config.vue` moved from one long scrolling page of stacked `UCard` sections to a 4-tab layout on 2026-08-21 (pure frontend template reorganization, no API/store/handler changes): **Pipeline Stages**, **Sales Quota & Targets** (quota + per-quarter targets), **Lead Sources & Scoring** (lead/deal sources + lead scoring criteria), **Notification Rules**. Local-`ref` tabs (`activeTab`, resets to "Pipeline Stages" on reload) — same convention as `pages/crm/companies/[id].vue`/`pages/admin/trash.vue`, not the route-backed child-route pattern `pages/crm/deals/[id].vue` uses (this page has no natural sub-routes). The "Related Configuration" (Tags) banner stays above the tabs, since it's a nav-out link, not a config section of its own.
 
 ### 8.8 CSV export (`FR-CRM-083`)
 
@@ -812,6 +884,8 @@ Response shape (one object covering every widget on `pages/index.vue`):
   }
 }
 ```
+
+> **`avg_sales_cycle_days` is fixed as of 2026-08-21.** It was previously a hardcoded `0` stub (this doc briefly, incorrectly, documented it as working) — `Summary()` now calls `(&ReportHandler{DB: h.DB}).fetchSalesCycle(...)` (the same computation §8.4's `GET /reports/sales-cycle` uses, §8.4's `FR-CRM-099`), passing through only `assigned_to`/`date_from`/`date_to` from this endpoint's own query params (not `business_unit`/`channel`/`company_tag`, which `fetchSalesCycle` doesn't support), rounded to the nearest whole day. A query error leaves it at `0` rather than failing the whole dashboard summary.
 
 `quarterly_sales_target` and `annual_revenue_goal` are both sourced server-side from the same `AppSettings` singleton row (§8.7a, `FR-CRM-058`/`FR-CRM-091` — Admin-configurable via `GET`/`PATCH /admin/settings`) rather than a hardcoded frontend constant. `pipeline_coverage_ratio` itself, however, divides `open_pipeline_value` by `currentQuarterTarget()` (§8.7b, `FR-CRM-092`) rather than `quarterly_sales_target / 4` directly: it first checks for a `SalesTarget` row matching *today's* calendar `(year, quarter)`, and only falls back to the flat `quarterly_sales_target / 4` if no such row exists — so the `quarterly_sales_target` value returned in this same response is always the flat singleton figure, which may or may not be what `pipeline_coverage_ratio` was actually computed against for the current quarter. `annual_revenue_actual` is the sum of Won Deal value since Jan 1 of the current calendar year — a fixed company-wide figure that deliberately ignores this endpoint's own filter params (`business_unit`/`channel`/`assigned_to`/`company_tag`/date range), the same convention `revenue_trend`/`forecast_trend` already follow, since the annual goal tracks the whole company against one company-wide target rather than a filtered slice. `annual_revenue_progress_ratio` is `annual_revenue_actual ÷ annual_revenue_goal` (0 if the goal is 0). The frontend's on-track indicator for this stat compares that ratio against how far through the calendar year it currently is (pro-rated), not a flat 100% bar — unlike `pipeline_coverage_ratio`'s on-track threshold, which is a flat `>= 1`.
 

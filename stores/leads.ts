@@ -45,14 +45,20 @@ export const useLeadsStore = defineStore('leads', {
         totalPage: response.data.total_page,
       }
     },
-    async add (lead: Omit<Lead, 'id'>): Promise<Lead> {
+    // score/classification are server-computed (FR-CRM-006/007's
+    // computeAndClassify runs on every Create/Update) — excluded from the
+    // create payload type since the client never supplies them, only reads
+    // them back off the response.
+    async add (lead: Omit<Lead, 'id' | 'score' | 'classification'>): Promise<Lead> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Lead>>('/leads', lead)
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<Lead, 'id'>>): Promise<Lead> {
+    // classification may be set to 'sql' here as a manual override (FR-CRM-007);
+    // score stays server-computed only, excluded same as in add() above.
+    async update (id: number, changes: Partial<Omit<Lead, 'id' | 'score'>>): Promise<Lead> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Lead>>(`/leads/${id}`, changes)
       const updated = parseDates(response.data.data)

@@ -507,6 +507,39 @@
       </UCard>
     </div>
 
+    <div class="mb-6">
+      <UCard class="ring-[var(--color-card-border)]">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-danger-toast)]/15">
+              <UIcon name="material-symbols:notifications-outline" class="size-4 text-[var(--color-danger-toast)]" />
+            </div>
+            <h3 class="text-lg font-medium">{{ t('crm.dashboard.recentAlerts') }}</h3>
+          </div>
+          <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.recentAlertsHint') }}</p>
+        </template>
+        <div v-if="recentAlerts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          {{ t('crm.dashboard.noRecentAlerts') }}
+        </div>
+        <div v-else class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <NuxtLink
+            v-for="alert in recentAlerts"
+            :key="alert.id"
+            :to="`/crm/deals/${alert.deal_id}`"
+            class="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+          >
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium">{{ alert.deal_title }}</p>
+              <p class="truncate text-xs text-[var(--color-gray)]">{{ alert.rule_name }}</p>
+            </div>
+            <UBadge color="neutral" variant="subtle" class="shrink-0">
+              {{ dateTimeFormat(alert.notified_at.toISOString()) }}
+            </UBadge>
+          </NuxtLink>
+        </div>
+      </UCard>
+    </div>
+
     <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
@@ -651,18 +684,22 @@ const channelFilterOptions = computed(() => [
 ])
 
 const { $api } = useNuxtApp()
-const { priceFormatCompact, dateFormat } = useFormatter()
+const { priceFormatCompact, dateFormat, dateTimeFormat } = useFormatter()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
+const notificationLogStore = useNotificationLogStore()
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
   if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyFetchError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyFetchError)
+  notificationLogStore.fetchRecent().catch(notifyFetchError)
 })
+
+const recentAlerts = computed(() => notificationLogStore.items)
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 

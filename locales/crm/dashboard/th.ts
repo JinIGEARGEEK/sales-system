@@ -84,4 +84,7 @@ export default {
   upcomingFollowUps: 'งานติดตามที่ใกล้ถึงกำหนด',
   upcomingFollowUpsHint: 'งานที่ค้างอยู่ในทุก Deal ผู้ติดต่อ และบริษัท เรียงตามวันครบกำหนดใกล้สุดก่อน',
   noUpcomingTasks: 'ไม่มีงานติดตามค้างอยู่ เยี่ยมมาก!',
+  recentAlerts: 'การแจ้งเตือนล่าสุด',
+  recentAlertsHint: 'Deal, Quote และ Contract ที่กฎการแจ้งเตือนอัตโนมัติเพิ่งตรวจพบสำหรับคุณ',
+  noRecentAlerts: 'ไม่มีการแจ้งเตือนล่าสุด',
 }

@@ -150,9 +150,23 @@ watch([page, () => buildParams()], () => { selected.value = [] })
 const displayRows = computed(() => rows.value.map(lead => ({
   ...lead,
   statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
+  classificationBadge: classificationBadge(lead.classification),
   createdDate: dateFormat(lead.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(lead.assigned_to),
 })))
+
+// Lead Scoring (FR-CRM-006/007) — renders as "-" for 'none', matching
+// TableData's Card/Status.vue isNoData convention for other empty cells.
+// Badges built once here rather than per-row inside classificationBadge()
+// below, since there are only ever two distinct translated strings on this
+// whole page regardless of how many Lead rows are displayed.
+const mqlBadge = computed(() => toBadge(t('crm.leads.index.mqlBadge'), 'info'))
+const sqlBadge = computed(() => toBadge(t('crm.leads.index.sqlBadge'), 'success'))
+const classificationBadge = (classification: LeadClassification) => {
+  if (classification === 'mql') return mqlBadge.value
+  if (classification === 'sql') return sqlBadge.value
+  return { title: '', color: 'neutral', isNoData: true }
+}
 
 const leadStatusColor = (status: LeadStatus) => {
   if (status === 'Qualified') return 'success'
@@ -169,6 +183,7 @@ const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.leads.index.columns.company'), align: 'left', field: 'company_name', isSort: true },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source' },
   { label: t('crm.leads.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.leads.index.columns.classification'), align: 'left', field: 'classificationBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.leads.index.columns.assignedTo'), align: 'left', field: 'assignedToName' },
   { label: t('crm.leads.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   {

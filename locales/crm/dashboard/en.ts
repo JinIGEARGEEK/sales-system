@@ -84,4 +84,7 @@ export default {
   upcomingFollowUps: 'Upcoming Follow-ups',
   upcomingFollowUpsHint: 'Pending tasks across deals, contacts, and companies, soonest due first.',
   noUpcomingTasks: 'No pending follow-ups. All caught up!',
+  recentAlerts: 'Recent Alerts',
+  recentAlertsHint: 'Deals, quotes, and contracts a workflow notification rule recently flagged for you.',
+  noRecentAlerts: 'No recent alerts.',
 }

@@ -13,19 +13,32 @@
           />
           <h2 class="text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
+          <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ t('crm.leads.index.mqlBadge') }}</UBadge>
+          <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ t('crm.leads.index.sqlBadge') }}</UBadge>
         </div>
-        <ButtonPrimary
-          v-if="lead.converted_deal_id"
-          :label="t('crm.leads.index.actions.viewDeal')"
-          icon="material-symbols:open-in-new"
-          @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
-        />
-        <ButtonPrimary
-          v-else-if="lead.status !== 'Disqualified'"
-          :label="t('crm.leads.detail.convertToDeal')"
-          icon="material-symbols:swap-horiz"
-          @click="navigateTo(`/crm/deals/create?lead_id=${lead.id}`)"
-        />
+        <div class="flex gap-2">
+          <!-- FR-CRM-007's manual "sales-ready" override — the only classification
+          a rep can set directly; mql/none stay entirely score-driven. -->
+          <ButtonPrimary
+            v-if="lead.classification !== 'sql'"
+            :label="t('crm.leads.detail.markSql')"
+            icon="material-symbols:star-outline"
+            outline
+            @click="onMarkSql"
+          />
+          <ButtonPrimary
+            v-if="lead.converted_deal_id"
+            :label="t('crm.leads.index.actions.viewDeal')"
+            icon="material-symbols:open-in-new"
+            @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
+          />
+          <ButtonPrimary
+            v-else-if="lead.status !== 'Disqualified'"
+            :label="t('crm.leads.detail.convertToDeal')"
+            icon="material-symbols:swap-horiz"
+            @click="navigateTo(`/crm/deals/create?lead_id=${lead.id}`)"
+          />
+        </div>
       </div>
 
       <ContainerTemplate>
@@ -180,4 +193,28 @@ const onSave = guard(async () => {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
+
+// The Update endpoint replaces every field from the request body (it isn't a
+// true partial-update — see leadForm on the backend), so marking a Lead "sql"
+// still has to resend the rest of the form's current values alongside it,
+// not just `classification` on its own.
+const onMarkSql = async () => {
+  if (!lead.value) return
+  try {
+    await leadsStore.update(lead.value.id, {
+      name: form.name,
+      company_name: form.company_name,
+      email: form.email,
+      phone: form.phone,
+      source: form.source as LeadSource,
+      status: form.status as LeadStatus,
+      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      notes: form.notes,
+      classification: 'sql',
+    })
+    success(t('crm.leads.detail.markSqlSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 </script>

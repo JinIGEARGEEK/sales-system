@@ -12,10 +12,13 @@ export default {
       company: 'บริษัท',
       source: 'แหล่งที่มา',
       status: 'สถานะ',
+      classification: 'คะแนน',
       assignedTo: 'ผู้รับผิดชอบ',
       created: 'สร้างเมื่อ',
       action: 'การดำเนินการ',
     },
+    mqlBadge: 'MQL',
+    sqlBadge: 'SQL',
     actions: {
       viewDetail: 'ดูรายละเอียด',
       edit: 'แก้ไข',
@@ -54,6 +57,8 @@ export default {
   detail: {
     pageTitle: 'รายละเอียด Lead',
     convertToDeal: 'แปลงเป็น Deal',
+    markSql: 'ทำเครื่องหมายว่าพร้อมขาย',
+    markSqlSuccess: 'ทำเครื่องหมาย Lead ว่าพร้อมขาย (SQL) แล้ว',
     fullName: 'ชื่อ-นามสกุล',
     companyName: 'ชื่อบริษัท',
     email: 'อีเมล',

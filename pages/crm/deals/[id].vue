@@ -32,7 +32,7 @@
     </div>
 
     <CrmAddProjectModal
-      v-model:open="wonModal"
+      v-model:open="projectModal"
       :title="t('crm.deals.detail.createProjectModalTitle')"
       :default-name="deal?.title"
       :description="t('crm.deals.detail.createProjectModalBody')"
@@ -54,7 +54,6 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
-const projectsStore = useProjectsStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal } = useCurrentDeal()
@@ -94,8 +93,8 @@ const tabItems = computed(() => [
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
 const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
-const wonModal = ref(false)
 const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)
+const { projectModal, promptCreateProject, onCreateProject } = useCreateProjectFromDeal(deal)
 
 const onMarkWon = async () => {
   if (!deal.value) return
@@ -104,21 +103,7 @@ const onMarkWon = async () => {
     await dealsStore.updateStage(deal.value.id, pipelineStagesStore.wonStageName as DealStage)
     if (!wasWon) createWonFollowUpTask()
     success(t('crm.deals.detail.markWonSuccess'))
-    wonModal.value = true
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
-}
-
-const onCreateProject = async (payload: { name: string, status: ProjectStatus, production_reference: string | null, target_end_date: Date | null, notes: string }) => {
-  if (!deal.value) return
-  try {
-    await projectsStore.add(deal.value.company_id, {
-      deal_id: deal.value.id,
-      start_date: new Date(),
-      ...payload,
-    })
-    success(t('crm.deals.detail.createProjectSuccess'))
+    promptCreateProject()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

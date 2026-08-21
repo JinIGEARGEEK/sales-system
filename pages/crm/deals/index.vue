@@ -108,6 +108,12 @@
               <UBadge size="xs" color="neutral" variant="subtle">
                 {{ item.status === 'Disqualified' ? t('crm.deals.index.disqualifiedLeadBadge') : item.status }}
               </UBadge>
+              <UBadge v-if="item.classification === 'mql'" size="xs" color="info" variant="subtle">
+                {{ t('crm.leads.index.mqlBadge') }}
+              </UBadge>
+              <UBadge v-else-if="item.classification === 'sql'" size="xs" color="success" variant="subtle">
+                {{ t('crm.leads.index.sqlBadge') }}
+              </UBadge>
             </div>
             <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ item.company_name }}</p>
           </div>

@@ -94,6 +94,7 @@
 
     <CrmAddQuoteModal
       v-model:open="addQuoteOpen"
+      :deal="deal"
       @submit="onAddQuote"
     />
   </div>
@@ -105,7 +106,6 @@ import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils
 
 const { t } = useI18n()
 
-const route = useRoute()
 const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -113,7 +113,7 @@ const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 
-const dealId = Number(route.params.id)
+const { dealId, deal } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
