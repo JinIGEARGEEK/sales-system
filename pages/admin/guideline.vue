@@ -78,7 +78,14 @@
     </UCard>
 
     <div class="flex flex-col gap-4">
-      <UCard v-for="topic in topics" :id="`guideline-topic-${topic.key}`" :key="topic.key" :ui="GLASS_PANEL_UI">
+      <UCard
+        v-for="topic in topics"
+        :id="`guideline-topic-${topic.key}`"
+        :key="topic.key"
+        class="transition-shadow duration-700"
+        :class="topic.key === highlightedTopicKey ? 'ring-2 ring-[var(--color-warning-toast)] shadow-[0_0_24px_rgba(248,196,14,0.45)]' : ''"
+        :ui="GLASS_PANEL_UI"
+      >
         <template #header>
           <div class="flex items-center gap-2">
             <UIcon :name="topic.flowIcons[0] ?? 'material-symbols:info-outline'" class="size-4 text-[var(--color-primary)]" />
@@ -172,6 +179,8 @@ const searchQuery = ref('')
 const normalizedQuery = computed(() => searchQuery.value.trim().toLowerCase())
 const isSearching = computed(() => normalizedQuery.value !== '')
 const matchesQuery = (text: string) => text.toLowerCase().includes(normalizedQuery.value)
+const stepMatchesQuery = (step: GuidelineStep) =>
+  matchesQuery(step.text) || matchesQuery(step.restriction ?? '') || matchesQuery(t(`layout.nav.${step.nav}`))
 
 // Same sticky-then-glass mechanism as the dashboard filter bar (pages/index.vue):
 // a zero-height sentinel right above the sticky card flips this ref the instant
@@ -190,10 +199,12 @@ onMounted(() => {
   onUnmounted(() => observer.disconnect())
 })
 
+// UCard's root defaults to `overflow-hidden`, which clips the search preview
+// dropdown below it — override that so the dropdown can extend past the card.
 const searchBarCardUi = computed(() => ({
-  root: isSearchBarStuck.value
+  root: `overflow-visible ${isSearchBarStuck.value
     ? 'bg-white/10 backdrop-blur-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_0_20px_rgba(96,165,250,0.4)] ring-1 ring-[rgba(96,165,250,0.4)]'
-    : '',
+    : ''}`,
   body: 'p-2 sm:p-3',
 }))
 
@@ -277,9 +288,11 @@ const buildTopic = (key: string): GuidelineTopic => {
   }
 }
 
+const currentTopicKeys = computed(() => topicKeysByTab[activeTab.value] ?? [])
+
 // The page below the search box always browses by role tab — search is a
 // separate live-preview dropdown layered on top, not a page replacement.
-const topics = computed<GuidelineTopic[]>(() => (topicKeysByTab[activeTab.value] ?? []).map(buildTopic))
+const topics = computed<GuidelineTopic[]>(() => currentTopicKeys.value.map(buildTopic))
 
 interface SearchPreviewResult {
   id: string
@@ -291,9 +304,10 @@ interface SearchPreviewResult {
 }
 
 const isSearchFocused = ref(false)
+const BLUR_CLOSE_DELAY_MS = 150
 const onSearchBlur = () => {
   // Delay so a click on a dropdown row registers before the dropdown unmounts.
-  setTimeout(() => { isSearchFocused.value = false }, 150)
+  setTimeout(() => { isSearchFocused.value = false }, BLUR_CLOSE_DELAY_MS)
 }
 
 const MAX_SEARCH_RESULTS = 8
@@ -307,11 +321,7 @@ const searchPreviewResults = computed<SearchPreviewResult[]>(() => {
 
   for (const key of ALL_TOPIC_KEYS) {
     const topic = buildTopic(key)
-    const matchingSteps = topic.steps.filter(step =>
-      matchesQuery(step.text)
-      || matchesQuery(step.restriction ?? '')
-      || matchesQuery(t(`layout.nav.${step.nav}`)),
-    )
+    const matchingSteps = topic.steps.filter(stepMatchesQuery)
 
     if (matchingSteps.length > 0) {
       matchingSteps.forEach((step, index) => {
@@ -344,8 +354,13 @@ const searchPreviewResults = computed<SearchPreviewResult[]>(() => {
 
 const showSearchPreview = computed(() => isSearchFocused.value && isSearching.value)
 
+// Briefly rings the card a jump landed on so it's obvious at a glance which
+// one matched, then fades back to normal on its own.
+const highlightedTopicKey = ref<string | null>(null)
+const HIGHLIGHT_DURATION_MS = 3000
+
 const goToSearchResult = (result: SearchPreviewResult) => {
-  if (!(topicKeysByTab[activeTab.value] ?? []).includes(result.topicKey)) {
+  if (!currentTopicKeys.value.includes(result.topicKey)) {
     const fallbackTab = Object.keys(topicKeysByTab).find(tab => (topicKeysByTab[tab] ?? []).includes(result.topicKey))
     if (fallbackTab) activeTab.value = fallbackTab
   }
@@ -353,6 +368,11 @@ const goToSearchResult = (result: SearchPreviewResult) => {
   nextTick(() => {
     document.getElementById(`guideline-topic-${result.topicKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
+
+  highlightedTopicKey.value = result.topicKey
+  setTimeout(() => {
+    if (highlightedTopicKey.value === result.topicKey) highlightedTopicKey.value = null
+  }, HIGHLIGHT_DURATION_MS)
 }
 
 // The CRM record types these guidelines talk about — highlighted inline so
