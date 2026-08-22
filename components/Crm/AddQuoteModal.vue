@@ -51,12 +51,17 @@
                   @update:model-value="onItemProductChange(item, $event)"
                 />
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
+                  <!-- Not required (unlike qty/price): the deal-prefilled row starts
+                  blank now that its narrative lives in Scope of Work above, and a
+                  rep should be able to save a quote with a bare product-linked line
+                  item too. A blank description just renders as an empty cell in the
+                  exported PDF's line-items table — a rep's own responsibility, not
+                  something worth blocking Save over. -->
                   <InputTextarea
                     v-model="item.description"
                     :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
                     :name="`item-description-${item.key}`"
                     rows="2"
-                    rules="required"
                   />
                   <InputText
                     v-model.number="item.qty"
@@ -175,17 +180,14 @@ const onItemProductChange = (item: { description: string, price: number, product
 watch(() => props.open, (value) => {
   if (value) {
     // Pre-fill a single line item from the parent Deal (FR-CRM-046) so a
-    // simple one-line quote doesn't start from a completely blank form and
-    // is immediately savable — still fully editable, and skipped entirely
-    // if no Deal was passed in. description is seeded with the Deal's title
-    // too (same as scope_of_work above) rather than left blank: the item
-    // description field has `rules="required"`, so leaving it empty would
-    // block Save on the very form this prefill exists to make quick. A rep
-    // who doesn't want the same text in both places can freely shorten/clear
-    // this one — the default here just has to be *something* valid, not
-    // necessarily distinct from scope_of_work.
+    // simple one-line quote doesn't start from a completely blank form —
+    // still fully editable, and skipped entirely if no Deal was passed in.
+    // description starts blank (not the Deal's title) since that narrative
+    // now lives in scope_of_work above — the item description field is no
+    // longer required, so this doesn't block Save the way it briefly did
+    // when this was tried before the field's `rules="required"` was removed.
     items.value = props.deal
-      ? [{ key: nextItemKey++, description: props.deal.title, qty: 1, price: props.deal.value, product_id: null }]
+      ? [{ key: nextItemKey++, description: '', qty: 1, price: props.deal.value, product_id: null }]
       : []
     if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }
