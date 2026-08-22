@@ -1,6 +1,7 @@
 // Real API-backed store, scoped one deal at a time. Quotes are hard-deleted
-// server-side. PDF export (GET /quotes/:id/export-pdf) isn't implemented yet —
-// no UI here calls it.
+// server-side. PDF export (GET /quotes/:id/export-pdf) is called directly via
+// useDownloadPdfBlob from pages/crm/deals/[id]/quotes.vue, not through this
+// store — there's no local state it would update.
 const parseDates = (quote: Quote): Quote => ({
   ...quote,
   validity_date: quote.validity_date ? new Date(quote.validity_date) : null,
@@ -22,7 +23,7 @@ export const useQuotesStore = defineStore('quotes', {
       this.items = [...this.items.filter(q => q.deal_id !== dealId), ...fetched]
       return fetched
     },
-    async add (dealId: number, quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }): Promise<Quote> {
+    async add (dealId: number, quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }): Promise<Quote> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Quote>>(`/deals/${dealId}/quotes`, quote)
       const created = parseDates(response.data.data)

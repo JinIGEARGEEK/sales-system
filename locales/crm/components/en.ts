@@ -58,6 +58,8 @@ export default {
     title: 'Create Quote',
     validUntil: 'Valid Until',
     status: 'Status',
+    scopeOfWork: 'Scope of Work',
+    scopeOfWorkPlaceholder: 'Describe the overall engagement — deliverables, phases, terms...',
     items: 'Line Items',
     addItem: 'Add Item',
     noItems: 'No items yet. Click "Add Item" to add one.',
