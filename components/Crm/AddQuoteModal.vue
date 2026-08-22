@@ -20,6 +20,7 @@
           :placeholder="t('crm.components.addQuoteModal.scopeOfWorkPlaceholder')"
           name="scope_of_work"
           rows="4"
+          class="mt-3"
         />
 
         <div class="mt-4">
@@ -112,7 +113,10 @@ const emit = defineEmits<{
 }>()
 
 const emptyForm = () => ({
-  scope_of_work: '',
+  // Pre-fill from the parent Deal's title (FR-CRM-046) — this is project-level
+  // narrative ("what is this"), so it belongs here, not copied into a line
+  // item's own short description (see the items watcher below).
+  scope_of_work: props.deal?.title ?? '',
   validity_date: '',
   status: 'draft' as QuoteStatus,
 })
@@ -156,8 +160,12 @@ watch(() => props.open, (value) => {
     // Pre-fill a single line item from the parent Deal (FR-CRM-046) so a
     // simple one-line quote doesn't start from a completely blank form —
     // still fully editable, and skipped entirely if no Deal was passed in.
+    // description starts blank rather than copying the Deal's title in
+    // here too — that's what scope_of_work (above) is now for; this field
+    // is meant for a short per-item label (a product name, a phase, a
+    // deliverable), not the same project narrative repeated redundantly.
     items.value = props.deal
-      ? [{ key: nextItemKey++, description: props.deal.title, qty: 1, price: props.deal.value, product_id: null }]
+      ? [{ key: nextItemKey++, description: '', qty: 1, price: props.deal.value, product_id: null }]
       : []
     if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }
