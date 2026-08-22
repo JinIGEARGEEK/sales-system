@@ -137,6 +137,8 @@ export default {
     annualGoalHelp: 'Used to compute the Annual Revenue Goal progress on the Dashboard.',
     mqlThresholdLabel: 'MQL Score Threshold',
     mqlThresholdHelp: 'A Lead whose computed score reaches this value is classified as MQL.',
+    requireSignedContractLabel: 'Require a Signed Contract before marking a Deal "Won"',
+    requireSignedContractHelp: 'When enabled, a Deal can\'t move into Won (from the pipeline board or its detail page) unless it already has at least one Contract with status Signed. Off by default.',
     lastUpdated: 'Last updated {date}',
     save: 'Save',
     saveSuccess: 'Sales quota saved successfully',
