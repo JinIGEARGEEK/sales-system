@@ -26,7 +26,14 @@
             name="deal_id"
             :disable="dealOptions.length === 0"
           />
-          <InputText v-if="!productionEditor" v-model="form.name" :label="t('crm.components.addProjectModal.name')" name="name" rules="required" />
+          <InputCombobox
+            v-if="!productionEditor"
+            v-model="form.name"
+            :options="projectNameOptions"
+            :label="t('crm.components.addProjectModal.name')"
+            name="name"
+            rules="required"
+          />
           <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
           <InputText v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
           <InputDatePicker v-if="!productionEditor" v-model="form.target_end_date" :label="t('crm.components.addProjectModal.targetEndDate')" name="target_end_date" />
@@ -48,6 +55,7 @@ import { useI18n } from 'vue-i18n'
 import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { toDateInputValue } = useFormatter()
 
 const props = defineProps<{
   open: boolean
@@ -85,11 +93,10 @@ const { hasRole } = useRole()
 // the other fields on an edit.
 const productionEditor = computed(() => hasRole('Production') && !!props.project)
 
-const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10)
-
 const companyOptions = computed(() => (props.companies ?? []).map(c => ({ label: c.name, value: String(c.id) })))
 
 const dealsStore = useDealsStore()
+const projectsStore = useProjectsStore()
 
 // Which company to filter the Deal picker by: the one currently picked in the
 // Company field when it's shown, otherwise the fixed `companyId` the parent
@@ -104,6 +111,11 @@ const filterCompanyId = computed(() => {
 const dealOptions = computed(() => dealsStore.items
   .filter(d => d.company_id === filterCompanyId.value)
   .map(d => ({ label: d.title, value: String(d.id) })))
+
+// Existing Project names to suggest in the creatable name combobox — scoped
+// to the current company when one is known, otherwise the full cross-company
+// list (e.g. the standalone Projects page's "Add" flow).
+const projectNameOptions = computed(() => projectsStore.projectNames(filterCompanyId.value))
 
 const emptyForm = () => ({
   company_id: '',

@@ -23,16 +23,23 @@ export const useCustomerProductsStore = defineStore('customerProducts', {
     },
     // The Create response doesn't merge the Product back in (unlike the list
     // endpoint), so the caller passes the already-selected Product to attach locally.
-    async add (companyId: number, payload: { product_id: number, status: CustomerProductStatus }, product: Product): Promise<CustomerProduct> {
+    async add (companyId: number, payload: { product_id: number, status: CustomerProductStatus, start_date?: Date | null, end_date?: Date | null, source_deal_id?: number | null }, product: Product): Promise<CustomerProduct> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Omit<CustomerProduct, 'product'>>>(`/companies/${companyId}/products`, payload)
+      const response = await $api.post<ApiResponse<Omit<CustomerProduct, 'product'>>>(`/companies/${companyId}/products`, {
+        product_id: payload.product_id,
+        status: payload.status,
+        start_date: payload.start_date ? payload.start_date.toISOString() : undefined,
+        end_date: payload.end_date ? payload.end_date.toISOString() : undefined,
+        source_deal_id: payload.source_deal_id ?? undefined,
+      })
       const created = parseDates({ ...response.data.data, product })
       this.items.push(created)
       return created
     },
     // Only `status`/`end_date` are updatable — company_id/product_id are immutable
-    // after creation. The Update response also doesn't merge Product back in, so
-    // it's carried over from the existing local record.
+    // after creation (internal/handlers/products.go's UpdateCustomerProduct). The
+    // Update response also doesn't merge Product back in, so it's carried over
+    // from the existing local record.
     async update (id: number, changes: { status: CustomerProductStatus, end_date: Date | null }): Promise<CustomerProduct> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Omit<CustomerProduct, 'product'>>>(`/customer-products/${id}`, {

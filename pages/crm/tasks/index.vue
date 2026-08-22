@@ -15,7 +15,7 @@
         <ButtonPrimary
           :label="t('crm.tasks.index.addTask')"
           icon="material-symbols:add"
-          @click="addTaskOpen = true"
+          @click="openAddTask"
         />
       </div>
     </div>
@@ -53,6 +53,7 @@
         :selected-ids="selectedIds"
         @toggle="onToggleTask"
         @remove="onRemoveTask"
+        @edit="openEditTask"
         @update:selected-ids="selectedIds = $event"
       />
     </ContainerTemplate>
@@ -68,7 +69,9 @@
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
       show-related-picker
+      :task="editingTask"
       @submit="onSubmitTask"
+      @update="onUpdateTask"
     />
   </div>
 </template>
@@ -137,11 +140,32 @@ const onRemoveTask = (id: number) => tasksStore.remove(id).catch(notifyApiError)
 // ── Create task (with related-record picker) ──────────────────────
 
 const addTaskOpen = ref(false)
+const editingTask = ref<Task | null>(null)
 
-const onSubmitTask = async (payload: { title: string, due_date: Date, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
+const openAddTask = () => {
+  editingTask.value = null
+  addTaskOpen.value = true
+}
+
+const openEditTask = (task: Task) => {
+  editingTask.value = task
+  addTaskOpen.value = true
+}
+
+const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
   try {
     await tasksStore.add(payload as Omit<Task, 'id' | 'status' | 'created_at'>)
     success(t('crm.tasks.index.addTaskSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
+}
+
+const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+  if (!editingTask.value) return
+  try {
+    await tasksStore.update(editingTask.value.id, payload)
+    success(t('crm.tasks.index.editTaskSuccess'))
   } catch (err) {
     notifyApiError(err)
   }

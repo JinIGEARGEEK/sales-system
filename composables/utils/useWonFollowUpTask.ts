@@ -20,7 +20,9 @@ export const useWonFollowUpTask = (dealId: number, deal: Ref<Deal | null>) => {
       related_type: 'deal',
       related_id: dealId,
       title: t('crm.deals.detail.wonFollowUpTaskTitle'),
+      description: '',
       due_date: dueDate,
+      priority: 'medium',
       assigned_to: deal.value.assigned_to,
     }).then(() => {
       info(t('crm.deals.detail.wonFollowUpTaskCreated'))
