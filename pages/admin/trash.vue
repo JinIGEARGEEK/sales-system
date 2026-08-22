@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
+import { MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -89,7 +90,7 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
 // Trash is Admin/Sales Manager only, matching GET /deals/trash and /leads/trash RBAC.
-const { canAccess, guardMounted } = usePageAccess('Admin', 'Sales Manager')
+const { canAccess, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 const activeTab = ref('deals')
 const tabItems = computed(() => [

@@ -111,6 +111,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -135,7 +136,7 @@ const productCategoryOptionsStore = useProductCategoryOptionsStore()
 const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
 
 // Matches the backend's /projects/export and /products/export RBAC (Admin/Sales Manager).
-const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const onExportProjects = () => downloadCsvBlob('/projects/export', 'projects.csv')
 const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv')
 
@@ -152,8 +153,11 @@ onMounted(async () => {
     productsStore.fetchAll().catch(notifyApiError).finally(() => { productsLoading.value = false })
   }
   if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  // Needed for CrmAddProjectModal's optional Deal picker once a Company is chosen.
-  if (canManageProjects.value && dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  // Needed both for CrmAddProjectModal's optional Deal picker once a Company
+  // is chosen, and to resolve each row's own linked-Deal display below —
+  // fetched regardless of canManageProjects so Production (which can view
+  // but not manage) still sees a resolved Deal name, not a raw id/blank.
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
   // Needed for CrmAddProductModal's category picker.
   if (productCategoryOptionsStore.items.length === 0) productCategoryOptionsStore.fetchAll().catch(notifyApiError)
 })
@@ -188,11 +192,16 @@ const projectRows = computed(() => filteredProjects.value.map(project => ({
   ...project,
   statusBadge: toBadge(project.status),
   targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
+  // deal_id is settable at creation (AddProjectModal's optional Deal picker)
+  // but was previously never surfaced anywhere afterward — resolve it here
+  // so the list is the one place a rep can see which Deal a Project came from.
+  dealName: project.deal_id ? (dealsStore.items.find(d => d.id === project.deal_id)?.title ?? `#${project.deal_id}`) : '-',
 })))
 
 const projectColumns: TableDataColumn[] = [
   { label: t('crm.projects.index.columns.name'), align: 'left', field: 'name' },
   { label: t('crm.projects.index.columns.company'), align: 'left', field: 'company_name' },
+  { label: t('crm.projects.index.columns.deal'), align: 'left', field: 'dealName' },
   { label: t('crm.projects.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.projects.index.columns.targetEndDate'), align: 'left', field: 'targetEndDateDisplay' },
   {

@@ -72,6 +72,9 @@
               >
                 <div>
                   <p class="text-sm font-medium">{{ project.name }}</p>
+                  <p v-if="project.deal_id" class="text-xs text-[var(--color-gray)]">
+                    {{ t('crm.contacts.detail.projectLinkedDeal', { title: dealTitleById(project.deal_id) }) }}
+                  </p>
                   <p class="text-xs text-[var(--color-gray)]">
                     {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                   </p>
@@ -183,6 +186,7 @@ watch(() => contact.value?.company_id, (companyId) => {
 const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
 
 const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
+const dealTitleById = (dealId: number) => dealsStore.items.find(d => d.id === dealId)?.title ?? `#${dealId}`
 const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
 
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not Production).

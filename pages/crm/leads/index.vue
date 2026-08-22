@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { LEAD_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -93,7 +94,7 @@ const teamMembersStore = useTeamMembersStore()
 const leadSourcesStore = useLeadSourcesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
-const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
+const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 
 const search = ref('')
 const statusFilter = ref('all')

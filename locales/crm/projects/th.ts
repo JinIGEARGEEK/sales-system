@@ -16,6 +16,7 @@ export default {
     columns: {
       name: 'ชื่อ',
       company: 'บริษัท',
+      deal: 'Deal',
       status: 'สถานะ',
       targetEndDate: 'วันที่คาดว่าจะเสร็จสิ้น',
       action: 'การจัดการ',

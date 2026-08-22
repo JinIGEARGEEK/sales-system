@@ -68,6 +68,7 @@ export default {
     addProject: 'Add Project',
     addProjectSuccess: 'Project added successfully',
     updateProjectSuccess: 'Project updated successfully',
+    projectLinkedDeal: 'From Deal: {title}',
     projectTargetEndDate: 'Target: {date}',
     activityTitle: 'Activity',
     tasksTitle: 'Tasks',

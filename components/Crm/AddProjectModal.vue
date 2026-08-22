@@ -26,6 +26,17 @@
             name="deal_id"
             :disable="dealOptions.length === 0"
           />
+          <!-- deal_id is immutable after creation (no PATCH field for it), so
+          edit mode shows it read-only rather than hiding it entirely — this
+          was previously the one place capable of showing a Project's linked
+          Deal, and it hid that information after creation instead of just
+          not letting it be changed. -->
+          <div v-else-if="project?.deal_id && !productionEditor">
+            <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addProjectModal.deal') }}</p>
+            <NuxtLink :to="`/crm/deals/${project.deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
+              {{ linkedDealTitle }}
+            </NuxtLink>
+          </div>
           <InputCombobox
             v-if="!productionEditor"
             v-model="form.name"
@@ -107,6 +118,8 @@ const filterCompanyId = computed(() => {
   if (props.companies) return Number(form.company_id) || null
   return props.companyId ?? null
 })
+
+const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
 
 const dealOptions = computed(() => dealsStore.items
   .filter(d => d.company_id === filterCompanyId.value)

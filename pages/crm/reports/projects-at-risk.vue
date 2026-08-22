@@ -18,16 +18,7 @@
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
     </div>
 
-    <UAlert
-      v-if="!canViewReports"
-      color="error"
-      variant="subtle"
-      icon="material-symbols:lock-outline"
-      :title="t('crm.reports.accessDeniedTitle')"
-      :description="t('crm.reports.accessDeniedMessage')"
-    />
-
-    <template v-else>
+    <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-wrap items-end gap-2">
           <InputText
@@ -65,12 +56,13 @@
         @change-per-page="onChangePerPage"
         @view-company="onViewCompany"
       />
-    </template>
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
@@ -82,11 +74,10 @@ const goBack = useBackNavigation('/crm/reports')
 
 const { $api } = useNuxtApp()
 const { error } = useNotify()
-const { hasRole } = useRole()
 const { dateFormat, toBadge, severityColor } = useFormatter()
 const downloadCsvBlob = useDownloadCsvBlob()
 
-const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
+const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 const companyTagFilter = ref('')
 const hasActiveFilters = computed(() => Boolean(companyTagFilter.value))
@@ -110,7 +101,7 @@ const fetchReport = async () => {
   }
 }
 
-onMounted(fetchReport)
+guardMounted(fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 watch(companyTagFilter, () => {

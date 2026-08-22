@@ -5,16 +5,7 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
     </div>
 
-    <UAlert
-      v-if="!canViewReports"
-      color="error"
-      variant="subtle"
-      icon="material-symbols:lock-outline"
-      :title="t('crm.reports.accessDeniedTitle')"
-      :description="t('crm.reports.accessDeniedMessage')"
-    />
-
-    <template v-else>
+    <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <!-- Problem-list reports first, each surfacing a live count badge so
            which ones actually need a look is visible without opening every
            card. The section chip repeats the same warm glass tone as every
@@ -102,20 +93,20 @@
           </UCard>
         </NuxtLink>
       </div>
-    </template>
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.reports.pageTitle') })
 
 const { $api } = useNuxtApp()
-const { hasRole } = useRole()
-const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
+const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 // "Needs Attention" reports are all a bounded, already-filtered problem list
 // (rows.length is literally "how many need a look") — Lead Source/Customer-
@@ -157,8 +148,7 @@ const badgeColor = (count: number) => {
   return 'warning'
 }
 
-onMounted(() => {
-  if (!canViewReports.value) return
+guardMounted(() => {
   for (const [key, path] of Object.entries(ATTENTION_ENDPOINTS)) {
     $api.get<ApiResponse<unknown[]>>(path)
       .then((response) => { counts.value[key] = response.data.data.length })

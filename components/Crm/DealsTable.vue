@@ -49,6 +49,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 // Filters are owned by the parent (pages/crm/deals/index.vue) so the same
@@ -78,7 +79,7 @@ onMounted(() => {
 })
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
-const canBulkManage = computed(() => hasRole('Admin', 'Sales Manager'))
+const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Deal>()
 

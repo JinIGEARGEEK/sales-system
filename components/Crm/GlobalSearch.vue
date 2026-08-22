@@ -45,18 +45,28 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
+const { hasRole } = useRole()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 
+// Deals/Companies/Contacts/Leads aren't a primary destination for Production
+// (same SALES_PIPELINE_ROLES exclusion as layouts/default.vue's nav) — this
+// search bar is the one place that restriction was previously not mirrored,
+// so a Production user could still jump straight into a Deal/Company/Contact
+// via search even though those links are hidden from their sidebar.
+const canSearchSalesPipeline = computed(() => hasRole(...SALES_PIPELINE_ROLES))
+
 // GlobalSearch lives in the layout and mounts once per app load, so this is a
 // convenient single place to warm all four stores instead of only relying on
 // each CRM page's own on-mount fetch.
 onMounted(() => {
+  if (!canSearchSalesPipeline.value) return
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
@@ -76,7 +86,7 @@ const matches = (...values: string[]) => {
 }
 
 const resultGroups = computed(() => {
-  if (query.value.trim().length < MIN_QUERY_LENGTH) return []
+  if (query.value.trim().length < MIN_QUERY_LENGTH || !canSearchSalesPipeline.value) return []
 
   return [
     {

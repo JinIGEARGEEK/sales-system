@@ -128,6 +128,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -156,8 +157,6 @@ interface MenuItem {
   // that, it just isn't surfaced as a primary nav destination).
   roles?: Role[]
 }
-
-const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager']
 
 const menuList = computed(() => {
   const items: MenuItem[] = [

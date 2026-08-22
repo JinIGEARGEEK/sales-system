@@ -18,16 +18,7 @@
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
     </div>
 
-    <UAlert
-      v-if="!canViewReports"
-      color="error"
-      variant="subtle"
-      icon="material-symbols:lock-outline"
-      :title="t('crm.reports.accessDeniedTitle')"
-      :description="t('crm.reports.accessDeniedMessage')"
-    />
-
-    <template v-else>
+    <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <div v-if="rows.length > 0" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <CrmStatCard :label="t('crm.reports.contractsStuck.summary.count')" icon="material-symbols:draft-outline">
           {{ rows.length }}
@@ -90,12 +81,13 @@
         @change-per-page="onChangePerPage"
         @view-deal="onViewDeal"
       />
-    </template>
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
@@ -108,12 +100,11 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { hasRole } = useRole()
 const { toBadge, severityColor } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
-const canViewReports = computed(() => hasRole('Admin', 'Sales Manager'))
+const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
@@ -158,7 +149,7 @@ const fetchReport = async () => {
   }
 }
 
-onMounted(fetchReport)
+guardMounted(fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 watch([minDays, companyTagFilter], () => {

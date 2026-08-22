@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import {
   BUSINESS_UNIT_FILTER_OPTIONS,
   matchesAssigneeFilter,
@@ -169,7 +170,7 @@ const channelFilterOptions = computed(() => [
 
 // Matches the backend's /deals/export RBAC (Admin/Sales Manager) — same
 // bulkRoles gate as the Deals bulk-action bar (components/Crm/DealsTable.vue).
-const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const onExport = () => downloadCsvBlob('/deals/export', 'deals.csv')
 
 // The Kanban board no longer loads Deals via dealsStore.fetchAll() (capped at

@@ -380,7 +380,7 @@
         </UCard>
       </div>
 
-      <div class="lg:col-span-2">
+      <div v-if="canViewSalesPipelineWidgets" class="lg:col-span-2">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
@@ -507,7 +507,7 @@
       </UCard>
     </div>
 
-    <div class="mb-6">
+    <div v-if="canViewSalesPipelineWidgets" class="mb-6">
       <UCard class="ring-[var(--color-card-border)]">
         <template #header>
           <div class="flex items-center gap-2">
@@ -612,8 +612,15 @@ import {
   isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
+const { hasRole } = useRole()
+// Upsell Opportunities/Recent Alerts link straight into Company/Deal detail
+// pages, which aren't a primary destination for Production (same
+// SALES_PIPELINE_ROLES exclusion as the sidebar nav and GlobalSearch) — this
+// dashboard was the one remaining place that restriction wasn't mirrored.
+const canViewSalesPipelineWidgets = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const { error } = useNotify()
 // Every fire-and-forget fetch below is a bare `if (...) store.fetchAll()` (no
 // `await`, no caller-side try/catch) — this dashboard has none of the loading
