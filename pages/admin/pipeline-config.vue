@@ -87,6 +87,17 @@
             />
             <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content :loading="salesQuotaLoading" @click="onSaveSalesQuota" />
           </div>
+
+          <!-- FR-CRM-045 — a Deal-stage policy, not a revenue figure, but
+          shares this same AppSettings singleton/save flow rather than
+          standing up a second Form+submit for one checkbox. -->
+          <div class="mt-4 border-t border-[var(--color-light-gray-2)] pt-4">
+            <UCheckbox
+              v-model="salesQuotaForm.require_signed_contract_before_won"
+              :label="t('admin.pipelineConfig.salesQuota.requireSignedContractLabel')"
+            />
+            <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.requireSignedContractHelp') }}</p>
+          </div>
         </Form>
         <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
         <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.annualGoalHelp') }}</p>
@@ -576,6 +587,7 @@ guardMounted(async () => {
     salesQuotaForm.quarterly_sales_target = settings.quarterly_sales_target
     salesQuotaForm.annual_revenue_goal = settings.annual_revenue_goal
     salesQuotaForm.lead_scoring_mql_threshold = settings.lead_scoring_mql_threshold
+    salesQuotaForm.require_signed_contract_before_won = settings.require_signed_contract_before_won
   } catch (err) {
     notifyApiError(err)
   }
@@ -589,7 +601,7 @@ guardMounted(async () => {
 // constant `false` since the initial value is set once via fetchAll above.
 const { form: salesQuotaForm, formRef: salesQuotaFormRef, validateThenSubmit, loading: salesQuotaLoading, guard: guardSalesQuota } = useModalForm(
   () => false,
-  () => ({ quarterly_sales_target: 0, annual_revenue_goal: 0, lead_scoring_mql_threshold: 0 }),
+  () => ({ quarterly_sales_target: 0, annual_revenue_goal: 0, lead_scoring_mql_threshold: 0, require_signed_contract_before_won: false }),
 )
 
 const onSubmitSalesQuota = guardSalesQuota(async () => {
@@ -598,6 +610,7 @@ const onSubmitSalesQuota = guardSalesQuota(async () => {
       quarterly_sales_target: salesQuotaForm.quarterly_sales_target,
       annual_revenue_goal: salesQuotaForm.annual_revenue_goal,
       lead_scoring_mql_threshold: salesQuotaForm.lead_scoring_mql_threshold,
+      require_signed_contract_before_won: salesQuotaForm.require_signed_contract_before_won,
     })
     success(t('admin.pipelineConfig.salesQuota.saveSuccess'))
   } catch (err) {

@@ -242,6 +242,10 @@ interface AppSettings {
   // MQL threshold for Lead Scoring (FR-CRM-006/007) — a Lead's computed
   // `score` at or above this value is classified 'mql' rather than 'none'.
   lead_scoring_mql_threshold: number
+  // FR-CRM-045 — "configurable, not hard-enforced by default" (so this
+  // defaults false). Once true, the backend blocks a Deal from moving into
+  // Won unless it already has at least one Contract with status Signed.
+  require_signed_contract_before_won: boolean
   // Neither figure resets itself on a new quarter/year — this is surfaced in
   // the Admin config UI as a "last updated" hint so a stale value (e.g. last
   // year's annual goal still sitting there in February) doesn't go unnoticed.
