@@ -158,14 +158,17 @@ const onItemProductChange = (item: { description: string, price: number, product
 watch(() => props.open, (value) => {
   if (value) {
     // Pre-fill a single line item from the parent Deal (FR-CRM-046) so a
-    // simple one-line quote doesn't start from a completely blank form —
-    // still fully editable, and skipped entirely if no Deal was passed in.
-    // description starts blank rather than copying the Deal's title in
-    // here too — that's what scope_of_work (above) is now for; this field
-    // is meant for a short per-item label (a product name, a phase, a
-    // deliverable), not the same project narrative repeated redundantly.
+    // simple one-line quote doesn't start from a completely blank form and
+    // is immediately savable — still fully editable, and skipped entirely
+    // if no Deal was passed in. description is seeded with the Deal's title
+    // too (same as scope_of_work above) rather than left blank: the item
+    // description field has `rules="required"`, so leaving it empty would
+    // block Save on the very form this prefill exists to make quick. A rep
+    // who doesn't want the same text in both places can freely shorten/clear
+    // this one — the default here just has to be *something* valid, not
+    // necessarily distinct from scope_of_work.
     items.value = props.deal
-      ? [{ key: nextItemKey++, description: '', qty: 1, price: props.deal.value, product_id: null }]
+      ? [{ key: nextItemKey++, description: props.deal.title, qty: 1, price: props.deal.value, product_id: null }]
       : []
     if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }

@@ -494,7 +494,7 @@ interface Quote {
 
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
-> **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `CrmAddQuoteModal` just pre-fills one `items[]` row (`description: deal.title, qty: 1, price: deal.value`) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one.
+> **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `CrmAddQuoteModal` pre-fills `scope_of_work` with `deal.title` and one `items[]` row with `description: deal.title, qty: 1, price: deal.value` (all editable) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one.
 
 ### 7.5 Payments
 
