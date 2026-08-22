@@ -44,10 +44,10 @@
               <div class="grid flex-1 grid-cols-1 gap-2">
                 <InputSelect
                   :model-value="item.product_id"
-                  :options="productOptions"
+                  :options="productOptionsFor(item)"
                   :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
                   :name="`item-product-${item.key}`"
-                  :disable="productOptions.length === 0"
+                  :disable="productOptionsFor(item).length === 0"
                   @update:model-value="onItemProductChange(item, $event)"
                 />
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
@@ -129,9 +129,26 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 // ("none") behaves exactly as before this field existed.
 const { notifyApiError } = useApiErrorNotifier()
 const productsStore = useProductsStore()
-const productOptions = computed(() => productsStore.items
+const activeProductOptions = computed(() => productsStore.items
   .filter(p => p.is_active)
   .map(p => ({ label: p.name, value: String(p.id) })))
+
+// A line item's product_id can end up pointing at a Product that's since
+// been deactivated (e.g. this Quote references a Product picked before it
+// was deactivated in the Catalog, or a stale product_id from before this
+// modal was reset) — without this, the picker would show the placeholder
+// instead of the actual selected product, or silently blank the field.
+// Mirrors pages/crm/companies/[id].vue's industryOptions/companySizeOptions/
+// revenueSizeOptions pattern for the exact same "deactivated but still
+// referenced" case, applied per-item since different rows can each
+// reference a different deactivated Product.
+const productOptionsFor = (item: { product_id: string | null }) => {
+  const current = item.product_id
+  if (!current || activeProductOptions.value.some(o => o.value === current)) return activeProductOptions.value
+  const inactive = productsStore.items.find(p => String(p.id) === current)
+  if (!inactive) return activeProductOptions.value
+  return [...activeProductOptions.value, { label: inactive.name, value: String(inactive.id) }]
+}
 
 let nextItemKey = 0
 const items = ref<{ key: number, description: string, qty: number, price: number, product_id: string | null }[]>([])
