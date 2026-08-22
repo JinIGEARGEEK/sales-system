@@ -34,15 +34,26 @@
         />
 
         <div class="min-w-0 flex-1">
-          <p class="truncate text-sm" :class="task.status === 'done' ? 'text-[var(--color-gray)] line-through' : 'font-medium'">
-            {{ task.title }}
-          </p>
+          <button
+            type="button"
+            class="block w-full text-left"
+            :aria-label="t('crm.components.taskList.editTask')"
+            @click="emit('edit', task)"
+          >
+            <p class="truncate text-sm" :class="task.status === 'done' ? 'text-[var(--color-gray)] line-through' : 'font-medium'">
+              {{ task.title }}
+            </p>
+            <p v-if="task.description" class="truncate text-xs text-[var(--color-gray)]">{{ task.description }}</p>
+          </button>
           <p class="truncate text-xs text-[var(--color-gray)]">
             <NuxtLink v-if="task.path" :to="task.path" class="hover:underline">{{ task.relatedLabel }}</NuxtLink>
             <span v-if="task.path"> · </span>
             {{ teamMembersStore.nameById(task.assigned_to) }}
           </p>
         </div>
+        <UBadge :color="taskPriorityColor(task.priority)" variant="subtle" class="shrink-0">
+          {{ t(`crm.components.taskList.priority.${task.priority}`) }}
+        </UBadge>
         <UBadge :color="isTaskOverdue(task) ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
           {{ dateFormat(task.due_date) }}
         </UBadge>
@@ -78,7 +89,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue } from '~/constants/mockData'
+import { isTaskOverdue, taskPriorityColor } from '~/constants/mockData'
 
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
@@ -104,6 +115,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   toggle: [id: number]
   remove: [id: number]
+  edit: [task: Task]
   'update:selectedIds': [ids: number[]]
 }>()
 

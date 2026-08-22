@@ -26,6 +26,8 @@ type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
 type ContractStatus = 'draft' | 'sent' | 'signed' | 'expired'
 type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other'
 type TaskStatus = 'pending' | 'done'
+// Plain triage label, no workflow behavior attached (unlike TaskStatus).
+type TaskPriority = 'low' | 'medium' | 'high'
 // Shared by Task.related_type and Activity.related_type — both point at whichever
 // record (deal, contact, or company) the follow-up/activity is attached to.
 type TaskRelatedType = ActivityRelatedType
@@ -387,8 +389,10 @@ interface Task {
   related_type: TaskRelatedType
   related_id: number
   title: string
+  description: string
   due_date: Date
   status: TaskStatus
+  priority: TaskPriority
   assigned_to: number | null
   created_at: Date
 }

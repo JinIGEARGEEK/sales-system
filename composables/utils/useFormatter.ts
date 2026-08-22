@@ -45,6 +45,11 @@ export const useFormatter = () => {
   // trimming whitespace and dropping empty entries from trailing/double commas.
   const parseTags = (value: string) => value.split(',').map(tag => tag.trim()).filter(Boolean)
 
+  // Converts a Date to the plain 'YYYY-MM-DD' string InputDatePicker's
+  // v-model expects — shared by every Add*Modal that prefills a date field
+  // from an existing record (Project, CustomerProduct, Task, ...).
+  const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10)
+
   return {
     dateFormat,
     dateTimeFormat,
@@ -54,5 +59,6 @@ export const useFormatter = () => {
     toBadge,
     severityColor,
     parseTags,
+    toDateInputValue,
   }
 }

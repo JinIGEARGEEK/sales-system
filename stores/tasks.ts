@@ -1,7 +1,6 @@
-// Real API-backed store. Only wraps what the backend supports: create, list,
-// toggle pending<->done, delete, and bulk mark-done/reassign — there's still
-// no endpoint to edit a task's other fields or reassign a single task
-// outside of a bulk call, so those actions don't exist here.
+// Real API-backed store. Wraps: create, list, update (title/description/due
+// date/priority/assigned_to), toggle pending<->done, delete, and bulk
+// mark-done/reassign.
 const parseDates = (task: Task): Task => ({
   ...task,
   due_date: new Date(task.due_date),
@@ -33,6 +32,14 @@ export const useTasksStore = defineStore('tasks', {
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created
+    },
+    async update (id: number, changes: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }): Promise<Task> {
+      const { $api } = useNuxtApp()
+      const response = await $api.patch<ApiResponse<Task>>(`/tasks/${id}`, changes)
+      const updated = parseDates(response.data.data)
+      const index = this.items.findIndex(t => t.id === id)
+      if (index !== -1) this.items[index] = updated
+      return updated
     },
     async remove (id: number) {
       const { $api } = useNuxtApp()

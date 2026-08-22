@@ -15,6 +15,14 @@ export const useProjectsStore = defineStore('projects', {
   getters: {
     forCompany: state => (companyId: number) => state.items.filter(p => p.company_id === companyId),
     forDeal: state => (dealId: number) => state.items.find(p => p.deal_id === dealId),
+    // Deduped, sorted list of previously-used Project names, optionally scoped
+    // to one company — feeds AddProjectModal's creatable name combobox so reps
+    // can reuse an existing name or type a new one.
+    projectNames: state => (companyId?: number | null) => [...new Set(
+      state.items
+        .filter(p => companyId == null || p.company_id === companyId)
+        .map(p => p.name),
+    )].sort(),
   },
   actions: {
     // GET /projects — the cross-company list (each row carries `company_name`),

@@ -103,7 +103,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
+            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
           </UCard>
         </div>
       </div>
@@ -115,7 +115,9 @@
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
+      :task="editingTask"
       @submit="onSubmitTask"
+      @update="onUpdateTask"
     />
 
     <CrmAddProjectModal
@@ -199,7 +201,7 @@ const {
   'crm.contacts.detail.updateProjectSuccess',
 )
 
-const { tasks: contactTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess')
+const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
 const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 
 const form = reactive({

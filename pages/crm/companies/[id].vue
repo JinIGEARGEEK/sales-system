@@ -152,6 +152,7 @@
         <CrmAddCustomerProductModal
           v-model:open="addCustomerProductOpen"
           :products="activeProducts"
+          :company-id="companyId"
           :record="editingCustomerProduct"
           @submit="onAddCustomerProduct"
           @update="onUpdateCustomerProduct"
@@ -212,12 +213,14 @@
               @click="openAddTask"
             />
           </div>
-          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
+          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
         </ContainerTemplate>
 
         <CrmAddTaskModal
           v-model:open="addTaskOpen"
+          :task="editingTask"
           @submit="onSubmitTask"
+          @update="onUpdateTask"
         />
       </div>
 
@@ -345,7 +348,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess')
+const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
 const activeProducts = computed(() => productsStore.items.filter(p => p.is_active))
@@ -362,7 +365,7 @@ const openEditCustomerProduct = (record: CustomerProduct) => {
   addCustomerProductOpen.value = true
 }
 
-const onAddCustomerProduct = async (payload: { product_id: number, status: CustomerProductStatus }, product: Product) => {
+const onAddCustomerProduct = async (payload: { product_id: number, status: CustomerProductStatus, start_date: Date | null, source_deal_id: number | null }, product: Product) => {
   try {
     await customerProductsStore.add(companyId, payload, product)
     success(t('crm.companies.detail.addProductSuccess'))

@@ -10,12 +10,14 @@
           @click="openAddTask"
         />
       </div>
-      <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @remove="onRemoveTask" />
+      <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
     </ContainerTemplate>
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
+      :task="editingTask"
       @submit="onSubmitTask"
+      @update="onUpdateTask"
     />
   </div>
 </template>
@@ -28,5 +30,5 @@ const { t } = useI18n()
 const route = useRoute()
 const dealId = Number(route.params.id)
 
-const { tasks: dealTasks, addTaskOpen, openAddTask, onSubmitTask, onToggleTask, onRemoveTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess')
+const { tasks: dealTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
 </script>

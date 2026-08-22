@@ -520,14 +520,18 @@ interface Payment {
 ```ts
 type TaskStatus = 'pending' | 'done'
 type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal'
+// Plain triage label, no workflow behavior attached (unlike TaskStatus) — added 2026-08-22.
+type TaskPriority = 'low' | 'medium' | 'high'
 
 interface Task {
   id: number
   related_type: TaskRelatedType
   related_id: number
   title: string
+  description: string   // added 2026-08-22 — free-text elaboration on title, optional
   due_date: string
   status: TaskStatus
+  priority: TaskPriority   // added 2026-08-22 — defaults 'medium'
   assigned_to: number | null
   notified_at: string | null   // set once the due-date reminder email has been sent for this Task, so the 15-min ticker doesn't re-send it
   created_at: string
@@ -537,7 +541,8 @@ interface Task {
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/tasks` | 🟢 | Filters: `related_type`+`related_id`, `status`, `assigned_to`. `status=pending` powers the dashboard's "Upcoming Follow-ups" widget across all related records — support that query without requiring `related_type`/`related_id`. |
-| `POST` | `/tasks` | 🟢 | Create. |
+| `POST` | `/tasks` | 🟢 | Create. Body now also accepts `description`/`priority` (both optional, `priority` defaults `medium` server-side if omitted/blank). |
+| `PATCH` | `/tasks/:id` | 🟢 **added 2026-08-22** | Update `title`/`description`/`due_date`/`priority`/`assigned_to` — `related_type`/`related_id` stay immutable after creation (same immutability rule as Contract's `quote_id` and CustomerProduct's `product_id`), and `status` changes still go through the dedicated toggle endpoint below, not this one. Ownership-gated via `CanWrite` against both the task's current assignee and the incoming `assigned_to`, mirroring `BulkReassign`. |
 | `PATCH` | `/tasks/:id/toggle` | 🟢 | Flips `pending`⇄`done` — mirrors `stores/tasks.ts`'s `toggleDone`. |
 | `DELETE` | `/tasks/:id` | 🟢 | Delete. |
 | — | *(reminder notifications)* | 🟢 | `FR-CRM-032`'s "notification on due" is now built as email: a new `internal/notifier` package runs a 15-minute ticker, sends via `internal/utils/mailer.go`, and sets `Task.notified_at` so a Task is only ever notified once. It degrades safely (silently no-ops) if no `SMTP_*` env vars (`SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, see `.env.example`) are configured — an operator must supply real SMTP credentials for reminders to actually send. Push notification is not built. |
@@ -606,8 +611,8 @@ interface CustomerProduct {
 | `PATCH` | `/products/:id` | Full edit of the catalog entry's own fields (name/category/description/is_active) — distinct from Deactivate below, which is left as the dedicated "remove from catalog" action. |
 | `PATCH` | `/products/:id/deactivate` | Sets `is_active: false` rather than deleting. |
 | `GET` | `/companies/:companyId/products` | List a Company's Customer-Product records — powers the Company profile's "Products in use" section (`FR-CRM-066`). |
-| `POST` | `/companies/:companyId/products` | Manually add/change status independent of a Deal (`FR-CRM-065`). |
-| `PATCH` | `/customer-products/:id` | Update a Customer-Product's own `status`/`end_date` after creation (e.g. Interested → Trial → Active → Churned) — `company_id`/`product_id` are immutable. Writes a `customer_product`/`status_changed` audit entry (§8.5) when `status` actually changes. |
+| `POST` | `/companies/:companyId/products` | Manually add/change status independent of a Deal (`FR-CRM-065`). Body also accepts `start_date` (optional, defaults to now server-side) and `source_deal_id` (optional — lets a rep manually link the new record back to a Deal, e.g. via `AddCustomerProductModal.vue`'s Deal picker, independent of the still-unimplemented Won-triggered auto-create in the row below). **Fixed 2026-08-22**: `start_date` was previously parsed from the request but never applied to the record (`internal/handlers/products.go`'s `AddForCompany`), so every manually-created row silently got Go's zero-value date regardless of what was sent — now applied (or defaulted to now). |
+| `PATCH` | `/customer-products/:id` | Update a Customer-Product's own `status`/`end_date` after creation (e.g. Interested → Trial → Active → Churned) — `company_id`/`product_id` are immutable. Writes a `customer_product`/`status_changed` audit entry (§8.5) when `status` actually changes. `end_date` remains settable only here, never at creation. |
 | **Side effect, not a separate endpoint** | — | When `PATCH /deals/:id/stage` (§7.1) sets `stage: 'Won'`, the backend must auto-create/update a `CustomerProduct` (`status: 'Active'`) for each Product on that Deal's accepted Quote (`FR-CRM-064`). Implement inside that same transaction, not as a client-triggered follow-up call. Still not implemented — deferred until Quotes have a real "accepted" flow. |
 
 ### 8.3 Projects (`FR-CRM-067`–`071`)
