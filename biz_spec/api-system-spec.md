@@ -472,6 +472,8 @@ interface Quote {
   id: number
   deal_id: number
   items: QuoteItem[]
+  scope_of_work: string   // added 2026-08-22 — whole-quote narrative (deliverables/phases/terms),
+                            // distinct from each QuoteItem's own short description
   validity_date: string | null
   status: QuoteStatus
   file_name?: string
@@ -488,7 +490,7 @@ interface Quote {
 | `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
 | `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. |
 | `DELETE` | `/quotes/:id` | 🟢 | Delete. |
-| `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). |
+| `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). **Updated 2026-08-22**: renders `scope_of_work` (if set) as a wrapped paragraph above the line-items table; `utils.RenderLineItemsTable` (shared with Contract's export, §8.1) now wraps a multi-line `QuoteItem.description` onto a properly height-sized row (via `SplitLines`+`MultiCell`) instead of clipping it to a fixed single-line cell. |
 
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
@@ -575,7 +577,7 @@ interface Contract {
 | `POST` | `/deals/:dealId/contracts` | Create. Body: `{status?, quote_id?}`. |
 | `PUT` | `/contracts/:id` | Update. Body: `{status?, quote_id?}`. |
 | `POST` | `/contracts/:id/upload` | Upload the signed document (§6.1) → sets `signed_file_url`/`signed_date`, flips status to `signed`. |
-| `GET` | `/contracts/:id/export-pdf` | 🟢 — returns a generated PDF (`github.com/go-pdf/fpdf`, same renderer as the Quote export): party details (Company `legal_name`/`address`/`tax_id`, Contact name/role), Deal info, the linked Quote's line items/total (if `quote_id` is set), status, signed date, and a signature-line placeholder. Read-only, same access level as List (no `CanWrite` check). |
+| `GET` | `/contracts/:id/export-pdf` | 🟢 — returns a generated PDF (`github.com/go-pdf/fpdf`, same renderer as the Quote export): party details (Company `legal_name`/`address`/`tax_id`, Contact name/role), Deal info, the linked Quote's `scope_of_work` and line items/total (if `quote_id` is set), status, signed date, and a signature-line placeholder. Read-only, same access level as List (no `CanWrite` check). Shares the 2026-08-22 `RenderLineItemsTable` multi-line-description fix noted in §7.4, and (2026-08-22) now also renders the linked Quote's `scope_of_work` as a wrapped paragraph above the pricing table — Contract is meant to be "a single source of truth for what was agreed" (S-17), so its export shouldn't capture price without the scope it was priced against. |
 
 Frontend: a "Contracts" tab on the Deal detail page (`pages/crm/deals/[id]/contracts.vue`, nested under the `pages/crm/deals/[id].vue` tab-bar parent), backed by `stores/contracts.ts` and `components/Crm/AddContractModal.vue` (which lets the user optionally link one of the Deal's existing Quotes, defaulting to the most recently Accepted one — `FR-CRM-047`, frontend-only, no API change).
 

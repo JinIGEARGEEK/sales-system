@@ -58,6 +58,8 @@ export default {
     title: 'สร้างใบเสนอราคา',
     validUntil: 'ใช้ได้ถึง',
     status: 'สถานะ',
+    scopeOfWork: 'สโคปงาน (Scope of Work)',
+    scopeOfWorkPlaceholder: 'อธิบายภาพรวมของงาน เช่น สิ่งที่ต้องส่งมอบ, เฟสการทำงาน, เงื่อนไข...',
     items: 'รายการสินค้า',
     addItem: 'เพิ่มรายการ',
     noItems: 'ยังไม่มีรายการ กด "เพิ่มรายการ" เพื่อเพิ่ม',

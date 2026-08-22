@@ -79,15 +79,18 @@
             </div>
           </div>
 
-          <table v-else class="w-full text-sm">
-            <tbody>
-              <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
-                <td class="py-1">{{ item.description }}</td>
-                <td class="py-1 text-right">x{{ item.qty }}</td>
-                <td class="py-1 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <template v-else>
+            <p v-if="quote.scope_of_work" class="mb-2 whitespace-pre-wrap text-sm text-[var(--color-gray)]">{{ quote.scope_of_work }}</p>
+            <table class="w-full text-sm">
+              <tbody>
+                <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
+                  <td class="py-1">{{ item.description }}</td>
+                  <td class="py-1 text-right">x{{ item.qty }}</td>
+                  <td class="py-1 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
         </div>
       </div>
     </ContainerTemplate>
@@ -164,7 +167,7 @@ const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId
 
 const addQuoteOpen = ref(false)
 
-const onAddQuote = async (quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }) => {
+const onAddQuote = async (quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }) => {
   try {
     await quotesStore.add(dealId, quote)
     success(t('crm.deals.detail.createQuoteSuccess'))

@@ -305,6 +305,10 @@ interface Quote {
   id: number
   deal_id: number
   items: QuoteItem[]
+  // Free-text narrative for the overall engagement (deliverables/phases/terms)
+  // — separate from each line item's own short description. Optional; shows
+  // as a wrapped paragraph above the line-items table in the exported PDF.
+  scope_of_work: string
   validity_date: Date | null
   status: QuoteStatus
   // Set when the quotation is an uploaded PDF (e.g. exported from FlowAccount)

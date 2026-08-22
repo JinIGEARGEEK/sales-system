@@ -10,6 +10,18 @@
           <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.components.addQuoteModal.status')" name="status" rules="required" />
         </div>
 
+        <!-- Whole-quote narrative (deliverables/phases/terms) — distinct from each
+        line item's own short description below, and separate from what actually
+        gets priced. Optional; prints as a paragraph above the line-items table
+        in the exported PDF. -->
+        <InputTextarea
+          v-model="form.scope_of_work"
+          :label="t('crm.components.addQuoteModal.scopeOfWork')"
+          :placeholder="t('crm.components.addQuoteModal.scopeOfWorkPlaceholder')"
+          name="scope_of_work"
+          rows="4"
+        />
+
         <div class="mt-4">
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-medium">{{ t('crm.components.addQuoteModal.items') }}</span>
@@ -38,10 +50,11 @@
                   @update:model-value="onItemProductChange(item, $event)"
                 />
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_8rem]">
-                  <InputText
+                  <InputTextarea
                     v-model="item.description"
                     :placeholder="t('crm.components.addQuoteModal.itemDescriptionPlaceholder')"
                     :name="`item-description-${item.key}`"
+                    rows="2"
                     rules="required"
                   />
                   <InputText
@@ -95,10 +108,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [quote: { items: QuoteItem[], validity_date: Date | null, status: QuoteStatus }]
+  submit: [quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }]
 }>()
 
 const emptyForm = () => ({
+  scope_of_work: '',
   validity_date: '',
   status: 'draft' as QuoteStatus,
 })
@@ -159,6 +173,7 @@ const onSubmit = guard(async () => {
       price,
       product_id: product_id ? Number(product_id) : null,
     })),
+    scope_of_work: form.scope_of_work,
     validity_date: form.validity_date ? new Date(form.validity_date) : null,
     status: form.status,
   })
