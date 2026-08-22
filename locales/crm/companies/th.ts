@@ -117,6 +117,7 @@ export default {
     addProjectSuccess: 'เพิ่ม Project สำเร็จ',
     updateProjectSuccess: 'แก้ไข Project สำเร็จ',
     noProjects: 'ยังไม่มี Project สำหรับบริษัทนี้',
+    projectLinkedDeal: 'จาก Deal: {title}',
     projectTargetEndDate: 'กำหนดเสร็จ: {date}',
     activityFeed: 'ฟีดกิจกรรม',
     tasksTitle: 'งานติดตาม',

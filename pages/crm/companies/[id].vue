@@ -178,6 +178,9 @@
             >
               <div>
                 <p class="text-sm font-medium">{{ project.name }}</p>
+                <p v-if="project.deal_id" class="text-xs text-[var(--color-gray)]">
+                  {{ t('crm.companies.detail.projectLinkedDeal', { title: dealTitleById(project.deal_id) }) }}
+                </p>
                 <p class="text-xs text-[var(--color-gray)]">
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
@@ -340,6 +343,9 @@ const tabItems = computed(() => [
 
 const companyContacts = computed(() => contactsStore.byCompany(companyId))
 const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
+// Resolves a Project's deal_id (settable at creation, never surfaced anywhere
+// afterward until now) to its Deal title for display on the Projects tab.
+const dealTitleById = (dealId: number) => dealsStore.items.find(d => d.id === dealId)?.title ?? `#${dealId}`
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
 const companyActivity = computed(() => activitiesStore.forRelated('company', companyId))
 const lastContact = computed(() => {

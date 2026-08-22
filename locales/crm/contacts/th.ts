@@ -68,6 +68,7 @@ export default {
     addProject: 'เพิ่ม Project',
     addProjectSuccess: 'เพิ่ม Project สำเร็จ',
     updateProjectSuccess: 'แก้ไข Project สำเร็จ',
+    projectLinkedDeal: 'จาก Deal: {title}',
     projectTargetEndDate: 'กำหนดเสร็จ: {date}',
     activityTitle: 'กิจกรรม',
     tasksTitle: 'งานติดตาม',

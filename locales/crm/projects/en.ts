@@ -16,6 +16,7 @@ export default {
     columns: {
       name: 'Name',
       company: 'Company',
+      deal: 'Deal',
       status: 'Status',
       targetEndDate: 'Target End Date',
       action: 'Action',

@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -106,7 +107,7 @@ const activitiesStore = useActivitiesStore()
 const industryOptionsStore = useIndustryOptionsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
-const canExport = computed(() => hasRole('Admin', 'Sales Manager'))
+const canExport = computed(() => hasRole(...MANAGER_ROLES))
 
 const search = ref('')
 const industryFilter = ref('all')

@@ -117,6 +117,7 @@ export default {
     addProjectSuccess: 'Project added successfully',
     updateProjectSuccess: 'Project updated successfully',
     noProjects: 'No projects for this company yet.',
+    projectLinkedDeal: 'From Deal: {title}',
     projectTargetEndDate: 'Target: {date}',
     activityFeed: 'Activity Feed',
     tasksTitle: 'Tasks',

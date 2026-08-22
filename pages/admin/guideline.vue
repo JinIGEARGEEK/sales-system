@@ -121,6 +121,7 @@
 
             <div class="flex-1 space-y-1.5 pb-4">
               <NuxtLink
+                v-if="!isStepBlockedForActiveTab(step)"
                 :to="NAV_META[step.nav]?.path ?? '/'"
                 class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-gray)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-gray)] transition-colors hover:bg-[var(--color-primary-bg)] hover:text-[var(--color-primary)]"
               >
@@ -128,6 +129,16 @@
                 <span>{{ t(`layout.nav.${step.nav}`) }}</span>
                 <UIcon name="material-symbols:chevron-right-rounded" class="size-3.5" />
               </NuxtLink>
+              <!-- Same chip, but non-navigable: this step's own restriction text says
+              it isn't available to the active tab's role, so linking there anyway
+              would contradict what the chip is telling the reader. -->
+              <span
+                v-else
+                class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-gray)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-gray)] opacity-60"
+              >
+                <UIcon :name="NAV_META[step.nav]?.icon ?? 'material-symbols:menu-open-rounded'" class="size-3.5" />
+                <span>{{ t(`layout.nav.${step.nav}`) }}</span>
+              </span>
 
               <!-- eslint-disable-next-line vue/no-v-html -->
               <p class="text-sm leading-relaxed" v-html="highlightKeyTerms(step.text)" />
@@ -266,6 +277,18 @@ const NAV_META: Record<string, { path: string, icon: string }> = {
 // restriction and gets the amber "limited" treatment instead.
 const OPEN_TO_ALL_SALES_ROLES = 'Sales Rep, Sales Manager, Admin'
 const isOpenToAllSalesRoles = (restriction: string) => restriction === OPEN_TO_ALL_SALES_ROLES
+
+// The Production tab renders every step of a topic assigned to it (see
+// topicKeysByTab below) even when a specific step's own restriction text
+// says it's off-limits — e.g. projectMilestones' Contract/Quote/Payment
+// step is "not available to Production." Previously the chip still linked
+// there regardless, contradicting the very text next to it. This only needs
+// to check the Production tab specifically: restriction text is free-form
+// prose, not a structured role list, so matching the one phrasing this
+// codebase actually uses for "excluded" is more robust than trying to parse
+// arbitrary restriction strings into role sets.
+const isStepBlockedForActiveTab = (step: GuidelineStep) =>
+  activeTab.value === 'production' && /not available to Production|ไม่รวม Production/.test(step.restriction ?? '')
 
 interface GuidelineTopic {
   key: string
