@@ -4,7 +4,6 @@ export default {
   allTypes: 'ทั้งหมด',
   dateRangePlaceholder: 'ช่วงวันที่',
   clearFilters: 'ล้างตัวกรอง',
-  noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
   columns: {
     entity: 'ข้อมูล',
     action: 'การกระทำ',

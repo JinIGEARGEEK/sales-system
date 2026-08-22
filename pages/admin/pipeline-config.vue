@@ -1,5 +1,6 @@
 <template>
   <div class="p-5">
+    <AccessGate :can-access="canAccess">
     <div class="mb-4">
       <h2 class="text-xl font-black">{{ t('admin.pipelineConfig.heading') }}</h2>
       <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.subheading') }}</p>
@@ -482,6 +483,7 @@
       confirm-color="warning"
       @confirm="confirmDeactivateProductCategory"
     />
+    </AccessGate>
   </div>
 </template>
 
@@ -494,9 +496,14 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.pipelineConfig.pageTitle') })
 
-// Admin-only page (gated by layouts/default.vue's nav `roles` filter and this
-// route requiring the Admin-only /admin/pipeline-stages + /admin/lead-sources
-// backend endpoints, which 403 for anyone else).
+// Admin-only page — gated by layouts/default.vue's nav `roles` filter, this
+// page's own `canAccess` guard below (paired with <AccessGate> in the
+// template, so a non-Admin who navigates here directly sees an explicit "no
+// access" state instead of a page full of components whose data-fetches
+// silently 403), and — the real security boundary — every underlying
+// /admin/* backend endpoint requiring Admin via RequireRoles.
+const { canAccess, guardMounted } = usePageAccess('Admin')
+
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { toBadge, dateTimeFormat } = useFormatter()
@@ -543,7 +550,7 @@ const revenueSizesLoading = ref(false)
 const jobTitlesLoading = ref(false)
 const productCategoriesLoading = ref(false)
 
-onMounted(async () => {
+guardMounted(async () => {
   stagesLoading.value = true
   pipelineStagesStore.fetchAll().catch(notifyApiError).finally(() => { stagesLoading.value = false })
   sourcesLoading.value = true

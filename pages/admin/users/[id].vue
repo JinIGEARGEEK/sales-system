@@ -1,31 +1,33 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center gap-3">
-      <UButton
-        icon="material-symbols:arrow-back"
-        variant="ghost"
-        color="neutral"
-        class="cursor-pointer p-0 hover:bg-transparent"
-        :aria-label="t('global.back')"
-        @click="goBack()"
-      />
-      <h2 class="text-xl font-black">{{ user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading') }}</h2>
-    </div>
+    <AccessGate :can-access="canAccess">
+      <div class="mb-4 flex items-center gap-3">
+        <UButton
+          icon="material-symbols:arrow-back"
+          variant="ghost"
+          color="neutral"
+          class="cursor-pointer p-0 hover:bg-transparent"
+          :aria-label="t('global.back')"
+          @click="goBack()"
+        />
+        <h2 class="text-xl font-black">{{ user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading') }}</h2>
+      </div>
 
-    <ContainerTemplate v-if="user">
-      <Form @submit="onSubmit">
-        <AdminUserForm v-model:form="form" />
+      <ContainerTemplate v-if="user">
+        <Form @submit="onSubmit">
+          <AdminUserForm v-model:form="form" />
 
-        <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="goBack()" />
-        </div>
-      </Form>
-    </ContainerTemplate>
+          <div class="mt-4 flex gap-3">
+            <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" :loading="loading" />
+            <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="goBack()" />
+          </div>
+        </Form>
+      </ContainerTemplate>
 
-    <div v-else class="py-12 text-center text-[var(--color-gray)]">
-      {{ t('admin.users.detail.staffNotFound') }}
-    </div>
+      <div v-else class="py-12 text-center text-[var(--color-gray)]">
+        {{ t('admin.users.detail.staffNotFound') }}
+      </div>
+    </AccessGate>
   </div>
 </template>
 
@@ -36,13 +38,16 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.users.detail.pageTitle') })
 
+// Admin-only page — same page-level guard as pages/admin/users/index.vue.
+const { canAccess, guardMounted } = usePageAccess('Admin')
+
 const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
 const goBack = useBackNavigation('/admin/users')
 
-onMounted(() => {
+guardMounted(() => {
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 

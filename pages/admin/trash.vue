@@ -1,9 +1,6 @@
 <template>
   <div class="p-5">
-    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
-      {{ t('admin.trash.noAccess') }}
-    </div>
-    <template v-else>
+    <AccessGate :can-access="canAccess">
       <div class="mb-4">
         <h2 class="text-xl font-black">{{ t('admin.trash.title') }}</h2>
         <p class="text-sm text-[var(--color-gray)]">{{ t('admin.trash.subtitle') }}</p>
@@ -71,7 +68,7 @@
           @restore="onRestoreContact"
         />
       </div>
-    </template>
+    </AccessGate>
   </div>
 </template>
 
@@ -86,14 +83,13 @@ useHead({ title: t('admin.trash.title') })
 const { dateFormat, priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { hasRole } = useRole()
 const dealsStore = useDealsStore()
 const leadsStore = useLeadsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 
 // Trash is Admin/Sales Manager only, matching GET /deals/trash and /leads/trash RBAC.
-const canAccess = computed(() => hasRole('Admin', 'Sales Manager'))
+const { canAccess, guardMounted } = usePageAccess('Admin', 'Sales Manager')
 
 const activeTab = ref('deals')
 const tabItems = computed(() => [
@@ -113,8 +109,10 @@ const useTrashTab = <T,>(fetchTrash: (page: number, perPage: number) => Promise<
   const perPage = ref(10)
   const totalPage = computed(() => Math.max(1, Math.ceil(getTotal() / perPage.value)))
 
+  // No canAccess check needed here: guardMounted() below only calls this once
+  // access is confirmed, and onChangePage/onChangePerPage are only reachable
+  // through UI that <AccessGate> already hides otherwise.
   const fetch = async () => {
-    if (!canAccess.value) return
     loading.value = true
     try {
       await fetchTrash(page.value, perPage.value)
@@ -312,8 +310,7 @@ const onRestoreContact = async (row: Contact) => {
   }
 }
 
-onMounted(() => {
-  if (!canAccess.value) return
+guardMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   fetchDealsTrash()
   fetchLeadsTrash()
