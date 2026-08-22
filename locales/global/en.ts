@@ -7,6 +7,11 @@ const lang = {
   next: 'Next',
   backToHome: 'Back To Home',
   back: 'Back',
+  // Shared default for <AccessGate> — pages/crm/reports/*.vue pass their own
+  // more specific accessDeniedTitle/Message instead of these; admin-only
+  // pages (Trash, Activity Log, Pipeline Config, Users) use these defaults.
+  noAccessTitle: 'Access restricted',
+  noAccess: 'You do not have permission to view this page.',
   updated: {
     updatedBy: 'Updated by',
   },

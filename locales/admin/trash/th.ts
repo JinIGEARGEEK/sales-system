@@ -39,7 +39,6 @@ export default {
   actions: {
     restore: 'กู้คืน',
   },
-  noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
   restoreSuccess: 'กู้คืน{entity}สำเร็จ',
   restoreError: 'ไม่สามารถกู้คืนรายการนี้ได้',
 }

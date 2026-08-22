@@ -1,58 +1,60 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
-      <ButtonPrimary
-        :label="t('admin.users.index.addStaff')"
-        icon="material-symbols:add"
-        @click="navigateTo('/admin/users/create')"
-      />
-    </div>
+    <AccessGate :can-access="canAccess">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
+        <ButtonPrimary
+          :label="t('admin.users.index.addStaff')"
+          icon="material-symbols:add"
+          @click="navigateTo('/admin/users/create')"
+        />
+      </div>
 
-    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-      <div class="flex flex-col gap-3">
-        <CrmStatusPill v-model="statusFilter" :options="STATUS_OPTIONS" />
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <div class="flex-1">
-            <InputText
-              v-model="search"
-              :placeholder="t('admin.users.index.searchPlaceholder')"
-              name="search"
-            />
-          </div>
-          <div class="w-full sm:w-40">
-            <InputSelect
-              v-model="roleFilter"
-              :options="ROLE_OPTIONS"
-              :placeholder="t('admin.users.index.rolePlaceholder')"
-              name="roleFilter"
-            />
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <div class="flex flex-col gap-3">
+          <CrmStatusPill v-model="statusFilter" :options="STATUS_OPTIONS" />
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="flex-1">
+              <InputText
+                v-model="search"
+                :placeholder="t('admin.users.index.searchPlaceholder')"
+                name="search"
+              />
+            </div>
+            <div class="w-full sm:w-40">
+              <InputSelect
+                v-model="roleFilter"
+                :options="ROLE_OPTIONS"
+                :placeholder="t('admin.users.index.rolePlaceholder')"
+                name="roleFilter"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </UCard>
+      </UCard>
 
-    <TableData
-      v-model:page="page"
-      server-paginated
-      :columns="columns"
-      :rows="displayUsers"
-      :total="total"
-      :total-page="totalPage"
-      :per-page="perPage"
-      :loading="loading"
-      @change-page="onChangePage"
-      @change-per-page="onChangePerPage"
-      @view-detail="onViewDetail"
-      @edit="onEdit"
-      @delete="requestDelete"
-    />
+      <TableData
+        v-model:page="page"
+        server-paginated
+        :columns="columns"
+        :rows="displayUsers"
+        :total="total"
+        :total-page="totalPage"
+        :per-page="perPage"
+        :loading="loading"
+        @change-page="onChangePage"
+        @change-per-page="onChangePerPage"
+        @view-detail="onViewDetail"
+        @edit="onEdit"
+        @delete="requestDelete"
+      />
 
-    <CrmConfirmDeleteModal
-      v-model:open="open"
-      :name="target ? `${target.first_name} ${target.last_name}` : ''"
-      @confirm="confirmDelete"
-    />
+      <CrmConfirmDeleteModal
+        v-model:open="open"
+        :name="target ? `${target.first_name} ${target.last_name}` : ''"
+        @confirm="confirmDelete"
+      />
+    </AccessGate>
   </div>
 </template>
 
@@ -66,6 +68,12 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.users.index.pageTitle') })
 
+// Admin-only page — page-level guard paired with <AccessGate> in the
+// template (an explicit "no access" state, not a page full of components
+// whose fetches silently 403); the real security boundary is /users'
+// RequireRoles(Admin) on the backend.
+const { canAccess, guardMounted } = usePageAccess('Admin')
+
 const { dateFormat, toBadge } = useFormatter()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -75,7 +83,7 @@ const usersStore = useUsersStore()
 // "updated by" column's name below — there's no per-row "updated by name"
 // field on the list endpoint, so this stays separate from the server-paginated
 // `rows` the table itself renders, same pattern as Contacts' tag-options fetch.
-onMounted(() => {
+guardMounted(() => {
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
@@ -103,7 +111,7 @@ const {
   onChangePerPage,
 } = useServerListPage<AdminUser>(params => usersStore.fetchList(params), buildParams)
 
-onMounted(fetch)
+guardMounted(fetch)
 
 watch(search, () => refetchDebounced())
 watch([roleFilter, statusFilter], () => refetchFromStart())

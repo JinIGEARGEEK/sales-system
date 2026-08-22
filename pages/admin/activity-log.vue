@@ -1,9 +1,6 @@
 <template>
   <div class="p-5">
-    <div v-if="!canAccess" class="p-10 text-center text-sm text-[var(--color-gray)]">
-      {{ t('admin.activityLog.noAccess') }}
-    </div>
-    <template v-else>
+    <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-xl font-black">{{ t('admin.activityLog.title') }}</h2>
@@ -78,7 +75,7 @@
           </div>
         </template>
       </UModal>
-    </template>
+    </AccessGate>
   </div>
 </template>
 
@@ -94,12 +91,11 @@ useHead({ title: t('admin.activityLog.title') })
 const { dateFormat, dateTimeFormat, toBadge } = useFormatter()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { hasRole } = useRole()
 const auditLogStore = useAuditLogStore()
 const usersStore = useUsersStore()
 
 // GET /audit-log is Admin-only server-side — gate the page to match.
-const canAccess = computed(() => hasRole('Admin'))
+const { canAccess, guardMounted } = usePageAccess('Admin')
 
 // Known entity_type values written by the backend (internal/utils/bulk.go and
 // SaveWithAudit callers in deals.go, leads.go, projects.go, products.go,
@@ -122,8 +118,10 @@ const clearFilters = () => {
 const loading = ref(false)
 const { page, perPage, totalPage, onChangePage: onChangePageBase, onChangePerPage: onChangePerPageBase } = useTablePagination(() => auditLogStore.total)
 
+// No canAccess check needed here: guardMounted() below only calls this once
+// access is confirmed, and the other call sites (onChangePage/onChangePerPage/
+// the filters watch) are only reachable through UI that <AccessGate> hides otherwise.
 const fetchEntries = async () => {
-  if (!canAccess.value) return
   loading.value = true
   try {
     await auditLogStore.fetchAll({
@@ -149,8 +147,7 @@ const onChangePerPage = (value: number) => {
   fetchEntries()
 }
 
-onMounted(() => {
-  if (!canAccess.value) return
+guardMounted(() => {
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
   fetchEntries()
 })

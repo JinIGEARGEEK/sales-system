@@ -144,23 +144,32 @@ interface MenuItem {
   label: string
   path: string
   separator: boolean
-  // Omitted = every role can see it. Only sections the backend actually
-  // restricts (internal/routes/routes.go's RequireRoles) should set this —
-  // everything else is open to any authenticated role at the route level.
+  // Omitted = every role can see it. Sections the backend actually restricts
+  // (internal/routes/routes.go's RequireRoles) should set this to match.
+  // Exception: the sales-pipeline items below (Leads/Deals/Tasks/Companies/
+  // Contacts/Tags) are readable by any role at the route level, but exclude
+  // Production anyway — user-story.md §4 is explicit that "Production is not
+  // a full user of this CRM; their only interaction is keeping a Project's
+  // status/reference current," so this is a deliberate nav-only UX match to
+  // that stated scope, not a security boundary (the backend still allows
+  // Production's own read access to those resources; nothing here removes
+  // that, it just isn't surfaced as a primary nav destination).
   roles?: Role[]
 }
+
+const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager']
 
 const menuList = computed(() => {
   const items: MenuItem[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
-    { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false },
-    { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false },
-    { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false },
+    { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false, roles: SALES_PIPELINE_ROLES },
+    { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false, roles: SALES_PIPELINE_ROLES },
+    { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:engineering-outline', label: t('layout.nav.projects'), path: '/crm/projects', separator: true },
-    { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false },
-    { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false },
-    { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true },
+    { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false, roles: SALES_PIPELINE_ROLES },
+    { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false, roles: SALES_PIPELINE_ROLES },
+    { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },

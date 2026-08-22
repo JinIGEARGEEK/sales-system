@@ -39,7 +39,6 @@ export default {
   actions: {
     restore: 'Restore',
   },
-  noAccess: 'You do not have permission to view this page.',
   restoreSuccess: '{entity} restored successfully',
   restoreError: 'Could not restore this record.',
 }

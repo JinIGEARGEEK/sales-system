@@ -7,6 +7,8 @@ export default {
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
   back: 'ย้อนกลับ',
+  noAccessTitle: 'จำกัดการเข้าถึง',
+  noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
   updated: {
     updatedBy: 'แก้ไขโดย ',
   },
