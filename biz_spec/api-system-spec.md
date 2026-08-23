@@ -500,6 +500,11 @@ interface Quote {
   discount_total: number
   notes: string | null
   internal_notes: string | null
+  // Set only on Quotes created via Upload below — the outcome of best-effort
+  // field extraction from a FlowAccount PDF export (internal/utils/flowaccount_extract.go).
+  // Added 2026-08-23.
+  extraction_status?: 'ok' | 'partial' | 'failed'
+  extraction_warnings?: string[]
 }
 ```
 
@@ -507,7 +512,7 @@ interface Quote {
 |---|---|---|---|
 | `GET` | `/deals/:dealId/quotes` | 🟢 | List quotes for a Deal — `FR-CRM-040`/`041`. Real per-Deal CRUD (`internal/handlers/quotes.go`, `stores/quotes.ts`), no longer a mock array embedded in the Deal detail page. |
 | `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote — accepts `items`/`scope_of_work`/`validity_date`/`status` only; the rest of `Quote`'s fields are edited afterward on `pages/crm/quotes/[id].vue` via `PUT`, not set at create time. |
-| `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
+| `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`. **Widened 2026-08-23**: if the PDF looks like a FlowAccount quotation export, `utils.ExtractFlowAccountQuote` (`internal/utils/flowaccount_extract.go`) also best-effort pre-fills `items` (incl. per-item `discount_percent`), `scope_of_work`, `reference_number`, `issue_date`, `vat_enabled`, `wht_enabled`/`wht_rate`, and `notes` from it, recording the outcome on `extraction_status`/`extraction_warnings`. Purely additive and never fatal — a PDF that isn't a FlowAccount export, or one extraction can't make sense of, still uploads exactly as before (`items` empty, `extraction_status: 'failed'`, no error surfaced); a `'partial'` result still pre-fills what it found; the rep reviews/corrects everything on `pages/crm/quotes/[id].vue` before Sending regardless, same trust model as the Deal pre-fill (`FR-CRM-046`). See the doc comment on `flowAccountGlyphFix` for the one FlowAccount-template-specific text-extraction bug it corrects (a broken glyph mapping in the embedded font, not a general Thai-PDF limitation). |
 | `GET` | `/quotes/:id` | 🟢 | **Added 2026-08-23** — fetch a single Quote by id, read-only (same access level as List/Export-PDF, no `CanWrite` check). Added for the quotation-builder rebuild's full-page Quote editor (`pages/crm/quotes/[id].vue`), reached by direct link/URL rather than always arriving with a known parent Deal already loaded the way the old modal flow did. |
 | `PUT` | `/quotes/:id` | 🟢 | **Widened 2026-08-23** — updates every field above except `id`/`deal_id`/`number`/`file_*`/`uploaded_at`: `items` (incl. per-item `discount_percent`), `scope_of_work`, `validity_date`, `status`, `reference_number`, `issue_date`, `credit_days`, `price_type`, `vat_enabled`, `wht_enabled`, `wht_rate`, `discount_total`, `notes`, `internal_notes` (`stores/quotes.ts`'s `QuoteUpdatePayload`). Existed on the backend before this rebuild but had no UI caller until the new editor page. |
 | `DELETE` | `/quotes/:id` | 🟢 | Delete. |

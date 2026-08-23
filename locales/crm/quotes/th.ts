@@ -59,5 +59,7 @@ export default {
     saveSuccess: 'บันทึกใบเสนอราคาสำเร็จ',
     addAttachmentSuccess: 'เพิ่มไฟล์แนบสำเร็จ',
     removeAttachmentSuccess: 'ลบไฟล์แนบสำเร็จ',
+    extractionPartialTitle: 'ดึงข้อมูลจากไฟล์ PDF ที่อัปโหลดแล้ว — กรุณาตรวจสอบก่อนบันทึก',
+    extractionFailedTitle: 'ไม่สามารถอ่านไฟล์ PDF นี้โดยอัตโนมัติ — ช่องด้านล่างว่างไว้ กรุณากรอกเอง',
   },
 }
