@@ -456,6 +456,7 @@ interface Tag {
 
 ```ts
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
+type QuotePriceType = 'excl_tax' | 'incl_tax'
 
 interface QuoteItem {
   description: string
@@ -466,35 +467,61 @@ interface QuoteItem {
                           // (not a live reference), then the item behaves like any other row.
                           // Left unset, the item is pure free-text, unchanged from before this field
                           // existed. FR-CRM-062.
+  discount_percent?: number   // added 2026-08-23 — 0-100, reduces this item's own line total.
+                                // Independent of Quote.discount_total below.
 }
 
 interface Quote {
   id: number
   deal_id: number
   items: QuoteItem[]
+  number?: string          // added 2026-08-23 — generated at Create time (e.g. "QT2026080004"),
+                             // race-safe via utils.NextDocumentNumber; never user-edited. Quotes
+                             // created before this field existed have no number (nil, not backfilled).
   scope_of_work: string   // added 2026-08-22 — whole-quote narrative (deliverables/phases/terms),
                             // distinct from each QuoteItem's own short description
-  validity_date: string | null
+  validity_date: string | null   // doubles as the quotation-builder reference's "due date" display
   status: QuoteStatus
   file_name?: string
   file_url?: string
   file_size?: number
   uploaded_at?: string
+  reference_number?: string   // added 2026-08-23 — free text, e.g. the customer's own PO number
+  issue_date?: string          // added 2026-08-23 — the quote's "as of" date
+  credit_days: number          // added 2026-08-23 — informational only, default 0
+  price_type: QuotePriceType   // added 2026-08-23 — default 'excl_tax'
+  vat_enabled: boolean         // added 2026-08-23 — default true; VAT is a fixed 7% (not a field)
+  wht_enabled: boolean         // added 2026-08-23 — default false
+  wht_rate: number             // added 2026-08-23 — only meaningful when wht_enabled
+  discount_total: number       // added 2026-08-23 — flat amount, default 0
+  notes?: string                // added 2026-08-23 — prints on the exported PDF
+  internal_notes?: string       // added 2026-08-23 — never printed anywhere
 }
+
+// ComputeQuoteTotals (internal/utils/quote_totals.go) — the single formula
+// behind both the exported PDF's totals block and the edit page's live
+// total, kept side-by-side commented on both ends so they can't drift:
+//   subtotal      = Σ item.qty * item.price * (1 - item.discount_percent/100)
+//   taxable       = subtotal - discount_total
+//   vat           = vatEnabled ? taxable * 0.07 : 0
+//   wht           = whtEnabled ? taxable * wht_rate/100 : 0
+//   grand_total   = taxable + vat - wht
 ```
 
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/deals/:dealId/quotes` | 🟢 | List quotes for a Deal — `FR-CRM-040`/`041`. Real per-Deal CRUD (`internal/handlers/quotes.go`, `stores/quotes.ts`), no longer a mock array embedded in the Deal detail page. |
-| `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote. |
-| `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
-| `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. |
+| `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote. **Updated 2026-08-23**: generates `number` (see above) inside the same DB transaction as the insert; accepts all the new optional fields listed above (`reference_number`/`issue_date`/`credit_days`/`price_type`/`vat_enabled`/`wht_enabled`/`wht_rate`/`discount_total`/`notes`/`internal_notes`) — every one is additive, so a caller that omits them entirely behaves exactly as before (defaults: `price_type: 'excl_tax'`, `vat_enabled: true`, everything else `0`/`false`/unset). `credit_days`/`wht_rate`/`discount_total` are validated non-negative; `price_type` against the enum above — both 422 the same way `settingsForm`'s fields do. |
+| `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. Also generates `number`/defaults `price_type`/`vat_enabled` since 2026-08-23, same as Create. |
+| `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. **Updated 2026-08-23**: also accepts every new field above — `reference_number`/`issue_date`/`notes`/`internal_notes` are unconditionally overwritten (same "frontend always resends the current value" convention as `scope_of_work`, so omitting one explicitly clears it), the rest are optional-on-PUT (only applied when present in the body), same reasoning as `settingsForm.lead_scoring_mql_threshold`. This is also the first UI caller of this endpoint — see the Quote editor note below. |
 | `DELETE` | `/quotes/:id` | 🟢 | Delete. |
-| `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). **Updated 2026-08-22**: renders `scope_of_work` (if set) as a wrapped paragraph above the line-items table; `utils.RenderLineItemsTable` (shared with Contract's export, §8.1) now wraps a multi-line `QuoteItem.description` onto a properly height-sized row (via `SplitLines`+`MultiCell`) instead of clipping it to a fixed single-line cell. |
+| `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). **Updated 2026-08-22**: renders `scope_of_work` (if set) as a wrapped paragraph above the line-items table; `utils.RenderLineItemsTable` (shared with Contract's export, §8.1) now wraps a multi-line `QuoteItem.description` onto a properly height-sized row (via `SplitLines`+`MultiCell`) instead of clipping it to a fixed single-line cell. **Updated 2026-08-23** (quotation-builder rebuild): now also renders `number`, Company address/tax ID (previously only Contract's export did), `reference_number`/`issue_date`/`credit_days`/`price_type` label, a per-item Discount % column (via the new `utils.RenderQuoteItemsTable`, Quote-only — Contract keeps the simpler unchanged `RenderLineItemsTable`), and a totals block (discount/VAT 7%/WHT/grand total, via `ComputeQuoteTotals` above) plus `notes` as a footer paragraph. `internal_notes` is never passed to the renderer. |
 
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
 > **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `CrmAddQuoteModal` pre-fills `scope_of_work` with `deal.title` and one `items[]` row with `qty: 1, price: deal.value` (description left blank, all fields editable) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one. `QuoteItem.description` has never had a backend-side non-empty check — it's only ever been a frontend `rules="required"` on the form field, and that rule was removed 2026-08-23 alongside this change.
+
+> **2026-08-23 — quotation-builder rebuild.** Following a reference (an accounting-style quotation builder shared by the business owner), the Quote model/API gained the fields documented above, plus `AttachmentRelatedType` gained a `'quote'` value (§8.6) reusing the existing generic Attachment model/handler with zero new attachment infrastructure. `PUT /quotes/:id` — which existed on the backend but had never been called by any UI (only Create/Upload/Delete were wired up) — is being adopted by a new full-page Quote editor (`pages/crm/quotes/[id].vue`, replacing the modal-only `AddQuoteModal.vue` flow); see the frontend PR tracking this. Explicitly out of scope per the business owner: Warehouse/inventory (no such concept exists anywhere in this codebase), e-signature/stamp (a PDF display concern only, deferred), and a Project code field (the Quote editor's Project picker shows `Project.name` only).
 
 ### 7.5 Payments
 
@@ -688,11 +715,11 @@ At minimum, write an entry whenever: a Deal's `stage` changes, a Deal's `status`
 
 ### 8.6 Attachments (`FR-CRM-085`–`090`)
 
-Generic file/link attachments for Leads, Deals, Companies, and Projects — quotations, proposals, estimations, plans, and other supporting material — as distinct from the two narrower, purpose-specific file fields that already exist: `Quote`'s exported PDF (§7.4) and `Contract.signed_file_url` (§8.1). Those keep their own dedicated upload endpoints; this is the general-purpose one for everything else.
+Generic file/link attachments for Leads, Deals, Companies, Projects, and (since 2026-08-23) Quotes — quotations, proposals, estimations, plans, and other supporting material — as distinct from the two narrower, purpose-specific file fields that already exist: `Quote`'s exported PDF (§7.4) and `Contract.signed_file_url` (§8.1). Those keep their own dedicated upload endpoints; this is the general-purpose one for everything else. `'quote'` backs the new Quote editor's attachments section (quotation-builder rebuild, §7.4) — reusing this same model/handler rather than a Quote-specific attachments table.
 
 ```ts
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
-type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote'
 
 interface Attachment {
   id: number
