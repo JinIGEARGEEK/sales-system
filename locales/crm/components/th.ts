@@ -65,7 +65,7 @@ export default {
     noItems: 'ยังไม่มีรายการ กด "เพิ่มรายการ" เพื่อเพิ่ม',
     itemProductPlaceholder: 'สินค้า (ไม่บังคับ)',
     itemKindScope: 'สโคป/ฟีเจอร์',
-    itemKindProduct: 'แพ็กเกจราคา',
+    itemKindProduct: 'แพ็กเกจราคา (สำหรับ Product)',
     itemDescriptionPlaceholder: 'รายละเอียด',
     itemQtyPlaceholder: 'จำนวน',
     itemPricePlaceholder: 'ราคาต่อหน่วย',

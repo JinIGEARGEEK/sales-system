@@ -1,5 +1,8 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
+  <!-- Wider than UModal's max-w-lg default: with a Scope of Work textarea
+  plus a per-row kind toggle, description, and qty/price columns, the
+  narrower default cramped every field in the items section. -->
+  <UModal :open="open" :ui="{ content: 'sm:max-w-2xl' }" @update:open="onUpdateOpen">
     <template #header>
       <h3 class="text-lg font-medium">{{ t('crm.components.addQuoteModal.title') }}</h3>
     </template>
@@ -62,6 +65,7 @@
                   :model-value="item.kind"
                   orientation="horizontal"
                   size="sm"
+                  :ui="{ base: 'ring-2 ring-[var(--color-gray)]' }"
                   :items="[
                     { label: t('crm.components.addQuoteModal.itemKindScope'), value: 'scope' },
                     { label: t('crm.components.addQuoteModal.itemKindProduct'), value: 'product' },
