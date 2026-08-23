@@ -104,6 +104,7 @@ export default {
     uploadSuccess: 'อัปโหลดใบเสนอราคาสำเร็จ',
     uploadedOn: 'อัปโหลดเมื่อ {date}',
     viewPdf: 'ดูไฟล์ PDF',
+    editQuote: 'แก้ไขใบเสนอราคา',
     downloadPdf: 'ดาวน์โหลดเป็น PDF',
     removeQuotation: 'ลบใบเสนอราคา',
     paymentsTitle: 'การชำระเงิน',

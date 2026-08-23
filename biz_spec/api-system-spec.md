@@ -488,6 +488,7 @@ interface Quote {
 | `GET` | `/deals/:dealId/quotes` | 🟢 | List quotes for a Deal — `FR-CRM-040`/`041`. Real per-Deal CRUD (`internal/handlers/quotes.go`, `stores/quotes.ts`), no longer a mock array embedded in the Deal detail page. |
 | `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote. |
 | `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
+| `GET` | `/quotes/:id` | 🟢 | **Added 2026-08-23** — fetch a single Quote by id, read-only (same access level as List/Export-PDF, no `CanWrite` check). Added for the quotation-builder rebuild's full-page Quote editor (`pages/crm/quotes/[id].vue`), reached by direct link/URL rather than always arriving with a known parent Deal already loaded the way the old modal flow did. |
 | `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. |
 | `DELETE` | `/quotes/:id` | 🟢 | Delete. |
 | `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). **Updated 2026-08-22**: renders `scope_of_work` (if set) as a wrapped paragraph above the line-items table; `utils.RenderLineItemsTable` (shared with Contract's export, §8.1) now wraps a multi-line `QuoteItem.description` onto a properly height-sized row (via `SplitLines`+`MultiCell`) instead of clipping it to a fixed single-line cell. |

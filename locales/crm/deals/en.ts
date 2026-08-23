@@ -104,6 +104,7 @@ export default {
     uploadSuccess: 'Quotation uploaded successfully',
     uploadedOn: 'Uploaded {date}',
     viewPdf: 'View PDF',
+    editQuote: 'Edit Quote',
     downloadPdf: 'Download as PDF',
     removeQuotation: 'Delete quotation',
     paymentsTitle: 'Payments',

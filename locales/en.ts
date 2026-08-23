@@ -17,6 +17,7 @@ import crmProjects from './crm/projects/en'
 import crmComponents from './crm/components/en'
 import crmReports from './crm/reports/en'
 import crmContracts from './crm/contracts/en'
+import crmQuotes from './crm/quotes/en'
 
 const components = {
 }
@@ -45,5 +46,6 @@ export default {
     components: crmComponents,
     reports: crmReports,
     contracts: crmContracts,
+    quotes: crmQuotes,
   },
 }

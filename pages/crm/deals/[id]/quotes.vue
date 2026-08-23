@@ -9,7 +9,7 @@
             icon="material-symbols:add"
             outline
             small
-            @click="addQuoteOpen = true"
+            @click="navigateTo(`/crm/quotes/create?deal_id=${dealId}`)"
           />
           <input
             ref="fileInputRef"
@@ -36,15 +36,24 @@
             <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
             <div class="flex items-center gap-3">
               <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
-              <UButton
-                v-if="!quote.file_name"
-                icon="material-symbols:download"
-                variant="ghost"
-                color="neutral"
-                size="xs"
-                :aria-label="t('crm.deals.detail.downloadPdf')"
-                @click="onExportQuotePdf(quote.id)"
-              />
+              <template v-if="!quote.file_name">
+                <UButton
+                  icon="material-symbols:edit-outline"
+                  variant="ghost"
+                  color="neutral"
+                  size="xs"
+                  :aria-label="t('crm.deals.detail.editQuote')"
+                  @click="navigateTo(`/crm/quotes/${quote.id}`)"
+                />
+                <UButton
+                  icon="material-symbols:download"
+                  variant="ghost"
+                  color="neutral"
+                  size="xs"
+                  :aria-label="t('crm.deals.detail.downloadPdf')"
+                  @click="onExportQuotePdf(quote.id)"
+                />
+              </template>
             </div>
           </div>
 
@@ -94,12 +103,6 @@
         </div>
       </div>
     </ContainerTemplate>
-
-    <CrmAddQuoteModal
-      v-model:open="addQuoteOpen"
-      :deal="deal"
-      @submit="onAddQuote"
-    />
   </div>
 </template>
 
@@ -116,7 +119,7 @@ const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 
-const { dealId, deal } = useCurrentDeal()
+const { dealId } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
@@ -164,15 +167,4 @@ const onRemoveQuote = async (quote: Quote) => {
 }
 
 const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)
-
-const addQuoteOpen = ref(false)
-
-const onAddQuote = async (quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }) => {
-  try {
-    await quotesStore.add(dealId, quote)
-    success(t('crm.deals.detail.createQuoteSuccess'))
-  } catch (err) {
-    notifyApiError(err)
-  }
-}
 </script>
