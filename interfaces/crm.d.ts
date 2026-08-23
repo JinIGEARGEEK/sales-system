@@ -39,8 +39,13 @@ type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | '
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
 // Deliberately broader than ActivityRelatedType (which excludes Lead) — attachments
-// are useful before a Lead ever converts to a Deal.
-type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
+// are useful before a Lead ever converts to a Deal. 'quote' added 2026-08-23 for the
+// Quote editor's attachments section (quotation-builder rebuild) — reuses this same
+// generic model, no dedicated Quote-attachments infrastructure.
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote'
+// Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default; a labeling/
+// expectation field only, doesn't change how VAT is computed (see useQuoteTotals).
+type QuotePriceType = 'excl_tax' | 'incl_tax'
 
 interface Company {
   id: number
@@ -293,6 +298,20 @@ interface Tag {
   created_at: Date
 }
 
+// Editable-row shape used by components/Crm/QuoteItemsEditor.vue and the
+// Quote create/edit pages — a superset of QuoteItem with the UI-only `key`
+// (stable v-for identity) and `kind` (explicit scope-vs-product toggle,
+// never sent to the backend — product_id already implies it on submit).
+interface QuoteItemRow {
+  key: number
+  description: string
+  qty: number
+  price: number
+  product_id: string | null
+  kind: 'scope' | 'product'
+  discount_percent: number
+}
+
 interface QuoteItem {
   description: string
   qty: number
@@ -303,12 +322,19 @@ interface QuoteItem {
   // change a saved quote's line item. Left unset, the item is pure free
   // text, exactly as before this field existed.
   product_id?: number | null
+  // 0-100, reduces this item's own line total — independent of Quote's own
+  // discount_total below. Added 2026-08-23 (quotation-builder rebuild).
+  discount_percent?: number
 }
 
 interface Quote {
   id: number
   deal_id: number
   items: QuoteItem[]
+  // Generated document number (e.g. "QT2026080004"), assigned once at create
+  // time — never user-edited. Quotes created before this field existed have
+  // no number. Added 2026-08-23.
+  number?: string
   // Free-text narrative for the overall engagement (deliverables/phases/terms)
   // — separate from each line item's own short description. Optional; shows
   // as a wrapped paragraph above the line-items table in the exported PDF.
@@ -321,6 +347,19 @@ interface Quote {
   file_url?: string
   file_size?: number
   uploaded_at?: Date
+  // All added 2026-08-23 (quotation-builder rebuild) — see useQuoteTotals for
+  // how they combine into the totals block, mirroring the backend's
+  // utils.ComputeQuoteTotals so the two never disagree.
+  reference_number?: string | null
+  issue_date: Date | null
+  credit_days: number
+  price_type: QuotePriceType
+  vat_enabled: boolean
+  wht_enabled: boolean
+  wht_rate: number
+  discount_total: number
+  notes?: string | null
+  internal_notes?: string | null
 }
 
 // A Contract attached to a Deal — optionally linked to the Quote it prices from

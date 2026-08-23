@@ -456,22 +456,29 @@ interface Tag {
 
 ```ts
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
+type QuotePriceType = 'excl_tax' | 'incl_tax'
 
 interface QuoteItem {
   description: string
   qty: number
   price: number
-  product_id?: number   // optional — set by AddQuoteModal's Product picker; the handler snapshots
-                          // that Product's current name/price into description/price at save time
-                          // (not a live reference), then the item behaves like any other row.
-                          // Left unset, the item is pure free-text, unchanged from before this field
-                          // existed. FR-CRM-062.
+  product_id?: number | null   // optional — set by the item's Product picker (CrmQuoteItemsEditor); the
+                          // handler snapshots that Product's current name/price into description/price
+                          // at save time (not a live reference), then the item behaves like any other
+                          // row. Left unset, the item is pure free-text, unchanged from before this
+                          // field existed. FR-CRM-062.
+  discount_percent?: number   // 0-100, reduces this item's own line total — independent of the
+                          // whole-quote discount_total below. Added 2026-08-23 (quotation-builder
+                          // rebuild), closing the discount gap noted on FR-CRM-040.
 }
 
 interface Quote {
   id: number
   deal_id: number
   items: QuoteItem[]
+  number?: string   // generated document number (e.g. "QT2026080004"), assigned once at create time,
+                          // never user-edited. Quotes created before this field existed have none.
+                          // Added 2026-08-23.
   scope_of_work: string   // added 2026-08-22 — whole-quote narrative (deliverables/phases/terms),
                             // distinct from each QuoteItem's own short description
   validity_date: string | null
@@ -480,21 +487,35 @@ interface Quote {
   file_url?: string
   file_size?: number
   uploaded_at?: string
+  // All added 2026-08-23 (quotation-builder rebuild) — see composables/utils/useQuoteTotals.ts for how
+  // they combine into the totals block, mirroring the backend's utils.ComputeQuoteTotals so the two
+  // never disagree (subtotal -> discount_total -> vat -> wht -> grand total).
+  reference_number?: string | null
+  issue_date: string | null
+  credit_days: number
+  price_type: QuotePriceType
+  vat_enabled: boolean
+  wht_enabled: boolean
+  wht_rate: number
+  discount_total: number
+  notes: string | null
+  internal_notes: string | null
 }
 ```
 
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/deals/:dealId/quotes` | 🟢 | List quotes for a Deal — `FR-CRM-040`/`041`. Real per-Deal CRUD (`internal/handlers/quotes.go`, `stores/quotes.ts`), no longer a mock array embedded in the Deal detail page. |
-| `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote. |
+| `POST` | `/deals/:dealId/quotes` | 🟢 | Create a line-item quote — accepts `items`/`scope_of_work`/`validity_date`/`status` only; the rest of `Quote`'s fields are edited afterward on `pages/crm/quotes/[id].vue` via `PUT`, not set at create time. |
 | `POST` | `/deals/:dealId/quotes/upload` | 🟢 | Upload a PDF quote in place of line items (§6.1) — sets `file_name/file_url/file_size/uploaded_at`, leaves `items` empty. |
-| `PUT` | `/quotes/:id` | 🟢 | Update status/items/validity_date. |
+| `GET` | `/quotes/:id` | 🟢 | **Added 2026-08-23** — fetch a single Quote by id, read-only (same access level as List/Export-PDF, no `CanWrite` check). Added for the quotation-builder rebuild's full-page Quote editor (`pages/crm/quotes/[id].vue`), reached by direct link/URL rather than always arriving with a known parent Deal already loaded the way the old modal flow did. |
+| `PUT` | `/quotes/:id` | 🟢 | **Widened 2026-08-23** — updates every field above except `id`/`deal_id`/`number`/`file_*`/`uploaded_at`: `items` (incl. per-item `discount_percent`), `scope_of_work`, `validity_date`, `status`, `reference_number`, `issue_date`, `credit_days`, `price_type`, `vat_enabled`, `wht_enabled`, `wht_rate`, `discount_total`, `notes`, `internal_notes` (`stores/quotes.ts`'s `QuoteUpdatePayload`). Existed on the backend before this rebuild but had no UI caller until the new editor page. |
 | `DELETE` | `/quotes/:id` | 🟢 | Delete. |
 | `GET` | `/quotes/:id/export-pdf` | 🟢 | `FR-CRM-042` — returns a generated PDF (`github.com/go-pdf/fpdf`): line items table, Deal/Company/Contact header, validity date, status. Read-only, same access level as List (no `CanWrite` ownership check). **Updated 2026-08-22**: renders `scope_of_work` (if set) as a wrapped paragraph above the line-items table; `utils.RenderLineItemsTable` (shared with Contract's export, §8.1) now wraps a multi-line `QuoteItem.description` onto a properly height-sized row (via `SplitLines`+`MultiCell`) instead of clipping it to a fixed single-line cell. |
 
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
-> **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `CrmAddQuoteModal` pre-fills `scope_of_work` with `deal.title` and one `items[]` row with `qty: 1, price: deal.value` (description left blank, all fields editable) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one. `QuoteItem.description` has never had a backend-side non-empty check — it's only ever been a frontend `rules="required"` on the form field, and that rule was removed 2026-08-23 alongside this change.
+> **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `pages/crm/quotes/create.vue` (the modal's 2026-08-23 full-page replacement, `CrmAddQuoteModal` before it) pre-fills `scope_of_work` with `deal.title` and one `items[]` row with `qty: 1, price: deal.value` (description left blank, all fields editable) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one. `QuoteItem.description` has never had a backend-side non-empty check — it's only ever been a frontend `rules="required"` on the form field, and that rule was removed 2026-08-23 alongside this change.
 
 ### 7.5 Payments
 
