@@ -67,6 +67,7 @@ export default {
     itemDescriptionPlaceholder: 'Description',
     itemQtyPlaceholder: 'Qty',
     itemPricePlaceholder: 'Unit Price',
+    total: 'Total',
     removeItem: 'Delete this item',
     cancel: 'Cancel',
     save: 'Save Quote',

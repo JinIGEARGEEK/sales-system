@@ -67,6 +67,7 @@ export default {
     itemDescriptionPlaceholder: 'รายละเอียด',
     itemQtyPlaceholder: 'จำนวน',
     itemPricePlaceholder: 'ราคาต่อหน่วย',
+    total: 'รวมทั้งหมด',
     removeItem: 'ลบรายการนี้',
     cancel: 'ยกเลิก',
     save: 'บันทึกใบเสนอราคา',

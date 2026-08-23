@@ -36,6 +36,14 @@
           </div>
 
           <p v-if="items.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.components.addQuoteModal.noItems') }}</p>
+          <!-- Live sum of qty*price across all rows — the exported PDF has
+          always computed this Grand Total, but nothing showed it here while
+          a rep is still splitting the deal's value into per-feature/service
+          line items, so there was no way to check the breakdown adds back up
+          to the intended total without saving first. -->
+          <p v-else class="mb-2 text-right text-sm font-medium">
+            {{ t('crm.components.addQuoteModal.total') }}: {{ t('global.currencySymbol') }}{{ priceFormat(itemsTotal) }}
+          </p>
 
           <!-- Capped + internally scrolling: an arbitrary number of line items
           shouldn't be able to push the modal's header/footer off-screen. -->
@@ -155,8 +163,12 @@ const productOptionsFor = (item: { product_id: string | null }) => {
   return [...activeProductOptions.value, { label: inactive.name, value: String(inactive.id) }]
 }
 
+const { priceFormat } = useFormatter()
+
 let nextItemKey = 0
 const items = ref<{ key: number, description: string, qty: number, price: number, product_id: string | null }[]>([])
+
+const itemsTotal = computed(() => items.value.reduce((sum, item) => sum + (item.qty || 0) * (item.price || 0), 0))
 
 const addItemRow = () => {
   items.value.push({ key: nextItemKey++, description: '', qty: 1, price: 0, product_id: null })
