@@ -33,6 +33,7 @@ export default {
     discountTotal: 'ส่วนลดรวม',
     vatEnabled: 'ภาษีมูลค่าเพิ่ม 7%',
     whtEnabled: 'หักภาษี ณ ที่จ่าย',
+    whtRateLabel: 'อัตราภาษีหัก ณ ที่จ่าย (%)',
     whtRatePlaceholder: 'อัตรา %',
     grandTotal: 'จำนวนเงินรวมทั้งสิ้น',
     notes: 'หมายเหตุ',

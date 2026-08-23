@@ -104,8 +104,8 @@ const onSubmit = guard(async () => {
   if (!deal.value) return
   try {
     const created = await quotesStore.add(deal.value.id, {
-      items: items.value.map(({ description, qty, price, product_id }) => ({
-        description, qty, price, product_id: product_id ? Number(product_id) : null,
+      items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
+        description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
       })),
       scope_of_work: form.scope_of_work,
       validity_date: form.validity_date ? new Date(form.validity_date) : null,

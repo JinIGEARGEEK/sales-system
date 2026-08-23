@@ -14,13 +14,13 @@
           <h2 class="text-xl font-black">{{ quote.number || `#${quote.id}` }}</h2>
           <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
         </div>
-        <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
       </div>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div class="lg:col-span-3">
           <ContainerTemplate>
-            <Form @submit="onSave">
+            <Form ref="formRef" @submit="onSave">
               <!-- Read-only, derived from the parent Deal — never duplicated
               as new Quote fields, same rule already established for
               Company/Contact on FR-CRM-046 (the Quote form doesn't need to
@@ -85,7 +85,7 @@
                   v-if="form.wht_enabled"
                   v-model.number="form.wht_rate"
                   type="number"
-                  :label="t('crm.quotes.editor.whtEnabled')"
+                  :label="t('crm.quotes.editor.whtRateLabel')"
                   :placeholder="t('crm.quotes.editor.whtRatePlaceholder')"
                   name="wht_rate"
                   rules="min_value:0"
@@ -193,7 +193,15 @@ const PRICE_TYPE_OPTIONS: Select[] = [
   { label: t('crm.quotes.editor.priceTypeInclTax'), value: 'incl_tax' },
 ]
 
-const form = reactive({
+// Not a modal (no "reset on reopen" behavior needed — this is an edit page,
+// populated once below from the loaded Quote), but reuses useModalForm's
+// formRef typing + validateThenSubmit dance anyway, same as
+// pages/admin/pipeline-config.vue's salesQuotaForm: the Save button lives
+// outside the <Form> (in the page header, next to the back button), so
+// without this it would fire the PUT request straight past every field's
+// vee-validate rules (status `required`, item qty/price/discount `min_value`,
+// credit_days/discount_total/wht_rate `min_value:0`).
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => false, () => ({
   scope_of_work: '',
   validity_date: '',
   status: 'draft' as QuoteStatus,
@@ -207,7 +215,7 @@ const form = reactive({
   discount_total: 0,
   notes: '',
   internal_notes: '',
-})
+}))
 
 let nextItemKey = 0
 const items = ref<QuoteItemRow[]>([])
@@ -243,8 +251,6 @@ watch(quote, (value) => {
 
 const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
 
-const { loading, guard } = useSubmitGuard()
-
 const onSave = guard(async () => {
   if (!quote.value) return
   try {
@@ -271,6 +277,8 @@ const onSave = guard(async () => {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
+
+const onSaveClick = () => validateThenSubmit(onSave)
 
 const addAttachmentOpen = ref(false)
 const quoteAttachments = computed(() => attachmentsStore.forRelated('quote', quoteId))

@@ -122,10 +122,15 @@ const productOptionsFor = (item: QuoteItemRow) => {
   return [...activeProductOptions.value, { label: inactive.name, value: String(inactive.id) }]
 }
 
-let nextItemKey = Math.max(0, ...items.value.map(i => i.key)) + 1
+// Computed fresh on every call rather than cached in a counter: the parent
+// pages (e.g. pages/crm/quotes/[id].vue) populate `items` asynchronously
+// after this component has already mounted with an empty array, so a
+// counter seeded once at setup would go stale and could hand out a `key`
+// that collides with a row added later by the parent's own watcher.
+const nextItemKey = () => Math.max(0, ...items.value.map(i => i.key)) + 1
 
 const addItemRow = () => {
-  items.value = [...items.value, { key: nextItemKey++, description: '', qty: 1, price: 0, product_id: null, kind: 'scope', discount_percent: 0 }]
+  items.value = [...items.value, { key: nextItemKey(), description: '', qty: 1, price: 0, product_id: null, kind: 'scope', discount_percent: 0 }]
 }
 
 const removeItemRow = (index: number) => {
@@ -148,6 +153,4 @@ const onItemProductChange = (item: QuoteItemRow, value: string | number | null) 
   item.description = product.name
   item.price = product.price
 }
-
-defineExpose({ addItemRow })
 </script>

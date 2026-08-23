@@ -37,6 +37,7 @@ export default {
     discountTotal: 'Discount',
     vatEnabled: 'VAT (7%)',
     whtEnabled: 'Withholding Tax',
+    whtRateLabel: 'Withholding Tax Rate (%)',
     whtRatePlaceholder: 'Rate %',
     grandTotal: 'Grand Total',
     notes: 'Notes',
