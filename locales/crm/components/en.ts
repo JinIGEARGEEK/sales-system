@@ -64,6 +64,8 @@ export default {
     addItem: 'Add Item',
     noItems: 'No items yet. Click "Add Item" to add one.',
     itemProductPlaceholder: 'Product (optional)',
+    itemKindScope: 'Scope / Feature',
+    itemKindProduct: 'Pricing Package',
     itemDescriptionPlaceholder: 'Description',
     itemQtyPlaceholder: 'Qty',
     itemPricePlaceholder: 'Unit Price',

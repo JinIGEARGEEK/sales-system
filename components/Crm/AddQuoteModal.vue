@@ -50,6 +50,16 @@
           <div class="max-h-[40vh] overflow-y-auto pr-1">
             <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
               <div class="grid flex-1 grid-cols-1 gap-2">
+                <!-- Which of the two things this row actually is depends on
+                whether a Product got picked — a bare row (no product_id) is a
+                custom scope/feature of a Project, priced by hand; a
+                product-linked row is one of the company's own packaged
+                Products, priced from the Catalog. Same row shape either way,
+                so this is just a label reflecting the row's current state,
+                not a separate field. -->
+                <span class="text-xs text-[var(--color-gray)]">
+                  {{ item.product_id ? t('crm.components.addQuoteModal.itemKindProduct') : t('crm.components.addQuoteModal.itemKindScope') }}
+                </span>
                 <InputSelect
                   :model-value="item.product_id"
                   :options="productOptionsFor(item)"
