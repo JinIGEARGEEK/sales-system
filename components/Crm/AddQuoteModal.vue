@@ -50,17 +50,26 @@
           <div class="max-h-[40vh] overflow-y-auto pr-1">
             <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
               <div class="grid flex-1 grid-cols-1 gap-2">
-                <!-- Which of the two things this row actually is depends on
-                whether a Product got picked — a bare row (no product_id) is a
-                custom scope/feature of a Project, priced by hand; a
-                product-linked row is one of the company's own packaged
-                Products, priced from the Catalog. Same row shape either way,
-                so this is just a label reflecting the row's current state,
-                not a separate field. -->
-                <span class="text-xs text-[var(--color-gray)]">
-                  {{ item.product_id ? t('crm.components.addQuoteModal.itemKindProduct') : t('crm.components.addQuoteModal.itemKindScope') }}
-                </span>
+                <!-- Explicit choice up front, not inferred from whether a
+                product happens to be picked: a rep decides what a row *is*
+                before filling it in, rather than the Product picker sitting
+                above the description on every row looking like a mandatory
+                first step. "scope" rows are a custom scope/feature of a
+                Project, priced by hand and never show the Product picker at
+                all; "product" rows are one of the company's own packaged
+                Products, priced from the Catalog. -->
+                <URadioGroup
+                  :model-value="item.kind"
+                  orientation="horizontal"
+                  size="sm"
+                  :items="[
+                    { label: t('crm.components.addQuoteModal.itemKindScope'), value: 'scope' },
+                    { label: t('crm.components.addQuoteModal.itemKindProduct'), value: 'product' },
+                  ]"
+                  @update:model-value="onItemKindChange(item, $event)"
+                />
                 <InputSelect
+                  v-if="item.kind === 'product'"
                   :model-value="item.product_id"
                   :options="productOptionsFor(item)"
                   :placeholder="t('crm.components.addQuoteModal.itemProductPlaceholder')"
@@ -165,7 +174,7 @@ const activeProductOptions = computed(() => productsStore.items
 // revenueSizeOptions pattern for the exact same "deactivated but still
 // referenced" case, applied per-item since different rows can each
 // reference a different deactivated Product.
-const productOptionsFor = (item: { product_id: string | null }) => {
+const productOptionsFor = (item: QuoteItemRow) => {
   const current = item.product_id
   if (!current || activeProductOptions.value.some(o => o.value === current)) return activeProductOptions.value
   const inactive = productsStore.items.find(p => String(p.id) === current)
@@ -175,20 +184,31 @@ const productOptionsFor = (item: { product_id: string | null }) => {
 
 const { priceFormat } = useFormatter()
 
+type QuoteItemRow = { key: number, description: string, qty: number, price: number, product_id: string | null, kind: 'scope' | 'product' }
+
 let nextItemKey = 0
-const items = ref<{ key: number, description: string, qty: number, price: number, product_id: string | null }[]>([])
+const items = ref<QuoteItemRow[]>([])
 
 const itemsTotal = computed(() => items.value.reduce((sum, item) => sum + (item.qty || 0) * (item.price || 0), 0))
 
 const addItemRow = () => {
-  items.value.push({ key: nextItemKey++, description: '', qty: 1, price: 0, product_id: null })
+  items.value.push({ key: nextItemKey++, description: '', qty: 1, price: 0, product_id: null, kind: 'scope' })
 }
 
 const removeItemRow = (index: number) => {
   items.value.splice(index, 1)
 }
 
-const onItemProductChange = (item: { description: string, price: number, product_id: string | null }, value: string | number | null) => {
+// Switching back to "scope" drops any product link — a scope row has no
+// Product picker visible at all, so a stale product_id must not silently
+// ride along to submit. Switching to "product" leaves description/price as
+// they are (typically still blank) until a Product is actually picked below.
+const onItemKindChange = (item: QuoteItemRow, value: string | number | null) => {
+  item.kind = value === 'product' ? 'product' : 'scope'
+  if (item.kind === 'scope') item.product_id = null
+}
+
+const onItemProductChange = (item: QuoteItemRow, value: string | number | null) => {
   item.product_id = value === null ? null : String(value)
   const product = productsStore.items.find(p => String(p.id) === item.product_id)
   if (!product) return
@@ -209,7 +229,7 @@ watch(() => props.open, (value) => {
     // longer required, so this doesn't block Save the way it briefly did
     // when this was tried before the field's `rules="required"` was removed.
     items.value = props.deal
-      ? [{ key: nextItemKey++, description: '', qty: 1, price: props.deal.value, product_id: null }]
+      ? [{ key: nextItemKey++, description: '', qty: 1, price: props.deal.value, product_id: null, kind: 'scope' }]
       : []
     if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   }
