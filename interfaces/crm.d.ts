@@ -360,6 +360,17 @@ interface Quote {
   discount_total: number
   notes?: string | null
   internal_notes?: string | null
+  // Set only on Quotes created via the PDF-upload flow (never on manually
+  // created ones) — the outcome of best-effort field extraction from a
+  // FlowAccount export (see api-system-spec.md §7.4's Upload row). 'ok': every
+  // field extraction looked for was found and self-consistent. 'partial':
+  // some fields were pre-filled, extraction_warnings lists what's missing or
+  // suspect (e.g. a recomputed total that doesn't match the PDF's printed
+  // one) — worth a second look before Sending. 'failed': the file is still
+  // attached but didn't look like a FlowAccount export, so nothing was
+  // pre-filled. Added 2026-08-23.
+  extraction_status?: 'ok' | 'partial' | 'failed' | null
+  extraction_warnings?: string[] | null
 }
 
 // A Contract attached to a Deal — optionally linked to the Quote it prices from

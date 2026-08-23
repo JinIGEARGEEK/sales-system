@@ -17,6 +17,35 @@
         <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
       </div>
 
+      <!-- Only for Quotes created via PDF upload (extraction_status is unset
+      for every manually-created Quote) — see interfaces/crm.d.ts's Quote
+      docblock and api-system-spec.md §7.4's Upload row. 'partial' still
+      pre-filled what it could; 'failed' pre-filled nothing, so the fields
+      below are exactly as blank as an upload always left them before this
+      existed. -->
+      <UAlert
+        v-if="quote.extraction_status === 'partial'"
+        class="mb-4"
+        color="warning"
+        variant="subtle"
+        icon="material-symbols:warning-outline"
+        :title="t('crm.quotes.detail.extractionPartialTitle')"
+      >
+        <template #description>
+          <ul class="list-disc pl-4">
+            <li v-for="(warning, index) in quote.extraction_warnings ?? []" :key="index">{{ warning }}</li>
+          </ul>
+        </template>
+      </UAlert>
+      <UAlert
+        v-else-if="quote.extraction_status === 'failed'"
+        class="mb-4"
+        color="neutral"
+        variant="subtle"
+        icon="material-symbols:info-outline"
+        :title="t('crm.quotes.detail.extractionFailedTitle')"
+      />
+
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div class="lg:col-span-3">
           <ContainerTemplate>

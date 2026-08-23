@@ -63,5 +63,7 @@ export default {
     saveSuccess: 'Quote saved successfully',
     addAttachmentSuccess: 'Attachment added successfully',
     removeAttachmentSuccess: 'Attachment removed successfully',
+    extractionPartialTitle: 'Pre-filled from the uploaded PDF — please review',
+    extractionFailedTitle: 'Could not read this PDF automatically — fields below are blank, fill them in manually',
   },
 }
