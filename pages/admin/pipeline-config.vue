@@ -86,7 +86,7 @@
               class="flex-1"
             >
               <template #label-suffix>
-                <UTooltip :text="t('admin.pipelineConfig.salesQuota.mqlThresholdHelp')">
+                <UTooltip :text="t('admin.pipelineConfig.salesQuota.mqlThresholdHelp')" :content="{ side: 'top' }">
                   <UIcon name="material-symbols:info-outline" class="ml-1 size-3 shrink-0 align-middle text-[var(--color-gray)]" />
                 </UTooltip>
               </template>
