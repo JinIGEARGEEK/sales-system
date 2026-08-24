@@ -115,7 +115,7 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ item.company_name }}</p>
+            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
           </div>
           <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
@@ -292,7 +292,7 @@ const filteredLeads = computed(() => {
   return leadsStore.items.filter((lead) => {
     const matchSearch = !search.value
       || lead.name.toLowerCase().includes(search.value.toLowerCase())
-      || lead.company_name.toLowerCase().includes(search.value.toLowerCase())
+      || companiesStore.nameById(lead.company_id).toLowerCase().includes(search.value.toLowerCase())
     const matchAssignee = matchesAssigneeFilter(lead.assigned_to, assigneeFilter.value)
     return matchSearch && matchAssignee
   })

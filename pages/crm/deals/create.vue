@@ -125,7 +125,7 @@ const form = reactive({
 })
 
 watch(originatingLead, (lead) => {
-  if (lead && !form.title) form.title = `${lead.company_name} — New Opportunity`
+  if (lead && !form.title) form.title = `${companiesStore.nameById(lead.company_id)} — New Opportunity`
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(

@@ -92,6 +92,7 @@ const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
 const leadSourcesStore = useLeadSourcesStore()
+const companiesStore = useCompaniesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
@@ -102,8 +103,11 @@ const sourceFilter = ref('all')
 const assigneeFilter = ref('all')
 
 // Maps a TableData column field to the `sort` query param the backend
-// understands (see GET /leads' ApplySort allow-list: created_at/name/company_name).
-const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
+// understands (see GET /leads: created_at/name plain columns, company_name
+// a join-based special case since Lead.company_id replaced the free-text
+// column it used to be — same join pattern as Deal/Contact's own
+// company_name sort).
+const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at', companyName: 'company_name' }
 
 const sortField = ref('')
 const sortDir = ref<'asc' | 'desc'>('asc')
@@ -140,6 +144,8 @@ onMounted(() => {
   fetch()
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  // Resolves each row's company_id to a display name below (companyName).
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
 })
 
 watch(search, () => refetchDebounced())
@@ -154,6 +160,7 @@ const displayRows = computed(() => rows.value.map(lead => ({
   classificationBadge: classificationBadge(lead.classification),
   createdDate: dateFormat(lead.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(lead.assigned_to),
+  companyName: companiesStore.nameById(lead.company_id),
 })))
 
 // Lead Scoring (FR-CRM-006/007) — renders as "-" for 'none', matching
@@ -181,7 +188,7 @@ const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelecti
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.leads.index.columns.name'), align: 'left', field: 'name', isSort: true },
-  { label: t('crm.leads.index.columns.company'), align: 'left', field: 'company_name', isSort: true },
+  { label: t('crm.leads.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source' },
   { label: t('crm.leads.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.leads.index.columns.classification'), align: 'left', field: 'classificationBadge', type: TABLE_CARD_TYPE.STATUS },
