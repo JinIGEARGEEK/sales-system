@@ -108,6 +108,23 @@ const companyOptions = computed(() => (props.companies ?? []).map(c => ({ label:
 
 const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
+const { notifyApiError } = useApiErrorNotifier()
+
+const emptyForm = () => ({
+  company_id: '',
+  deal_id: '',
+  name: props.project?.name ?? props.defaultName ?? '',
+  status: (props.project?.status ?? 'Not Started') as ProjectStatus,
+  production_reference: props.project?.production_reference ?? '',
+  target_end_date: props.project?.target_end_date ? toDateInputValue(props.project.target_end_date) : '',
+  notes: props.project?.notes ?? '',
+})
+
+// Declared before filterCompanyId below, which reads form.company_id —
+// filterCompanyId is used inside an immediate watch further down, which
+// evaluates it synchronously right there, so `form` must already exist by
+// then, not just by the time the rest of the script has finished running.
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 // Which company to filter the Deal picker by: the one currently picked in the
 // Company field when it's shown, otherwise the fixed `companyId` the parent
@@ -118,8 +135,6 @@ const filterCompanyId = computed(() => {
   if (props.companies) return Number(form.company_id) || null
   return props.companyId ?? null
 })
-
-const { notifyApiError } = useApiErrorNotifier()
 
 const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
 watch(() => props.project?.deal_id, (dealId) => {
@@ -133,36 +148,20 @@ watch(() => props.project?.deal_id, (dealId) => {
 // Scoped to filterCompanyId, not the global dealsStore cache — same reason
 // as linkedDealTitle above; this is a real picker, so an older Deal missing
 // here isn't just a display gap, it's one a rep can never actually pick.
-const companyDealResults = ref<Deal[]>([])
-watch(filterCompanyId, async (companyId) => {
-  if (!companyId) {
-    companyDealResults.value = []
-    return
-  }
-  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
-    notifyApiError(err)
-    return { items: [] as Deal[] }
-  })
-  companyDealResults.value = items
-}, { immediate: true })
+// useScopedFetch guards against a slow request for a previously-selected
+// Company resolving after a faster one for the current selection and
+// overwriting it with stale results.
+const { result: companyDealResults } = useScopedFetch(
+  filterCompanyId,
+  async (companyId: number) => (await dealsStore.fetchList({ company_id: companyId, per_page: 200 })).items,
+  [] as Deal[],
+)
 const dealOptions = computed(() => companyDealResults.value.map(d => ({ label: d.title, value: String(d.id) })))
 
 // Existing Project names to suggest in the creatable name combobox — scoped
 // to the current company when one is known, otherwise the full cross-company
 // list (e.g. the standalone Projects page's "Add" flow).
 const projectNameOptions = computed(() => projectsStore.projectNames(filterCompanyId.value))
-
-const emptyForm = () => ({
-  company_id: '',
-  deal_id: '',
-  name: props.project?.name ?? props.defaultName ?? '',
-  status: (props.project?.status ?? 'Not Started') as ProjectStatus,
-  production_reference: props.project?.production_reference ?? '',
-  target_end_date: props.project?.target_end_date ? toDateInputValue(props.project.target_end_date) : '',
-  notes: props.project?.notes ?? '',
-})
-
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 // A Deal picked before switching companies would otherwise belong to the
 // wrong company and get submitted anyway — clear it so the field always

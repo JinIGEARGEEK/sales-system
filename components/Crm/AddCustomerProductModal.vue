@@ -93,19 +93,15 @@ const { notifyApiError } = useApiErrorNotifier()
 // Scoped to props.companyId, not the global dealsStore cache — fetchAll()
 // (wherever the parent warms it) is capped at 200 rows, newest-first (see
 // stores/companies.ts's fetchAll doc), so an older Deal belonging to this
-// Company could otherwise never appear in this picker at all.
-const companyDealResults = ref<Deal[]>([])
-watch(() => props.companyId, async (companyId) => {
-  if (!companyId) {
-    companyDealResults.value = []
-    return
-  }
-  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
-    notifyApiError(err)
-    return { items: [] as Deal[] }
-  })
-  companyDealResults.value = items
-}, { immediate: true })
+// Company could otherwise never appear in this picker at all. useScopedFetch
+// also guards against a slow request for a previously-selected Company
+// resolving after a faster one for the current selection and overwriting it
+// with stale results.
+const { result: companyDealResults } = useScopedFetch(
+  computed(() => props.companyId),
+  async (companyId: number) => (await dealsStore.fetchList({ company_id: companyId, per_page: 200 })).items,
+  [] as Deal[],
+)
 const dealOptions = computed(() => companyDealResults.value.map(d => ({ label: d.title, value: String(d.id) })))
 
 const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.record?.source_deal_id)?.title ?? `#${props.record?.source_deal_id}`)
