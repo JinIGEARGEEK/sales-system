@@ -63,7 +63,7 @@
           <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
             <InputText
               v-model.number="salesQuotaForm.quarterly_sales_target"
-              type="number"
+              thousands
               :label="t('admin.pipelineConfig.salesQuota.label')"
               name="quarterly_sales_target"
               rules="required"
@@ -71,7 +71,7 @@
             />
             <InputText
               v-model.number="salesQuotaForm.annual_revenue_goal"
-              type="number"
+              thousands
               :label="t('admin.pipelineConfig.salesQuota.annualGoalLabel')"
               name="annual_revenue_goal"
               rules="required"
@@ -84,7 +84,13 @@
               name="lead_scoring_mql_threshold"
               rules="required"
               class="flex-1"
-            />
+            >
+              <template #label-suffix>
+                <UTooltip :text="t('admin.pipelineConfig.salesQuota.mqlThresholdHelp')">
+                  <UIcon name="material-symbols:info-outline" class="ml-1 size-3 shrink-0 align-middle text-[var(--color-gray)]" />
+                </UTooltip>
+              </template>
+            </InputText>
             <ButtonPrimary :label="t('admin.pipelineConfig.salesQuota.save')" fit-content :loading="salesQuotaLoading" @click="onSaveSalesQuota" />
           </div>
 
@@ -517,7 +523,7 @@ const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { toBadge, dateTimeFormat } = useFormatter()
+const { toBadge, dateTimeFormat, numberFormat } = useFormatter()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const appSettingsStore = useAppSettingsStore()
@@ -745,6 +751,7 @@ const currentPeriod = computed(() => {
 const targetRows = computed(() => salesTargetsStore.sorted.map(target => ({
   ...target,
   quarterLabel: `Q${target.quarter} ${target.year}`,
+  targetValueDisplay: numberFormat(target.target_value),
   periodBadge: (target.year === currentPeriod.value.year && target.quarter === currentPeriod.value.quarter)
     ? toBadge(t('admin.pipelineConfig.salesTargets.currentBadge'), 'success')
     : (target.year > currentPeriod.value.year || (target.year === currentPeriod.value.year && target.quarter > currentPeriod.value.quarter))
@@ -754,7 +761,7 @@ const targetRows = computed(() => salesTargetsStore.sorted.map(target => ({
 
 const targetColumns: TableDataColumn[] = [
   { label: t('admin.pipelineConfig.salesTargets.columns.period'), align: 'left', field: 'quarterLabel' },
-  { label: t('admin.pipelineConfig.salesTargets.columns.targetValue'), align: 'left', field: 'target_value' },
+  { label: t('admin.pipelineConfig.salesTargets.columns.targetValue'), align: 'left', field: 'targetValueDisplay' },
   { label: t('admin.pipelineConfig.salesTargets.columns.status'), align: 'left', field: 'periodBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.salesTargets.columns.action'),

@@ -14,6 +14,10 @@
             {{ label }}
           </label>
           <span v-if="rules.includes('required')" class="text-[var(--color-danger-toast)]">*</span>
+          <!-- Optional inline addition after the label text (e.g. an info
+          tooltip explaining a non-obvious field) — most callers don't pass
+          this, so it renders nothing by default. -->
+          <slot name="label-suffix" />
         </div>
         <slot :field="field" :errors="errors" :field-id="fieldId" :error-id="errorId" />
         <slot name="footer" :errors="errors">
