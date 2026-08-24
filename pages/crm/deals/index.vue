@@ -332,6 +332,23 @@ const pipelineItems = computed(() => [
   ...filteredLeads.value.map(lead => ({ ...lead, _type: 'lead' as const, _lane: leadLane(lead) })),
 ])
 
+// companiesStore.fetchAll() above is a capped, point-in-time snapshot (see
+// its own doc in stores/companies.ts) — it can miss a Deal/Lead's Company
+// outright (past the 200-newest cutoff) or simply run before that Company
+// existed. Without this, every companiesStore.nameById(...) call on this page
+// (both the Kanban cards' company label above and the search filter
+// predicates in filteredDeals/filteredLeads) silently renders/matches "-" for
+// any such row even though company_id is correctly set — same class of bug
+// fixed for Contacts/Leads' own list pages. Leads' company_id is nullable, so
+// skip items with none rather than fetchOne(null).
+watch(pipelineItems, (items) => {
+  for (const item of items) {
+    if (item.company_id && !companiesStore.items.some(c => c.id === item.company_id)) {
+      companiesStore.fetchOne(item.company_id).catch(notifyApiError)
+    }
+  }
+})
+
 // Real per-column count for the board header, even though only up to
 // DEALS_PAGE_SIZE (+ any loaded "more" pages) Deals are actually rendered:
 // stage's server-reported `total` (from the paginated fetch) plus however

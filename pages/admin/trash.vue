@@ -173,6 +173,20 @@ const dealsColumns: TableDataColumn[] = [
   },
 ]
 
+// companiesStore.fetchAll() (guardMounted below) is a capped, point-in-time
+// snapshot (see its own doc in stores/companies.ts) — trashed Deals are
+// typically *older* records, so they're statistically more likely than
+// average to fall outside that "200 newest" cutoff, silently rendering "-"
+// for companyName even though company_id is correctly set. Same class of bug
+// fixed for Contacts/Leads/Deals' own live list pages.
+watch(() => dealsStore.trashItems, (items) => {
+  for (const deal of items) {
+    if (!companiesStore.items.some(c => c.id === deal.company_id)) {
+      companiesStore.fetchOne(deal.company_id).catch(notifyApiError)
+    }
+  }
+})
+
 const onRestoreDeal = async (row: Deal) => {
   try {
     await dealsStore.restore(row.id)
@@ -197,12 +211,24 @@ const {
 
 const leadsRows = computed(() => leadsStore.trashItems.map(lead => ({
   ...lead,
+  companyName: companiesStore.nameById(lead.company_id),
   deletedAtDisplay: lead.deleted_at ? dateFormat(lead.deleted_at) : '-',
 })))
 
+// Same fetchOne fallback as dealsStore/contactsStore.trashItems above.
+// lead.company_id is nullable (unlike Deal/Contact's), so skip rows with no
+// Company rather than fetchOne(null).
+watch(() => leadsStore.trashItems, (items) => {
+  for (const lead of items) {
+    if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
+      companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
+    }
+  }
+})
+
 const leadsColumns: TableDataColumn[] = [
   { label: t('admin.trash.columns.leads.name'), align: 'left', field: 'name' },
-  { label: t('admin.trash.columns.leads.company'), align: 'left', field: 'company_name' },
+  { label: t('admin.trash.columns.leads.company'), align: 'left', field: 'companyName' },
   { label: t('admin.trash.columns.leads.source'), align: 'left', field: 'source' },
   { label: t('admin.trash.columns.leads.deletedAt'), align: 'left', field: 'deletedAtDisplay' },
   {
@@ -301,6 +327,16 @@ const contactsColumns: TableDataColumn[] = [
     ],
   },
 ]
+
+// Same fetchOne fallback as dealsStore.trashItems above, for the same
+// "trashed rows skew older than the cached 200-newest companies" reason.
+watch(() => contactsStore.trashItems, (items) => {
+  for (const contact of items) {
+    if (!companiesStore.items.some(c => c.id === contact.company_id)) {
+      companiesStore.fetchOne(contact.company_id).catch(notifyApiError)
+    }
+  }
+})
 
 const onRestoreContact = async (row: Contact) => {
   try {

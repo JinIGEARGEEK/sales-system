@@ -145,7 +145,25 @@ onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   // Resolves each row's company_id to a display name below (companyName).
+  // Only seeds the cache — a Lead whose Company falls outside this capped
+  // 200-newest snapshot (or was created after this ran) still needs the
+  // per-row fetchOne fallback below; see that watcher's own comment.
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+})
+
+// The `fetchAll` seed above is a capped, point-in-time snapshot (see its own
+// doc in stores/companies.ts) — it can miss a Lead's Company outright (past
+// the 200-newest cutoff) or simply run before that Company existed. Without
+// this, nameById renders "-" for any such Lead even though company_id is
+// correctly set — same class of bug already fixed for Contacts' own Company
+// column (pages/crm/contacts/index.vue). company_id is nullable here (unlike
+// Contact's), so skip rows with no Company at all rather than fetchOne(null).
+watch(rows, (visibleLeads) => {
+  for (const lead of visibleLeads) {
+    if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
+      companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
+    }
+  }
 })
 
 watch(search, () => refetchDebounced())
