@@ -76,6 +76,11 @@ const props = defineProps<{
   project?: Project | null
   // Only used for a fresh create (e.g. pre-filling from the originating Deal's title).
   defaultName?: string
+  // Only used for a fresh create — seeds target_end_date from the
+  // originating Deal's own expected_close_date (the Deal-Won/Contract-
+  // Signed prompts both already know this and have no other date to offer;
+  // still just a starting point, not locked to it afterward).
+  defaultTargetEndDate?: Date | null
   // Optional context text shown above the form (e.g. explaining this project
   // links back to the Deal that's being marked Won).
   description?: string
@@ -116,7 +121,9 @@ const emptyForm = () => ({
   name: props.project?.name ?? props.defaultName ?? '',
   status: (props.project?.status ?? 'Not Started') as ProjectStatus,
   production_reference: props.project?.production_reference ?? '',
-  target_end_date: props.project?.target_end_date ? toDateInputValue(props.project.target_end_date) : '',
+  target_end_date: props.project?.target_end_date
+    ? toDateInputValue(props.project.target_end_date)
+    : (props.defaultTargetEndDate ? toDateInputValue(props.defaultTargetEndDate) : ''),
   notes: props.project?.notes ?? '',
 })
 
