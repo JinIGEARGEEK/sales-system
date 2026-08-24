@@ -12,7 +12,7 @@
     </template>
     <template #default="{ field, errors, fieldId, errorId }">
       <UInput
-        v-bind="field"
+        v-bind="omitFieldValue(field)"
         :id="fieldId"
         ref="input"
         :model-value="props.thousands ? displayValue : props.modelValue"
@@ -94,6 +94,30 @@ const props = defineProps({
 
 const input = ref()
 const emit = defineEmits(['update:model-value'])
+
+// vee-validate's Field slot prop carries its own tracked `value` alongside
+// onBlur/onInput/onChange/onUpdate:modelValue. Spreading it wholesale onto
+// UInput leaks that `value` through as a plain fallthrough attribute — and
+// since UInput itself binds its native <input> as
+// `:value="modelValue" ... v-bind="{ ...$attrs, ... }"`, that fallthrough
+// attribute wins over UInput's own modelValue-derived value (mergeProps'
+// last-write-wins for plain, non-"on" keys). Normally invisible because
+// field.value and modelValue hold the same thing — but in `thousands` mode
+// modelValue is the plain number while the on-screen text needs commas, so
+// this was silently snapping the displayed value back to the raw digits on
+// every render, and no comma formatting ever showed up. Dropping the key
+// (not just setting it to undefined — mergeProps still applies an explicit
+// `undefined`) leaves the onBlur/onInput/onChange handlers untouched.
+// `field`'s slot type is already untyped upstream (vee-validate's Field);
+// typing this any tighter than `any` here would newly surface an unrelated
+// pre-existing `props.size` vs UInput's literal-union type mismatch that the
+// untyped spread previously masked, without this component's contract
+// actually changing.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const omitFieldValue = (field: any) => {
+  const { value: _value, ...rest } = field
+  return rest
+}
 
 const onInput = (event: KeyboardEvent) => {
   if (props.isThOnly || props.isEnOnly) {
