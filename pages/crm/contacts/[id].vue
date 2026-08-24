@@ -20,7 +20,7 @@
             <Form @submit="onSave">
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <InputText v-model="form.name" :label="t('crm.contacts.detail.fullName')" name="name" rules="required" />
-                <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.contacts.detail.company')" name="company_id" :disable="companyOptions.length === 0" rules="required" />
+                <InputCompanySelect v-model="form.company_id" :label="t('crm.contacts.detail.company')" name="company_id" rules="required" />
                 <InputSelect v-model="form.role_title" :options="roleTitleOptions" :label="t('crm.contacts.detail.roleTitle')" name="role_title" />
                 <InputText v-model="form.email" :label="t('crm.contacts.detail.email')" name="email" />
                 <InputText v-model="form.phone" :label="t('crm.contacts.detail.phone')" name="phone" />
@@ -145,7 +145,6 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags, dateFormat } = useFormatter()
 const { hasRole } = useRole()
-const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
@@ -157,9 +156,16 @@ const contact = computed(() => contactsStore.items.find(c => c.id === contactId)
 const goBack = useBackNavigation('/crm/contacts')
 
 onMounted(() => {
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  // fetchOne, not fetchAll: this page only ever needs this one Contact, and
+  // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
+  // a Contact past that cutoff would otherwise never load here at all.
+  if (!contactsStore.items.some(c => c.id === contactId)) contactsStore.fetchOne(contactId).catch(notifyApiError)
+  // Companies aren't preloaded here — InputCompanySelect below searches the
+  // server as the rep types instead of filtering a capped preloaded list
+  // (companiesStore.fetchAll() is capped at 200, newest-first, and can miss
+  // an older Company entirely — see api-system-spec.md's NFR-003 note). This
+  // Contact's own Company's Deals are fetched scoped, below, once the
+  // Contact itself (and so its company_id) resolves.
   if (jobTitleOptionsStore.items.length === 0) jobTitleOptionsStore.fetchAll().catch(notifyApiError)
   activitiesStore.fetchForRelated('contact', contactId).catch(notifyApiError)
 })
@@ -179,14 +185,27 @@ const roleTitleOptions = computed<Select[]>(() => {
 // optionally a Deal) — so "this contact's Projects" means the Projects of
 // the Company the contact belongs to. Fetched once that company id is known,
 // since the contact itself loads asynchronously.
-watch(() => contact.value?.company_id, (companyId) => {
-  if (companyId) projectsStore.fetchForCompany(companyId).catch(notifyApiError)
+const companyDeals = ref<Deal[]>([])
+watch(() => contact.value?.company_id, async (companyId) => {
+  if (!companyId) return
+  projectsStore.fetchForCompany(companyId).catch(notifyApiError)
+  // Scoped to this Contact's own Company, not a blanket dealsStore.fetchAll()
+  // — that cache is capped at 200 rows, newest-first, system-wide (see
+  // stores/companies.ts's fetchAll doc), so an older Deal belonging to this
+  // Company could otherwise be missing from "linked deals" below even though
+  // the Contact page itself loaded fine.
+  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
+    notifyApiError(err)
+    return { items: [] as Deal[] }
+  })
+  companyDeals.value = items
 }, { immediate: true })
 
-const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
-
-const linkedDeals = computed(() => dealsStore.items.filter(d => d.contact_id === contactId))
-const dealTitleById = (dealId: number) => dealsStore.items.find(d => d.id === dealId)?.title ?? `#${dealId}`
+const linkedDeals = computed(() => companyDeals.value.filter(d => d.contact_id === contactId))
+// A Project's linked deal always belongs to this same Company, so
+// companyDeals (fetched above) already covers it, same reasoning as
+// pages/crm/companies/[id].vue's own dealTitleById.
+const dealTitleById = (dealId: number) => companyDeals.value.find(d => d.id === dealId)?.title ?? `#${dealId}`
 const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
 
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not Production).
@@ -210,7 +229,7 @@ const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task =>
 
 const form = reactive({
   name: contact.value?.name || '',
-  company_id: contact.value ? String(contact.value.company_id) : '',
+  company_id: contact.value?.company_id ?? null as number | null,
   role_title: contact.value?.role_title || '',
   email: contact.value?.email || '',
   phone: contact.value?.phone || '',
@@ -222,7 +241,7 @@ const form = reactive({
 watch(contact, (value) => {
   if (!value) return
   form.name = value.name
-  form.company_id = String(value.company_id)
+  form.company_id = value.company_id
   form.role_title = value.role_title
   form.email = value.email
   form.phone = value.phone
@@ -236,7 +255,7 @@ const onSave = guard(async () => {
   try {
     await contactsStore.update(contact.value.id, {
       name: form.name,
-      company_id: Number(form.company_id),
+      company_id: form.company_id ?? 0,
       role_title: form.role_title,
       email: form.email,
       phone: form.phone,

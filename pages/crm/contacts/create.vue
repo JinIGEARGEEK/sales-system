@@ -25,13 +25,11 @@
             name="name"
             rules="required"
           />
-          <InputSelect
+          <InputCompanySelect
             v-model="form.company_id"
-            :options="companyOptions"
             :label="t('crm.contacts.create.company')"
             :placeholder="t('crm.contacts.create.companyPlaceholder')"
             name="company_id"
-            :disable="companyOptions.length === 0"
             rules="required"
           />
           <InputSelect
@@ -81,21 +79,21 @@ const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
-const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const jobTitleOptionsStore = useJobTitleOptionsStore()
 const goBack = useBackNavigation('/crm/contacts')
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  // Companies aren't preloaded here — InputCompanySelect below searches the
+  // server as the rep types instead of filtering a capped preloaded list
+  // (companiesStore.fetchAll() is capped at 200, newest-first, and can miss
+  // an older Company entirely — see api-system-spec.md's NFR-003 note).
   if (jobTitleOptionsStore.items.length === 0) jobTitleOptionsStore.fetchAll().catch(notifyApiError)
 })
 
-const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
-
 const form = reactive({
   name: '',
-  company_id: (route.query.company_id as string) || '',
+  company_id: route.query.company_id ? Number(route.query.company_id) : null as number | null,
   role_title: '',
   email: '',
   phone: '',
@@ -108,7 +106,7 @@ const onSubmit = guard(async () => {
   try {
     await contactsStore.add({
       name: form.name,
-      company_id: Number(form.company_id),
+      company_id: form.company_id ?? 0,
       role_title: form.role_title,
       email: form.email,
       phone: form.phone,

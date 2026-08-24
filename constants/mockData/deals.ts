@@ -50,13 +50,13 @@ export const BUSINESS_UNIT_FILTER_OPTIONS: Select[] = [
 
 // ── Duplicate detection (simple deal dedup) ─────────────────────────
 
-export const findDuplicateDeals = (deals: Deal[], companyId: string, contactId: string, excludeId?: number): Deal[] => {
+export const findDuplicateDeals = (deals: Deal[], companyId: string | number | null, contactId: string, excludeId?: number): Deal[] => {
   if (!companyId) return []
 
   return deals.filter((deal) => {
     if (deal.id === excludeId) return false
     if (deal.status !== 'open') return false
-    const companyMatch = String(deal.company_id) === companyId
+    const companyMatch = String(deal.company_id) === String(companyId)
     const contactMatch = !contactId || String(deal.contact_id) === contactId
     return companyMatch && contactMatch
   })

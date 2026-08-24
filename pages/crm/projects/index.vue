@@ -153,11 +153,10 @@ onMounted(async () => {
     productsStore.fetchAll().catch(notifyApiError).finally(() => { productsLoading.value = false })
   }
   if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  // Needed both for CrmAddProjectModal's optional Deal picker once a Company
-  // is chosen, and to resolve each row's own linked-Deal display below —
-  // fetched regardless of canManageProjects so Production (which can view
-  // but not manage) still sees a resolved Deal name, not a raw id/blank.
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  // No blanket dealsStore.fetchAll() here anymore — CrmAddProjectModal's own
+  // Deal picker scopes its fetch to the chosen Company itself now, and each
+  // row's linked-Deal display below (dealName) ensures its own Deal is
+  // loaded via the filteredProjects watcher just above it.
   // Needed for CrmAddProductModal's category picker.
   if (productCategoryOptionsStore.items.length === 0) productCategoryOptionsStore.fetchAll().catch(notifyApiError)
 })
@@ -187,6 +186,18 @@ const filteredProjects = computed(() => {
     return matchSearch && matchStatus
   })
 })
+
+// dealsStore.fetchAll() above is capped at 200 rows, newest-first (see
+// stores/companies.ts's fetchAll doc) and can miss an older Deal entirely —
+// ensure every visible Project's own linked Deal is actually loaded rather
+// than silently showing "#id" for one that happens to be older/uncached.
+watch(filteredProjects, (visibleProjects) => {
+  for (const project of visibleProjects) {
+    if (project.deal_id && !dealsStore.items.some(d => d.id === project.deal_id)) {
+      dealsStore.fetchOne(project.deal_id).catch(notifyApiError)
+    }
+  }
+}, { immediate: true })
 
 const projectRows = computed(() => filteredProjects.value.map(project => ({
   ...project,

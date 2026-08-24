@@ -30,11 +30,11 @@ export const useLeadsStore = defineStore('leads', {
       return this.items
     },
     // Server-paginated fetch used by the Leads list page (search/filter/sort/page
-    // all round-trip to GET /leads). Deliberately does NOT touch `items`/`total`/
-    // `page` above — those stay the "up to 200, everything" cache that duplicate
-    // checks, dropdowns, the pipeline board and the Lead detail page all rely on
-    // via fetchAll(). Mixing the two would silently truncate those callers to
-    // whatever page the list view last landed on.
+    // all round-trip to GET /leads) and by search-as-you-type pickers/search
+    // boxes. Deliberately does NOT touch `items`/`total`/`page` above — see
+    // stores/companies.ts's fetchAll for why that cache is capped and what
+    // still relies on it. Mixing the two would silently truncate those
+    // callers to whatever page the list view last landed on.
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Lead[]>>('/leads', { params })
@@ -44,6 +44,16 @@ export const useLeadsStore = defineStore('leads', {
         page: response.data.page,
         totalPage: response.data.total_page,
       }
+    },
+    // Loads a single Lead by id directly (GET /leads/:id) — for the Lead
+    // detail page and anything else that needs one specific Lead regardless
+    // of whether it made fetchAll's capped 200-row cache.
+    async fetchOne (id: number): Promise<Lead> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`)
+      const fetched = parseDates(response.data.data)
+      this.items = [...this.items.filter(l => l.id !== id), fetched]
+      return fetched
     },
     // score/classification are server-computed (FR-CRM-006/007's
     // computeAndClassify runs on every Create/Update) — excluded from the

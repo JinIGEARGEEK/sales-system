@@ -209,11 +209,24 @@ onMounted(async () => {
     notifyApiError(err)
     return
   }
-  if (dealsStore.items.length === 0) await dealsStore.fetchAll().catch(notifyApiError)
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket
+  // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
+  // newest-first (see stores/companies.ts's fetchAll doc), so an older
+  // Deal/Company/Contact linked to this Quote could otherwise never resolve
+  // here even though the Quote itself loaded fine.
+  if (!dealsStore.items.some(d => d.id === quote.value!.deal_id)) {
+    await dealsStore.fetchOne(quote.value!.deal_id).catch(notifyApiError)
+  }
+  if (deal.value) {
+    if (!companiesStore.items.some(c => c.id === deal.value!.company_id)) {
+      companiesStore.fetchOne(deal.value.company_id).catch(notifyApiError)
+    }
+    if (!contactsStore.items.some(c => c.id === deal.value!.contact_id)) {
+      contactsStore.fetchOne(deal.value.contact_id).catch(notifyApiError)
+    }
+    projectsStore.fetchForCompany(deal.value.company_id).catch(notifyApiError)
+  }
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
-  if (projectsStore.items.length === 0) projectsStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('quote', quoteId).catch(notifyApiError)
 })
 

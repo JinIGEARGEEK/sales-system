@@ -5,6 +5,16 @@
 export const useBusinessUnitItemOptions = (businessUnit: Ref<string>, companyId: Ref<number | null>) => {
   const projectsStore = useProjectsStore()
   const productsStore = useProductsStore()
+  const { notifyApiError } = useApiErrorNotifier()
+
+  // Scoped to this Company (fetchForCompany), not a blanket
+  // projectsStore.fetchAll() — that cache is capped at 200 rows,
+  // newest-first, system-wide (see stores/companies.ts's fetchAll doc), so
+  // an older Project belonging to this Company could otherwise be missing
+  // from the list below even if some other page already warmed the store.
+  watch(companyId, (id) => {
+    if (id !== null) projectsStore.fetchForCompany(id).catch(notifyApiError)
+  }, { immediate: true })
 
   return computed(() => {
     if (businessUnit.value === 'Project') {
