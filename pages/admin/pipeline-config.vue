@@ -86,8 +86,17 @@
               class="flex-1"
             >
               <template #label-suffix>
-                <UTooltip :text="t('admin.pipelineConfig.salesQuota.mqlThresholdHelp')" :content="{ side: 'top' }">
-                  <UIcon name="material-symbols:info-outline" class="ml-1 size-3 shrink-0 align-middle text-[var(--color-gray)]" />
+                <UTooltip
+                  :text="t('admin.pipelineConfig.salesQuota.mqlThresholdHelp')"
+                  :content="{ side: 'top' }"
+                  :open="mqlThresholdTooltipOpen"
+                  @update:open="mqlThresholdTooltipOpen = $event"
+                >
+                  <UIcon
+                    name="material-symbols:info-outline"
+                    class="ml-1 size-3 shrink-0 cursor-pointer align-middle text-[var(--color-gray)]"
+                    @click="mqlThresholdTooltipOpen = !mqlThresholdTooltipOpen"
+                  />
                 </UTooltip>
               </template>
             </InputText>
@@ -548,6 +557,11 @@ const salesQuotaUpdatedAt = computed(() => appSettings.value?.updated_at ?? null
 // used instead of one long scrolling page of stacked UCards now that this
 // page has grown to 6 config sections.
 const activeTab = ref('stages')
+
+// UTooltip is hover/focus-only by default (reka-ui TooltipRoot) — controlling
+// `open` ourselves lets a click toggle it too, on top of the normal hover
+// behavior (hovering still fires update:open the same way).
+const mqlThresholdTooltipOpen = ref(false)
 const tabItems = computed(() => [
   { label: t('admin.pipelineConfig.tabs.stages'), value: 'stages' },
   { label: t('admin.pipelineConfig.tabs.revenue'), value: 'revenue' },
