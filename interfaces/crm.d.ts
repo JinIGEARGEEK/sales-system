@@ -91,7 +91,14 @@ interface TeamMember {
 interface Lead {
   id: number
   name: string
-  company_name: string
+  // Replaced free-text company_name 2026-08-24 — a real Company FK, same as
+  // Deal.company_id/Contact.company_id. Nullable (unlike Deal/Contact): a
+  // Lead can still exist with no company picked, matching company_name's
+  // old optional-ness. Set via InputCompanySelect on the create/edit pages —
+  // picking an existing Company links to it directly; typing a new name
+  // creates a real Company (POST /companies) and links to that instead of
+  // ever staying a free-text stand-in.
+  company_id: number | null
   email: string
   phone: string
   source: LeadSource

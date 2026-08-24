@@ -110,8 +110,8 @@ const resultGroups = computed(() => {
     {
       key: 'leads',
       label: t('crm.components.globalSearch.leads'),
-      items: leadsStore.items.filter(lead => matches(lead.name, lead.company_name)).slice(0, RESULT_LIMIT)
-        .map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: lead.company_name })),
+      items: leadsStore.items.filter(lead => matches(lead.name, companiesStore.nameById(lead.company_id))).slice(0, RESULT_LIMIT)
+        .map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: companiesStore.nameById(lead.company_id) })),
     },
   ]
 })

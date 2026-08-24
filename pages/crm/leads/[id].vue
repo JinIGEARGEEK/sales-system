@@ -45,7 +45,7 @@
         <Form @submit="onSave">
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.name" :label="t('crm.leads.detail.fullName')" name="name" rules="required" />
-            <InputText v-model="form.company_name" :label="t('crm.leads.detail.companyName')" name="company_name" />
+            <InputCompanySelect v-model="form.company_id" :label="t('crm.leads.detail.companyName')" name="company_id" />
             <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" rules="required" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
             <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
@@ -150,7 +150,7 @@ const onRemoveAttachment = async (id: number) => {
 
 const form = reactive({
   name: lead.value?.name || '',
-  company_name: lead.value?.company_name || '',
+  company_id: lead.value?.company_id ?? null as number | null,
   email: lead.value?.email || '',
   phone: lead.value?.phone || '',
   source: lead.value?.source || '',
@@ -164,7 +164,7 @@ const form = reactive({
 watch(lead, (value) => {
   if (!value) return
   form.name = value.name
-  form.company_name = value.company_name
+  form.company_id = value.company_id ?? null
   form.email = value.email
   form.phone = value.phone
   form.source = value.source
@@ -180,7 +180,7 @@ const onSave = guard(async () => {
   try {
     await leadsStore.update(lead.value.id, {
       name: form.name,
-      company_name: form.company_name,
+      company_id: form.company_id,
       email: form.email,
       phone: form.phone,
       source: form.source as LeadSource,
@@ -203,7 +203,7 @@ const onMarkSql = async () => {
   try {
     await leadsStore.update(lead.value.id, {
       name: form.name,
-      company_name: form.company_name,
+      company_id: form.company_id,
       email: form.email,
       phone: form.phone,
       source: form.source as LeadSource,

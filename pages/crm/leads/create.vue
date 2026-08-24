@@ -38,7 +38,12 @@
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <InputText v-model="form.name" :label="t('crm.leads.create.fullName')" :placeholder="t('crm.leads.create.fullNamePlaceholder')" name="name" rules="required" />
-          <InputText v-model="form.company_name" :label="t('crm.leads.create.companyName')" :placeholder="t('crm.leads.create.companyNamePlaceholder')" name="company_name" />
+          <InputCompanySelect
+            v-model="form.company_id"
+            :label="t('crm.leads.create.companyName')"
+            :placeholder="t('crm.leads.create.companyNamePlaceholder')"
+            name="company_id"
+          />
           <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" rules="required" />
           <InputText v-model="form.phone" :label="t('crm.leads.create.phone')" :placeholder="t('crm.leads.create.phonePlaceholder')" name="phone" />
           <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
@@ -86,11 +91,13 @@ const goBack = useBackNavigation('/crm/leads')
 onMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  // Companies aren't fetched here — InputCompanySelect below loads its own
+  // options and handles creating a new Company on demand.
 })
 
 const form = reactive({
   name: '',
-  company_name: '',
+  company_id: null as number | null,
   email: '',
   phone: '',
   source: '',
@@ -107,7 +114,7 @@ const onSubmit = guard(async () => {
   try {
     await leadsStore.add({
       name: form.name,
-      company_name: form.company_name,
+      company_id: form.company_id,
       email: form.email,
       phone: form.phone,
       source: form.source as LeadSource,

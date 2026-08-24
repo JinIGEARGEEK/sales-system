@@ -22,7 +22,16 @@ export const useCompaniesStore = defineStore('companies', {
     trashPage: 1,
   }),
   getters: {
-    nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
+    // Accepts null/undefined (not just number) so callers can pass an
+    // optional FK straight through — e.g. Lead.company_id, which unlike
+    // Deal/Contact's own company_id can be unset — without an extra guard
+    // at every call site; a no-match (including a null/undefined id) falls
+    // back to '-'.
+    nameById: state => (id: number | null | undefined) => state.items.find(c => c.id === id)?.name || '-',
+    // Case/whitespace-insensitive exact-match lookup — used by
+    // components/Input/CompanySelect.vue to reuse an existing Company
+    // instead of creating a near-duplicate when a typed name already
+    // matches one differently cased/padded.
     findByName: state => (name: string) => state.items.find(c => c.name.trim().toLowerCase() === name.trim().toLowerCase()),
   },
   actions: {
