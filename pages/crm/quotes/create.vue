@@ -68,12 +68,16 @@ const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
 const goBack = useBackNavigation('/crm/deals')
 
-onMounted(() => {
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
-})
-
 const dealId = computed(() => Number(route.query.deal_id))
 const deal = computed(() => dealsStore.items.find(d => d.id === dealId.value) ?? null)
+
+onMounted(() => {
+  // fetchOne, not fetchAll: this page only ever needs this one Deal (the
+  // one it's creating a Quote for), and fetchAll's 200-row cache
+  // (newest-first) can miss an older one entirely — the Deal pre-fill below
+  // would otherwise silently not happen for an older Deal.
+  if (!dealsStore.items.some(d => d.id === dealId.value)) dealsStore.fetchOne(dealId.value).catch(notifyApiError)
+})
 
 const form = reactive({
   validity_date: '',

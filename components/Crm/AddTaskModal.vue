@@ -15,13 +15,32 @@
               :options="RELATED_TYPE_OPTIONS"
               rules="required"
             />
-            <InputSelect
-              v-model="form.related_id"
+            <InputCompanySelect
+              v-if="form.related_type === 'company'"
+              v-model="relatedRecordId"
               :label="t('crm.components.addTaskModal.relatesToRecord')"
               :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
               name="related_id"
-              :options="relatedRecordOptions"
-              :disable="!form.related_type || relatedRecordOptions.length === 0"
+              rules="required"
+            />
+            <InputAsyncSelect
+              v-else-if="form.related_type === 'deal'"
+              v-model="relatedRecordId"
+              :search="searchDeals"
+              :resolve-selected="resolveDeal"
+              :label="t('crm.components.addTaskModal.relatesToRecord')"
+              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+              name="related_id"
+              rules="required"
+            />
+            <InputAsyncSelect
+              v-else-if="form.related_type === 'contact'"
+              v-model="relatedRecordId"
+              :search="searchContacts"
+              :resolve-selected="resolveContact"
+              :label="t('crm.components.addTaskModal.relatesToRecord')"
+              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+              name="related_id"
               rules="required"
             />
           </template>
@@ -80,25 +99,38 @@ const RELATED_TYPE_OPTIONS: Select[] = [
   { label: 'Company', value: 'company' },
 ]
 
-// Only fetched when the picker is actually shown — the 3 detail-page call
-// sites that don't pass showRelatedPicker have no reason to pull these.
+// None of Deal/Contact/Company are preloaded here anymore — each branch
+// above searches the server as the rep types instead of filtering a capped
+// preloaded list (fetchAll() is capped at 200 rows, newest-first, and can
+// miss an older record entirely — see stores/companies.ts's fetchAll doc for
+// the full explanation).
 const dealsStore = useDealsStore()
 const contactsStore = useContactsStore()
-const companiesStore = useCompaniesStore()
-const { notifyApiError } = useApiErrorNotifier()
 
-onMounted(() => {
-  if (!props.showRelatedPicker) return
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-})
+const searchDeals = async (term: string): Promise<Select[]> => {
+  const { items } = await dealsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'title' })
+  return items.map(d => ({ label: d.title, value: d.id }))
+}
+const searchContacts = async (term: string): Promise<Select[]> => {
+  const { items } = await contactsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
+  return items.map(c => ({ label: c.name, value: c.id }))
+}
+const resolveDeal = async (id: number): Promise<Select | null> => {
+  const deal = await dealsStore.fetchOne(id)
+  return { label: deal.title, value: deal.id }
+}
+const resolveContact = async (id: number): Promise<Select | null> => {
+  const contact = await contactsStore.fetchOne(id)
+  return { label: contact.name, value: contact.id }
+}
 
-const relatedRecordOptions = computed<Select[]>(() => {
-  if (form.related_type === 'deal') return dealsStore.items.map(d => ({ label: d.title, value: String(d.id) }))
-  if (form.related_type === 'contact') return contactsStore.items.map(c => ({ label: c.name, value: String(c.id) }))
-  if (form.related_type === 'company') return companiesStore.items.map(c => ({ label: c.name, value: String(c.id) }))
-  return []
+// Every branch above resolves to a number, but form.related_id stays a plain
+// string — this proxy is the one place that converts between the two, so
+// submit's Number(form.related_id) keeps working unchanged regardless of
+// which related_type was picked.
+const relatedRecordId = computed<number | null>({
+  get: () => form.related_id ? Number(form.related_id) : null,
+  set: value => { form.related_id = value ? String(value) : '' },
 })
 
 const emptyForm = () => ({

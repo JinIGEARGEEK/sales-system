@@ -38,7 +38,7 @@
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <InputText v-model="form.title" :label="t('crm.deals.create.dealTitle')" :placeholder="t('crm.deals.create.dealTitlePlaceholder')" name="title" rules="required" />
-          <InputSelect v-model="form.company_id" :options="companyOptions" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" :disable="companyOptions.length === 0" rules="required" />
+          <InputCompanySelect v-model="form.company_id" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" rules="required" />
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
           <InputText v-model.number="form.value" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" type="number" rules="required" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
@@ -86,35 +86,57 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 const dealsStore = useDealsStore()
-const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
 const pipelineStagesStore = usePipelineStagesStore()
 const goBack = useBackNavigation('/crm/deals')
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
-  if (projectsStore.items.length === 0) projectsStore.fetchAll().catch(notifyApiError)
+  // Companies aren't preloaded here — InputCompanySelect below searches the
+  // server as the rep types instead of filtering a capped preloaded list
+  // (companiesStore.fetchAll() is capped at 200, newest-first, and can miss
+  // an older Company entirely — see api-system-spec.md's NFR-003 note).
+  // Contacts/Deals/Projects (for business-unit items) are scoped-fetched
+  // per-Company below instead of a blanket fetchAll(), same reasoning.
+  if (leadOriginId.value && !leadsStore.items.some(l => l.id === leadOriginId.value)) {
+    leadsStore.fetchOne(leadOriginId.value).catch(notifyApiError)
+  }
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
 })
 
-// leadsStore.items is fetched asynchronously (onMounted), so on a fresh page
-// load (e.g. a direct/bookmarked URL, or a hard refresh) it's still empty at
-// setup time — this must stay reactive rather than a one-time lookup, or a
-// direct load would silently miss that this Deal originates from a Lead.
-const originatingLead = computed(() => route.query.lead_id
-  ? leadsStore.items.find(l => l.id === Number(route.query.lead_id))
+const leadOriginId = computed(() => route.query.lead_id ? Number(route.query.lead_id) : null)
+// leadsStore.items is fetched asynchronously (onMounted, above), so on a
+// fresh page load (e.g. a direct/bookmarked URL, or a hard refresh) it's
+// still empty at setup time — this must stay reactive rather than a
+// one-time lookup, or a direct load would silently miss that this Deal
+// originates from a Lead.
+const originatingLead = computed(() => leadOriginId.value
+  ? leadsStore.items.find(l => l.id === leadOriginId.value)
   : null)
 
-const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
-const contactOptions = computed(() => contactsStore.byCompany(form.company_id).map(c => ({ label: c.name, value: String(c.id) })))
+// Scoped to the currently-picked Company, not the global contactsStore
+// cache — see the onMounted comment above.
+const companyContacts = ref<Contact[]>([])
+const companyDeals = ref<Deal[]>([])
+watch(() => form.company_id, async (companyId) => {
+  if (!companyId) {
+    companyContacts.value = []
+    companyDeals.value = []
+    return
+  }
+  const [contactsResult, dealsResult] = await Promise.all([
+    contactsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => { notifyApiError(err); return { items: [] as Contact[] } }),
+    dealsStore.fetchList({ company_id: companyId, status: 'open', per_page: 200 }).catch((err) => { notifyApiError(err); return { items: [] as Deal[] } }),
+  ])
+  companyContacts.value = contactsResult.items
+  companyDeals.value = dealsResult.items
+}, { immediate: true })
+
+const contactOptions = computed(() => companyContacts.value.map(c => ({ label: c.name, value: String(c.id) })))
 
 const form = reactive({
   title: '',
-  company_id: (route.query.company_id as string) || '',
+  company_id: route.query.company_id ? Number(route.query.company_id) : null as number | null,
   contact_id: '',
   value: 0,
   stage: 'Lead',
@@ -124,13 +146,21 @@ const form = reactive({
   business_unit_item: '',
 })
 
-watch(originatingLead, (lead) => {
-  if (lead && !form.title) form.title = `${companiesStore.nameById(lead.company_id)} — New Opportunity`
+// The originating Lead's own Company may not be the one loaded/searched via
+// InputCompanySelect above (its search is driven by whatever the rep types,
+// not this Lead's link) — fetchOne guarantees nameById below resolves a
+// real name here regardless of companiesStore's own capped/lazy cache.
+watch(originatingLead, async (lead) => {
+  if (!lead) return
+  if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
+    await companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
+  }
+  if (!form.title) form.title = `${companiesStore.nameById(lead.company_id)} — New Opportunity`
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
-  computed(() => Number(form.company_id) || null),
+  computed(() => form.company_id),
 )
 
 // Switching business unit (or company) invalidates whichever item was picked
@@ -139,7 +169,7 @@ watch([() => form.business_unit, () => form.company_id], () => {
   form.business_unit_item = ''
 })
 
-const duplicateDeals = computed(() => findDuplicateDeals(dealsStore.items, form.company_id, form.contact_id))
+const duplicateDeals = computed(() => findDuplicateDeals(companyDeals.value, form.company_id, form.contact_id))
 
 // A contact picked before switching companies would otherwise belong to the
 // wrong company and get submitted anyway — clear it so the field always

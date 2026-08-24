@@ -62,17 +62,6 @@ const leadsStore = useLeadsStore()
 // via search even though those links are hidden from their sidebar.
 const canSearchSalesPipeline = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
-// GlobalSearch lives in the layout and mounts once per app load, so this is a
-// convenient single place to warm all four stores instead of only relying on
-// each CRM page's own on-mount fetch.
-onMounted(() => {
-  if (!canSearchSalesPipeline.value) return
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
-})
-
 const RESULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 2
 
@@ -80,10 +69,55 @@ const query = ref('')
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
 
-const matches = (...values: string[]) => {
-  const needle = query.value.trim().toLowerCase()
-  return values.some(value => value.toLowerCase().includes(needle))
-}
+// All four groups search the server live as the rep types (useDebouncedSearch)
+// instead of filtering a preloaded-but-capped store cache — fetchAll() is
+// capped at 200 rows, newest-first, per entity (see stores/companies.ts's
+// fetchAll doc for the full explanation), so an older Deal/Company/Contact/
+// Lead would otherwise never surface here at all, no matter how exactly its
+// name was typed. This also means the Leads group properly matches by
+// Company name again (GET /leads?search= joins to companies server-side),
+// which a purely client-side filter here never could reliably do anyway.
+const shouldSearch = (term: string) => term.trim().length >= MIN_QUERY_LENGTH && canSearchSalesPipeline.value
+
+const dealSearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await dealsStore.fetchList({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch })
+
+const companySearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await companiesStore.fetchList({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch })
+
+const contactSearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await contactsStore.fetchList({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch })
+
+const leadSearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await leadsStore.fetchList({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch })
+
+// One input drives all four independent debounced searches.
+watch(query, (value) => {
+  dealSearch.term.value = value
+  companySearch.term.value = value
+  contactSearch.term.value = value
+  leadSearch.term.value = value
+})
+
+// The Leads group's sublabel needs each visible lead's Company name —
+// companiesStore.items isn't broadly preloaded anymore, so ensure each
+// result's Company is actually loaded rather than silently showing "-" for
+// one that happens to be older/uncached.
+watch(leadSearch.results, (visibleLeads) => {
+  for (const lead of visibleLeads) {
+    if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
+      companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
+    }
+  }
+})
 
 const resultGroups = computed(() => {
   if (query.value.trim().length < MIN_QUERY_LENGTH || !canSearchSalesPipeline.value) return []
@@ -92,26 +126,22 @@ const resultGroups = computed(() => {
     {
       key: 'deals',
       label: t('crm.components.globalSearch.deals'),
-      items: dealsStore.items.filter(deal => matches(deal.title)).slice(0, RESULT_LIMIT)
-        .map(deal => ({ path: `/crm/deals/${deal.id}`, label: deal.title, sublabel: deal.stage })),
+      items: dealSearch.results.value.map(deal => ({ path: `/crm/deals/${deal.id}`, label: deal.title, sublabel: deal.stage })),
     },
     {
       key: 'companies',
       label: t('crm.components.globalSearch.companies'),
-      items: companiesStore.items.filter(company => matches(company.name)).slice(0, RESULT_LIMIT)
-        .map(company => ({ path: `/crm/companies/${company.id}`, label: company.name, sublabel: company.industry })),
+      items: companySearch.results.value.map(company => ({ path: `/crm/companies/${company.id}`, label: company.name, sublabel: company.industry })),
     },
     {
       key: 'contacts',
       label: t('crm.components.globalSearch.contacts'),
-      items: contactsStore.items.filter(contact => matches(contact.name)).slice(0, RESULT_LIMIT)
-        .map(contact => ({ path: `/crm/contacts/${contact.id}`, label: contact.name, sublabel: contact.role_title })),
+      items: contactSearch.results.value.map(contact => ({ path: `/crm/contacts/${contact.id}`, label: contact.name, sublabel: contact.role_title })),
     },
     {
       key: 'leads',
       label: t('crm.components.globalSearch.leads'),
-      items: leadsStore.items.filter(lead => matches(lead.name, companiesStore.nameById(lead.company_id))).slice(0, RESULT_LIMIT)
-        .map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: companiesStore.nameById(lead.company_id) })),
+      items: leadSearch.results.value.map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: companiesStore.nameById(lead.company_id) })),
     },
   ]
 })

@@ -30,10 +30,11 @@ export const useDealsStore = defineStore('deals', {
       this.page = response.data.page
       return this.items
     },
-    // Server-paginated fetch used by the Deals list (table) view. Deliberately
-    // does NOT touch `items`/`total`/`page` above — those stay the "up to 200,
-    // everything" cache the Kanban board, Deal detail page, dropdowns and
-    // duplicate-deal checks all rely on via fetchAll().
+    // Server-paginated fetch used by the Deals list (table) view and by
+    // search-as-you-type pickers/search boxes. Deliberately does NOT touch
+    // `items`/`total`/`page` above — those stay the "up to 200, newest-first"
+    // cache that fetchAll() populates (capped by the backend's own per-page
+    // ceiling — see stores/companies.ts's fetchAll for the full explanation).
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Deal[]>>('/deals', { params })
@@ -43,6 +44,18 @@ export const useDealsStore = defineStore('deals', {
         page: response.data.page,
         totalPage: response.data.total_page,
       }
+    },
+    // Loads a single Deal by id directly (GET /deals/:id) — for the Deal
+    // detail page (useCurrentDeal) and anything else that needs one specific
+    // Deal regardless of whether it made fetchAll's capped 200-row cache.
+    // Upserts into `items` so every getter/computed built over `items`
+    // immediately picks it up too.
+    async fetchOne (id: number): Promise<Deal> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Deal>>(`/deals/${id}`)
+      const fetched = parseDates(response.data.data)
+      this.items = [...this.items.filter(d => d.id !== id), fetched]
+      return fetched
     },
     async add (deal: Omit<Deal, 'id'>): Promise<Deal> {
       const { $api } = useNuxtApp()

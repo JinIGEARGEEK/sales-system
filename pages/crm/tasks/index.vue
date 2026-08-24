@@ -109,6 +109,10 @@ const businessUnitFilter = ref('all')
 // Company, api-system-spec.md §7.6). A task related to a Contact/Company
 // (no Deal at all) can't match a specific Business Unit and is excluded once
 // this filter is anything but "all".
+// Relies on dealsStore.items already having this Deal — resolveRelated
+// (called just below, in filteredTasks' own .map over the same tasks) fires
+// a fetchOne for any related Deal not already loaded, so this naturally
+// re-evaluates correctly once that resolves, without needing its own fetch.
 const matchesBusinessUnit = (task: Task) => {
   if (businessUnitFilter.value === 'all') return true
   if (task.related_type !== 'deal') return false

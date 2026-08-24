@@ -35,6 +35,15 @@ export const useCompaniesStore = defineStore('companies', {
     findByName: state => (name: string) => state.items.find(c => c.name.trim().toLowerCase() === name.trim().toLowerCase()),
   },
   actions: {
+    // Capped at 200 (the backend's own per-page ceiling, internal/utils/
+    // response.go — anything higher silently falls back to the default 20,
+    // it doesn't raise the cap) and ordered newest-first, so past ~200
+    // companies this misses older ones — every plain `companyOptions =
+    // computed(() => companiesStore.items.map(...))`-style dropdown built
+    // from `items` inherits that limit. Fine for a picker whose full list
+    // fits comfortably under 200; anything that must find one *specific*
+    // Company regardless of scale (the detail page, CompanySelect) uses
+    // fetchOne below instead.
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Company[]>>('/companies', {
@@ -45,10 +54,10 @@ export const useCompaniesStore = defineStore('companies', {
       this.page = response.data.page
       return this.items
     },
-    // Server-paginated fetch used by the Companies list page. Deliberately does
-    // NOT touch `items`/`total`/`page` above — those stay the "up to 200,
-    // everything" cache that dropdowns, the Company detail page and the
-    // nameById/findByName getters all rely on via fetchAll().
+    // Server-paginated fetch used by the Companies list page and by
+    // CompanySelect's search-as-you-type. Deliberately does NOT touch
+    // `items`/`total`/`page` above — see fetchAll's own doc for why that
+    // cache is capped and what still relies on it.
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Company[]>>('/companies', { params })
@@ -58,6 +67,19 @@ export const useCompaniesStore = defineStore('companies', {
         page: response.data.page,
         totalPage: response.data.total_page,
       }
+    },
+    // Loads a single Company by id directly (GET /companies/:id) — for
+    // anything that needs one specific Company regardless of whether it
+    // made fetchAll's capped 200-row cache (nameById/findByName/the
+    // dropdowns still built from `items` can all miss a company past that
+    // cutoff; this doesn't). Upserts into `items` so nameById and any
+    // v-for over `items` immediately pick it up too.
+    async fetchOne (id: number): Promise<Company> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Company>>(`/companies/${id}`)
+      const fetched = parseDates(response.data.data)
+      this.items = [...this.items.filter(c => c.id !== id), fetched]
+      return fetched
     },
     async add (company: Omit<Company, 'id'>): Promise<Company> {
       const { $api } = useNuxtApp()

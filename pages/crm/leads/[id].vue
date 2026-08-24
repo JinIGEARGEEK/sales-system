@@ -118,7 +118,10 @@ const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
 
 onMounted(() => {
-  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
+  // fetchOne, not fetchAll: this page only ever needs this one Lead, and
+  // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
+  // a Lead past that cutoff would otherwise never load here at all.
+  if (!leadsStore.items.some(l => l.id === leadId)) leadsStore.fetchOne(leadId).catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })

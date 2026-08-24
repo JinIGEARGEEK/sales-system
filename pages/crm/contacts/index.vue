@@ -36,11 +36,16 @@
             />
           </div>
           <div class="w-full sm:w-48">
-            <InputSelect
+            <USelectMenu
               v-model="companyFilter"
-              :options="[{ label: t('crm.contacts.index.allCompanies'), value: 'all' }, ...companyOptions]"
+              v-model:search-term="companySearchTerm"
+              :items="[{ label: t('crm.contacts.index.allCompanies'), value: 'all' }, ...companyOptions]"
+              ignore-filter
+              value-key="value"
+              label-key="label"
+              :loading="companySearching"
               :placeholder="t('crm.contacts.index.companyPlaceholder')"
-              name="companyFilter"
+              class="w-full"
             />
           </div>
           <div class="w-full sm:w-40">
@@ -109,11 +114,11 @@ const canExport = computed(() => hasRole(...MANAGER_ROLES))
 
 onMounted(() => {
   fetch()
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // A full (up to 200) fetch is kept purely to derive the tag filter's option
   // list below — there's no "distinct tags" endpoint, so this stays separate
   // from the server-paginated `rows` that the table itself renders.
   if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  runCompanySearch('')
 })
 
 const search = ref('')
@@ -124,7 +129,24 @@ const showImport = ref(false)
 
 const onExport = () => downloadCsvBlob('/contacts/export', 'contacts.csv')
 
-const companyOptions = computed(() => companiesStore.items.map(c => ({ label: c.name, value: String(c.id) })))
+// The Company filter searches the server as the rep types instead of
+// filtering a capped preloaded list (companiesStore.fetchAll() is capped at
+// 200 rows, newest-first, and can miss an older Company entirely — see
+// stores/companies.ts's fetchAll doc for the full explanation) — same
+// pattern as components/Input/CompanySelect.vue, just inlined here since
+// this is a filter (with an "All Companies" sentinel option) rather than a
+// plain Company picker.
+const {
+  term: companySearchTerm,
+  loading: companySearching,
+  results: companySearchResults,
+  run: runCompanySearch,
+} = useDebouncedSearch(async (term: string) => {
+  const { items } = await companiesStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
+  return items
+})
+const companyOptions = computed<Select[]>(() => companySearchResults.value.map(c => ({ label: c.name, value: String(c.id) })))
+
 const tagOptions = computed(() => [...new Set(contactsStore.items.flatMap(c => c.tags))].sort().map(tag => ({ label: tag, value: tag })))
 
 // Maps a TableData column field to the `sort` query param GET /contacts
@@ -164,6 +186,18 @@ const {
 
 watch(search, () => refetchDebounced())
 watch([companyFilter, statusFilter, tagFilter], () => refetchFromStart())
+
+// Companies aren't broadly preloaded anymore (see the filter's own comment
+// above), so the Company column needs each visible page's Contacts' own
+// companies fetched on demand — otherwise nameById would show "-" for any
+// Company outside whatever the filter search happened to load.
+watch(rows, (visibleContacts) => {
+  for (const contact of visibleContacts) {
+    if (!companiesStore.items.some(c => c.id === contact.company_id)) {
+      companiesStore.fetchOne(contact.company_id).catch(notifyApiError)
+    }
+  }
+})
 
 const displayContacts = computed(() => rows.value.map(contact => ({
   ...contact,

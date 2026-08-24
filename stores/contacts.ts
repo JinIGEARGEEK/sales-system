@@ -22,9 +22,12 @@ export const useContactsStore = defineStore('contacts', {
   }),
   getters: {
     nameById: state => (id: number) => state.items.find(c => c.id === id)?.name || '-',
-    // Accepts number or string so callers backed by a select's string v-model
-    // (e.g. a company_id form field) don't need to coerce first.
-    byCompany: state => (companyId: number | string) => state.items.filter(c => String(c.company_id) === String(companyId)),
+    // Accepts number, string, or null/undefined so callers backed by either a
+    // select's string v-model or InputCompanySelect's number|null one (e.g. a
+    // company_id form field) don't need to coerce first. A null/undefined
+    // companyId matches nothing (no Contact has a null company_id) rather
+    // than throwing.
+    byCompany: state => (companyId: number | string | null | undefined) => state.items.filter(c => String(c.company_id) === String(companyId)),
   },
   actions: {
     async fetchAll (params?: Record<string, unknown>) {
@@ -37,10 +40,10 @@ export const useContactsStore = defineStore('contacts', {
       this.page = response.data.page
       return this.items
     },
-    // Server-paginated fetch used by the Contacts list page. Deliberately does
-    // NOT touch `items`/`total`/`page` above — those stay the "up to 200,
-    // everything" cache that dropdowns, the Contact detail page and
-    // nameById/byCompany getters all rely on via fetchAll().
+    // Server-paginated fetch used by the Contacts list page and by
+    // search-as-you-type pickers/search boxes. Deliberately does NOT touch
+    // `items`/`total`/`page` above — see stores/companies.ts's fetchAll for
+    // why that cache is capped and what still relies on it.
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Contact[]>>('/contacts', { params })
@@ -50,6 +53,16 @@ export const useContactsStore = defineStore('contacts', {
         page: response.data.page,
         totalPage: response.data.total_page,
       }
+    },
+    // Loads a single Contact by id directly (GET /contacts/:id) — for the
+    // Contact detail page and anything else that needs one specific Contact
+    // regardless of whether it made fetchAll's capped 200-row cache.
+    async fetchOne (id: number): Promise<Contact> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Contact>>(`/contacts/${id}`)
+      const fetched = parseDates(response.data.data)
+      this.items = [...this.items.filter(c => c.id !== id), fetched]
+      return fetched
     },
     async add (contact: Omit<Contact, 'id'>): Promise<Contact> {
       const { $api } = useNuxtApp()

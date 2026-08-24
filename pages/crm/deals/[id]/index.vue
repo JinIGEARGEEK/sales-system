@@ -140,9 +140,20 @@ const isLostStage = (stage: string) => pipelineStagesStore.byName(stage)?.is_los
 const { dealId, deal } = useCurrentDeal()
 const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
+// Targeted fetchOne for this Deal's own Company/Contact, not a blanket
+// fetchAll() — those stores' fetchAll caches are capped at 200 rows,
+// newest-first (see stores/companies.ts's fetchAll doc), so an older
+// Company/Contact linked to this Deal could otherwise never resolve here
+// even though the Deal itself loaded fine. Deal loads asynchronously
+// (useCurrentDeal), so this has to be a watcher, not a one-time onMounted
+// check.
+watch(deal, (value) => {
+  if (!value) return
+  if (!companiesStore.items.some(c => c.id === value.company_id)) companiesStore.fetchOne(value.company_id).catch(notifyApiError)
+  if (!contactsStore.items.some(c => c.id === value.contact_id)) contactsStore.fetchOne(value.contact_id).catch(notifyApiError)
+}, { immediate: true })
+
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
   if (canViewOwnerHistory.value) {

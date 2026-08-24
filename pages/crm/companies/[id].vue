@@ -291,9 +291,17 @@ const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
 
 onMounted(() => {
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  // fetchOne, not fetchAll: this page only ever needs this one Company, and
+  // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
+  // a company past that cutoff would otherwise never load here at all.
+  if (!companiesStore.items.some(c => c.id === companyId)) companiesStore.fetchOne(companyId).catch(notifyApiError)
+  // Scoped fetches for this Company's own Contacts/Deals, not a blanket
+  // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
+  // newest-first system-wide (see stores/companies.ts's fetchAll doc), so an
+  // older Contact/Deal belonging to this Company could otherwise be missing
+  // from its own tab here even though the Company page itself loaded fine.
+  fetchCompanyContacts()
+  fetchCompanyDeals()
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (industryOptionsStore.items.length === 0) industryOptionsStore.fetchAll().catch(notifyApiError)
   if (companySizeOptionsStore.items.length === 0) companySizeOptionsStore.fetchAll().catch(notifyApiError)
@@ -341,11 +349,28 @@ const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.attachments'), value: 'attachments' },
 ])
 
-const companyContacts = computed(() => contactsStore.byCompany(companyId))
-const companyDeals = computed(() => dealsStore.items.filter(d => d.company_id === companyId))
+const companyContacts = ref<Contact[]>([])
+const fetchCompanyContacts = async () => {
+  const { items } = await contactsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
+    notifyApiError(err)
+    return { items: [] as Contact[] }
+  })
+  companyContacts.value = items
+}
+
+const companyDeals = ref<Deal[]>([])
+const fetchCompanyDeals = async () => {
+  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
+    notifyApiError(err)
+    return { items: [] as Deal[] }
+  })
+  companyDeals.value = items
+}
 // Resolves a Project's deal_id (settable at creation, never surfaced anywhere
-// afterward until now) to its Deal title for display on the Projects tab.
-const dealTitleById = (dealId: number) => dealsStore.items.find(d => d.id === dealId)?.title ?? `#${dealId}`
+// afterward until now) to its Deal title for display on the Projects tab —
+// a Project's linked Deal always belongs to this same Company, so
+// companyDeals (this Company's own deals, fetched above) already covers it.
+const dealTitleById = (dealId: number) => companyDeals.value.find(d => d.id === dealId)?.title ?? `#${dealId}`
 const { openDeals, openValue: openDealsValue } = useDealMetrics(() => companyDeals.value)
 const companyActivity = computed(() => activitiesStore.forRelated('company', companyId))
 const lastContact = computed(() => {

@@ -88,10 +88,30 @@ const emit = defineEmits<{
 const productOptions = computed(() => props.products.map(p => ({ label: p.name, value: String(p.id) })))
 
 const dealsStore = useDealsStore()
-const dealOptions = computed(() => dealsStore.items
-  .filter(d => d.company_id === props.companyId)
-  .map(d => ({ label: d.title, value: String(d.id) })))
+const { notifyApiError } = useApiErrorNotifier()
+
+// Scoped to props.companyId, not the global dealsStore cache — fetchAll()
+// (wherever the parent warms it) is capped at 200 rows, newest-first (see
+// stores/companies.ts's fetchAll doc), so an older Deal belonging to this
+// Company could otherwise never appear in this picker at all.
+const companyDealResults = ref<Deal[]>([])
+watch(() => props.companyId, async (companyId) => {
+  if (!companyId) {
+    companyDealResults.value = []
+    return
+  }
+  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
+    notifyApiError(err)
+    return { items: [] as Deal[] }
+  })
+  companyDealResults.value = items
+}, { immediate: true })
+const dealOptions = computed(() => companyDealResults.value.map(d => ({ label: d.title, value: String(d.id) })))
+
 const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.record?.source_deal_id)?.title ?? `#${props.record?.source_deal_id}`)
+watch(() => props.record?.source_deal_id, (dealId) => {
+  if (dealId && !dealsStore.items.some(d => d.id === dealId)) dealsStore.fetchOne(dealId).catch(notifyApiError)
+}, { immediate: true })
 
 const emptyForm = () => ({
   product_id: props.record ? String(props.record.product_id) : '',

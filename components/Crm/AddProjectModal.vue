@@ -119,11 +119,33 @@ const filterCompanyId = computed(() => {
   return props.companyId ?? null
 })
 
-const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
+const { notifyApiError } = useApiErrorNotifier()
 
-const dealOptions = computed(() => dealsStore.items
-  .filter(d => d.company_id === filterCompanyId.value)
-  .map(d => ({ label: d.title, value: String(d.id) })))
+const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
+watch(() => props.project?.deal_id, (dealId) => {
+  // dealsStore.fetchAll() (wherever the parent warms it) is capped at 200
+  // rows, newest-first (see stores/companies.ts's fetchAll doc) — ensure
+  // this specific Deal is loaded rather than silently showing "#id" for one
+  // that happens to be older/uncached.
+  if (dealId && !dealsStore.items.some(d => d.id === dealId)) dealsStore.fetchOne(dealId).catch(notifyApiError)
+}, { immediate: true })
+
+// Scoped to filterCompanyId, not the global dealsStore cache — same reason
+// as linkedDealTitle above; this is a real picker, so an older Deal missing
+// here isn't just a display gap, it's one a rep can never actually pick.
+const companyDealResults = ref<Deal[]>([])
+watch(filterCompanyId, async (companyId) => {
+  if (!companyId) {
+    companyDealResults.value = []
+    return
+  }
+  const { items } = await dealsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => {
+    notifyApiError(err)
+    return { items: [] as Deal[] }
+  })
+  companyDealResults.value = items
+}, { immediate: true })
+const dealOptions = computed(() => companyDealResults.value.map(d => ({ label: d.title, value: String(d.id) })))
 
 // Existing Project names to suggest in the creatable name combobox — scoped
 // to the current company when one is known, otherwise the full cross-company
