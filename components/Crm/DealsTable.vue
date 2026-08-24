@@ -126,6 +126,20 @@ watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.c
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
+// companiesStore.fetchAll() above is a capped, point-in-time snapshot (see
+// its own doc in stores/companies.ts) — it can miss a Deal's Company outright
+// (past the 200-newest cutoff) or simply run before that Company existed.
+// Without this, nameById renders "-" for any such Deal even though
+// company_id is correctly set — same class of bug fixed for Contacts/Leads'
+// own Company column (pages/crm/contacts/index.vue, pages/crm/leads/index.vue).
+watch(rows, (visibleDeals) => {
+  for (const deal of visibleDeals) {
+    if (!companiesStore.items.some(c => c.id === deal.company_id)) {
+      companiesStore.fetchOne(deal.company_id).catch(notifyApiError)
+    }
+  }
+})
+
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
