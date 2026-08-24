@@ -154,6 +154,20 @@ watch(originatingLead, async (lead) => {
     await companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
   }
   if (!form.title) form.title = `${companiesStore.nameById(lead.company_id)} — New Opportunity`
+  // Pre-fill the actual Company field too, not just the title text — the
+  // Lead already carries a real company_id (FR-CRM-001's migration off
+  // free-text company_name), so a rep converting it shouldn't have to
+  // re-pick or re-create the same Company by hand. Contact is deliberately
+  // left for the rep to pick/create separately: a Lead has no linked
+  // Contact record of its own (only free-text name/email/phone), and
+  // leadsStore.convert() already creates one from that text server-side
+  // when contact_id is omitted (api-system-spec.md §3's Convert row).
+  if (!form.company_id && lead.company_id) form.company_id = lead.company_id
+  // Same reasoning: the Lead already has an owner, so the resulting Deal
+  // should default to the same rep instead of landing unassigned/on whoever
+  // the form happens to default to — the rep converting it can still
+  // reassign before saving if that's actually wrong.
+  if (!form.assigned_to && lead.assigned_to) form.assigned_to = String(lead.assigned_to)
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
