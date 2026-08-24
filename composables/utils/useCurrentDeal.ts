@@ -5,6 +5,14 @@
 // quote pre-fill and FR-CRM-048 auto-create-Project-on-Signed flow) — only
 // Tasks/Activity/Attachments still read `route.params.id` directly since they
 // never need the Deal record itself.
+
+// Module-scoped (not inside the composable function), so it's shared across
+// every call to useCurrentDeal() for the life of the app, not just within
+// one component — the layout and its currently-active child route each call
+// this composable independently for the same dealId on every page load, and
+// without this both would fire their own GET /deals/:id at once.
+const pendingDealFetches = new Set<number>()
+
 export const useCurrentDeal = () => {
   const route = useRoute()
   const dealsStore = useDealsStore()
@@ -19,8 +27,9 @@ export const useCurrentDeal = () => {
   // show "Deal not found" (pages/crm/deals/[id].vue) despite existing.
   // fetchOne is harmless to call even when already cached elsewhere (e.g.
   // from a list page) — it just re-fetches and upserts the same record.
-  if (!deal.value) {
-    dealsStore.fetchOne(dealId).catch(notifyApiError)
+  if (!deal.value && !pendingDealFetches.has(dealId)) {
+    pendingDealFetches.add(dealId)
+    dealsStore.fetchOne(dealId).catch(notifyApiError).finally(() => pendingDealFetches.delete(dealId))
   }
 
   return { dealId, deal }
