@@ -13,7 +13,7 @@
     >
       <div
         v-if="isSearchBarStuck"
-        class="pointer-events-none absolute inset-x-4 -bottom-px h-px bg-linear-to-r from-transparent via-(--color-secondary) to-transparent opacity-80 shadow-[0_0_8px_1px_var(--color-secondary)]"
+        class="pointer-events-none absolute inset-x-4 -bottom-px h-px bg-linear-to-r from-transparent via-[rgba(250,204,21,0.8)] to-[rgba(96,165,250,0.8)] opacity-80 shadow-[0_0_8px_1px_rgba(96,165,250,0.5)]"
       />
       <div class="relative">
         <UInput
@@ -212,9 +212,12 @@ onMounted(() => {
 
 // UCard's root defaults to `overflow-hidden`, which clips the search preview
 // dropdown below it — override that so the dropdown can extend past the card.
+// The stuck state picks up the same yellow-to-blue gradient ring used on the
+// sidebar nav items (see .guideline-search-card below), instead of a plain
+// blue ring.
 const searchBarCardUi = computed(() => ({
-  root: `overflow-visible ${isSearchBarStuck.value
-    ? 'bg-white/10 backdrop-blur-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_0_20px_rgba(96,165,250,0.4)] ring-1 ring-[rgba(96,165,250,0.4)]'
+  root: `overflow-visible guideline-search-card ${isSearchBarStuck.value
+    ? 'is-stuck bg-white/10 backdrop-blur-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)]'
     : ''}`,
   body: 'p-2 sm:p-3',
 }))
@@ -423,3 +426,36 @@ const highlightKeyTerms = (text: string) => escapeHtml(text).replace(
   '<mark class="bg-transparent text-inherit underline decoration-[var(--color-warning-toast)] decoration-2 underline-offset-2">$1</mark>',
 )
 </script>
+
+<style scoped>
+/*
+ * Search bar stuck border: same yellow-to-blue gradient ring treatment as
+ * the sidebar nav items (.sidebar-nav-link in layouts/default.vue), drawn
+ * via a mask-clipped ::before since border-color can't take a gradient.
+ * Only shown once the bar is actually floating (is-stuck).
+ *
+ * No `position: relative` here on purpose: this class lives on the same
+ * element as the `sticky` Tailwind utility (merged in via UCard's root ui +
+ * the component's own `class`). Both are single-class selectors of equal
+ * specificity, so adding `position: relative` here risked the cascade
+ * flipping `position: sticky` back to `relative` and breaking the float —
+ * `position: sticky` already establishes a positioning context for the
+ * absolutely-positioned ::before below, so it isn't needed anyway.
+ */
+.guideline-search-card.is-stuck {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
+}
+
+.guideline-search-card.is-stuck::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.9), rgba(96, 165, 250, 0.9));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+</style>
