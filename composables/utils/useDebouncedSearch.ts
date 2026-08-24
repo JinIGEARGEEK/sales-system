@@ -21,14 +21,25 @@ export const useDebouncedSearch = <T>(
   const loading = ref(false)
   const results = ref<T[]>([]) as Ref<T[]>
 
+  // Debouncing only prevents overlapping *requests* from typing quickly —
+  // it doesn't guarantee they *resolve* in the order they were sent. Two
+  // calls to run() (e.g. one fired by the debounce timer, one via the
+  // exposed `run` for an immediate initial search) can still race on the
+  // network, and a slower earlier response landing after a faster later one
+  // would otherwise silently overwrite the correct results with stale ones.
+  // requestId guards against that: only the most recently *started* call is
+  // allowed to write `results`.
+  let requestId = 0
   const run = async (value: string) => {
+    const id = ++requestId
     loading.value = true
     try {
-      results.value = await search(value)
+      const found = await search(value)
+      if (id === requestId) results.value = found
     } catch (err) {
-      notifyApiError(err)
+      if (id === requestId) notifyApiError(err)
     } finally {
-      loading.value = false
+      if (id === requestId) loading.value = false
     }
   }
 

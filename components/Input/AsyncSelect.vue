@@ -12,7 +12,7 @@
       <USelectMenu
         v-bind="field"
         :id="fieldId"
-        v-model:search-term="searchTerm"
+        v-model:search-term="term"
         :model-value="props.modelValue"
         :data-cy="dataCy"
         :placeholder="placeholder || undefined"
@@ -84,29 +84,15 @@ const props = defineProps({
 const emit = defineEmits(['update:model-value'])
 
 const { notifyApiError } = useApiErrorNotifier()
-const searching = ref(false)
-const searchTerm = ref('')
-const results = ref<Select[]>([])
 const selectedOption = ref<Select | null>(null)
 
-const runSearch = async (term: string) => {
-  searching.value = true
-  try {
-    results.value = await props.search(term)
-  } catch (err) {
-    notifyApiError(err)
-  } finally {
-    searching.value = false
-  }
-}
-
-// Debounced the same way useServerListPage's own search does (plain
-// setTimeout, no extra dependency) — fires on every keystroke otherwise.
-let debounceTimer: ReturnType<typeof setTimeout> | undefined
-watch(searchTerm, (term) => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => runSearch(term), 300)
-})
+// useDebouncedSearch also guards against responses resolving out of order
+// (a slow earlier request landing after a faster later one) — important
+// here since `run('')` below fires immediately on mount alongside whatever
+// the debounce timer schedules from typing.
+const { term, loading: searching, results, run: runSearch } = useDebouncedSearch(
+  (search: string) => props.search(search),
+)
 
 const ensureSelectedLoaded = async (id: number) => {
   if (results.value.some(o => o.value === id) || selectedOption.value?.value === id) return
