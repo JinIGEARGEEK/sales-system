@@ -24,6 +24,11 @@ export const useFormatter = () => {
 
   const priceFormat = (value: number) => numeric(value).format('0,0.00')
 
+  // Thousands-grouped, no decimals — for whole-number figures that aren't
+  // currency (sales quotas/targets, lead-scoring thresholds), as opposed to
+  // priceFormat's fixed 2-decimal money formatting.
+  const numberFormat = (value: number) => numeric(value).format('0,0')
+
   // Abbreviated form (77.8M, 1.6K) for dashboard-style at-a-glance figures —
   // exact precision belongs in a detail view/export, not a stat tile.
   const priceFormatCompact = (value: number) => numeric(value).format('0,0.[0]a').toUpperCase()
@@ -56,6 +61,7 @@ export const useFormatter = () => {
     phoneFormat,
     priceFormat,
     priceFormatCompact,
+    numberFormat,
     toBadge,
     severityColor,
     parseTags,

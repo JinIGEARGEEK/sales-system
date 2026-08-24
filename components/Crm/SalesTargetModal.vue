@@ -22,7 +22,7 @@
           />
           <InputText
             v-model.number="form.target_value"
-            type="number"
+            thousands
             :label="t('admin.pipelineConfig.salesTargets.targetValue')"
             name="target_value"
             rules="required"
