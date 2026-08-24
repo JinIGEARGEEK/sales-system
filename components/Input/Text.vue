@@ -5,7 +5,7 @@
     :rules="props.rules"
     :label="props.label"
     :data-cy="props.dataCy"
-    @update:model-value="emit('update:model-value', $event)"
+    @update:model-value="onUpdateModelValue($event)"
   >
     <template v-if="$slots['label-suffix']" #label-suffix>
       <slot name="label-suffix" />
@@ -131,11 +131,17 @@ const onInput = (event: KeyboardEvent) => {
   }
 }
 
+// Shared gate for BOTH update:model-value listeners in the template above —
+// UInput's own, and InputFormField's (fired by vee-validate's Field
+// component whenever its internal onInput handler runs, which happens on
+// every keystroke regardless of `thousands`). In thousands mode,
+// onThousandsInput below is the only source of truth for what gets emitted:
+// vee-validate's Field tracks its own value from the raw, mid-keystroke DOM
+// string (comma included, e.g. "1,0000"), and forwarding that straight
+// through would hand the parent's v-model a comma-laden string that
+// `v-model.number` can't parse (Number("1,0000") is NaN) — which is what
+// was silently resetting/dropping digits typed past 999.
 const onUpdateModelValue = (value: unknown) => {
-  // In thousands mode, onThousandsInput below is the only source of truth
-  // for what gets emitted — UInput's own update:model-value here would
-  // otherwise carry the comma-formatted *display* string (e.g. "3,000,000")
-  // straight up as if it were the real value.
   if (props.thousands) return
   emit('update:model-value', value)
 }
