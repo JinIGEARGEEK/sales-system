@@ -12,7 +12,7 @@
       <USelectMenu
         v-bind="field"
         :id="fieldId"
-        v-model:search-term="searchTerm"
+        v-model:search-term="term"
         :model-value="props.modelValue"
         :data-cy="dataCy"
         :placeholder="placeholder || undefined"
@@ -20,7 +20,7 @@
         ignore-filter
         value-key="value"
         label-key="label"
-        :create-item="{ when: 'empty' }"
+        :create-item="{ when: 'always', position: 'bottom' }"
         :loading="props.loading || searching || creating"
         :disabled="props.disable"
         :size="props.size"
@@ -45,6 +45,15 @@
 // USelectMenu's own `create-item` only ever synthesizes { [valueKey]:
 // searchTerm } — no label, no id — so creation is handled here instead of
 // letting it fall through: @create hands us the typed string directly.
+//
+// `when: 'always'` (not the default 'empty'): a rep typing a near-duplicate
+// name — e.g. "Custo Care" while "Custo Care Co., Ltd." already exists —
+// needs the create row available alongside the partial matches, not only
+// once the search comes back empty. onCreate's server-side dedup check below
+// still catches an exact (case/whitespace-insensitive) match before actually
+// creating, so choosing "create" on a true duplicate name reuses the
+// existing record rather than doubling it — this only widens *when* the
+// option is offered, not whether a duplicate can slip through.
 //
 // Search-as-you-type against the server (companiesStore.fetchList), not a
 // preloaded/cached list: companiesStore.items (via fetchAll) is capped at
@@ -78,29 +87,17 @@ const emit = defineEmits(['update:model-value'])
 const companiesStore = useCompaniesStore()
 const { notifyApiError } = useApiErrorNotifier()
 const creating = ref(false)
-const searching = ref(false)
-const searchTerm = ref('')
-const searchResults = ref<Company[]>([])
 
-const runSearch = async (term: string) => {
-  searching.value = true
-  try {
-    const { items } = await companiesStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
-    searchResults.value = items
-  } catch (err) {
-    notifyApiError(err)
-  } finally {
-    searching.value = false
-  }
-}
-
-// Debounced the same way useServerListPage's own search does (plain
-// setTimeout, no extra dependency) — fires on every keystroke otherwise.
-let debounceTimer: ReturnType<typeof setTimeout> | undefined
-watch(searchTerm, (term) => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => runSearch(term), 300)
-})
+// useDebouncedSearch also guards against responses resolving out of order
+// (a slow earlier request landing after a faster later one) — important
+// here since `run('')` below fires immediately on mount alongside whatever
+// the debounce timer schedules from typing.
+const { term, loading: searching, results: searchResults, run: runSearch } = useDebouncedSearch(
+  async (search: string) => {
+    const { items } = await companiesStore.fetchList({ search: search || undefined, per_page: 20, sort: 'name' })
+    return items
+  },
+)
 
 // Ensures whatever Company modelValue already points at (e.g. opening the
 // edit page for a Lead linked to one) is loaded and thus resolvable to a

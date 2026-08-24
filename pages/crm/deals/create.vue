@@ -114,26 +114,6 @@ const originatingLead = computed(() => leadOriginId.value
   ? leadsStore.items.find(l => l.id === leadOriginId.value)
   : null)
 
-// Scoped to the currently-picked Company, not the global contactsStore
-// cache — see the onMounted comment above.
-const companyContacts = ref<Contact[]>([])
-const companyDeals = ref<Deal[]>([])
-watch(() => form.company_id, async (companyId) => {
-  if (!companyId) {
-    companyContacts.value = []
-    companyDeals.value = []
-    return
-  }
-  const [contactsResult, dealsResult] = await Promise.all([
-    contactsStore.fetchList({ company_id: companyId, per_page: 200 }).catch((err) => { notifyApiError(err); return { items: [] as Contact[] } }),
-    dealsStore.fetchList({ company_id: companyId, status: 'open', per_page: 200 }).catch((err) => { notifyApiError(err); return { items: [] as Deal[] } }),
-  ])
-  companyContacts.value = contactsResult.items
-  companyDeals.value = dealsResult.items
-}, { immediate: true })
-
-const contactOptions = computed(() => companyContacts.value.map(c => ({ label: c.name, value: String(c.id) })))
-
 const form = reactive({
   title: '',
   company_id: route.query.company_id ? Number(route.query.company_id) : null as number | null,
@@ -145,6 +125,24 @@ const form = reactive({
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',
 })
+
+// Scoped to the currently-picked Company, not the global contactsStore/
+// dealsStore caches — see the onMounted comment above. useScopedFetch
+// guards against a slow request for a previously-picked Company resolving
+// after a faster one for the currently-picked Company and overwriting it
+// with stale data.
+const { result: companyContacts } = useScopedFetch(
+  computed(() => form.company_id),
+  async (companyId: number) => (await contactsStore.fetchList({ company_id: companyId, per_page: 200 })).items,
+  [] as Contact[],
+)
+const { result: companyDeals } = useScopedFetch(
+  computed(() => form.company_id),
+  async (companyId: number) => (await dealsStore.fetchList({ company_id: companyId, status: 'open', per_page: 200 })).items,
+  [] as Deal[],
+)
+
+const contactOptions = computed(() => companyContacts.value.map(c => ({ label: c.name, value: String(c.id) })))
 
 // The originating Lead's own Company may not be the one loaded/searched via
 // InputCompanySelect above (its search is driven by whatever the rep types,
