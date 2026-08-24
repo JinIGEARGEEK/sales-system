@@ -9,7 +9,7 @@
         :placeholder="t('crm.components.globalSearch.placeholder')"
         class="w-full"
         :ui="{
-          base: 'rounded-full bg-white/10 backdrop-blur-md border border-white/25 ring-1 ring-white/25 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:ring-white/40 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:bg-white/15 py-1.5',
+          base: 'rounded-full bg-white/10 backdrop-blur-md text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:bg-white/15 focus-visible:bg-white/15 py-1.5',
           leadingIcon: 'text-yellow-400',
         }"
         @focus="open = true"
@@ -163,10 +163,30 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 <style scoped>
 /*
- * Mirrors the sidebar nav-link treatment in layouts/default.vue: the same
- * yellow-to-blue accent glow on focus, so the search bar reads as part of
- * the same sidebar/topbar system rather than a generic input.
+ * Same yellow-to-blue gradient ring as pages/admin/guideline.vue's search
+ * bar (.guideline-search-card) and the sidebar nav-link treatment in
+ * layouts/default.vue — drawn via a mask-clipped ::before since border-color
+ * can't take a gradient. Always on here (this bar has no "stuck"/floating
+ * state to gate it behind, unlike guideline's), with the glow intensifying
+ * on focus to match guideline's own focus/stuck emphasis.
+ *
+ * `overflow-hidden` on this element (for the corner-highlight overlay div
+ * right below it in the template) doesn't clip this ::before — it's inset:0
+ * with a 1px padding, entirely within bounds already.
  */
+.global-search-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.9), rgba(96, 165, 250, 0.9));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 .global-search-glow:has(input:focus-visible) {
   box-shadow: 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
 }
