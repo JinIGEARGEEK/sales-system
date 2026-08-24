@@ -390,7 +390,17 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
 
   try {
     const { deal } = await leadsStore.convert(lead.id, {
-      deal: { title: lead.name, value: 0, stage: newStage as DealStage },
+      // company_id is deliberately omitted — the backend's Convert handler
+      // already falls back to the Lead's own company_id when it's absent
+      // (internal/handlers/leads.go), unlike assigned_to/channel below,
+      // which it takes as-is from this request with no such fallback.
+      deal: {
+        title: lead.name,
+        value: 0,
+        stage: newStage as DealStage,
+        assigned_to: lead.assigned_to,
+        channel: lead.source,
+      },
     })
     const index = leadsStore.items.findIndex(l => l.id === lead.id)
     if (index !== -1) leadsStore.items.splice(index, 1)

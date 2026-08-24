@@ -81,6 +81,7 @@
       v-model:open="projectModal"
       :title="t('crm.deals.detail.createProjectModalTitle')"
       :default-name="deal?.title"
+      :default-target-end-date="deal?.expected_close_date"
       :description="t('crm.deals.detail.createProjectModalBody')"
       @submit="onCreateProject"
     />

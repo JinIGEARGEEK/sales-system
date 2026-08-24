@@ -202,7 +202,10 @@ const onSubmit = guard(async () => {
       stage: form.stage as DealStage,
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      channel: 'Other' as LeadSource,
+      // Carries the originating Lead's own source forward instead of
+      // discarding it — a manually-created Deal (no Lead at all) has no
+      // source to inherit, so 'Other' stays the fallback for that case.
+      channel: (originatingLead.value?.source ?? 'Other') as LeadSource,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
       probability: stageDefaultProbability(form.stage),
