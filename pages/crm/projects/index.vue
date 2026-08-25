@@ -281,6 +281,7 @@ const productRows = computed(() => filteredProducts.value.map(product => ({
 const productColumns: TableDataColumn[] = [
   { label: t('admin.products.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.products.columns.category'), align: 'left', field: 'category' },
+  { label: t('admin.products.columns.description'), align: 'left', field: 'description' },
   { label: t('admin.products.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.products.columns.action'),

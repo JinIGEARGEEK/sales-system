@@ -16,6 +16,7 @@ export default {
   columns: {
     name: 'Name',
     category: 'Category',
+    description: 'Description',
     status: 'Status',
     action: 'Action',
   },

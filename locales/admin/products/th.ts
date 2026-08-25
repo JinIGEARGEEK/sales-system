@@ -16,6 +16,7 @@ export default {
   columns: {
     name: 'ชื่อ',
     category: 'หมวดหมู่',
+    description: 'รายละเอียด',
     status: 'สถานะ',
     action: 'การจัดการ',
   },
