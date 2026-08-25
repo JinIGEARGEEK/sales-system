@@ -58,7 +58,14 @@ const tasksStore = useTasksStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal } = useCurrentDeal()
-const goBack = useBackNavigation('/crm/deals')
+
+// Always back to the Deals list, not useBackNavigation's "return to actual
+// previous page" behavior — every tab under this detail page (overview,
+// quotes, contracts, payments, tasks, activity, attachments) shares this one
+// back arrow, and a rep bouncing between them or arriving via a cross-link
+// from another entity's detail page expects a Deal's back arrow to mean
+// "back to Deals", not history-back to wherever they came from.
+const goBack = () => navigateTo('/crm/deals')
 
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
@@ -87,8 +94,8 @@ const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.contracts'), value: 'contracts' },
   { label: t('crm.deals.detail.tabs.payments'), value: 'payments' },
   { label: dealOverdueTaskCount.value > 0 ? `${t('crm.deals.detail.tabs.tasks')} (${dealOverdueTaskCount.value})` : t('crm.deals.detail.tabs.tasks'), value: 'tasks' },
-  { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
   { label: t('crm.deals.detail.tabs.attachments'), value: 'attachments' },
+  { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
 ])
 
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
