@@ -94,8 +94,8 @@ const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.contracts'), value: 'contracts' },
   { label: t('crm.deals.detail.tabs.payments'), value: 'payments' },
   { label: dealOverdueTaskCount.value > 0 ? `${t('crm.deals.detail.tabs.tasks')} (${dealOverdueTaskCount.value})` : t('crm.deals.detail.tabs.tasks'), value: 'tasks' },
-  { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
   { label: t('crm.deals.detail.tabs.attachments'), value: 'attachments' },
+  { label: t('crm.deals.detail.tabs.activity'), value: 'activity' },
 ])
 
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
