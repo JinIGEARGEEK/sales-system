@@ -88,7 +88,10 @@ const leadsStore = useLeadsStore()
 const dealsStore = useDealsStore()
 const productsStore = useProductsStore()
 const pipelineStagesStore = usePipelineStagesStore()
-const goBack = useBackNavigation('/crm/deals')
+
+// Always back to the Deals list — see the matching note in
+// pages/crm/deals/[id].vue for why this doesn't use useBackNavigation here.
+const goBack = () => navigateTo('/crm/deals')
 
 onMounted(() => {
   // Companies aren't preloaded here — InputCompanySelect below searches the

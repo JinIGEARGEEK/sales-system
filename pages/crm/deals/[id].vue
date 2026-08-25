@@ -58,7 +58,14 @@ const tasksStore = useTasksStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal } = useCurrentDeal()
-const goBack = useBackNavigation('/crm/deals')
+
+// Always back to the Deals list, not useBackNavigation's "return to actual
+// previous page" behavior — every tab under this detail page (overview,
+// quotes, contracts, payments, tasks, activity, attachments) shares this one
+// back arrow, and a rep bouncing between them or arriving via a cross-link
+// from another entity's detail page expects a Deal's back arrow to mean
+// "back to Deals", not history-back to wherever they came from.
+const goBack = () => navigateTo('/crm/deals')
 
 onMounted(() => {
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
