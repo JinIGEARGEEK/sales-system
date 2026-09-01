@@ -46,15 +46,6 @@
       </div>
     </div>
 
-    <UAlert
-      v-if="viewMode === 'kanban'"
-      class="mb-4"
-      color="neutral"
-      variant="subtle"
-      icon="material-symbols:info-outline"
-      :description="t('crm.prospects.index.convertInfoBody')"
-    />
-
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3">
         <CrmStatusPill v-if="viewMode === 'list'" v-model="statusFilter" :options="PROSPECT_STATUS_OPTIONS" />
@@ -71,6 +62,15 @@
         </div>
       </div>
     </UCard>
+
+    <UAlert
+      v-if="viewMode === 'kanban'"
+      class="mb-4"
+      color="neutral"
+      variant="subtle"
+      icon="material-symbols:info-outline"
+      :description="t('crm.prospects.index.convertInfoBody')"
+    />
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
