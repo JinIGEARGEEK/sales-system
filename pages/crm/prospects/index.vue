@@ -66,7 +66,7 @@
     <UAlert
       v-if="viewMode === 'kanban'"
       class="mb-4"
-      color="neutral"
+      color="info"
       variant="subtle"
       icon="material-symbols:info-outline"
       :description="t('crm.prospects.index.convertInfoBody')"
