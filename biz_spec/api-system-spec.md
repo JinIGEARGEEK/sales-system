@@ -312,9 +312,9 @@ Every `/prospects*` route requires the **Admin**, **Marketing**, or **Sales Mana
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/prospects` | 🟢 | Filters: `status`, `source`, `assigned_to` (`unassigned` matches `IS NULL`), `company_id` (exact match), `search` (name/email/company name, via the same `LEFT JOIN companies` pattern as `GET /leads`), `exclude_converted=true` (`converted_lead_id IS NULL`). `sort=company_name`/`-company_name` also joins to `companies`. Backs `pages/crm/prospects/index.vue`. |
-| `POST` | `/prospects` | 🟢 | Create. `source` is validated against Prospect's own active `ProspectSourceOption` config (`/admin/prospect-sources`, Admin-only — see below), separate from Lead/Deal's `LeadSourceOption`. `status` defaults to `New` when omitted. No Lead-style scoring/classification — that's Lead-specific. |
+| `POST` | `/prospects` | 🟢 | Create. `source` is validated against Prospect's own active `ProspectSourceOption` config (`/admin/prospect-sources`, Admin-only — see below), separate from Lead/Deal's `LeadSourceOption`. `status` defaults to `New` when omitted. `status: 'Converted'` is rejected with `422` (see the Convert row's status guard below) — a client can't fake that state without a Lead behind it. No Lead-style scoring/classification — that's Lead-specific. |
 | `GET` | `/prospects/:id` | 🟢 | Single prospect. |
-| `PUT` | `/prospects/:id` | 🟢 | Update (including status transitions). Not a true partial update — every field is overwritten from the request body, same as `PUT /leads/:id`. |
+| `PUT` | `/prospects/:id` | 🟢 | Update (including status transitions). Not a true partial update — every field is overwritten from the request body, same as `PUT /leads/:id`. Same `status: 'Converted'` guard as Create: rejected with `422` unless the Prospect is already `Converted` (a client harmlessly resubmitting an unchanged record's status is allowed through — only an attempted *transition* into `Converted` from anything else is blocked). |
 | `DELETE` | `/prospects/:id` | 🟢 | Soft-delete. |
 | `GET` | `/prospects/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Prospects. |
 | `POST` | `/prospects/:id/restore` | 🟢 | Admin/Sales Manager only. |
