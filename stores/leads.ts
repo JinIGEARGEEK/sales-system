@@ -87,5 +87,12 @@ export const useLeadsStore = defineStore('leads', {
       const response = await $api.post<ApiResponse<{ deal: Deal, company: Company, contact: Contact }>>(`/leads/${id}/convert`, payload)
       return response.data.data
     },
+    // Folds in a Lead returned by POST /prospects/:id/convert (raw, unparsed
+    // dates) — mirrors dealsStore.receiveConverted's role for Lead→Deal.
+    receiveConverted (lead: Lead): Lead {
+      const parsed = parseDates(lead)
+      this.items.push(parsed)
+      return parsed
+    },
   },
 })

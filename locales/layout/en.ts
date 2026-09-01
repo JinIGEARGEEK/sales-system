@@ -7,6 +7,7 @@ export default {
     companies: 'Companies',
     contacts: 'Contacts',
     tags: 'Tags',
+    prospects: 'Prospects',
     leads: 'Leads',
     deals: 'Deals',
     projects: 'Projects/Products',

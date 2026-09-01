@@ -17,3 +17,9 @@ export const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manage
 // re-declared as the same inline `hasRole('Admin', 'Sales Manager')` literal
 // in ~16 separate call sites.
 export const MANAGER_ROLES: Role[] = ['Admin', 'Sales Manager']
+
+// The Prospect funnel's own role grouping (§3.1a) — Marketing owns it
+// day-to-day, Admin/Sales Manager get oversight visibility, matching the
+// backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
+// /prospects* in internal/routes/routes.go.
+export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager']

@@ -8,6 +8,11 @@ export default {
       negotiation: 'Terms being discussed',
       won: 'Deal closed successfully',
       lost: 'Deal did not close',
+      prospectNew: 'Not yet contacted',
+      prospectEngaging: 'In active outreach',
+      prospectNurturing: 'Warming up over time',
+      prospectDisqualified: 'Not a good fit',
+      prospectConverted: 'Handed off to Sales as a Lead',
     },
   },
   activityTimeline: {

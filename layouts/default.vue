@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -162,6 +162,11 @@ const menuList = computed(() => {
   const items: MenuItem[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
+    // Prospects (§3.1a) — the pre-Lead marketing funnel, kept its own
+    // separator-bounded group ahead of the sales-pipeline group below rather
+    // than folded into SALES_PIPELINE_ROLES, since it's Marketing's own
+    // destination, not a Sales one.
+    { icon: 'material-symbols:contact-mail-outline', label: t('layout.nav.prospects'), path: '/crm/prospects', separator: true, roles: PROSPECT_ROLES },
     { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: SALES_PIPELINE_ROLES },

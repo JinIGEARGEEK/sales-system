@@ -7,6 +7,7 @@ export default {
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
     tags: 'Tag',
+    prospects: 'Prospects',
     leads: 'Leads',
     deals: 'Deals',
     projects: 'Projects/Products',

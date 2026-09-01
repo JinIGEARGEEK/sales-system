@@ -8,6 +8,7 @@ import adminGuideline from './admin/guideline/th'
 import adminPipelineConfig from './admin/pipeline-config/th'
 import crmDashboard from './crm/dashboard/th'
 import crmLeads from './crm/leads/th'
+import crmProspects from './crm/prospects/th'
 import crmDeals from './crm/deals/th'
 import crmContacts from './crm/contacts/th'
 import crmCompanies from './crm/companies/th'
@@ -38,6 +39,7 @@ export default {
   crm: {
     dashboard: crmDashboard,
     leads: crmLeads,
+    prospects: crmProspects,
     deals: crmDeals,
     contacts: crmContacts,
     companies: crmCompanies,

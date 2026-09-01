@@ -8,6 +8,11 @@ export default {
       negotiation: 'อยู่ระหว่างเจรจาต่อรอง',
       won: 'ปิดการขายสำเร็จ',
       lost: 'ดีลไม่สำเร็จ',
+      prospectNew: 'ยังไม่ได้ติดต่อ',
+      prospectEngaging: 'อยู่ระหว่างติดต่อ',
+      prospectNurturing: 'ดูแลอย่างต่อเนื่อง',
+      prospectDisqualified: 'ไม่เหมาะสม',
+      prospectConverted: 'ส่งต่อให้เซลล์เป็น Lead แล้ว',
     },
   },
   activityTimeline: {
