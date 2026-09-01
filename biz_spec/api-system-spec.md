@@ -139,7 +139,8 @@ Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) i
 |---|---|
 | **Admin** | Full access to every resource, including Users, Tags, and (once built) Product Catalog / pipeline config |
 | **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records |
-| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts |
+| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts. Also has access to `/prospects*` for oversight, alongside Marketing. |
+| **Marketing** | Added 2026-09-01 for the Prospect funnel (§3a) — full CRUD on `/prospects*` (bulk/trash/restore stay Admin/Sales-Manager-only, same restriction as Leads), plus whatever Company/Contact access those records need (reuses the existing `/companies`/`/contacts` endpoints, no Marketing-specific restriction there). No access to Leads/Deals/Quotes/Contracts/Payments — a Prospect converting to a Lead is where Marketing's involvement ends. Not part of the original spec's role table — see `feature-spec.md`'s Prospect Management section |
 | **Production (limited)** | Write access to *only* `status` and `production_reference` on `Project` records (§8.3) — no access to any other resource |
 
 Suggested enforcement: role on the JWT claims, checked server-side per route — not by trusting a client-sent role header.
@@ -263,6 +264,56 @@ interface LeadScoringCriterion {
 | `PATCH` / `DELETE` | `/admin/lead-scoring-criteria/:id` | 🟢 | Admin only. Update / deactivate (`DELETE` is a soft `is_active: false` flip, same convention as `/admin/pipeline-stages`, not a hard row delete). |
 
 The MQL threshold itself (`score >=` this value → `classification: 'mql'`) lives on the `AppSettings` singleton, not a `LeadScoringCriterion` row — see `lead_scoring_mql_threshold` in §8.7a.
+
+---
+
+## 3a. Prospects (`FR-CRM-105`/`FR-CRM-106`)
+
+The pre-Lead marketing funnel entity — Marketing works a Prospect (with an optional linked Company/Contact, same nullable-FK shape as `Lead.company_id`) before it's ready to hand off to Sales via Convert. Endpoint/handler/model shape deliberately mirrors Leads one funnel stage earlier — see §3 for the pattern this is modeled on.
+
+`interfaces/crm.d.ts` → `Prospect`:
+
+```ts
+type ProspectStatus = 'New' | 'Engaging' | 'Nurturing' | 'Disqualified' | 'Converted'
+// ProspectStatus is a fixed enum, not admin-configurable (mirrors LeadStatus,
+// not the admin-configurable PipelineStage) — Marketing's funnel stage is a
+// simple closed set. 'Converted' is set only by POST /prospects/:id/convert,
+// never chosen directly.
+
+interface Prospect {
+  id: number
+  name: string
+  company_id: number | null   // nullable FK, same optional-ness as Lead.company_id
+  email: string
+  phone: string
+  source: LeadSource          // reuses Lead's source enum/admin-configurable LeadSourceOption — no separate Prospect source config
+  status: ProspectStatus
+  notes: string
+  assigned_to: number | null  // User.id
+  tags: string[] | null
+  converted_lead_id: number | null   // Lead.id once converted, else null — see /prospects/:id/convert
+  deleted_at?: string | null  // present only on GET /prospects/trash rows
+  created_at: string
+}
+```
+
+`Prospect` soft-deletes the same as `Lead`/`Deal` — `DELETE` sets `deleted_at`/`deleted_by`, recoverable via `/trash` + `/:id/restore`.
+
+Every `/prospects*` route requires the **Admin**, **Marketing**, or **Sales Manager** role (§1.7) — a plain Sales Rep has no legitimate reason to see the pre-Lead funnel and is `403`'d at the route group, before any per-record ownership check.
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/prospects` | 🟢 | Filters: `status`, `source`, `assigned_to` (`unassigned` matches `IS NULL`), `company_id` (exact match), `search` (name/email/company name, via the same `LEFT JOIN companies` pattern as `GET /leads`), `exclude_converted=true` (`converted_lead_id IS NULL`). `sort=company_name`/`-company_name` also joins to `companies`. Backs `pages/crm/prospects/index.vue`. |
+| `POST` | `/prospects` | 🟢 | Create. `source` is validated against the same active `LeadSourceOption` config Leads use (§8.7) — no separate Prospect source list. `status` defaults to `New` when omitted. No Lead-style scoring/classification — that's Lead-specific. |
+| `GET` | `/prospects/:id` | 🟢 | Single prospect. |
+| `PUT` | `/prospects/:id` | 🟢 | Update (including status transitions). Not a true partial update — every field is overwritten from the request body, same as `PUT /leads/:id`. |
+| `DELETE` | `/prospects/:id` | 🟢 | Soft-delete. |
+| `GET` | `/prospects/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Prospects. |
+| `POST` | `/prospects/:id/restore` | 🟢 | Admin/Sales Manager only. |
+| `PATCH` | `/prospects/bulk-reassign` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], assigned_to: number \| null}`. |
+| `PATCH` | `/prospects/bulk-tag` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], tags: string[], mode: 'add' \| 'set'}`. |
+| `PATCH` | `/prospects/bulk-archive` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[]}`. |
+| `POST` | `/prospects/:id/convert` | 🟢 | Converts a Prospect into a Lead (and Company/Contact if new) — `FR-CRM-106`, mirroring `POST /leads/:id/convert`'s Company-resolution precedence exactly, one funnel stage earlier: (1) an explicit `company_id` on this request always wins; (2) otherwise the Prospect's own `company_id` is reused directly (falling back to a fresh Company if that one's since been soft-deleted); (3) with neither, a fresh, unnamed Company is created. `contact_id`, if omitted, is created from the Prospect's `name`/`email`/`phone`. Body: `{ company_id?: number, contact_id?: number, lead?: { assigned_to?: number } }` — the new Lead's `assigned_to` defaults to the Prospect's own `assigned_to` if not overridden in the request. The new Lead is created with `status: 'New'` and `prospect_id` set to this Prospect's id (mirrors `Deal.lead_id`). Any Prospect attachments (`related_type: 'prospect'`) are re-pointed to the new Lead in the same transaction, same as Lead→Deal's attachment carry-over (§8.6). Sets the Prospect's `status: 'Converted'` and `converted_lead_id` in the same transaction. Response: `{ data: { lead: Lead, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Prospect has already been converted. |
 
 ---
 
@@ -416,7 +467,7 @@ interface Deal {
 
 ```ts
 type ActivityType = 'call' | 'email' | 'meeting'
-type ActivityRelatedType = 'contact' | 'company' | 'deal'
+type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect'   // 'prospect' added 2026-09-01 for Marketing's Prospect Tasks tab (§3a) — Activity/Task share this union
 
 interface Activity {
   id: number
@@ -554,7 +605,7 @@ interface Payment {
 
 ```ts
 type TaskStatus = 'pending' | 'done'
-type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal'
+type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal' | 'prospect'
 // Plain triage label, no workflow behavior attached (unlike TaskStatus) — added 2026-08-22.
 type TaskPriority = 'low' | 'medium' | 'high'
 
@@ -725,7 +776,7 @@ Generic file/link attachments for Leads, Deals, Companies, and Projects — quot
 
 ```ts
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
-type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'prospect'
 
 interface Attachment {
   id: number
@@ -751,6 +802,8 @@ Exactly one of `file_url`/`external_url` must be present on every row — reject
 | `DELETE` | `/attachments/:id` | Sales/Admin, or the original uploader | Deletes the metadata row only — the file itself is left in object storage (no orphan-cleanup job in v1, matching §6.1's general storage approach). |
 
 > **Lead → Deal conversion (`POST /leads/:id/convert`, §3):** re-point any `Attachment` rows with `related_type: 'lead'` and `related_id: <the converted lead>` to `related_type: 'deal'`/the newly created Deal's id, in the same transaction as the conversion — don't leave them stranded on a Lead record that no longer appears in any list view once converted.
+>
+> **Prospect → Lead conversion (`POST /prospects/:id/convert`, §3a):** same re-pointing, one funnel stage earlier — `related_type: 'prospect'` rows move to `related_type: 'lead'`/the newly created Lead's id, in the same transaction as the conversion.
 
 ### 8.7 Admin pipeline configuration (`FR-CRM-021`, `FR-CRM-081`)
 

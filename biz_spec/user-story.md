@@ -21,6 +21,7 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | **แอดมิน (Admin)** | จัดการบัญชีผู้ใช้งาน กำหนดสิทธิ์การเข้าถึง และตั้งค่าระบบ (§1 ด้านล่าง) |
 | **เซลล์ / ผู้ดูแลลูกค้า (Sales Rep / Account Manager)** | ดูแล Lead, Deal, ผู้ติดต่อ, บริษัท บันทึกการชำระเงิน และสร้าง/ติดตามงาน (Tasks) ของตนเอง (§2 ด้านล่าง) |
 | **หัวหน้าทีมขาย (Sales Manager)** | ดู Dashboard ภาพรวมทีม, รายงานยอดขาย, มอบหมาย/โยกย้าย Deal (§3 ด้านล่าง) |
+| **การตลาด (Marketing)** | บริหาร Prospect บนบอร์ด Kanban ของตนเอง ก่อนส่งต่อเป็น Lead ให้เซลล์ (§3a ด้านล่าง — เพิ่มเมื่อ 2026-09-01) |
 | **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะ Project ที่เชื่อมกับ Deal เท่านั้น เมื่อฟีเจอร์นี้ถูกสร้างขึ้น (§4 ด้านล่าง — ยังไม่ได้พัฒนา) |
 
 ### กรณีการใช้งานจริง (Use Cases) — จากฟีเจอร์ที่สร้างเสร็จแล้ว
@@ -122,6 +123,19 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | M-8 | As a Sales Manager, I want to reassign a Deal to a different rep and see the prior owner history, so that I can rebalance workload without losing accountability. | FR-CRM-025 | ✅ reassignment works; an Admin-only "Owner History" card on the Deal detail page (`pages/crm/deals/[id]/index.vue`) shows prior owners, sourced from `GET /audit-log` filtered to `reassigned`/`bulk_reassigned` actions for that Deal — gated Admin-only since the underlying audit-log endpoint is Admin-only |
 | M-9 | As a Sales Manager, I want to slice the dashboard by Business Unit (Project or Product, with a drill-down to the specific one) and by sales Channel, so that I can see performance by segment without a full custom report builder. | FR-CRM-055 | ✅ |
 | M-10 | As a Sales Manager, I want to see average deal size, average sales cycle length, pipeline coverage against quota, a revenue trend chart, and a win-rate breakdown by customer industry, so that I can judge pipeline health beyond raw totals. | FR-CRM-057, FR-CRM-058, FR-CRM-059 | ✅ quota is now Admin-configurable (`AppSettings` singleton, `GET`/`PATCH /admin/settings`), edited from a "Sales Quota" card on `pages/admin/pipeline-config.vue` |
+
+---
+
+## 3a. Role: Marketing
+
+Added 2026-09-01. Marketing has no access to Leads/Deals/Quotes/Contracts/Payments — its scope is the Prospect funnel that exists *before* a record is ready to become a Lead (§3.1a in `feature-spec.md`).
+
+| # | User Story | Refs | Status |
+|---|---|---|---|
+| P-1 | As someone in Marketing, I want to log a new Prospect (name, contact info, source, notes, optionally an existing or new Company), so that early-funnel outreach has a home before it's qualified enough to hand to Sales. | FR-CRM-105 | ✅ `POST /prospects`, reuses `InputCompanySelect` for the Company field same as Lead/Deal/Contact forms |
+| P-2 | As someone in Marketing, I want to see my Prospects on their own Kanban board (New/Engaging/Nurturing/Disqualified), separate from the Sales team's Deals/Leads board, so that I can manage my own funnel stages without cluttering or being cluttered by the sales pipeline. | FR-CRM-105 | ✅ `pages/crm/prospects/index.vue`, standalone `CrmPipelineBoard` instance |
+| P-3 | As someone in Marketing, I want to log follow-up tasks against a Prospect the same way Sales does for a Deal/Contact/Company, so that nurture touchpoints don't get lost. | FR-CRM-032 | ✅ reuses the existing Task model — `'prospect'` added to `TaskRelatedType` |
+| P-4 | As someone in Marketing, when a Prospect is sales-ready, I want to convert it into a Lead in one action (reusing or creating its Company/Contact), so that Sales picks up exactly where I left off instead of the record being re-entered from scratch. | FR-CRM-106 | ✅ `POST /prospects/:id/convert`, mirrors `POST /leads/:id/convert`'s Company/Contact resolution and Attachment carry-over one funnel stage earlier |
 
 ---
 

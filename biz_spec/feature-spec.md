@@ -24,6 +24,7 @@
 | **แอดมิน (Admin)** | จัดการบัญชีผู้ใช้งานทั้งหมด กำหนดสิทธิ์การเข้าถึง และ (ในอนาคต) ตั้งค่าระบบ เช่น ขั้นตอน Pipeline, Tag, Product Catalog |
 | **เซลล์ / ผู้ดูแลลูกค้า (Sales Rep / Account Manager)** | ดูแล Lead, Deal, บริษัท และผู้ติดต่อของตนเอง บันทึกการชำระเงินแต่ละงวด สร้างและติดตามงาน (Tasks) ที่ผูกกับ Deal/ผู้ติดต่อ/บริษัท |
 | **หัวหน้าทีมขาย (Sales Manager)** | ดูภาพรวม Pipeline และผลงานของทั้งทีมผ่าน Dashboard, มอบหมาย/โยกย้าย Deal ระหว่างเซลล์, ติดตามงานที่เกินกำหนดของทั้งทีม |
+| **การตลาด (Marketing)** | บริหาร Prospect (ลูกค้ามุ่งหวังก่อนเป็น Lead) บนบอร์ด Kanban ของตนเอง สร้าง/เชื่อมโยงบริษัทและผู้ติดต่อ แล้วส่งต่อให้เซลล์ด้วยการ "แปลงเป็น Lead" (เพิ่มเมื่อ 2026-09-01 — ดู §3.1a) |
 | **ทีม Production (สิทธิ์จำกัด)** | อัปเดตสถานะและ Production Reference ของ Project ที่เชื่อมกับ Deal ของบริษัทลูกค้า (ดู §3.7 — พัฒนาแล้ว) |
 
 ### กรณีการใช้งานจริง (Use Cases) — อ้างอิงจากฟีเจอร์ที่สร้างเสร็จแล้ว
@@ -92,6 +93,7 @@ The system is a web application, single workspace, organized around the sales pi
 | **Admin** | Full system access, manages users, roles, pipeline/field/product-catalog configuration |
 | **Sales Rep / Account Manager** | Owns Leads, Contacts, Deals, Quotes, Contracts, and keeps each customer's Product/Project records current |
 | **Sales Manager** | Views team-wide pipeline, forecasts, reassigns deals, runs reporting across accounts/products/projects |
+| **Marketing** | Added 2026-09-01 (§3.1a). Owns the pre-Lead Prospect funnel on its own Kanban board — creates/links Companies and Contacts before they qualify as a Lead, then hands off to Sales via a manual "Convert to Lead" action. No access to Leads/Deals/Quotes/Contracts/Payments. |
 | **Production Team (limited/optional)** | Not a full user of this system. At most, updates the status/reference on a customer's Project record from their own tooling (manual entry, or later a simple API/webhook) so Sales sees progress without leaving the CRM. |
 
 ### 2.3 Assumptions & Dependencies
@@ -118,6 +120,15 @@ Each requirement has an ID, description, and priority (**M**ust, **S**hould, **C
 | FR-CRM-005 | System shall capture Lead source analytics (count/conversion rate by source). | S | ⬜ |
 | FR-CRM-006 | System shall compute a numeric Lead Score from Admin-configurable weighted criteria (e.g., source, company size, budget stated, engagement/activity count), recalculated on relevant field/activity changes. | S | ✅ **2026-08-21** `Lead.Score`/`Lead.Classification` (`internal/models/lead.go`), weighted by Admin-configurable `LeadScoringCriterion` rows (`/admin/lead-scoring-criteria`, managed from the "Lead Scoring Criteria" card on `pages/admin/pipeline-config.vue`); recomputed on Lead Create/Update via `computeAndClassify()` (`internal/handlers/leads.go`). Score isn't capped to 0–100 as originally drafted — it's an open-ended sum of active criteria weights, which an Admin tunes directly rather than the system normalizing to a fixed range |
 | FR-CRM-007 | System shall classify Leads as MQL (score above an Admin-configurable threshold) or SQL (manually marked "sales-ready" by a rep), with the classification visible on the Lead card/row. | S | ✅ **2026-08-21** threshold is `AppSettings.LeadScoringMqlThreshold` (Admin-editable from the same Sales Quota card, `PATCH /admin/settings`); "sql" is settable via a "Mark Sales Ready" button on `pages/crm/leads/[id].vue` (a manual override that persists regardless of score — the backend's `Update` handler only treats an explicit `"sql"` as a real override, any other value defers to the auto mql/none computation) — corrected 2026-08-21 from an earlier draft of this row that claimed a `classification` form field existed when it didn't yet. MQL/SQL badge shown on the Lead detail header, `pages/crm/leads/index.vue`'s list, and the Lead card in `pages/crm/deals/index.vue`'s Kanban board |
+
+### 3.1a Prospect Management (Marketing)
+
+A pre-Lead funnel entity, added 2026-09-01 so Marketing has its own CRM presence: working Companies/Contacts before they qualify as a Lead, tracking a marketing-specific status, and handing off to Sales via a deliberate manual action rather than Sales re-entering everything from scratch. Owned by the new **Marketing** role (§2.2), which has no access to Leads/Deals/Quotes/Contracts/Payments — its involvement ends at conversion.
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR-CRM-105 | System shall allow Marketing to create/manage a Prospect (name, contact info, source, notes, optional linked Company) with a status of New, Engaging, Nurturing, or Disqualified, and view them on a dedicated Kanban board (`pages/crm/prospects/index.vue`), separate from the unified Deals/Leads Pipeline board (FR-CRM-022). | M | ✅ `internal/models/prospect.go`, `POST`/`GET`/`PUT`/`DELETE /prospects*` (`api-system-spec.md` §3a). Status is a fixed enum, not admin-configurable — mirrors `LeadStatus`, not the admin-configurable `PipelineStage` used by Deals, keeping scope down and consistent with how Lead itself works. |
+| FR-CRM-106 | System shall support converting a Prospect into a Lead (and Contact/Company if new) via a manual "Convert to Lead" action, mirroring FR-CRM-004's Lead→Deal pattern one funnel stage earlier: resolve-or-create Company → resolve-or-create Contact → create the Lead with a back-reference (`Lead.prospect_id`) → carry over Attachments → mark the Prospect `Converted`, all in one transaction. | M | ✅ `POST /prospects/:id/convert` (`internal/handlers/prospects.go`), `409 CONFLICT` guard against double-conversion via `Prospect.converted_lead_id`, same shape as `Lead.converted_deal_id`. |
 
 ### 3.2 Company & Contact Management
 
@@ -287,6 +298,9 @@ Project (1) ── (N) Attachment                           [§3.9]
 Contact (1) ── (N) Activity
 User (1) ── (N) Deal (owner)
 User (1) ── (1) Role
+Prospect (0..1) ── (1) Company                          [§3.1a — pre-Lead funnel entity, nullable FK like Lead.company_id]
+Prospect (1) ── (0..1) Lead                             [§3.1a — set on Convert, FR-CRM-106]
+Prospect (1) ── (N) Task/Attachment                     [§3.1a/§3.9 — carried over to the Lead on conversion]
 ```
 
 Key entities and notable fields:
@@ -303,7 +317,8 @@ Key entities and notable fields:
 - **Product**: id, name, category, description, is_active
 - **CustomerProduct**: id, company_id, product_id, status (Interested/Trial/Active/Churned), start_date, end_date, source_deal_id (nullable)
 - **Project**: id, company_id, deal_id (nullable), name, status (Not Started/In Progress/On Hold/Completed/Cancelled), start_date, target_end_date, production_reference (text/url, nullable), notes
-- **Attachment**: id, related_type (lead/deal/company/project), related_id, category (Quotation/Proposal/Estimation/Plan/Support/Other), file_name, file_url (nullable), external_url (nullable — exactly one of file_url/external_url is set), file_size (nullable), mime_type (nullable), uploaded_by, created_at
+- **Attachment**: id, related_type (lead/deal/company/project/prospect), related_id, category (Quotation/Proposal/Estimation/Plan/Support/Other), file_name, file_url (nullable), external_url (nullable — exactly one of file_url/external_url is set), file_size (nullable), mime_type (nullable), uploaded_by, created_at
+- **Prospect**: id, name, company_id (nullable, same shape as Lead.company_id), email, phone, source, status (New/Engaging/Nurturing/Disqualified/Converted — fixed enum, not admin-configurable), notes, assigned_to (User), tags[], converted_lead_id (nullable, set by Convert), created_at
 - **User**: id, name, email, role, active
 
 Note: `Product`, `CustomerProduct`, and `Project` are kept deliberately summary-level. No Task/Sprint/Roadmap/FeatureRequest tables exist in this schema — that detail lives entirely in Production's own system.
