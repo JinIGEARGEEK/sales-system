@@ -42,15 +42,6 @@
       </template>
     </USlideover>
 
-    <UButton
-      icon="material-symbols:menu"
-      variant="solid"
-      color="neutral"
-      size="sm"
-      class="fixed top-3 left-3 z-20 md:hidden"
-      @click="drawer = true"
-    />
-
     <aside class="relative hidden overflow-hidden border-r border-white/15 bg-[var(--color-sidebar-bg)]/90 text-white backdrop-blur-2xl md:flex md:w-44 md:flex-col">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
 
@@ -102,8 +93,22 @@
     </aside>
 
     <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
-      <div ref="headerRef" class="sticky top-0 z-10 hidden h-(--layout-header-height) items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 backdrop-blur-2xl md:flex">
+      <div ref="headerRef" class="sticky top-0 z-10 flex h-(--layout-header-height) items-center justify-between gap-3 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-3 backdrop-blur-2xl md:gap-4 md:px-5">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
+        <!-- Mobile menu trigger — lives in-flow in this always-visible bar
+             (rather than a fixed/floating button over the page content, which
+             used to overlap whatever heading a page put at its own top-left,
+             e.g. the Dashboard's title) so every page gets real top clearance
+             on mobile instead of a button sitting on top of its content. -->
+        <UButton
+          icon="material-symbols:menu"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          class="relative shrink-0 text-white hover:bg-white/10 md:hidden"
+          :aria-label="t('layout.openMenu')"
+          @click="drawer = true"
+        />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
         </div>
@@ -113,7 +118,11 @@
           leave-active-class="transition duration-150 ease-in"
           leave-to-class="opacity-0 translate-x-2"
         >
-          <p v-if="showTitleInHeader" class="truncate text-sm font-bold text-white">
+          <!-- Hidden on mobile — the page's own on-page heading right below
+               already shows this same title, and there's no room to also
+               duplicate it in this narrower bar alongside the menu trigger
+               and search box. -->
+          <p v-if="showTitleInHeader" class="hidden truncate text-sm font-bold text-white md:block">
             {{ currentPageTitle }}
           </p>
         </Transition>
