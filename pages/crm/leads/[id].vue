@@ -48,7 +48,7 @@
             <InputCompanySelect v-model="form.company_id" :label="t('crm.leads.detail.companyName')" name="company_id" />
             <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" rules="required" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
-            <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
+            <InputSelect v-model="form.source" :options="sourceOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
             <InputSelect
               v-model="form.status"
               :options="LEAD_STATUS_FORM_OPTIONS"
@@ -124,6 +124,18 @@ onMounted(() => {
   if (!leadsStore.items.some(l => l.id === leadId)) leadsStore.fetchOne(leadId).catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
+})
+
+// A Lead converted from a Prospect (POST /prospects/:id/convert) may carry a
+// source value that isn't one of Lead's own configured LeadSourceOption rows
+// (e.g. "LINE OA") — Prospect and Lead deliberately have separate source
+// lists. Keep it selectable here rather than silently blanking the field,
+// same pattern as pages/crm/contacts/[id].vue's roleTitleOptions.
+const sourceOptions = computed<Select[]>(() => {
+  const current = lead.value?.source
+  const active = leadSourcesStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
 })
 
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))

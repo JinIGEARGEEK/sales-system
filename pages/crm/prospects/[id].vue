@@ -40,7 +40,7 @@
                 <InputCompanySelect v-model="form.company_id" :label="t('crm.prospects.detail.companyName')" name="company_id" />
                 <InputText v-model="form.email" :label="t('crm.prospects.detail.email')" name="email" />
                 <InputText v-model="form.phone" :label="t('crm.prospects.detail.phone')" name="phone" />
-                <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.prospects.detail.source')" name="source" rules="required" />
+                <InputSelect v-model="form.source" :options="prospectSourcesStore.activeOptions" :label="t('crm.prospects.detail.source')" name="source" rules="required" />
                 <InputSelect
                   v-model="form.status"
                   :options="PROSPECT_STATUS_FORM_OPTIONS"
@@ -129,7 +129,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
-const leadSourcesStore = useLeadSourcesStore()
+const prospectSourcesStore = useProspectSourcesStore()
 const goBack = useBackNavigation('/crm/prospects')
 
 const prospectId = Number(route.params.id)
@@ -139,7 +139,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Prospect, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely.
   if (!prospectsStore.items.some(p => p.id === prospectId)) prospectsStore.fetchOne(prospectId).catch(notifyApiError)
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
 })
 
@@ -203,7 +203,7 @@ const onSave = guard(async () => {
       company_id: form.company_id,
       email: form.email,
       phone: form.phone,
-      source: form.source as LeadSource,
+      source: form.source,
       status: form.status as ProspectStatus,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       notes: form.notes,

@@ -54,7 +54,7 @@
             <InputText v-model="search" :placeholder="t('crm.prospects.index.searchPlaceholder')" name="search" />
           </div>
           <div class="w-full sm:w-40">
-            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.prospects.index.allSources'), value: 'all' }, ...leadSourcesStore.activeOptions]" :placeholder="t('crm.prospects.index.sourcePlaceholder')" name="sourceFilter" />
+            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.prospects.index.allSources'), value: 'all' }, ...prospectSourcesStore.activeOptions]" :placeholder="t('crm.prospects.index.sourcePlaceholder')" name="sourceFilter" />
           </div>
           <div class="w-full sm:w-48">
             <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.prospects.index.assigneePlaceholder')" name="assigneeFilter" />
@@ -151,7 +151,7 @@ const { hasRole } = useRole()
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
-const leadSourcesStore = useLeadSourcesStore()
+const prospectSourcesStore = useProspectSourcesStore()
 const companiesStore = useCompaniesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the
@@ -175,7 +175,7 @@ onMounted(() => {
   prospectsStore.fetchAll({ exclude_converted: true }).catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
 })
 
 const filteredProspects = computed(() => prospectsStore.items.filter((prospect) => {

@@ -46,7 +46,7 @@
           />
           <InputText v-model="form.email" :label="t('crm.prospects.create.email')" :placeholder="t('crm.prospects.create.emailPlaceholder')" name="email" />
           <InputText v-model="form.phone" :label="t('crm.prospects.create.phone')" :placeholder="t('crm.prospects.create.phonePlaceholder')" name="phone" />
-          <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.prospects.create.source')" :placeholder="t('crm.prospects.create.sourcePlaceholder')" name="source" rules="required" />
+          <InputSelect v-model="form.source" :options="prospectSourcesStore.activeOptions" :label="t('crm.prospects.create.source')" :placeholder="t('crm.prospects.create.sourcePlaceholder')" name="source" rules="required" />
           <InputSelect
             v-model="form.status"
             :options="PROSPECT_STATUS_FORM_OPTIONS"
@@ -85,12 +85,12 @@ useHead({ title: t('crm.prospects.create.pageTitle') })
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const prospectsStore = useProspectsStore()
-const leadSourcesStore = useLeadSourcesStore()
+const prospectSourcesStore = useProspectSourcesStore()
 const goBack = useBackNavigation('/crm/prospects')
 
 onMounted(() => {
   if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
-  if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   // Companies aren't fetched here — InputCompanySelect below loads its own
   // options and handles creating a new Company on demand.
 })
@@ -117,7 +117,7 @@ const onSubmit = guard(async () => {
       company_id: form.company_id,
       email: form.email,
       phone: form.phone,
-      source: form.source as LeadSource,
+      source: form.source,
       status: form.status as ProspectStatus,
       notes: form.notes,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,

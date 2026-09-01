@@ -142,7 +142,12 @@ interface Prospect {
   company_id: number | null
   email: string
   phone: string
-  source: LeadSource
+  // A plain string, not LeadSource — Prospect's source list
+  // (ProspectSourceOption, /admin/prospect-sources) is deliberately separate
+  // from Lead/Deal's (LeadSourceOption): Marketing's actual channels (Social
+  // Media, LINE OA, Email Campaign, ...) don't overlap well with Sales's
+  // lead-capture sources. Added 2026-09-01.
+  source: string
   status: ProspectStatus
   notes: string
   assigned_to: number | null
@@ -195,6 +200,16 @@ interface PipelineStage {
 // An Admin-configurable lead/deal source — GET/POST/PATCH/DELETE /admin/lead-sources.
 // Replaces the previously hardcoded LeadSource enum shared by Lead.source/Deal.channel.
 interface LeadSourceOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Prospect (marketing funnel) source — GET/POST/PATCH/
+// DELETE /admin/prospect-sources. Deliberately separate from LeadSourceOption
+// above — see Prospect.source's own comment for why.
+interface ProspectSourceOption {
   id: number
   name: string
   is_active: boolean

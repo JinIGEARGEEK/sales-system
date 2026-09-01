@@ -40,6 +40,10 @@
       <AdminPipelineConfigLeadScoringPanel :loading="criteriaLoading" />
     </div>
 
+    <div v-else-if="activeTab === 'prospects'">
+      <AdminPipelineConfigProspectSourcesPanel :loading="prospectSourcesLoading" />
+    </div>
+
     <div v-else-if="activeTab === 'company'">
       <AdminPipelineConfigIndustriesPanel :loading="industriesLoading" />
       <AdminPipelineConfigCompanySizesPanel :loading="companySizesLoading" />
@@ -74,6 +78,7 @@ const { canAccess, guardMounted } = usePageAccess('Admin')
 const { notifyApiError } = useApiErrorNotifier()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
+const prospectSourcesStore = useProspectSourcesStore()
 const appSettingsStore = useAppSettingsStore()
 const salesTargetsStore = useSalesTargetsStore()
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
@@ -94,12 +99,14 @@ const tabItems = computed(() => [
   { label: t('admin.pipelineConfig.tabs.stages'), value: 'stages' },
   { label: t('admin.pipelineConfig.tabs.revenue'), value: 'revenue' },
   { label: t('admin.pipelineConfig.tabs.leads'), value: 'leads' },
+  { label: t('admin.pipelineConfig.tabs.prospects'), value: 'prospects' },
   { label: t('admin.pipelineConfig.tabs.company'), value: 'company' },
   { label: t('admin.pipelineConfig.tabs.notifications'), value: 'notifications' },
 ])
 
 const stagesLoading = ref(false)
 const sourcesLoading = ref(false)
+const prospectSourcesLoading = ref(false)
 const targetsLoading = ref(false)
 const criteriaLoading = ref(false)
 const rulesLoading = ref(false)
@@ -114,6 +121,8 @@ guardMounted(async () => {
   pipelineStagesStore.fetchAll().catch(notifyApiError).finally(() => { stagesLoading.value = false })
   sourcesLoading.value = true
   leadSourcesStore.fetchAll().catch(notifyApiError).finally(() => { sourcesLoading.value = false })
+  prospectSourcesLoading.value = true
+  prospectSourcesStore.fetchAll().catch(notifyApiError).finally(() => { prospectSourcesLoading.value = false })
   targetsLoading.value = true
   salesTargetsStore.fetchAll().catch(notifyApiError).finally(() => { targetsLoading.value = false })
   criteriaLoading.value = true
