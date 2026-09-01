@@ -19,14 +19,14 @@
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-end gap-2">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <InputDateRangePicker
             v-model="dateRange"
             :label="t('crm.reports.salesCycle.filterDateRange')"
             :placeholder="t('crm.reports.dateRangePlaceholder')"
             name="dateRange"
             size="xs"
-            class="w-64"
+            class="w-full sm:w-64"
           />
           <InputSelect
             v-model="salesRepFilter"
@@ -34,7 +34,7 @@
             :label="t('crm.reports.salesCycle.filterSalesRep')"
             name="salesRepFilter"
             size="xs"
-            class="w-56"
+            class="w-full sm:w-56"
           />
           <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>

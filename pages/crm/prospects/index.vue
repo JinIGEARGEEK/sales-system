@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-black">{{ t('crm.prospects.index.heading') }}</h2>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <!-- View switcher — mirrors pages/crm/deals/index.vue's Kanban/List toggle. -->
         <div class="flex items-center gap-0.5 rounded-full bg-[var(--color-light-gray-1)] p-1">
           <UTooltip :text="t('crm.prospects.index.viewKanban')">

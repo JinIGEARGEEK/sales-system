@@ -29,14 +29,14 @@
       </div>
 
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-end gap-2">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <InputText
             v-model.number="minDays"
             type="number"
             :label="t('crm.reports.contractsStuck.filterMinDays')"
             name="minDays"
             size="xs"
-            class="w-72"
+            class="w-full sm:w-72"
           />
           <InputSelect
             v-model="salesRepFilter"
@@ -44,7 +44,7 @@
             :label="t('crm.reports.contractsStuck.filterSalesRep')"
             name="salesRepFilter"
             size="xs"
-            class="w-56"
+            class="w-full sm:w-56"
           />
           <InputText
             v-model="companyTagFilter"
@@ -52,7 +52,7 @@
             :placeholder="t('crm.reports.contractsStuck.filterCompanyTagPlaceholder')"
             name="companyTagFilter"
             size="xs"
-            class="w-40"
+            class="w-full sm:w-40"
           />
           <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>

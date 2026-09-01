@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
     <div v-if="lead">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-3">
           <UButton
             icon="material-symbols:arrow-back"
             variant="ghost"
@@ -11,12 +11,12 @@
             :aria-label="t('global.back')"
             @click="goBack()"
           />
-          <h2 class="text-xl font-black">{{ lead.name }}</h2>
+          <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
           <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ t('crm.leads.index.mqlBadge') }}</UBadge>
           <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ t('crm.leads.index.sqlBadge') }}</UBadge>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
           a rep can set directly; mql/none stay entirely score-driven. -->
           <ButtonPrimary

@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div v-if="contact">
-      <div class="mb-4 flex items-center gap-3">
+      <div class="mb-4 flex flex-wrap items-center gap-3">
         <UButton
           icon="material-symbols:arrow-back"
           variant="ghost"
@@ -10,7 +10,7 @@
           :aria-label="t('global.back')"
           @click="goBack()"
         />
-        <h2 class="text-xl font-black">{{ contact.name }}</h2>
+        <h2 class="max-w-full truncate text-xl font-black">{{ contact.name }}</h2>
         <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
       </div>
 

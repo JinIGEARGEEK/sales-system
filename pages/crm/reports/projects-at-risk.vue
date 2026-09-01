@@ -20,14 +20,14 @@
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-wrap items-end gap-2">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <InputText
             v-model="companyTagFilter"
             :label="t('crm.reports.projectsAtRisk.filterCompanyTag')"
             :placeholder="t('crm.reports.projectsAtRisk.filterCompanyTagPlaceholder')"
             name="companyTagFilter"
             size="xs"
-            class="w-48"
+            class="w-full sm:w-48"
           />
           <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>

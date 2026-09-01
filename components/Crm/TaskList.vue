@@ -15,7 +15,7 @@
       <div
         v-for="task in tasks"
         :key="task.id"
-        class="flex items-center gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
+        class="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
       >
         <UCheckbox
           v-if="selectable"
@@ -33,7 +33,7 @@
           @click="onToggleClick(task)"
         />
 
-        <div class="min-w-0 flex-1">
+        <div class="min-w-35 flex-1">
           <button
             type="button"
             class="block w-full text-left"
@@ -57,7 +57,7 @@
         <UBadge :color="isTaskOverdue(task) ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
           {{ dateFormat(task.due_date) }}
         </UBadge>
-        <UTooltip :text="t('crm.components.taskList.removeTask')">
+        <UTooltip :text="t('crm.components.taskList.removeTask')" class="shrink-0">
           <UButton
             icon="material-symbols:delete-outline"
             variant="ghost"

@@ -90,15 +90,17 @@
 
           <template v-else>
             <p v-if="quote.scope_of_work" class="mb-2 whitespace-pre-wrap text-sm text-[var(--color-gray)]">{{ quote.scope_of_work }}</p>
-            <table class="w-full text-sm">
-              <tbody>
-                <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
-                  <td class="py-1">{{ item.description }}</td>
-                  <td class="py-1 text-right">x{{ item.qty }}</td>
-                  <td class="py-1 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-80 text-sm">
+                <tbody>
+                  <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
+                    <td class="max-w-60 truncate py-1">{{ item.description }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </template>
         </div>
       </div>

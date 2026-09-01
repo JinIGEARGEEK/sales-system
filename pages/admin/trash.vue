@@ -6,7 +6,9 @@
         <p class="text-sm text-[var(--color-gray)]">{{ t('admin.trash.subtitle') }}</p>
       </div>
 
-      <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
+      <div class="mb-4 overflow-x-auto">
+        <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
+      </div>
 
       <div v-if="activeTab === 'deals'">
         <TableData

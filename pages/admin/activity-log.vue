@@ -23,7 +23,7 @@
             v-model="dateRange"
             :placeholder="t('admin.activityLog.dateRangePlaceholder')"
             name="dateRange"
-            class="w-64"
+            class="w-full sm:w-64"
           />
           <UButton
             v-if="hasActiveFilters"

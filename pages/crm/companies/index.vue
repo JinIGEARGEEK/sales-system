@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-black">{{ t('crm.companies.index.heading') }}</h2>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <ButtonPrimary
           v-if="canExport"
           :label="t('crm.companies.index.exportCsv')"

@@ -17,7 +17,7 @@
         v-if="isFilterBarStuck"
         class="pointer-events-none absolute inset-x-4 -bottom-px h-px bg-linear-to-r from-transparent via-(--color-secondary) to-transparent opacity-80 shadow-[0_0_8px_1px_var(--color-secondary)]"
       />
-      <div class="flex flex-wrap items-end gap-2">
+      <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
         <InputSelect
           :model-value="activePreset"
           :options="periodPresets"
@@ -25,7 +25,7 @@
           :placeholder="t('crm.dashboard.periodCustom')"
           name="periodPreset"
           size="xs"
-          class="w-32"
+          class="w-full sm:w-32"
           @update:model-value="emit('apply-preset', $event as string)"
         />
         <InputDateRangePicker
@@ -34,7 +34,7 @@
           :placeholder="t('crm.dashboard.dateRangePlaceholder')"
           name="dateRange"
           size="xs"
-          class="w-56"
+          class="w-full sm:w-56"
           @update:model-value="emit('update:dateRange', $event)"
         />
         <!-- Always shown on lg+ (desktop has room for them); on smaller
@@ -46,7 +46,7 @@
             :label="t('crm.dashboard.filterBusinessUnit')"
             name="businessUnitFilter"
             size="xs"
-            class="w-36"
+            class="w-full sm:w-36"
             @update:model-value="emit('update:businessUnitFilter', $event as string)"
           />
           <InputSelect
@@ -55,7 +55,7 @@
             :label="t('crm.dashboard.filterChannel')"
             name="channelFilter"
             size="xs"
-            class="w-32"
+            class="w-full sm:w-32"
             @update:model-value="emit('update:channelFilter', $event as string)"
           />
           <InputSelect
@@ -64,7 +64,7 @@
             :label="t('crm.dashboard.filterSalesRep')"
             name="salesRepFilter"
             size="xs"
-            class="w-40"
+            class="w-full sm:w-40"
             @update:model-value="emit('update:salesRepFilter', $event as string)"
           />
           <InputText
@@ -73,7 +73,7 @@
             :placeholder="t('crm.dashboard.filterCompanyTagPlaceholder')"
             name="companyTagFilter"
             size="xs"
-            class="w-36"
+            class="w-full sm:w-36"
             @update:model-value="emit('update:companyTagFilter', $event as string)"
           />
         </div>
