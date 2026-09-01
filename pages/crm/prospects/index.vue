@@ -70,6 +70,7 @@
       variant="subtle"
       icon="material-symbols:info-outline"
       :description="t('crm.prospects.index.convertInfoBody')"
+      :ui="{ root: 'p-2', icon: 'size-4' }"
     />
 
     <CrmPipelineBoard
