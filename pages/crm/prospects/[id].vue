@@ -21,12 +21,13 @@
             icon="material-symbols:open-in-new"
             @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
           />
-          <ButtonPrimary
-            v-else-if="prospect.status !== 'Disqualified'"
-            :label="t('crm.prospects.detail.convertToLead')"
-            icon="material-symbols:swap-horiz"
-            @click="onConvert"
-          />
+          <UTooltip v-else-if="prospect.status !== 'Disqualified'" :text="t('crm.prospects.detail.convertToLeadHint')">
+            <ButtonPrimary
+              :label="t('crm.prospects.detail.convertToLead')"
+              icon="material-symbols:swap-horiz"
+              @click="onConvert"
+            />
+          </UTooltip>
         </div>
       </div>
 

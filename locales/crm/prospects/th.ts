@@ -12,6 +12,8 @@ export default {
     prospectStatusUpdated: 'ย้าย Prospect ไปที่ {status}',
     prospectConvertedToLead: 'แปลง Prospect เป็น Lead แล้ว',
     entityLabel: 'Prospect',
+    convertInfoTitle: 'วิธีแปลง Prospect เป็น Lead',
+    convertInfoBody: 'ไม่มีสถานะเฉพาะที่ต้องไปถึงก่อน — New, Engaging และ Nurturing เป็นเพียงป้ายกำกับความคืบหน้าในการติดต่อ ไม่ใช่เงื่อนไขบังคับ สามารถแปลง Prospect เป็น Lead ได้ทุกเมื่อที่พร้อม ผ่านปุ่ม "แปลงเป็น Lead" ในหน้ารายละเอียด หรือจากเมนูการดำเนินการในรายการนี้ ข้อกำหนดเดียวคือต้องไม่ใช่สถานะ Disqualified',
     columns: {
       name: 'ชื่อ',
       company: 'บริษัท',
@@ -58,6 +60,7 @@ export default {
   detail: {
     pageTitle: 'รายละเอียด Prospect',
     convertToLead: 'แปลงเป็น Lead',
+    convertToLeadHint: 'สร้าง Lead จากข้อมูล Prospect นี้ (พร้อมบริษัท/ผู้ติดต่อถ้ายังไม่มี) และส่งต่อให้ทีมขาย ไม่ต้องมีสถานะเฉพาะก่อน ขอแค่ไม่ใช่ Disqualified',
     viewLead: 'ดู Lead',
     fullName: 'ชื่อ-นามสกุล',
     companyName: 'ชื่อบริษัท',
