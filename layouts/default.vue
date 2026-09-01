@@ -59,31 +59,28 @@
         <span class="text-lg font-medium">CRM System</span>
       </NuxtLink>
 
-      <div class="relative z-10 flex-1 overflow-y-auto p-2">
-        <nav class="flex flex-col gap-1">
+      <div class="relative z-10 flex-1 overflow-y-auto p-1.5">
+        <nav class="flex flex-col gap-0.5">
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-white"
+              class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
               :class="{ 'is-active font-medium': isActive(menuItem.path) }"
             >
               <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
               <span class="truncate">{{ menuItem.label }}</span>
             </NuxtLink>
-            <USeparator v-if="menuItem.separator" class="my-1 opacity-10" />
+            <USeparator v-if="menuItem.separator" class="my-0.5 opacity-10" />
           </template>
         </nav>
       </div>
 
-      <div class="relative z-10 border-t border-white/10 p-2.5">
-        <div class="flex items-center gap-2">
+      <div class="relative z-10 border-t border-white/10 p-2">
+        <div class="flex items-center gap-2" :title="email">
           <UAvatar :text="userInitials" size="xs" />
-          <div class="flex-1 min-w-0">
-            <div class="text-xs font-medium text-white truncate">{{ userDisplayName }}</div>
-            <div class="text-[11px] text-white/60 truncate">{{ email }}</div>
-          </div>
+          <div class="min-w-0 flex-1 truncate text-xs font-medium text-white">{{ userDisplayName }}</div>
         </div>
-        <div class="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5 text-white">
+        <div class="mt-1.5 flex items-center justify-between border-t border-white/10 pt-1.5 text-white">
           <SwitchLang glass />
           <div class="flex items-center gap-1">
             <UButton
