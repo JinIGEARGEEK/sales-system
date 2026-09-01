@@ -12,7 +12,6 @@ export default {
     prospectStatusUpdated: 'ย้าย Prospect ไปที่ {status}',
     prospectConvertedToLead: 'แปลง Prospect เป็น Lead แล้ว',
     entityLabel: 'Prospect',
-    convertInfoTitle: 'วิธีแปลง Prospect เป็น Lead',
     convertInfoBody: 'วิธีแปลง Prospect เป็น Lead: กด "แปลงเป็น Lead" ได้ทุกเมื่อที่พร้อม ยกเว้นสถานะ Disqualified',
     columns: {
       name: 'ชื่อ',

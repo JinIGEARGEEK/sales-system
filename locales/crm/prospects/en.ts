@@ -12,8 +12,7 @@ export default {
     prospectStatusUpdated: 'Prospect moved to {status}',
     prospectConvertedToLead: 'Prospect converted to a Lead',
     entityLabel: 'prospects',
-    convertInfoTitle: 'How Prospects become Leads',
-    convertInfoBody: 'There\'s no special stage to reach first — New, Engaging, and Nurturing are just tracking labels for outreach progress, not a gate. Convert any Prospect to a Lead whenever it\'s ready using the Convert to Lead action on its detail page or from this list\'s row actions; the only requirement is that it isn\'t Disqualified.',
+    convertInfoBody: 'How Prospects become Leads: click Convert to Lead whenever it\'s ready, from its detail page or this list\'s row actions — no special stage required, just that it isn\'t Disqualified.',
     columns: {
       name: 'Name',
       company: 'Company',

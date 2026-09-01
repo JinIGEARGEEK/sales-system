@@ -52,7 +52,6 @@
       color="neutral"
       variant="subtle"
       icon="material-symbols:info-outline"
-      :title="t('crm.prospects.index.convertInfoTitle')"
       :description="t('crm.prospects.index.convertInfoBody')"
     />
 
