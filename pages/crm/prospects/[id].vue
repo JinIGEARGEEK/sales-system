@@ -13,6 +13,7 @@
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ prospect.name }}</h2>
           <UBadge :color="prospectStatusColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
+          <UBadge v-for="tag in prospect.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
         <div class="flex flex-wrap gap-2">
           <ButtonPrimary
@@ -49,12 +50,14 @@
                   rules="required"
                 />
                 <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+                <InputText v-model="form.tags" :label="t('crm.prospects.detail.tags')" :placeholder="t('crm.prospects.detail.tagsPlaceholder')" name="tags" />
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.notes" :label="t('crm.prospects.detail.notes')" name="notes" />
                 </div>
               </div>
               <div class="mt-4 flex gap-3">
                 <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" />
+                <TableCardLink v-if="prospect.company_id" :items="{ path: `/crm/companies/${prospect.company_id}`, label: t('crm.prospects.detail.viewCompany') }" />
               </div>
             </Form>
           </ContainerTemplate>
@@ -74,6 +77,13 @@
         </div>
 
         <div class="lg:col-span-2">
+          <UCard class="mb-4">
+            <template #header>
+              <h3 class="text-base font-semibold">{{ t('crm.prospects.detail.activityTitle') }}</h3>
+            </template>
+            <CrmActivityTimeline :items="prospectActivity" />
+          </UCard>
+
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
@@ -129,8 +139,10 @@ const { notifyApiError } = useApiErrorNotifier()
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
+const activitiesStore = useActivitiesStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const goBack = useBackNavigation('/crm/prospects')
+const { parseTags } = useFormatter()
 
 const prospectId = Number(route.params.id)
 const prospect = computed(() => prospectsStore.items.find(p => p.id === prospectId))
@@ -141,7 +153,10 @@ onMounted(() => {
   if (!prospectsStore.items.some(p => p.id === prospectId)) prospectsStore.fetchOne(prospectId).catch(notifyApiError)
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
+  activitiesStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
 })
+
+const prospectActivity = computed(() => activitiesStore.forRelated('prospect', prospectId))
 
 const prospectAttachments = computed(() => attachmentsStore.forRelated('prospect', prospectId))
 const addAttachmentOpen = ref(false)
@@ -176,6 +191,7 @@ const form = reactive({
   source: prospect.value?.source || '',
   status: prospect.value?.status || 'New',
   assigned_to: prospect.value?.assigned_to ? String(prospect.value.assigned_to) : '',
+  tags: prospect.value?.tags?.join(', ') || '',
   notes: prospect.value?.notes || '',
 })
 
@@ -190,6 +206,7 @@ watch(prospect, (value) => {
   form.source = value.source
   form.status = value.status
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+  form.tags = value.tags?.join(', ') || ''
   form.notes = value.notes
 }, { immediate: true })
 
@@ -206,6 +223,7 @@ const onSave = guard(async () => {
       source: form.source,
       status: form.status as ProspectStatus,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      tags: parseTags(form.tags),
       notes: form.notes,
     })
     success(t('crm.prospects.detail.updateSuccess'))
