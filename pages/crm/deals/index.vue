@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-black">{{ t('crm.deals.index.heading') }}</h2>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <!-- View switcher: one joined segmented control, not two standalone
              buttons — kept visually distinct from the Export/Add actions so
              it doesn't read as a third/fourth action in the row. -->

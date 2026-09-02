@@ -50,16 +50,19 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEAL_STAGE_COLORS } from '~/constants/mockData'
+import { DEAL_STAGE_COLORS, PROSPECT_STATUS_COLORS } from '~/constants/mockData'
 
 const { t } = useI18n()
 const pipelineStagesStore = usePipelineStagesStore()
 
-// A card can be a Deal or a Lead being shown ahead of conversion — `_lane` is the
-// column (DealStage value) it renders under, precomputed by the caller so this
-// component never needs to know how a Lead's status maps onto Deal stages.
+// A card can be a Deal or a Lead being shown ahead of conversion (on the
+// unified Deals board), or a Prospect on its own standalone board (§3.1a) —
+// `_lane` is the column value it renders under, precomputed by the caller so
+// this component never needs to know how a Lead/Prospect's status maps onto
+// its board's columns.
 type PipelineCard = { id: number, _type: 'deal', _lane: string } & Deal
   | { id: number, _type: 'lead', _lane: string } & Lead
+  | { id: number, _type: 'prospect', _lane: string } & Prospect
 
 const props = defineProps<{
   columns: Select[]
@@ -84,20 +87,33 @@ const STAGE_DESCRIPTION_KEYS: Record<DealStage, string> = {
   Lost: 'lost',
 }
 
+const PROSPECT_STATUS_DESCRIPTION_KEYS: Record<ProspectStatus, string> = {
+  New: 'prospectNew',
+  Engaging: 'prospectEngaging',
+  Nurturing: 'prospectNurturing',
+  Disqualified: 'prospectDisqualified',
+  Converted: 'prospectConverted',
+}
+
 const getStageDescription = (value: string) => {
-  const key = STAGE_DESCRIPTION_KEYS[value as DealStage]
+  const key = STAGE_DESCRIPTION_KEYS[value as DealStage] || PROSPECT_STATUS_DESCRIPTION_KEYS[value as ProspectStatus]
   return key ? t(`crm.components.pipelineBoard.stageDescriptions.${key}`) : ''
 }
 
 const WON_COLOR = '#00C875'
 const LOST_COLOR = '#E2445C'
 
-// Prefers the hardcoded DEAL_STAGE_COLORS map (kept for the default stages'
-// exact existing look), then falls back to the configured PipelineStage's
-// is_won_stage/is_lost_stage flags so a custom Admin-added stage still renders
-// sensibly (green/red/primary) without needing a per-stage hardcoded color.
+// Prefers the hardcoded DEAL_STAGE_COLORS/PROSPECT_STATUS_COLORS maps (kept
+// for each board's default columns' exact existing look), then falls back to
+// the configured PipelineStage's is_won_stage/is_lost_stage flags so a custom
+// Admin-added Deal stage still renders sensibly (green/red/primary) without
+// needing a per-stage hardcoded color. Prospect statuses are a fixed enum
+// (not admin-configurable, see PROSPECT_STATUS_COLORS' own doc), so they
+// never reach the pipelineStagesStore fallback — that store only knows Deal
+// stages, and would just return undefined for a Prospect status.
 const getColumnColor = (value: string) => {
   if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
+  if (PROSPECT_STATUS_COLORS[value as ProspectStatus]) return PROSPECT_STATUS_COLORS[value as ProspectStatus]
   const row = pipelineStagesStore.byName(value)
   if (row?.is_won_stage) return WON_COLOR
   if (row?.is_lost_stage) return LOST_COLOR

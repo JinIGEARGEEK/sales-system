@@ -139,7 +139,8 @@ Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) i
 |---|---|
 | **Admin** | Full access to every resource, including Users, Tags, and (once built) Product Catalog / pipeline config |
 | **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records |
-| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts |
+| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts. Also has access to `/prospects*` for oversight, alongside Marketing. |
+| **Marketing** | Added 2026-09-01 for the Prospect funnel (§3a) — full CRUD on `/prospects*` (bulk/trash/restore stay Admin/Sales-Manager-only, same restriction as Leads), plus whatever Company/Contact access those records need (reuses the existing `/companies`/`/contacts` endpoints, no Marketing-specific restriction there). No access to Leads/Deals/Quotes/Contracts/Payments — a Prospect converting to a Lead is where Marketing's involvement ends. Not part of the original spec's role table — see `feature-spec.md`'s Prospect Management section |
 | **Production (limited)** | Write access to *only* `status` and `production_reference` on `Project` records (§8.3) — no access to any other resource |
 
 Suggested enforcement: role on the JWT claims, checked server-side per route — not by trusting a client-sent role header.
@@ -229,7 +230,7 @@ interface Lead {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `company_id` (exact match, added 2026-08-24), `search` (name/email/**company name**, via a join now that `company_name` is a real FK — preserves what `search` could already match before the 2026-08-24 migration off free-text `company_name`, unlike Deal/Contact's own `search`, which was never company-name-aware to begin with), `exclude_converted=true` (returns only Leads with `converted_deal_id IS NULL` — used by the Deals Pipeline board, see §7.1, so already-converted Leads don't show up as cards alongside their own resulting Deal). `sort=company_name`/`-company_name` also joins to `companies`, same pattern as Deal/Contact's existing company-name sort special-case (§7.1/§3 elsewhere) — the two joins are shared/deduplicated, not applied twice. A Lead with no `company_id` at all still matches on `name`/`email` and still appears in an otherwise-unfiltered list (`LEFT JOIN`, not `JOIN`). Backs `pages/crm/leads/index.vue`. |
+| `GET` | `/leads` | 🟢 | Filters: `status`, `source`, `assigned_to`, `company_id` (exact match, added 2026-08-24), `search` (name/email/**company name**, via a join now that `company_name` is a real FK — preserves what `search` could already match before the 2026-08-24 migration off free-text `company_name`, unlike Deal/Contact's own `search`, which was never company-name-aware to begin with), `exclude_converted=true` (returns only Leads with `converted_deal_id IS NULL` — used by the Deals Pipeline board, see §7.1, so already-converted Leads don't show up as cards alongside their own resulting Deal). `sort=company_name`/`-company_name` also joins to `companies`, same pattern as Deal/Contact's existing company-name sort special-case (§7.1/§3 elsewhere) — the two joins are shared/deduplicated, not applied twice. A Lead with no `company_id` at all still matches on `name`/`email` and still appears in an otherwise-unfiltered list (`LEFT JOIN`, not `JOIN`). **Updated 2026-09-01**: this nullable-company-id join+search logic is now a shared pair of helpers, `utils.ApplyNullableCompanySearch`/`ApplyNullableCompanySort`, used by both this endpoint and `GET /prospects` below (previously duplicated inline in `LeadHandler.List` only, back when Lead was the only resource with a nullable `company_id` needing it). Backs `pages/crm/leads/index.vue`. |
 | `POST` | `/leads` | 🟢 | Create. `company_id`, if supplied, is **not** validated against an existing Company row — unlike Deal/Contact, which require and validate it, Lead's stays optional and unchecked, matching the old `company_name`'s complete lack of validation. If the request body omits `assigned_to` (or sends `null`), the backend auto-assigns the new Lead via `pickAutoAssignee()` (`internal/handlers/leads.go`) — a least-open-load strategy that picks whichever active Sales Rep currently has the fewest open Leads/Deals, not a literal round-robin index. This only fires on creation with no explicit assignee; bulk-reassign and Kanban-drag reassignment flows are untouched. `score`/`classification` are computed server-side after create (`computeAndClassify()`) — an optional `classification: 'sql'` in the body is honored as a manual override, any other value is ignored in favor of the auto mql/none result. |
 | `GET` | `/leads/:id` | 🟢 | Single lead. |
 | `PUT` | `/leads/:id` | 🟢 | Update (including status transitions). **Not a true partial update** — every `leadForm` field (`name`, `company_id`, `email`, `phone`, `source`, `status`, `notes`, `assigned_to`) is overwritten from whatever the request body contains, so a caller must resend the full current record, not just the changed field(s) — note this means omitting `company_id` clears the link entirely, unlike Contact's Update, which only touches `company_id` if non-zero/present. `score` is always recomputed. `classification` is the one exception with real partial-update semantics: omitting it (or sending anything other than `'sql'`) leaves an existing `'sql'` override in place and otherwise falls through to the auto mql/none result — only an explicit `classification: 'sql'` in the body sets/keeps it. Frontend: `pages/crm/leads/[id].vue`'s "Mark Sales Ready" button. |
@@ -263,6 +264,68 @@ interface LeadScoringCriterion {
 | `PATCH` / `DELETE` | `/admin/lead-scoring-criteria/:id` | 🟢 | Admin only. Update / deactivate (`DELETE` is a soft `is_active: false` flip, same convention as `/admin/pipeline-stages`, not a hard row delete). |
 
 The MQL threshold itself (`score >=` this value → `classification: 'mql'`) lives on the `AppSettings` singleton, not a `LeadScoringCriterion` row — see `lead_scoring_mql_threshold` in §8.7a.
+
+---
+
+## 3a. Prospects (`FR-CRM-105`/`FR-CRM-106`)
+
+The pre-Lead marketing funnel entity — Marketing works a Prospect (with an optional linked Company/Contact, same nullable-FK shape as `Lead.company_id`) before it's ready to hand off to Sales via Convert. Endpoint/handler/model shape deliberately mirrors Leads one funnel stage earlier — see §3 for the pattern this is modeled on.
+
+`interfaces/crm.d.ts` → `Prospect`:
+
+```ts
+type ProspectStatus = 'New' | 'Engaging' | 'Nurturing' | 'Disqualified' | 'Converted'
+// ProspectStatus is a fixed enum, not admin-configurable (mirrors LeadStatus,
+// not the admin-configurable PipelineStage) — Marketing's funnel stage is a
+// simple closed set. 'Converted' is set only by POST /prospects/:id/convert,
+// never chosen directly.
+
+interface Prospect {
+  id: number
+  name: string
+  company_id: number | null   // nullable FK, same optional-ness as Lead.company_id
+  email: string
+  phone: string
+  // Plain string, not LeadSource. Updated 2026-09-01: Prospect has its own
+  // admin-configurable source list (ProspectSourceOption,
+  // /admin/prospect-sources) — deliberately separate from Lead/Deal's
+  // (LeadSourceOption), since Marketing's actual channels (Social Media,
+  // LINE OA, Email Campaign, Content/SEO, Cold Outreach, Marketing
+  // Campaign) don't overlap well with Sales's lead-capture sources
+  // (Referral/Website/Event/Ads/Other). Originally shared Lead's list; split
+  // out same day once Marketing's real channel mix turned out not to fit it.
+  source: string
+  status: ProspectStatus
+  notes: string
+  assigned_to: number | null  // User.id
+  tags: string[] | null
+  converted_lead_id: number | null   // Lead.id once converted, else null — see /prospects/:id/convert
+  deleted_at?: string | null  // present only on GET /prospects/trash rows
+  created_at: string
+}
+```
+
+`Prospect` soft-deletes the same as `Lead`/`Deal` — `DELETE` sets `deleted_at`/`deleted_by`, recoverable via `/trash` + `/:id/restore`.
+
+Every `/prospects*` route requires the **Admin**, **Marketing**, or **Sales Manager** role (§1.7) — a plain Sales Rep has no legitimate reason to see the pre-Lead funnel and is `403`'d at the route group, before any per-record ownership check.
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/prospects` | 🟢 | Filters: `status`, `source`, `assigned_to` (`unassigned` matches `IS NULL`), `company_id` (exact match), `search` (name/email/company name, via the same `LEFT JOIN companies` pattern as `GET /leads`), `exclude_converted=true` (`converted_lead_id IS NULL`). `sort=company_name`/`-company_name` also joins to `companies`. Backs `pages/crm/prospects/index.vue`. |
+| `POST` | `/prospects` | 🟢 | Create. `source` is validated against Prospect's own active `ProspectSourceOption` config (`/admin/prospect-sources`, Admin-only — see below), separate from Lead/Deal's `LeadSourceOption`. `status` defaults to `New` when omitted. `status: 'Converted'` is rejected with `422` (see the Convert row's status guard below) — a client can't fake that state without a Lead behind it. No Lead-style scoring/classification — that's Lead-specific. `tags` is settable directly here, unlike Lead's own `leadForm` (which only exposes tags via `PATCH /leads/bulk-tag`) — mirrors Contact's simpler pattern instead, added 2026-09-02 once single-record tag editing on `pages/crm/prospects/[id].vue` turned out to be a real Marketing workflow, not just a bulk-select action. |
+| `GET` | `/prospects/:id` | 🟢 | Single prospect. |
+| `PUT` | `/prospects/:id` | 🟢 | Update (including status transitions). Not a true partial update — every field is overwritten from the request body, same as `PUT /leads/:id`. Same `status: 'Converted'` guard as Create: rejected with `422` unless the Prospect is already `Converted` (a client harmlessly resubmitting an unchanged record's status is allowed through — only an attempted *transition* into `Converted` from anything else is blocked). |
+| `DELETE` | `/prospects/:id` | 🟢 | Soft-delete. |
+| `GET` | `/prospects/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Prospects. |
+| `POST` | `/prospects/:id/restore` | 🟢 | Admin/Sales Manager only. |
+| `PATCH` | `/prospects/bulk-reassign` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], assigned_to: number \| null}`. |
+| `PATCH` | `/prospects/bulk-tag` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[], tags: string[], mode: 'add' \| 'set'}`. |
+| `PATCH` | `/prospects/bulk-archive` | 🟢 | Admin/Sales Manager only. Body: `{ids: number[]}`. |
+| `POST` | `/prospects/:id/convert` | 🟢 | Converts a Prospect into a Lead (and Company/Contact if new) — `FR-CRM-106`, mirroring `POST /leads/:id/convert`'s Company-resolution precedence exactly, one funnel stage earlier: (1) an explicit `company_id` on this request always wins; (2) otherwise the Prospect's own `company_id` is reused directly (falling back to a fresh Company if that one's since been soft-deleted); (3) with neither, a fresh, unnamed Company is created. `contact_id`, if omitted, is created from the Prospect's `name`/`email`/`phone`. Body: `{ company_id?: number, contact_id?: number, lead?: { assigned_to?: number } }` — the new Lead's `assigned_to` defaults to the Prospect's own `assigned_to` if not overridden in the request. The new Lead is created with `status: 'New'` and `prospect_id` set to this Prospect's id (mirrors `Deal.lead_id`). Any Prospect attachments (`related_type: 'prospect'`) are re-pointed to the new Lead in the same transaction, same as Lead→Deal's attachment carry-over (§8.6). Sets the Prospect's `status: 'Converted'` and `converted_lead_id` in the same transaction. Response: `{ data: { lead: Lead, company: Company, contact: Contact } }`. Returns `409 CONFLICT` if the Prospect has already been converted. |
+
+> **Source carry-over on Convert (added 2026-09-01):** the new Lead's `source` is set directly from the Prospect's `source` string, even though Prospect and Lead now validate against separate option lists (`ProspectSourceOption` vs. `LeadSourceOption` — see above). The resulting Lead can end up with a `source` value that isn't one of Lead's own configured options (e.g. `"LINE OA"`) — intentional, to preserve real origination info rather than lossily mapping it to `"Other"`. The frontend's Lead detail page (`pages/crm/leads/[id].vue`) keeps that value selectable in its Source picker even though it won't appear for new Leads going forward, same pattern as `pages/crm/contacts/[id].vue`'s `role_title` handling a deactivated option.
+
+> **Known gap, both Convert endpoints (flagged 2026-09-01, not fixed as part of adding Prospect — it's Lead's existing, unchanged behavior and changing it here was out of scope):** `CanWrite` is only checked against the *source* record's `assigned_to` (the Lead/Prospect being converted) — the request body's `deal.assigned_to` / `lead.assigned_to` for the *newly created* target record is never itself ownership-checked. In practice this means a Sales Rep converting a Lead/Prospect they own could assign the resulting Deal/Lead to a teammate without Sales-Manager privileges, the one write `CanWrite` would otherwise block via a direct `PUT`. Worth a real look if/when Lead's Convert behavior is revisited, but not addressed here to avoid changing established Lead semantics as a side effect of adding Prospect.
 
 ---
 
@@ -416,7 +479,7 @@ interface Deal {
 
 ```ts
 type ActivityType = 'call' | 'email' | 'meeting'
-type ActivityRelatedType = 'contact' | 'company' | 'deal'
+type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect'   // 'prospect' added 2026-09-01 for Marketing's Prospect Tasks tab (§3a) — Activity/Task share this union
 
 interface Activity {
   id: number
@@ -554,7 +617,7 @@ interface Payment {
 
 ```ts
 type TaskStatus = 'pending' | 'done'
-type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal'
+type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal' | 'prospect'
 // Plain triage label, no workflow behavior attached (unlike TaskStatus) — added 2026-08-22.
 type TaskPriority = 'low' | 'medium' | 'high'
 
@@ -725,7 +788,7 @@ Generic file/link attachments for Leads, Deals, Companies, and Projects — quot
 
 ```ts
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
-type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project'
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'prospect'
 
 interface Attachment {
   id: number
@@ -751,6 +814,8 @@ Exactly one of `file_url`/`external_url` must be present on every row — reject
 | `DELETE` | `/attachments/:id` | Sales/Admin, or the original uploader | Deletes the metadata row only — the file itself is left in object storage (no orphan-cleanup job in v1, matching §6.1's general storage approach). |
 
 > **Lead → Deal conversion (`POST /leads/:id/convert`, §3):** re-point any `Attachment` rows with `related_type: 'lead'` and `related_id: <the converted lead>` to `related_type: 'deal'`/the newly created Deal's id, in the same transaction as the conversion — don't leave them stranded on a Lead record that no longer appears in any list view once converted.
+>
+> **Prospect → Lead conversion (`POST /prospects/:id/convert`, §3a):** same re-pointing, one funnel stage earlier — `related_type: 'prospect'` rows move to `related_type: 'lead'`/the newly created Lead's id, in the same transaction as the conversion.
 
 ### 8.7 Admin pipeline configuration (`FR-CRM-021`, `FR-CRM-081`)
 
@@ -770,6 +835,14 @@ interface LeadSourceOption {
   name: string   // the LeadSource string value used elsewhere
   is_active: boolean
 }
+
+// Added 2026-09-01 — Prospect's own source list, separate from
+// LeadSourceOption above (see §3a's Prospect.source comment for why).
+interface ProspectSourceOption {
+  id: number
+  name: string
+  is_active: boolean
+}
 ```
 
 | Method | Path | Auth | Description |
@@ -778,8 +851,10 @@ interface LeadSourceOption {
 | `PUT` / `DELETE` | `/admin/pipeline-stages/:id` | Admin | Update/deactivate a stage. `is_won_stage`/`is_lost_stage` are read by `internal/handlers/deals.go`'s `IsWonStage`/`IsLostStage` helpers, so renaming or adding a custom stage with these flags set is honored by Won/Lost resolution across Create/Update/`PATCH /deals/:id/stage`. |
 | `GET` / `POST` | `/admin/lead-sources` | Admin | List/create Lead source rows. Seeded from the previously hardcoded `CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` lists on first run. |
 | `PUT` / `DELETE` | `/admin/lead-sources/:id` | Admin | Update/deactivate a Lead source. |
+| `GET` / `POST` | `/admin/prospect-sources` | Admin | List/create Prospect source rows — Marketing's own funnel-source taxonomy (§3a), Admin-only same as every other option list here even though Marketing owns day-to-day Prospect data. Seeded with 6 defaults on first run: Social Media, LINE OA, Email Campaign, Content/SEO, Cold Outreach, Marketing Campaign. |
+| `PATCH` / `DELETE` | `/admin/prospect-sources/:id` | Admin | Update/deactivate a Prospect source (soft `is_active: false` flip, not a hard delete). |
 
-Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants (`constants/mockData/deals.ts`, `leads.ts`) were removed — these two stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
+Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`/`stores/prospectSources.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants (`constants/mockData/deals.ts`, `leads.ts`) were removed — these stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
 
 ### 8.7a Admin app settings (`FR-CRM-058`, `FR-CRM-091`, `FR-CRM-045`)
 

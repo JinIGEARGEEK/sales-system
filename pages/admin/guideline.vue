@@ -43,6 +43,11 @@ const roleTabValueByRole: Record<Role, string> = {
   'Sales Manager': 'salesManager',
   Admin: 'admin',
   Production: 'production',
+  // No dedicated Marketing guideline tab exists yet (§3.1a's Prospect
+  // funnel is new) — defaults to the closest existing content rather than
+  // leaving this map incomplete. Revisit if/when Marketing gets its own
+  // guideline topics.
+  Marketing: 'salesRep',
 }
 
 const activeTab = ref(roleTabValueByRole[role.value] ?? 'salesRep')

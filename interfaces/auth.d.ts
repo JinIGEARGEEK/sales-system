@@ -1,4 +1,7 @@
-type Role = 'Admin' | 'Sales Rep' | 'Sales Manager' | 'Production'
+// 'Marketing' added 2026-09-01 for the pre-Lead Prospect funnel (§3.1a) —
+// owns /prospects* alongside Admin/Sales Manager oversight, no access to
+// Leads/Deals/Quotes/Contracts/Payments.
+type Role = 'Admin' | 'Sales Rep' | 'Sales Manager' | 'Production' | 'Marketing'
 
 interface User {
   first_name: string

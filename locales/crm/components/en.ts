@@ -8,6 +8,11 @@ export default {
       negotiation: 'Terms being discussed',
       won: 'Deal closed successfully',
       lost: 'Deal did not close',
+      prospectNew: 'Not yet contacted',
+      prospectEngaging: 'In active outreach',
+      prospectNurturing: 'Warming up over time',
+      prospectDisqualified: 'Not a good fit',
+      prospectConverted: 'Handed off to Sales as a Lead',
     },
   },
   activityTimeline: {
@@ -20,6 +25,13 @@ export default {
     confirmBodyFallback: 'Are you sure you want to delete this item? This action cannot be undone.',
     cancel: 'Cancel',
     delete: 'Confirm',
+  },
+  companyPreviewModal: {
+    title: 'Company',
+    close: 'Close',
+    viewFullPage: 'Open Full Page',
+    loading: 'Loading company...',
+    notFound: 'Company not found.',
   },
   lastContact: {
     never: 'Never contacted',

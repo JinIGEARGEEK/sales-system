@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
     <div v-if="company">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-3">
           <UButton
             icon="material-symbols:arrow-back"
             variant="ghost"
@@ -11,7 +11,7 @@
             :aria-label="t('global.back')"
             @click="navigateTo('/crm/companies')"
           />
-          <h2 class="text-xl font-black">{{ company.name }}</h2>
+          <h2 class="max-w-full truncate text-xl font-black">{{ company.name }}</h2>
           <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
             {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
           </UBadge>
@@ -20,7 +20,9 @@
         <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
       </div>
 
-      <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
+      <div class="mb-4 overflow-x-auto">
+        <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
+      </div>
 
       <div v-if="activeTab === 'overview'" class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div class="lg:col-span-3">

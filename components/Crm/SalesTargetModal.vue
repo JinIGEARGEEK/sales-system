@@ -5,7 +5,7 @@
     </template>
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputText
             v-model.number="form.year"
             type="number"

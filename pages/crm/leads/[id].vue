@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
     <div v-if="lead">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-3">
           <UButton
             icon="material-symbols:arrow-back"
             variant="ghost"
@@ -11,12 +11,12 @@
             :aria-label="t('global.back')"
             @click="goBack()"
           />
-          <h2 class="text-xl font-black">{{ lead.name }}</h2>
+          <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
           <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ t('crm.leads.index.mqlBadge') }}</UBadge>
           <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ t('crm.leads.index.sqlBadge') }}</UBadge>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
           a rep can set directly; mql/none stay entirely score-driven. -->
           <ButtonPrimary
@@ -36,7 +36,7 @@
             v-else-if="lead.status !== 'Disqualified'"
             :label="t('crm.leads.detail.convertToDeal')"
             icon="material-symbols:swap-horiz"
-            @click="navigateTo(`/crm/deals/create?lead_id=${lead.id}`)"
+            @click="requestConvert"
           />
         </div>
       </div>
@@ -48,7 +48,7 @@
             <InputCompanySelect v-model="form.company_id" :label="t('crm.leads.detail.companyName')" name="company_id" />
             <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" rules="required" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
-            <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
+            <InputSelect v-model="form.source" :options="sourceOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
             <InputSelect
               v-model="form.status"
               :options="LEAD_STATUS_FORM_OPTIONS"
@@ -84,6 +84,15 @@
       <CrmAddAttachmentModal
         v-model:open="addAttachmentOpen"
         @submit="onAddAttachment"
+      />
+
+      <CrmConfirmDeleteModal
+        v-model:open="confirmConvertOpen"
+        :title="t('crm.leads.detail.confirmConvertToDealTitle')"
+        :body="t('crm.leads.detail.confirmConvertToDealBody', { name: lead.name })"
+        :confirm-label="t('crm.leads.detail.confirmConvertToDealButton')"
+        confirm-color="primary"
+        @confirm="onConvertToDeal"
       />
     </div>
 
@@ -126,8 +135,27 @@ onMounted(() => {
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })
 
+// A Lead converted from a Prospect (POST /prospects/:id/convert) may carry a
+// source value that isn't one of Lead's own configured LeadSourceOption rows
+// (e.g. "LINE OA") — Prospect and Lead deliberately have separate source
+// lists. Keep it selectable here rather than silently blanking the field,
+// same pattern as pages/crm/contacts/[id].vue's roleTitleOptions.
+const sourceOptions = computed<Select[]>(() => {
+  const current = lead.value?.source
+  const active = leadSourcesStore.activeOptions
+  if (!current || active.some(o => o.value === current)) return active
+  return [...active, { label: current, value: current }]
+})
+
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
 const addAttachmentOpen = ref(false)
+const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
+
+const onConvertToDeal = () => {
+  if (!lead.value) return
+  closeConvertConfirm()
+  navigateTo(`/crm/deals/create?lead_id=${lead.value.id}`)
+}
 
 const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
   try {

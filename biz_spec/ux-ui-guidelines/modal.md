@@ -134,4 +134,22 @@ Modal ทุกหน้าแบ่งออกเป็น **3 ส่วนช
 - ลบข้อมูล → "ยืนยัน" (default)
 - ยกเลิกคำสั่ง → "ยืนยันการยกเลิก"
 - ปิดใช้งาน → "ปิดใช้งาน"
+- แปลง (Convert to Lead / Convert to Deal) → "แปลง" (`confirm-color="primary"`, ไม่ใช้สีแดงเช่นกัน เพราะไม่ใช่ action ทำลายข้อมูล)
 - ใช้ `confirmLabel` prop เพื่อกำหนดชื่อปุ่มตาม context
+
+**Confirm ก่อน action บนหน้า Detail ของ record เดียว (ไม่ใช่ list row)**
+Prospect Detail (`crm.prospects.detail.convertToLead`) และ Lead Detail (`crm.leads.detail.convertToDeal`) ใช้ `CrmConfirmDeleteModal` ตัวเดียวกันนี้ยืนยันก่อนเรียก Convert เพราะเป็น action ที่ย้อนกลับไม่ได้ (เปลี่ยนสถานะ record ปัจจุบันและสร้างเรคคอร์ดใหม่) เช่นเดียวกับการลบ — component และ copy pattern เหมือนกันทุกอย่าง ต่างกันแค่ trigger: หน้า list ใช้ `useDeleteConfirm` composable (เก็บ target ของแถวที่เลือก) ส่วนหน้า Detail ที่ record อยู่ใน scope แล้วใช้ `useConfirmGate` composable (`composables/utils/useConfirmGate.ts`) ซึ่งเป็นแค่ boolean gate ไม่ต้องเก็บ target แยก
+
+------------------------------------------------
+
+## Modal ดูรายละเอียดแบบย่อ (Quick-View / Preview)
+
+ใช้เมื่อหน้า Detail หนึ่งมีลิงก์ไปยัง record อื่นที่อยู่นอก entity หลักของหน้า (เช่น "ดูบริษัท" บน Prospect/Contact Detail) แต่ไม่อยากพาผู้ใช้ออกจากฟอร์มที่กำลังกรอกอยู่ด้วยการเปลี่ยนหน้าเต็ม — ให้เปิด modal แสดงข้อมูลอ่านอย่างเดียว (read-only) แทนการ navigate ตรง ๆ
+
+| | ค่า |
+|---|---|
+| โครงสร้าง | เหมือน modal ฟอร์มทั่วไป (Header / Body / Footer คั่นด้วยเส้นแบ่ง) แต่ Body เป็นข้อมูลอ่านอย่างเดียว ไม่ใช่ฟอร์ม |
+| หัวข้อ | ชื่อ record (เช่นชื่อบริษัท) |
+| Footer | ปุ่ม "ปิด" (outline/cancel) และปุ่ม "ดูหน้าเต็ม" ที่พาไปหน้ารายละเอียดจริงของ record นั้น |
+
+ตัวอย่างแรก: `components/Crm/CompanyPreviewModal.vue` — ใช้แทน `TableCardLink` เดิมที่ "ดูบริษัท" บน Prospect Detail (`pages/crm/prospects/[id].vue`) และ Contact Detail (`pages/crm/contacts/[id].vue`) เคยแค่ `NuxtLink` ไปหน้า Company Detail เต็ม รับ `company-id` prop, fetch ผ่าน `companiesStore.fetchOne` ถ้ายังไม่มีใน `items` (record อาจอยู่นอก cache 200 แถวของ `fetchAll`), และแสดงสถานะ/tags/industry/size/revenue size/website/address/notes อย่างย่อ — ไม่ทำ tabs ครบเหมือนหน้าเต็ม (Contacts/Deals/Products/Projects/Activity/Tasks/Attachments tabs ยังต้องกดปุ่ม "ดูหน้าเต็ม" เพื่อเข้าไปดู)

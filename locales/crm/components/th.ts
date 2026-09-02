@@ -8,6 +8,11 @@ export default {
       negotiation: 'อยู่ระหว่างเจรจาต่อรอง',
       won: 'ปิดการขายสำเร็จ',
       lost: 'ดีลไม่สำเร็จ',
+      prospectNew: 'ยังไม่ได้ติดต่อ',
+      prospectEngaging: 'อยู่ระหว่างติดต่อ',
+      prospectNurturing: 'ดูแลอย่างต่อเนื่อง',
+      prospectDisqualified: 'ไม่เหมาะสม',
+      prospectConverted: 'ส่งต่อให้เซลล์เป็น Lead แล้ว',
     },
   },
   activityTimeline: {
@@ -20,6 +25,13 @@ export default {
     confirmBodyFallback: 'คุณต้องการจะลบรายการนี้ใช่หรือไม่ การดำเนินการนี้ไม่สามารถย้อนกลับได้',
     cancel: 'ยกเลิก',
     delete: 'ยืนยัน',
+  },
+  companyPreviewModal: {
+    title: 'บริษัท',
+    close: 'ปิด',
+    viewFullPage: 'ดูหน้าเต็ม',
+    loading: 'กำลังโหลดข้อมูลบริษัท...',
+    notFound: 'ไม่พบข้อมูลบริษัท',
   },
   lastContact: {
     never: 'ยังไม่เคยติดต่อ',

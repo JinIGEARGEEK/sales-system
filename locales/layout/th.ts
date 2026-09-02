@@ -7,6 +7,7 @@ export default {
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
     tags: 'Tag',
+    prospects: 'Prospects',
     leads: 'Leads',
     deals: 'Deals',
     projects: 'Projects/Products',
@@ -15,6 +16,7 @@ export default {
     trash: 'ถังขยะ',
     guideline: 'คู่มือการใช้งาน',
   },
+  openMenu: 'เปิดเมนู',
   logout: 'ออกจากระบบ',
   changePassword: 'เปลี่ยนรหัสผ่าน',
   user: {

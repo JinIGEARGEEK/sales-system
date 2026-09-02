@@ -19,7 +19,15 @@ type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
 type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost'
 type DealStatus = 'open' | 'won' | 'lost'
 type ActivityType = 'call' | 'email' | 'meeting'
-type ActivityRelatedType = 'contact' | 'company' | 'deal'
+// 'prospect' added 2026-09-01 for Marketing's pre-Lead funnel (§3.1a) — Task
+// shares this same union (TaskRelatedType below), so Prospects get a Tasks
+// tab for free via the existing polymorphic infra.
+type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect'
+// A fixed enum, not admin-configurable (mirrors LeadStatus, not the
+// admin-configurable PipelineStage) — Marketing's funnel stage is a simple
+// closed set. 'Converted' is set only by POST /prospects/:id/convert, never
+// chosen directly in the create/edit form.
+type ProspectStatus = 'New' | 'Engaging' | 'Nurturing' | 'Disqualified' | 'Converted'
 // 'expired' is a read-derived value computed server-side (Quote.EffectiveStatus)
 // for display/filtering only — never a value the create/edit status picker sets.
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
@@ -42,7 +50,9 @@ type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Su
 // are useful before a Lead ever converts to a Deal. 'quote' added 2026-08-23 for the
 // Quote editor's attachments section (quotation-builder rebuild) — reuses this same
 // generic model, no dedicated Quote-attachments infrastructure.
-type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote'
+// 'prospect' added 2026-09-01 — carried over to 'lead' by
+// POST /prospects/:id/convert, same as 'lead' is carried to 'deal'.
+type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote' | 'prospect'
 // Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default; a labeling/
 // expectation field only, doesn't change how VAT is computed (see useQuoteTotals).
 type QuotePriceType = 'excl_tax' | 'incl_tax'
@@ -113,7 +123,38 @@ interface Lead {
   // AppSettings.lead_scoring_mql_threshold.
   score: number
   classification: LeadClassification
+  // Set when this Lead originated from a Marketing Prospect via
+  // POST /prospects/:id/convert — null for a Lead created directly. Mirrors
+  // Deal.lead_id's back-reference to its own originating record.
+  prospect_id?: number | null
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
+  deleted_at?: Date | null
+  created_at: Date
+}
+
+// The pre-Lead marketing funnel entity (§3.1a) — Marketing works a Prospect,
+// with an optional linked Company (same nullable-FK shape as Lead.company_id),
+// before it's ready to hand off to Sales via Convert. Endpoint/field shape
+// deliberately mirrors Lead one funnel stage earlier.
+interface Prospect {
+  id: number
+  name: string
+  company_id: number | null
+  email: string
+  phone: string
+  // A plain string, not LeadSource — Prospect's source list
+  // (ProspectSourceOption, /admin/prospect-sources) is deliberately separate
+  // from Lead/Deal's (LeadSourceOption): Marketing's actual channels (Social
+  // Media, LINE OA, Email Campaign, ...) don't overlap well with Sales's
+  // lead-capture sources. Added 2026-09-01.
+  source: string
+  status: ProspectStatus
+  notes: string
+  assigned_to: number | null
+  tags?: string[] | null
+  // Set once this Prospect has been converted into a Lead — null until then.
+  converted_lead_id: number | null
+  // Present only on trash-listing responses (GET /prospects/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
 }
@@ -159,6 +200,16 @@ interface PipelineStage {
 // An Admin-configurable lead/deal source — GET/POST/PATCH/DELETE /admin/lead-sources.
 // Replaces the previously hardcoded LeadSource enum shared by Lead.source/Deal.channel.
 interface LeadSourceOption {
+  id: number
+  name: string
+  is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Prospect (marketing funnel) source — GET/POST/PATCH/
+// DELETE /admin/prospect-sources. Deliberately separate from LeadSourceOption
+// above — see Prospect.source's own comment for why.
+interface ProspectSourceOption {
   id: number
   name: string
   is_active: boolean

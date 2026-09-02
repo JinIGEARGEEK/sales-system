@@ -1,8 +1,8 @@
 <template>
   <div class="p-5">
     <div v-if="deal">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-3">
           <UButton
             icon="material-symbols:arrow-back"
             variant="ghost"
@@ -11,7 +11,7 @@
             :aria-label="t('global.back')"
             @click="goBack()"
           />
-          <h2 class="text-xl font-black">{{ deal.title }}</h2>
+          <h2 class="max-w-full truncate text-xl font-black">{{ deal.title }}</h2>
           <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
         </div>
         <ButtonPrimary
@@ -22,7 +22,9 @@
         />
       </div>
 
-      <UTabs :model-value="activeTab" :items="tabItems" class="mb-4" @update:model-value="onTabChange" />
+      <div class="mb-4 overflow-x-auto">
+        <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
+      </div>
 
       <NuxtPage />
     </div>

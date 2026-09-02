@@ -34,6 +34,7 @@
               variant="ghost"
               color="neutral"
               size="xs"
+              :class="action.danger ? 'text-red-500 hover:bg-red-50 hover:text-red-600' : ''"
               :aria-label="action.ariaLabel"
               @click="drawer = false; action.onClick()"
             />
@@ -41,15 +42,6 @@
         </div>
       </template>
     </USlideover>
-
-    <UButton
-      icon="material-symbols:menu"
-      variant="solid"
-      color="neutral"
-      size="sm"
-      class="fixed top-3 left-3 z-20 md:hidden"
-      @click="drawer = true"
-    />
 
     <aside class="relative hidden overflow-hidden border-r border-white/15 bg-[var(--color-sidebar-bg)]/90 text-white backdrop-blur-2xl md:flex md:w-44 md:flex-col">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
@@ -59,31 +51,28 @@
         <span class="text-lg font-medium">CRM System</span>
       </NuxtLink>
 
-      <div class="relative z-10 flex-1 overflow-y-auto p-2">
-        <nav class="flex flex-col gap-1">
+      <div class="relative z-10 flex-1 overflow-y-auto p-1.5">
+        <nav class="flex flex-col gap-0.5">
           <template v-for="(menuItem, index) in menuList" :key="index">
             <NuxtLink
               :to="menuItem.path"
-              class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-white"
+              class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
               :class="{ 'is-active font-medium': isActive(menuItem.path) }"
             >
               <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
               <span class="truncate">{{ menuItem.label }}</span>
             </NuxtLink>
-            <USeparator v-if="menuItem.separator" class="my-1 opacity-10" />
+            <USeparator v-if="menuItem.separator" class="my-0.5 opacity-10" />
           </template>
         </nav>
       </div>
 
-      <div class="relative z-10 border-t border-white/10 p-2.5">
-        <div class="flex items-center gap-2">
+      <div class="relative z-10 border-t border-white/10 p-2">
+        <div class="flex items-center gap-2" :title="email">
           <UAvatar :text="userInitials" size="xs" />
-          <div class="flex-1 min-w-0">
-            <div class="text-xs font-medium text-white truncate">{{ userDisplayName }}</div>
-            <div class="text-[11px] text-white/60 truncate">{{ email }}</div>
-          </div>
+          <div class="min-w-0 flex-1 truncate text-xs font-medium text-white">{{ userDisplayName }}</div>
         </div>
-        <div class="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2.5 text-white">
+        <div class="mt-1.5 flex items-center justify-between border-t border-white/10 pt-1.5 text-white">
           <SwitchLang glass />
           <div class="flex items-center gap-1">
             <UButton
@@ -105,8 +94,22 @@
     </aside>
 
     <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
-      <div ref="headerRef" class="sticky top-0 z-10 hidden h-(--layout-header-height) items-center justify-between gap-4 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-5 backdrop-blur-2xl md:flex">
+      <div ref="headerRef" class="sticky top-0 z-10 flex h-(--layout-header-height) items-center justify-between gap-3 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-3 backdrop-blur-2xl md:gap-4 md:px-5">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
+        <!-- Mobile menu trigger — lives in-flow in this always-visible bar
+             (rather than a fixed/floating button over the page content, which
+             used to overlap whatever heading a page put at its own top-left,
+             e.g. the Dashboard's title) so every page gets real top clearance
+             on mobile instead of a button sitting on top of its content. -->
+        <UButton
+          icon="material-symbols:menu"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          class="relative shrink-0 text-white hover:bg-white/10 md:hidden"
+          :aria-label="t('layout.openMenu')"
+          @click="drawer = true"
+        />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
         </div>
@@ -116,7 +119,11 @@
           leave-active-class="transition duration-150 ease-in"
           leave-to-class="opacity-0 translate-x-2"
         >
-          <p v-if="showTitleInHeader" class="truncate text-sm font-bold text-white">
+          <!-- Hidden on mobile — the page's own on-page heading right below
+               already shows this same title, and there's no room to also
+               duplicate it in this narrower bar alongside the menu trigger
+               and search box. -->
+          <p v-if="showTitleInHeader" class="hidden truncate text-sm font-bold text-white md:block">
             {{ currentPageTitle }}
           </p>
         </Transition>
@@ -128,7 +135,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -162,6 +169,11 @@ const menuList = computed(() => {
   const items: MenuItem[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
+    // Prospects (§3.1a) — the pre-Lead marketing funnel, kept its own
+    // separator-bounded group ahead of the sales-pipeline group below rather
+    // than folded into SALES_PIPELINE_ROLES, since it's Marketing's own
+    // destination, not a Sales one.
+    { icon: 'material-symbols:contact-mail-outline', label: t('layout.nav.prospects'), path: '/crm/prospects', separator: true, roles: PROSPECT_ROLES },
     { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: SALES_PIPELINE_ROLES },
