@@ -26,6 +26,13 @@ export default {
     cancel: 'Cancel',
     delete: 'Confirm',
   },
+  companyPreviewModal: {
+    title: 'Company',
+    close: 'Close',
+    viewFullPage: 'Open Full Page',
+    loading: 'Loading company...',
+    notFound: 'Company not found.',
+  },
   lastContact: {
     never: 'Never contacted',
     today: 'Contacted today',

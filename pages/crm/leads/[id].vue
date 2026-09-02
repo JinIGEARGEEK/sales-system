@@ -36,7 +36,7 @@
             v-else-if="lead.status !== 'Disqualified'"
             :label="t('crm.leads.detail.convertToDeal')"
             icon="material-symbols:swap-horiz"
-            @click="navigateTo(`/crm/deals/create?lead_id=${lead.id}`)"
+            @click="requestConvert"
           />
         </div>
       </div>
@@ -84,6 +84,15 @@
       <CrmAddAttachmentModal
         v-model:open="addAttachmentOpen"
         @submit="onAddAttachment"
+      />
+
+      <CrmConfirmDeleteModal
+        v-model:open="confirmConvertOpen"
+        :title="t('crm.leads.detail.confirmConvertToDealTitle')"
+        :body="t('crm.leads.detail.confirmConvertToDealBody', { name: lead.name })"
+        :confirm-label="t('crm.leads.detail.confirmConvertToDealButton')"
+        confirm-color="primary"
+        @confirm="onConvertToDeal"
       />
     </div>
 
@@ -140,6 +149,13 @@ const sourceOptions = computed<Select[]>(() => {
 
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
 const addAttachmentOpen = ref(false)
+const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
+
+const onConvertToDeal = () => {
+  if (!lead.value) return
+  closeConvertConfirm()
+  navigateTo(`/crm/deals/create?lead_id=${lead.value.id}`)
+}
 
 const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
   try {

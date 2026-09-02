@@ -26,6 +26,13 @@ export default {
     cancel: 'ยกเลิก',
     delete: 'ยืนยัน',
   },
+  companyPreviewModal: {
+    title: 'บริษัท',
+    close: 'ปิด',
+    viewFullPage: 'ดูหน้าเต็ม',
+    loading: 'กำลังโหลดข้อมูลบริษัท...',
+    notFound: 'ไม่พบข้อมูลบริษัท',
+  },
   lastContact: {
     never: 'ยังไม่เคยติดต่อ',
     today: 'ติดต่อวันนี้',

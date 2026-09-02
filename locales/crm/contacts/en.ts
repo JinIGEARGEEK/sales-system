@@ -60,7 +60,7 @@ export default {
     tags: 'Tags',
     tagsPlaceholder: 'Comma-separated',
     saveChanges: 'Save Changes',
-    viewCompany: 'View company →',
+    viewCompany: 'View Company',
     linkedDeals: 'Linked Deals',
     noLinkedDeals: 'No linked deals.',
     linkedProjects: 'Company Projects',

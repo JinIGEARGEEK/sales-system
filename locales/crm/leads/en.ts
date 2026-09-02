@@ -57,6 +57,9 @@ export default {
   detail: {
     pageTitle: 'Lead Detail',
     convertToDeal: 'Convert to Deal',
+    confirmConvertToDealTitle: 'Convert to Deal?',
+    confirmConvertToDealBody: 'Convert "{name}" to a Deal? You\'ll continue on the new Deal\'s create form.',
+    confirmConvertToDealButton: 'Convert',
     markSql: 'Mark Sales Ready',
     markSqlSuccess: 'Lead marked sales-ready (SQL)',
     fullName: 'Full Name',

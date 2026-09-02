@@ -26,7 +26,7 @@
             <ButtonPrimary
               :label="t('crm.prospects.detail.convertToLead')"
               icon="material-symbols:swap-horiz"
-              @click="onConvert"
+              @click="requestConvert"
             />
           </UTooltip>
         </div>
@@ -57,7 +57,13 @@
               </div>
               <div class="mt-4 flex gap-3">
                 <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" />
-                <TableCardLink v-if="prospect.company_id" :items="{ path: `/crm/companies/${prospect.company_id}`, label: t('crm.prospects.detail.viewCompany') }" />
+                <ButtonPrimary
+                  v-if="prospect.company_id"
+                  :label="t('crm.prospects.detail.viewCompany')"
+                  outline
+                  type="button"
+                  @click="companyPreviewOpen = true"
+                />
               </div>
             </Form>
           </ContainerTemplate>
@@ -122,6 +128,20 @@
       v-model:open="addAttachmentOpen"
       @submit="onAddAttachment"
     />
+
+    <CrmCompanyPreviewModal
+      v-model:open="companyPreviewOpen"
+      :company-id="prospect?.company_id ?? null"
+    />
+
+    <CrmConfirmDeleteModal
+      v-model:open="confirmConvertOpen"
+      :title="t('crm.prospects.detail.confirmConvertToLeadTitle')"
+      :body="t('crm.prospects.detail.confirmConvertToLeadBody', { name: prospect?.name || '' })"
+      :confirm-label="t('crm.prospects.detail.confirmConvertToLeadButton')"
+      confirm-color="primary"
+      @confirm="onConvert"
+    />
   </div>
 </template>
 
@@ -160,6 +180,7 @@ const prospectActivity = computed(() => activitiesStore.forRelated('prospect', p
 
 const prospectAttachments = computed(() => attachmentsStore.forRelated('prospect', prospectId))
 const addAttachmentOpen = ref(false)
+const companyPreviewOpen = ref(false)
 
 const onAddAttachment = async (payload: { category: AttachmentCategory, file: File } | { category: AttachmentCategory, fileName: string, externalUrl: string }) => {
   try {
@@ -232,6 +253,8 @@ const onSave = guard(async () => {
   }
 })
 
+const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
+
 const onConvert = async () => {
   if (!prospect.value) return
   try {
@@ -243,6 +266,8 @@ const onConvert = async () => {
     navigateTo(`/crm/leads/${lead.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+  } finally {
+    closeConvertConfirm()
   }
 }
 

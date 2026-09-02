@@ -57,6 +57,9 @@ export default {
   detail: {
     pageTitle: 'รายละเอียด Lead',
     convertToDeal: 'แปลงเป็น Deal',
+    confirmConvertToDealTitle: 'แปลงเป็น Deal?',
+    confirmConvertToDealBody: 'ต้องการแปลง "{name}" เป็น Deal ใช่หรือไม่? ระบบจะพาไปยังฟอร์มสร้าง Deal ใหม่',
+    confirmConvertToDealButton: 'แปลง',
     markSql: 'ทำเครื่องหมายว่าพร้อมขาย',
     markSqlSuccess: 'ทำเครื่องหมาย Lead ว่าพร้อมขาย (SQL) แล้ว',
     fullName: 'ชื่อ-นามสกุล',

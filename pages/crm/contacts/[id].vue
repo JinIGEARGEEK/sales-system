@@ -28,7 +28,12 @@
               </div>
               <div class="mt-4 flex gap-3">
                 <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" />
-                <TableCardLink :items="{ path: `/crm/companies/${contact.company_id}`, label: t('crm.contacts.detail.viewCompany') }" />
+                <ButtonPrimary
+                  :label="t('crm.contacts.detail.viewCompany')"
+                  outline
+                  type="button"
+                  @click="companyPreviewOpen = true"
+                />
               </div>
             </Form>
           </ContainerTemplate>
@@ -129,6 +134,11 @@
       :company-id="contact?.company_id"
       @submit="onSaveProject"
     />
+
+    <CrmCompanyPreviewModal
+      v-model:open="companyPreviewOpen"
+      :company-id="contact?.company_id ?? null"
+    />
   </div>
 </template>
 
@@ -154,6 +164,7 @@ const jobTitleOptionsStore = useJobTitleOptionsStore()
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
 const goBack = useBackNavigation('/crm/contacts')
+const companyPreviewOpen = ref(false)
 
 onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Contact, and
