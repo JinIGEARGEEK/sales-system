@@ -249,6 +249,17 @@ const onSave = guard(async () => {
   const wasWon = deal.value.status === 'won'
   try {
     const updated = await dealsStore.update(deal.value.id, {
+      // Company/Contact/Channel aren't editable on this form (Company/Contact
+      // are fixed at creation, shown read-only in the Linked Records card;
+      // Channel has no field here either) — but the Update endpoint replaces
+      // every field from the request body (it isn't a true partial update,
+      // same as Lead's own onMarkSql note), and company_id/contact_id are
+      // hard-required server-side. Omitting them here previously made every
+      // save on this page 422 outright, and omitting channel silently wiped
+      // it back to empty on every successful save.
+      company_id: deal.value.company_id,
+      contact_id: deal.value.contact_id,
+      channel: deal.value.channel,
       title: form.title,
       value: form.value,
       stage: form.stage as DealStage,
