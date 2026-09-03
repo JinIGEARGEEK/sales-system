@@ -134,7 +134,14 @@ onMounted(() => {
   notificationLogStore.fetchRecent().catch(notifyFetchError)
 })
 
-const recentAlerts = computed(() => notificationLogStore.items)
+// This widget only ever rendered Deal-linked firings (a "prospect" firing
+// has no deal_id/deal_title at all, added 2026-09-03 alongside that entity
+// type, FR-CRM-107) — filter+narrow here rather than loosening the prop
+// type, since this Sales-pipeline widget has nothing sensible to link a
+// Prospect alert to anyway.
+const recentAlerts = computed(() => notificationLogStore.items.filter(
+  (item): item is typeof item & { deal_id: number, deal_title: string } => item.deal_id !== undefined,
+))
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 

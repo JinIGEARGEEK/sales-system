@@ -12,7 +12,7 @@ type LeadScoringCriterionField = 'source' | 'has_company_name' | 'has_phone'
 // Workflow Notification Rules (FR-CRM-100/101/102) — the closed set of record
 // types a rule can watch, and who gets notified when it fires. Mirrors the
 // backend's NotificationRule.EntityType/RecipientRole validation.
-type NotificationEntityType = 'deal' | 'quote' | 'contract'
+type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect'
 type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 // Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
