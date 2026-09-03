@@ -47,6 +47,8 @@
           />
           <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
           <InputText v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
+          <InputDatePicker v-if="!productionEditor" v-model="form.expected_proposal_date" :label="t('crm.components.addProjectModal.expectedProposalDate')" name="expected_proposal_date" />
+          <InputDatePicker v-if="!productionEditor" v-model="form.expected_start_date" :label="t('crm.components.addProjectModal.expectedStartDate')" name="expected_start_date" />
           <InputDatePicker v-if="!productionEditor" v-model="form.target_end_date" :label="t('crm.components.addProjectModal.targetEndDate')" name="target_end_date" />
           <InputTextarea v-if="!productionEditor" v-model="form.notes" :label="t('crm.components.addProjectModal.notes')" name="notes" />
         </div>
@@ -99,7 +101,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { status: ProjectStatus, production_reference: string | null, name?: string, target_end_date?: Date | null, notes?: string, company_id?: number, deal_id?: number | null }]
+  submit: [payload: {
+    status: ProjectStatus
+    production_reference: string | null
+    name?: string
+    target_end_date?: Date | null
+    expected_proposal_date?: Date | null
+    expected_start_date?: Date | null
+    notes?: string
+    company_id?: number
+    deal_id?: number | null
+  }]
 }>()
 
 const { hasRole } = useRole()
@@ -124,6 +136,8 @@ const emptyForm = () => ({
   target_end_date: props.project?.target_end_date
     ? toDateInputValue(props.project.target_end_date)
     : (props.defaultTargetEndDate ? toDateInputValue(props.defaultTargetEndDate) : ''),
+  expected_proposal_date: props.project?.expected_proposal_date ? toDateInputValue(props.project.expected_proposal_date) : '',
+  expected_start_date: props.project?.expected_start_date ? toDateInputValue(props.project.expected_start_date) : '',
   notes: props.project?.notes ?? '',
 })
 
@@ -194,6 +208,8 @@ const onSubmit = guard(async () => {
     status: form.status,
     production_reference: form.production_reference || null,
     target_end_date: form.target_end_date ? new Date(form.target_end_date) : null,
+    expected_proposal_date: form.expected_proposal_date ? new Date(form.expected_proposal_date) : null,
+    expected_start_date: form.expected_start_date ? new Date(form.expected_start_date) : null,
     notes: form.notes,
     ...(props.companies && !props.project ? { company_id: Number(form.company_id) } : {}),
     ...(!props.project ? { deal_id: form.deal_id ? Number(form.deal_id) : null } : {}),

@@ -488,6 +488,12 @@ interface Project {
   status: ProjectStatus
   start_date: Date
   target_end_date: Date | null
+  // Planning estimates set by Sales before work is confirmed — distinct from
+  // start_date (record-creation time, not a schedule) and target_end_date
+  // (the deadline the projects-at-risk report checks against). Both
+  // nullable: unknown until estimated.
+  expected_proposal_date: Date | null
+  expected_start_date: Date | null
   production_reference: string | null
   notes: string
   // Only present on rows from GET /projects (the cross-company list) — the

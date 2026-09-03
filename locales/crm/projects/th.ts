@@ -18,6 +18,8 @@ export default {
       company: 'บริษัท',
       deal: 'Deal',
       status: 'สถานะ',
+      expectedProposalDate: 'วันที่คาดว่าจะเสนอ',
+      expectedStartDate: 'วันที่คาดว่าจะเริ่มงาน',
       targetEndDate: 'วันที่คาดว่าจะเสร็จสิ้น',
       action: 'การจัดการ',
     },
