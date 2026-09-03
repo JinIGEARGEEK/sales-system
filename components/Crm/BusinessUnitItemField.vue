@@ -30,6 +30,7 @@
     v-model:open="addProjectOpen"
     :company-id="companyId"
     :companies="companyId ? undefined : companiesStore.items"
+    :early-stage="earlyStage"
     @submit="onSubmitProject"
   />
 </template>
@@ -49,6 +50,11 @@ const props = defineProps<{
   businessUnit: string
   companyId: number | null
   options: Select[]
+  // Forwarded to CrmAddProjectModal's own `earlyStage` — set by the Lead/
+  // Prospect create+edit forms (not the Deal ones) since a Project created
+  // this early has no Deal to link and no production details yet either.
+  // See that prop's own doc for exactly what it hides.
+  earlyStage?: boolean
 }>()
 
 const emit = defineEmits<{
