@@ -33,7 +33,15 @@ export const useCreateProjectFromDeal = (deal: Ref<Deal | null>) => {
     }
   }
 
-  const onCreateProject = async (payload: { name: string, status: ProjectStatus, production_reference: string | null, target_end_date: Date | null, notes: string }) => {
+  const onCreateProject = async (payload: {
+    name: string
+    status: ProjectStatus
+    production_reference: string | null
+    target_end_date: Date | null
+    expected_proposal_date: Date | null
+    expected_start_date: Date | null
+    notes: string
+  }) => {
     if (!deal.value) return
     try {
       await projectsStore.add(deal.value.company_id, {

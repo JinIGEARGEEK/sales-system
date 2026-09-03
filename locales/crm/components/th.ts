@@ -106,6 +106,8 @@ export default {
     name: 'ชื่อ Project',
     status: 'สถานะ',
     productionReference: 'PO (ไม่บังคับ)',
+    expectedProposalDate: 'วันที่คาดว่าจะเสนอ',
+    expectedStartDate: 'วันที่คาดว่าจะเริ่มงาน',
     targetEndDate: 'วันที่คาดว่าจะเสร็จสิ้น',
     notes: 'บันทึกเพิ่มเติม',
     cancel: 'ยกเลิก',

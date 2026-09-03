@@ -18,6 +18,8 @@ export default {
       company: 'Company',
       deal: 'Deal',
       status: 'Status',
+      expectedProposalDate: 'Expected Proposal Date',
+      expectedStartDate: 'Expected Start Date',
       targetEndDate: 'Target End Date',
       action: 'Action',
     },

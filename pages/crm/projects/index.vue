@@ -204,6 +204,8 @@ const projectRows = computed(() => filteredProjects.value.map(project => ({
   ...project,
   statusBadge: toBadge(project.status),
   targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
+  expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
+  expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',
   // deal_id is settable at creation (AddProjectModal's optional Deal picker)
   // but was previously never surfaced anywhere afterward — resolve it here
   // so the list is the one place a rep can see which Deal a Project came from.
@@ -215,6 +217,8 @@ const projectColumns: TableDataColumn[] = [
   { label: t('crm.projects.index.columns.company'), align: 'left', field: 'company_name' },
   { label: t('crm.projects.index.columns.deal'), align: 'left', field: 'dealName' },
   { label: t('crm.projects.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.projects.index.columns.expectedProposalDate'), align: 'left', field: 'expectedProposalDateDisplay' },
+  { label: t('crm.projects.index.columns.expectedStartDate'), align: 'left', field: 'expectedStartDateDisplay' },
   { label: t('crm.projects.index.columns.targetEndDate'), align: 'left', field: 'targetEndDateDisplay' },
   {
     label: t('crm.projects.index.columns.action'),

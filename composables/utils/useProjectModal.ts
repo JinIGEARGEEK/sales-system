@@ -5,6 +5,8 @@ interface ProjectSavePayload {
   production_reference: string | null
   name?: string
   target_end_date?: Date | null
+  expected_proposal_date?: Date | null
+  expected_start_date?: Date | null
   notes?: string
   company_id?: number
   deal_id?: number | null
@@ -56,6 +58,8 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
           start_date: new Date(),
           name: payload.name!,
           target_end_date: payload.target_end_date ?? null,
+          expected_proposal_date: payload.expected_proposal_date ?? null,
+          expected_start_date: payload.expected_start_date ?? null,
           notes: payload.notes ?? '',
           status: payload.status,
           production_reference: payload.production_reference,

@@ -4,6 +4,8 @@ const parseDates = (project: Project): Project => ({
   ...project,
   start_date: new Date(project.start_date),
   target_end_date: project.target_end_date ? new Date(project.target_end_date) : null,
+  expected_proposal_date: project.expected_proposal_date ? new Date(project.expected_proposal_date) : null,
+  expected_start_date: project.expected_start_date ? new Date(project.expected_start_date) : null,
 })
 
 export const useProjectsStore = defineStore('projects', {
