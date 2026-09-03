@@ -260,6 +260,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -273,10 +274,11 @@ const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go's companies.Post("/:companyId/projects", ...).
-const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+// Same role set as SALES_PIPELINE_ROLES, so reuse it rather than re-listing.
+const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 // Matches the backend's POST /attachments RBAC — same role set as Projects,
 // coincidentally, but a separate backend rule, so kept as its own computed.
-const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()

@@ -70,7 +70,7 @@
       </UCard>
     </div>
 
-    <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
+    <div v-if="canViewSalesPipelineWidgets" class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>

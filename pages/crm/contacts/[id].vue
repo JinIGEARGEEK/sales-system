@@ -145,6 +145,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { isTaskOverdue } from '~/constants/mockData'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -219,8 +220,9 @@ const linkedDeals = computed(() => companyDeals.value.filter(d => d.contact_id =
 const dealTitleById = (dealId: number) => companyDeals.value.find(d => d.id === dealId)?.title ?? `#${dealId}`
 const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
 
-// Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not Production).
-const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+// Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not
+// Production) — same role set as SALES_PIPELINE_ROLES, so reuse it.
+const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const contactCompanyProjects = computed(() => contact.value ? projectsStore.forCompany(contact.value.company_id) : [])
 
 const {

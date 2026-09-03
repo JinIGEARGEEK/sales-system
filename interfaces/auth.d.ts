@@ -4,6 +4,7 @@
 type Role = 'Admin' | 'Sales Rep' | 'Sales Manager' | 'Production' | 'Marketing'
 
 interface User {
+  id: number
   first_name: string
   last_name: string
   tel: string

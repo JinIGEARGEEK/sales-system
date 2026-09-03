@@ -105,6 +105,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -120,8 +121,9 @@ const leadSourcesStore = useLeadSourcesStore()
 const goBack = useBackNavigation('/crm/leads')
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
-// not Production) — internal/routes/routes.go.
-const canManageAttachments = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+// not Production) — internal/routes/routes.go. Same role set as
+// SALES_PIPELINE_ROLES, so reuse it rather than re-listing the same 3 roles.
+const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))

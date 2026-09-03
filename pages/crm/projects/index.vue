@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MANAGER_ROLES } from '~/constants/roles'
+import { MANAGER_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -133,7 +133,8 @@ const productCategoryOptionsStore = useProductCategoryOptionsStore()
 
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — same check as the company detail page's Projects tab.
-const canManageProjects = computed(() => hasRole('Admin', 'Sales Rep', 'Sales Manager'))
+// Same role set as SALES_PIPELINE_ROLES, so reuse it rather than re-listing.
+const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 // Matches the backend's /projects/export and /products/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))

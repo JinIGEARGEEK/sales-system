@@ -5,6 +5,7 @@ export const useRelatedRecord = () => {
   const dealsStore = useDealsStore()
   const contactsStore = useContactsStore()
   const companiesStore = useCompaniesStore()
+  const prospectsStore = useProspectsStore()
   const { notifyApiError } = useApiErrorNotifier()
 
   // None of the three stores' `items` get a blanket preload wherever this
@@ -19,6 +20,7 @@ export const useRelatedRecord = () => {
   const pendingDeals = new Set<number>()
   const pendingContacts = new Set<number>()
   const pendingCompanies = new Set<number>()
+  const pendingProspects = new Set<number>()
 
   const ensureLoaded = <T extends { id: number }>(
     items: T[], pending: Set<number>, id: number, fetchOne: (id: number) => Promise<T>,
@@ -38,6 +40,16 @@ export const useRelatedRecord = () => {
       const contact = contactsStore.items.find(c => c.id === relatedId)
       if (!contact) ensureLoaded(contactsStore.items, pendingContacts, relatedId, id => contactsStore.fetchOne(id))
       return { relatedLabel: contact?.name || '-', path: `/crm/contacts/${relatedId}` }
+    }
+    // Previously fell through to the Company branch below for 'prospect' too
+    // (treating relatedId as a company id) — Prospect and Company are
+    // separate tables with independent id sequences, so a Prospect-linked
+    // task/activity resolved to the wrong record (or a 404) at
+    // /crm/companies/:id instead of /crm/prospects/:id.
+    if (relatedType === 'prospect') {
+      const prospect = prospectsStore.items.find(p => p.id === relatedId)
+      if (!prospect) ensureLoaded(prospectsStore.items, pendingProspects, relatedId, id => prospectsStore.fetchOne(id))
+      return { relatedLabel: prospect?.name || '-', path: `/crm/prospects/${relatedId}` }
     }
     ensureLoaded(companiesStore.items, pendingCompanies, relatedId, id => companiesStore.fetchOne(id))
     return { relatedLabel: companiesStore.nameById(relatedId), path: `/crm/companies/${relatedId}` }

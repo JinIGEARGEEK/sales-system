@@ -27,40 +27,46 @@
       @clear-filters="clearFilters"
     />
 
-    <DashboardPipelineOverview
-      :open-pipeline-value="openPipelineValue"
-      :forecasted-revenue="forecastedRevenue"
-      :win-rate="winRate"
-      :open-deals-count="openDealsCount"
-      :won-value="wonValue"
-      :avg-deal-size="avgDealSize"
-      :avg-sales-cycle-days="avgSalesCycleDays"
-      :pipeline-coverage-ratio="pipelineCoverageRatio"
-      :is-pipeline-healthy="isPipelineHealthy"
-      :quarterly-sales-target="quarterlySalesTarget"
-      :annual-goal-progress-percent="annualGoalProgressPercent"
-      :is-annual-goal-on-track="isAnnualGoalOnTrack"
-      :annual-revenue-actual="annualRevenueActual"
-      :annual-revenue-goal="annualRevenueGoal"
-    />
+    <!-- Open pipeline value/forecast/win rate/quota, revenue trends, stage
+    breakdown, funnel, and outcome split are all Deal-derived numbers with no
+    meaning outside the sales pipeline — hidden from Marketing/Production
+    (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
+    Contacts nav items and GlobalSearch results. -->
+    <template v-if="canViewSalesPipelineWidgets">
+      <DashboardPipelineOverview
+        :open-pipeline-value="openPipelineValue"
+        :forecasted-revenue="forecastedRevenue"
+        :win-rate="winRate"
+        :open-deals-count="openDealsCount"
+        :won-value="wonValue"
+        :avg-deal-size="avgDealSize"
+        :avg-sales-cycle-days="avgSalesCycleDays"
+        :pipeline-coverage-ratio="pipelineCoverageRatio"
+        :is-pipeline-healthy="isPipelineHealthy"
+        :quarterly-sales-target="quarterlySalesTarget"
+        :annual-goal-progress-percent="annualGoalProgressPercent"
+        :is-annual-goal-on-track="isAnnualGoalOnTrack"
+        :annual-revenue-actual="annualRevenueActual"
+        :annual-revenue-goal="annualRevenueGoal"
+      />
 
-    <DashboardTrends
-      :revenue-trend="revenueTrend"
-      :forecast-trend="forecastTrend"
-      :annual-revenue-trend-chart="annualRevenueTrendChart"
-    />
+      <DashboardTrends
+        :revenue-trend="revenueTrend"
+        :forecast-trend="forecastTrend"
+        :annual-revenue-trend-chart="annualRevenueTrendChart"
+      />
 
-    <DashboardPipelineOpportunities
-      :stage-breakdown="stageBreakdown"
-      :can-view-sales-pipeline-widgets="canViewSalesPipelineWidgets"
-      :upsell-groups="upsellGroups"
-      :funnel-stages="funnelStages"
-      :funnel-stages-preview="funnelStagesPreview"
-      :outcome-donut-segments="outcomeDonutSegments"
-      :outcome-donut-segments-preview="outcomeDonutSegmentsPreview"
-      :outcome-total="outcomeTotal"
-      :outcome-total-preview-label="outcomeTotalPreviewLabel"
-    />
+      <DashboardPipelineOpportunities
+        :stage-breakdown="stageBreakdown"
+        :upsell-groups="upsellGroups"
+        :funnel-stages="funnelStages"
+        :funnel-stages-preview="funnelStagesPreview"
+        :outcome-donut-segments="outcomeDonutSegments"
+        :outcome-donut-segments-preview="outcomeDonutSegmentsPreview"
+        :outcome-total="outcomeTotal"
+        :outcome-total-preview-label="outcomeTotalPreviewLabel"
+      />
+    </template>
 
     <DashboardFollowUpsTeam
       :upcoming-tasks="upcomingTasks"
@@ -233,9 +239,18 @@ const isAnnualGoalOnTrack = computed(() => {
 const UPCOMING_TASKS_LIMIT = 6
 const { resolveRelated } = useRelatedRecord()
 
+// Deal/Contact/Company-linked tasks resolve to pages nav-hides from
+// Marketing/Production (SALES_PIPELINE_ROLES) — previously this widget
+// surfaced them to every role regardless, so a Marketing/Production user
+// could click straight into a Deal detail page with no nav trail back.
+// Prospect-linked tasks stay visible to everyone since Marketing owns that
+// entity; Production has no task-linked entity of its own (Tasks aren't
+// tied to Projects), so it sees none here, matching its "not a full CRM
+// user" scope.
 const upcomingTasks = computed(() => {
   const now = Date.now()
   return tasksStore.pending
+    .filter(task => canViewSalesPipelineWidgets.value || task.related_type === 'prospect')
     .map(task => ({
       ...task,
       ...resolveRelated(task.related_type, task.related_id),
