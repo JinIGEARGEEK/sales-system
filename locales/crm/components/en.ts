@@ -38,7 +38,6 @@ export default {
     product: 'Product',
     placeholder: 'Select which one',
     addProjectHint: 'Create a new Project',
-    addProjectNeedsCompanyHint: 'Pick a Company first',
     addProjectSuccess: 'Project created successfully',
   },
   lastContact: {
