@@ -44,20 +44,22 @@
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
-          <InputSelect
-            v-model="form.business_unit"
-            :options="BUSINESS_UNIT_OPTIONS"
-            :label="t('crm.deals.create.businessUnit')"
-            :placeholder="t('crm.deals.create.businessUnitPlaceholder')"
-            name="business_unit"
-          />
-          <CrmBusinessUnitItemField
-            v-if="form.business_unit"
-            v-model="form.business_unit_item"
-            :business-unit="form.business_unit"
-            :company-id="form.company_id"
-            :options="businessUnitItemOptions"
-          />
+          <div class="grid grid-cols-1 gap-3 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary-bg)] p-3 md:col-span-2 md:grid-cols-2">
+            <InputSelect
+              v-model="form.business_unit"
+              :options="BUSINESS_UNIT_OPTIONS"
+              :label="t('crm.deals.create.businessUnit')"
+              :placeholder="t('crm.deals.create.businessUnitPlaceholder')"
+              name="business_unit"
+            />
+            <CrmBusinessUnitItemField
+              v-if="form.business_unit"
+              v-model="form.business_unit_item"
+              :business-unit="form.business_unit"
+              :company-id="form.company_id"
+              :options="businessUnitItemOptions"
+            />
+          </div>
         </div>
 
         <div class="mt-4 flex gap-3">
