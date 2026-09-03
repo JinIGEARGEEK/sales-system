@@ -25,14 +25,12 @@
               :placeholder="t('crm.deals.detail.businessUnitPlaceholder')"
               name="business_unit"
             />
-            <InputSelect
+            <CrmBusinessUnitItemField
               v-if="form.business_unit"
               v-model="form.business_unit_item"
+              :business-unit="form.business_unit"
+              :company-id="deal?.company_id ?? null"
               :options="businessUnitItemOptions"
-              :label="form.business_unit === 'Project' ? t('crm.deals.detail.project') : t('crm.deals.detail.product')"
-              :placeholder="t('crm.deals.detail.businessUnitItemPlaceholder')"
-              name="business_unit_item"
-              :disable="businessUnitItemOptions.length === 0"
             />
             <InputSelect
               v-if="isLostStage(form.stage)"
