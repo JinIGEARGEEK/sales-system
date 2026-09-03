@@ -33,6 +33,14 @@ export default {
     loading: 'กำลังโหลดข้อมูลบริษัท...',
     notFound: 'ไม่พบข้อมูลบริษัท',
   },
+  businessUnitItemField: {
+    project: 'Project',
+    product: 'Product',
+    placeholder: 'เลือกรายการ',
+    addProjectHint: 'สร้าง Project ใหม่',
+    addProjectNeedsCompanyHint: 'กรุณาเลือกบริษัทก่อน',
+    addProjectSuccess: 'สร้าง Project สำเร็จ',
+  },
   lastContact: {
     never: 'ยังไม่เคยติดต่อ',
     today: 'ติดต่อวันนี้',

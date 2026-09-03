@@ -33,6 +33,14 @@ export default {
     loading: 'Loading company...',
     notFound: 'Company not found.',
   },
+  businessUnitItemField: {
+    project: 'Project',
+    product: 'Product',
+    placeholder: 'Select which one',
+    addProjectHint: 'Create a new Project',
+    addProjectNeedsCompanyHint: 'Pick a Company first',
+    addProjectSuccess: 'Project created successfully',
+  },
   lastContact: {
     never: 'Never contacted',
     today: 'Contacted today',

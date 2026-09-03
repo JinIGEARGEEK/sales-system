@@ -51,14 +51,12 @@
             :placeholder="t('crm.deals.create.businessUnitPlaceholder')"
             name="business_unit"
           />
-          <InputSelect
+          <CrmBusinessUnitItemField
             v-if="form.business_unit"
             v-model="form.business_unit_item"
+            :business-unit="form.business_unit"
+            :company-id="form.company_id"
             :options="businessUnitItemOptions"
-            :label="form.business_unit === 'Project' ? t('crm.deals.create.project') : t('crm.deals.create.product')"
-            :placeholder="t('crm.deals.create.businessUnitItemPlaceholder')"
-            name="business_unit_item"
-            :disable="businessUnitItemOptions.length === 0"
           />
         </div>
 
