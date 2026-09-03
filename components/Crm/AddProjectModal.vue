@@ -166,12 +166,13 @@ const filterCompanyId = computed(() => {
   return props.companyId ?? null
 })
 
-// Named rather than left as a 4-clause inline v-if — both the picker (fresh
-// create) and its edit-mode read-only counterpart below hide for the same
-// earlyStage reason (see that prop's own doc), on top of their own existing
-// project/productionEditor/filterCompanyId conditions.
-const showDealField = computed(() => !props.project && !productionEditor.value && !props.earlyStage && !!filterCompanyId.value)
-const showLinkedDeal = computed(() => !!props.project?.deal_id && !productionEditor.value && !props.earlyStage)
+// Both the picker (fresh create) and its edit-mode read-only counterpart
+// below hide for Production (never should've seen a Deal link at all) and
+// for earlyStage (no Deal exists yet — see that prop's own doc), on top of
+// their own distinct project/filterCompanyId conditions.
+const canShowDealInfo = computed(() => !productionEditor.value && !props.earlyStage)
+const showDealField = computed(() => !props.project && canShowDealInfo.value && !!filterCompanyId.value)
+const showLinkedDeal = computed(() => !!props.project?.deal_id && canShowDealInfo.value)
 
 const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
 watch(() => props.project?.deal_id, (dealId) => {
