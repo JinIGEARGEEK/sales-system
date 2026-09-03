@@ -39,6 +39,12 @@
             @click="toggleSelectMode"
           />
           <ButtonPrimary
+            outline
+            :label="t('crm.prospects.index.viewReport')"
+            icon="material-symbols:query-stats"
+            @click="navigateTo('/crm/reports/prospect-source')"
+          />
+          <ButtonPrimary
             :label="t('crm.prospects.index.addProspect')"
             icon="material-symbols:add"
             @click="navigateTo('/crm/prospects/create')"

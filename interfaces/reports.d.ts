@@ -6,6 +6,17 @@ interface LeadSourceConversionRow {
   conversion_rate: number
 }
 
+// GET /reports/prospect-source-conversion — Marketing's own funnel report,
+// one row per Prospect source. "Converted" mirrors LeadSourceConversionRow's
+// "qualified": Prospect.Status === 'Converted', set only by
+// POST /prospects/:id/convert.
+interface ProspectSourceConversionRow {
+  source: string
+  total: number
+  converted: number
+  conversion_rate: number
+}
+
 // GET /reports/customers-by-product-status — one row per Company/Product link.
 interface CustomerByProductStatusRow {
   company_id: number
