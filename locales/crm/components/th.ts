@@ -38,7 +38,6 @@ export default {
     product: 'Product',
     placeholder: 'เลือกรายการ',
     addProjectHint: 'สร้าง Project ใหม่',
-    addProjectNeedsCompanyHint: 'กรุณาเลือกบริษัทก่อน',
     addProjectSuccess: 'สร้าง Project สำเร็จ',
   },
   lastContact: {

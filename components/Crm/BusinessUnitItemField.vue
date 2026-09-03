@@ -10,24 +10,26 @@
         :disable="options.length === 0"
       />
     </div>
-    <UTooltip
-      v-if="businessUnit === 'Project'"
-      :text="companyId ? t('crm.components.businessUnitItemField.addProjectHint') : t('crm.components.businessUnitItemField.addProjectNeedsCompanyHint')"
-    >
+    <UTooltip v-if="businessUnit === 'Project'" :text="t('crm.components.businessUnitItemField.addProjectHint')">
       <UButton
         icon="material-symbols:add"
         variant="outline"
         color="neutral"
-        :disabled="!companyId"
         :aria-label="t('crm.components.businessUnitItemField.addProjectHint')"
         @click="openAddProject"
       />
     </UTooltip>
   </div>
 
+  <!-- No Company picked on the parent form yet (companyId is nullable here,
+  unlike the Company/Contact detail pages' own Projects tabs) — fall back to
+  the same `companies` picker the standalone cross-company Projects page uses,
+  instead of forcing the rep to cancel out and pick a Company on this form
+  first just to create a Project. -->
   <CrmAddProjectModal
     v-model:open="addProjectOpen"
     :company-id="companyId"
+    :companies="companyId ? undefined : companiesStore.items"
     @submit="onSubmitProject"
   />
 </template>
@@ -36,6 +38,8 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { notifyApiError } = useApiErrorNotifier()
+const companiesStore = useCompaniesStore()
 
 const props = defineProps<{
   modelValue: string
@@ -66,7 +70,11 @@ const { open: addProjectOpen, openAdd: openAddProjectModal, onSave: onSaveProjec
 )
 
 const openAddProject = () => {
-  if (!props.companyId) return
+  // Only needed for the no-Company-picked-yet path's own company picker
+  // (see the modal's `companies` binding above) — fetchAll() is capped at
+  // 200 rows, newest-first, same as the standalone Projects page's identical
+  // fetch, and only actually runs once.
+  if (!props.companyId && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   openAddProjectModal()
 }
 
