@@ -123,7 +123,13 @@ interface NotificationFiring {
   id: number
   rule_name: string
   entity_type: NotificationEntityType
-  deal_id: number
-  deal_title: string
+  // deal_id/deal_title are present for 'deal'/'quote'/'contract' firings;
+  // prospect_id/prospect_name for 'prospect' firings (added 2026-09-03,
+  // FR-CRM-107) — additive fields, not a rename, so existing Deal/Quote/
+  // Contract consumers (the dashboard's Recent Alerts widget) are untouched.
+  deal_id?: number
+  deal_title?: string
+  prospect_id?: number
+  prospect_name?: string
   notified_at: Date
 }

@@ -224,6 +224,7 @@ export default {
       deal: 'Deal',
       quote: 'Quote',
       contract: 'Contract',
+      prospect: 'Prospect',
     },
     recipientRoleOptions: {
       owner: 'Owner Only',
