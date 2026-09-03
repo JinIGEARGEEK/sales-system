@@ -30,6 +30,14 @@ export const useBusinessUnitItemOptions = (
     if (id !== null) projectsStore.fetchForCompany(id).catch(notifyApiError)
   }, { immediate: true })
 
+  // Products aren't scoped to a Company, so unlike Projects above there's
+  // nothing to re-fetch on change — just make sure the catalog has been
+  // loaded at least once. Some call sites (Deal forms) already warm this
+  // store themselves, but Lead/Prospect forms don't, which left the Product
+  // item list empty there until some other page happened to populate it
+  // first. Owning the fetch here makes it work regardless of call site.
+  if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
+
   if (businessUnitItem) {
     watch([businessUnit, companyId], () => {
       if (!isSuppressed?.()) businessUnitItem.value = ''
