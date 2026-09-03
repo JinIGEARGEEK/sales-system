@@ -6,7 +6,14 @@ export default defineAppConfig({
     },
     tabs: {
       slots: {
-        list: 'bg-white/65 backdrop-blur-2xl border border-white/90 divide-x divide-white/70 shadow-xl',
+        // `shadow-xl` here used to spread a large soft shadow well past the
+        // pill's own bounds — on a thin tab strip (unlike a full UCard,
+        // which has real body height to anchor a shadow that size against)
+        // it read as a stray hazy gray box sitting under the tabs rather
+        // than a shadow. `shadow-sm` keeps the glass-pill look grounded
+        // without that artifact — see design-system.md §2.5 if you touch
+        // this again.
+        list: 'bg-white/65 backdrop-blur-2xl border border-white/90 divide-x divide-white/70 shadow-sm',
       },
     },
     card: {
