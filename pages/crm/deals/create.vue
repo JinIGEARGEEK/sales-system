@@ -44,7 +44,7 @@
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
-          <div class="grid grid-cols-1 gap-3 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary-bg)] p-3 md:col-span-2 md:grid-cols-2">
+          <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
             <InputSelect
               v-model="form.business_unit"
               :options="BUSINESS_UNIT_OPTIONS"
