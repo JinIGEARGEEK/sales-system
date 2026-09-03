@@ -287,13 +287,16 @@ const filteredDeals = computed(() => {
   })
 })
 
-// Leads have no business_unit/channel, so only search and assignee apply here.
+// Leads gained their own business_unit tag alongside Deal's (2026-09-03) —
+// honor the same Business Unit filter here now. Leads have no channel field
+// though, so channelFilter still only applies to filteredDeals above.
 const filteredLeads = computed(() => {
   return leadsStore.items.filter((lead) => {
     const matchSearch = !search.value
       || lead.name.toLowerCase().includes(search.value.toLowerCase())
       || companiesStore.nameById(lead.company_id).toLowerCase().includes(search.value.toLowerCase())
     const matchAssignee = matchesAssigneeFilter(lead.assigned_to, assigneeFilter.value)
+    if (businessUnitFilter.value !== 'all' && lead.business_unit !== businessUnitFilter.value) return false
     return matchSearch && matchAssignee
   })
 })

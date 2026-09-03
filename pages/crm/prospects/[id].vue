@@ -52,6 +52,22 @@
                 />
                 <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
                 <InputText v-model="form.tags" :label="t('crm.prospects.detail.tags')" :placeholder="t('crm.prospects.detail.tagsPlaceholder')" name="tags" />
+                <InputSelect
+                  v-model="form.business_unit"
+                  :options="BUSINESS_UNIT_OPTIONS"
+                  :label="t('crm.prospects.detail.businessUnit')"
+                  :placeholder="t('crm.prospects.detail.businessUnitPlaceholder')"
+                  name="business_unit"
+                />
+                <InputSelect
+                  v-if="form.business_unit"
+                  v-model="form.business_unit_item"
+                  :options="businessUnitItemOptions"
+                  :label="form.business_unit === 'Project' ? t('crm.prospects.detail.project') : t('crm.prospects.detail.product')"
+                  :placeholder="t('crm.prospects.detail.businessUnitItemPlaceholder')"
+                  name="business_unit_item"
+                  :disable="businessUnitItemOptions.length === 0"
+                />
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.notes" :label="t('crm.prospects.detail.notes')" name="notes" />
                 </div>
@@ -150,7 +166,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, isTaskOverdue } from '~/constants/mockData'
+import { PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -226,14 +242,20 @@ const form = reactive({
   source: prospect.value?.source || '',
   status: prospect.value?.status || 'New',
   assigned_to: prospect.value?.assigned_to ? String(prospect.value.assigned_to) : '',
+  business_unit: (prospect.value?.business_unit || '') as BusinessUnit | '',
+  business_unit_item: prospect.value?.business_unit_item || '',
   tags: prospect.value?.tags?.join(', ') || '',
   notes: prospect.value?.notes || '',
 })
 
 // Prospect loads asynchronously (fetched on mount), so the form is
 // (re)populated once the record arrives instead of only at setup time.
+// `hydrating` suppresses the business_unit watcher below during this — same
+// pattern as pages/crm/deals/[id]/index.vue and pages/crm/leads/[id].vue.
+let hydrating = false
 watch(prospect, (value) => {
   if (!value) return
+  hydrating = true
   form.name = value.name
   form.company_id = value.company_id ?? null
   form.email = value.email
@@ -241,9 +263,19 @@ watch(prospect, (value) => {
   form.source = value.source
   form.status = value.status
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+  form.business_unit = value.business_unit || ''
+  form.business_unit_item = value.business_unit_item || ''
   form.tags = value.tags?.join(', ') || ''
   form.notes = value.notes
+  nextTick(() => { hydrating = false })
 }, { immediate: true })
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  toRef(form, 'company_id'),
+  toRef(form, 'business_unit_item'),
+  () => hydrating,
+)
 
 const { loading, guard } = useSubmitGuard()
 
@@ -258,6 +290,8 @@ const onSave = guard(async () => {
       source: form.source,
       status: form.status as ProspectStatus,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       tags: parseTags(form.tags),
       notes: form.notes,
     })

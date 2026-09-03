@@ -6,6 +6,7 @@ export const MOCK_DEV_CREDENTIALS = {
 export const MOCK_DEV_TOKEN = 'mock-dev-token'
 
 export const MOCK_DEV_USER: User = {
+  id: 1,
   first_name: 'Admin',
   last_name: 'Dev',
   tel: '',

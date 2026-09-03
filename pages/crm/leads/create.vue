@@ -60,6 +60,22 @@
             name="assigned_to"
             :placeholder="t('crm.leads.create.assignedToPlaceholder')"
           />
+          <InputSelect
+            v-model="form.business_unit"
+            :options="BUSINESS_UNIT_OPTIONS"
+            :label="t('crm.leads.create.businessUnit')"
+            :placeholder="t('crm.leads.create.businessUnitPlaceholder')"
+            name="business_unit"
+          />
+          <InputSelect
+            v-if="form.business_unit"
+            v-model="form.business_unit_item"
+            :options="businessUnitItemOptions"
+            :label="form.business_unit === 'Project' ? t('crm.leads.create.project') : t('crm.leads.create.product')"
+            :placeholder="t('crm.leads.create.businessUnitItemPlaceholder')"
+            name="business_unit_item"
+            :disable="businessUnitItemOptions.length === 0"
+          />
           <div class="md:col-span-2">
             <InputTextarea v-model="form.notes" :label="t('crm.leads.create.notes')" :placeholder="t('crm.leads.create.notesPlaceholder')" name="notes" />
           </div>
@@ -76,7 +92,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_STATUS_FORM_OPTIONS, findDuplicateLeads } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS, findDuplicateLeads, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -103,8 +119,16 @@ const form = reactive({
   source: '',
   status: 'New',
   assigned_to: '',
+  business_unit: '' as BusinessUnit | '',
+  business_unit_item: '',
   notes: '',
 })
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  toRef(form, 'company_id'),
+  toRef(form, 'business_unit_item'),
+)
 
 const duplicateLeads = computed(() => findDuplicateLeads(leadsStore.items, form.email, form.phone))
 
@@ -121,6 +145,8 @@ const onSubmit = guard(async () => {
       status: form.status as LeadStatus,
       notes: form.notes,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       converted_deal_id: null,
       created_at: new Date(),
     })

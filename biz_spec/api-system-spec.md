@@ -221,6 +221,16 @@ interface Lead {
   converted_deal_id: number | null   // Deal.id once converted, else null — see /leads/:id/convert
   score: number                // FR-CRM-006 — server-computed, sum of matching active LeadScoringCriterion weights; never client-settable
   classification: 'none' | 'mql' | 'sql'   // FR-CRM-007 — server-computed mql/none from `score` vs the Admin-configurable threshold (§8.7a), unless the request body explicitly sets `classification: 'sql'` (see POST/PUT rows below)
+  // Mirrors Deal.business_unit/business_unit_item (§7.1) — added 2026-09-03,
+  // same nullable/free-text-item shape and IsValidBusinessUnit enum guard.
+  // Carried forward to the Deal on conversion (POST /leads/:id/convert's
+  // `deal.business_unit`/`deal.business_unit_item`, pre-filled client-side
+  // from this Lead by pages/crm/deals/create.vue, same as channel/company_id/
+  // assigned_to already are — not auto-defaulted server-side, unlike
+  // Prospect→Lead below, since this Convert already takes a full Deal-style
+  // payload from the frontend form).
+  business_unit: 'Project' | 'Product' | null
+  business_unit_item: string | null
   deleted_at?: string | null   // present only on GET /leads/trash rows
   created_at: string
 }
@@ -300,6 +310,13 @@ interface Prospect {
   assigned_to: number | null  // User.id
   tags: string[] | null
   converted_lead_id: number | null   // Lead.id once converted, else null — see /prospects/:id/convert
+  // Mirrors Deal.business_unit/business_unit_item (§7.1) — added 2026-09-03.
+  // Carried over to the new Lead automatically, server-side, on Convert
+  // (unlike Lead→Deal, which takes its own Deal-style payload from the
+  // frontend form and pre-fills client-side instead — see Lead's own doc
+  // above) — the same pass-through treatment already given to `source`.
+  business_unit: 'Project' | 'Product' | null
+  business_unit_item: string | null
   deleted_at?: string | null  // present only on GET /prospects/trash rows
   created_at: string
 }

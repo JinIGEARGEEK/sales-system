@@ -57,6 +57,22 @@
               rules="required"
             />
             <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+            <InputSelect
+              v-model="form.business_unit"
+              :options="BUSINESS_UNIT_OPTIONS"
+              :label="t('crm.leads.detail.businessUnit')"
+              :placeholder="t('crm.leads.detail.businessUnitPlaceholder')"
+              name="business_unit"
+            />
+            <InputSelect
+              v-if="form.business_unit"
+              v-model="form.business_unit_item"
+              :options="businessUnitItemOptions"
+              :label="form.business_unit === 'Project' ? t('crm.leads.detail.project') : t('crm.leads.detail.product')"
+              :placeholder="t('crm.leads.detail.businessUnitItemPlaceholder')"
+              name="business_unit_item"
+              :disable="businessUnitItemOptions.length === 0"
+            />
             <div class="md:col-span-2">
               <InputTextarea v-model="form.notes" :label="t('crm.leads.detail.notes')" name="notes" />
             </div>
@@ -104,7 +120,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_STATUS_FORM_OPTIONS } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -189,13 +205,20 @@ const form = reactive({
   source: lead.value?.source || '',
   status: lead.value?.status || 'New',
   assigned_to: lead.value?.assigned_to ? String(lead.value.assigned_to) : '',
+  business_unit: (lead.value?.business_unit || '') as BusinessUnit | '',
+  business_unit_item: lead.value?.business_unit_item || '',
   notes: lead.value?.notes || '',
 })
 
 // Lead loads asynchronously now (fetched on mount), so the form is (re)populated
-// once the record arrives instead of only at setup time.
+// once the record arrives instead of only at setup time. `hydrating` suppresses
+// the business_unit watcher below during this — otherwise setting
+// business_unit here would immediately wipe business_unit_item set a couple
+// lines later, same pattern as pages/crm/deals/[id]/index.vue.
+let hydrating = false
 watch(lead, (value) => {
   if (!value) return
+  hydrating = true
   form.name = value.name
   form.company_id = value.company_id ?? null
   form.email = value.email
@@ -203,8 +226,18 @@ watch(lead, (value) => {
   form.source = value.source
   form.status = value.status
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
+  form.business_unit = value.business_unit || ''
+  form.business_unit_item = value.business_unit_item || ''
   form.notes = value.notes
+  nextTick(() => { hydrating = false })
 }, { immediate: true })
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  toRef(form, 'company_id'),
+  toRef(form, 'business_unit_item'),
+  () => hydrating,
+)
 
 const { loading, guard } = useSubmitGuard()
 
@@ -219,6 +252,8 @@ const onSave = guard(async () => {
       source: form.source as LeadSource,
       status: form.status as LeadStatus,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       notes: form.notes,
     })
     success(t('crm.leads.detail.updateSuccess'))
@@ -242,6 +277,8 @@ const onMarkSql = async () => {
       source: form.source as LeadSource,
       status: form.status as LeadStatus,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       notes: form.notes,
       classification: 'sql',
     })

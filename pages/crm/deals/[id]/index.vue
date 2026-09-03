@@ -229,13 +229,9 @@ watch(deal, (value) => {
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   computed(() => deal.value?.company_id ?? null),
+  toRef(form, 'business_unit_item'),
+  () => hydrating,
 )
-
-// Switching business unit invalidates whichever item was picked under the old
-// one — but not during the hydration above, which sets both at once.
-watch(() => form.business_unit, () => {
-  if (!hydrating) form.business_unit_item = ''
-})
 
 // Re-derives probability's default whenever stage changes manually (not during
 // hydration) — still freely editable afterwards. lost_reason only makes sense

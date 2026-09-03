@@ -1,8 +1,22 @@
-// Shared by the Deal create/edit forms: Project options are scoped to the
-// Deal's Company (Projects always belong to one company), while Product
-// options are the whole active catalog — a Deal can be about a product the
-// company doesn't have linked yet.
-export const useBusinessUnitItemOptions = (businessUnit: Ref<string>, companyId: Ref<number | null>) => {
+// Shared by every Deal/Lead/Prospect create/edit form: Project options are
+// scoped to the record's Company (Projects always belong to one company),
+// while Product options are the whole active catalog — a record can be about
+// a product the company doesn't have linked yet.
+//
+// Also owns the "clear business_unit_item when business_unit or company
+// changes" behavior (pass `businessUnitItem` to opt in) — every call site
+// used to re-implement this exact watcher by hand. Pass `isSuppressed` to
+// skip a clear while some other effect is setting business_unit and
+// business_unit_item together atomically (loading an existing record, or
+// pre-filling a create form from an originating Lead/Prospect) — without it,
+// that other effect's own business_unit_item assignment would just get wiped
+// back out by this watcher reacting to the business_unit change alongside it.
+export const useBusinessUnitItemOptions = (
+  businessUnit: Ref<string>,
+  companyId: Ref<number | null>,
+  businessUnitItem?: Ref<string>,
+  isSuppressed?: () => boolean,
+) => {
   const projectsStore = useProjectsStore()
   const productsStore = useProductsStore()
   const { notifyApiError } = useApiErrorNotifier()
@@ -15,6 +29,12 @@ export const useBusinessUnitItemOptions = (businessUnit: Ref<string>, companyId:
   watch(companyId, (id) => {
     if (id !== null) projectsStore.fetchForCompany(id).catch(notifyApiError)
   }, { immediate: true })
+
+  if (businessUnitItem) {
+    watch([businessUnit, companyId], () => {
+      if (!isSuppressed?.()) businessUnitItem.value = ''
+    })
+  }
 
   return computed(() => {
     if (businessUnit.value === 'Project') {
