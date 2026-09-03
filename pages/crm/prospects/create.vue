@@ -60,6 +60,22 @@
             name="assigned_to"
             :placeholder="t('crm.prospects.create.assignedToPlaceholder')"
           />
+          <InputSelect
+            v-model="form.business_unit"
+            :options="BUSINESS_UNIT_OPTIONS"
+            :label="t('crm.prospects.create.businessUnit')"
+            :placeholder="t('crm.prospects.create.businessUnitPlaceholder')"
+            name="business_unit"
+          />
+          <InputSelect
+            v-if="form.business_unit"
+            v-model="form.business_unit_item"
+            :options="businessUnitItemOptions"
+            :label="form.business_unit === 'Project' ? t('crm.prospects.create.project') : t('crm.prospects.create.product')"
+            :placeholder="t('crm.prospects.create.businessUnitItemPlaceholder')"
+            name="business_unit_item"
+            :disable="businessUnitItemOptions.length === 0"
+          />
           <div class="md:col-span-2">
             <InputTextarea v-model="form.notes" :label="t('crm.prospects.create.notes')" :placeholder="t('crm.prospects.create.notesPlaceholder')" name="notes" />
           </div>
@@ -76,7 +92,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROSPECT_STATUS_FORM_OPTIONS, findDuplicateProspects } from '~/constants/mockData'
+import { PROSPECT_STATUS_FORM_OPTIONS, findDuplicateProspects, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -103,7 +119,20 @@ const form = reactive({
   source: '',
   status: 'New',
   assigned_to: '',
+  business_unit: '' as BusinessUnit | '',
+  business_unit_item: '',
   notes: '',
+})
+
+const businessUnitItemOptions = useBusinessUnitItemOptions(
+  toRef(form, 'business_unit'),
+  toRef(form, 'company_id'),
+)
+
+// Switching business unit (or company) invalidates whichever item was picked
+// under the old context — same as the Deal/Lead create forms.
+watch([() => form.business_unit, () => form.company_id], () => {
+  form.business_unit_item = ''
 })
 
 const duplicateProspects = computed(() => findDuplicateProspects(prospectsStore.items, form.email, form.phone))
@@ -121,6 +150,8 @@ const onSubmit = guard(async () => {
       status: form.status as ProspectStatus,
       notes: form.notes,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+      business_unit: form.business_unit || null,
+      business_unit_item: form.business_unit_item || null,
       converted_lead_id: null,
       created_at: new Date(),
     })

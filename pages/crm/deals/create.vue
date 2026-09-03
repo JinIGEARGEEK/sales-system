@@ -151,8 +151,15 @@ const contactOptions = computed(() => companyContacts.value.map(c => ({ label: c
 // InputCompanySelect above (its search is driven by whatever the rep types,
 // not this Lead's link) — fetchOne guarantees nameById below resolves a
 // real name here regardless of companiesStore's own capped/lazy cache.
+// Guards the business_unit/company_id watcher below from wiping
+// business_unit_item right back out immediately after this pre-fills both
+// together — that watcher exists to clear a stale item when the *rep*
+// changes business_unit/company by hand, not when this effect sets them
+// together atomically from the Lead.
+let hydratingFromLead = false
 watch(originatingLead, async (lead) => {
   if (!lead) return
+  hydratingFromLead = true
   if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
     await companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
   }
@@ -171,6 +178,12 @@ watch(originatingLead, async (lead) => {
   // the form happens to default to — the rep converting it can still
   // reassign before saving if that's actually wrong.
   if (!form.assigned_to && lead.assigned_to) form.assigned_to = String(lead.assigned_to)
+  // Same reasoning again: carry the Lead's own Project/Product interest tag
+  // forward instead of making the rep re-pick it, same as channel/source
+  // already are (see dealFields.channel below).
+  if (!form.business_unit && lead.business_unit) form.business_unit = lead.business_unit
+  if (!form.business_unit_item && lead.business_unit_item) form.business_unit_item = lead.business_unit_item
+  nextTick(() => { hydratingFromLead = false })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -179,8 +192,10 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 )
 
 // Switching business unit (or company) invalidates whichever item was picked
-// under the old context.
+// under the old context — but not while the Lead pre-fill above is setting
+// both together.
 watch([() => form.business_unit, () => form.company_id], () => {
+  if (hydratingFromLead) return
   form.business_unit_item = ''
 })
 

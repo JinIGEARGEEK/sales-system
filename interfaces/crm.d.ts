@@ -127,6 +127,12 @@ interface Lead {
   // POST /prospects/:id/convert — null for a Lead created directly. Mirrors
   // Deal.lead_id's back-reference to its own originating record.
   prospect_id?: number | null
+  // Mirrors Deal's own business_unit/business_unit_item — a lightweight tag
+  // of which Project or Product this Lead is interested in, not a real FK.
+  // Carried over to the Deal on conversion (deals/create.vue pre-fills from
+  // it), same as channel/source already are.
+  business_unit: BusinessUnit | null
+  business_unit_item: string | null
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -154,6 +160,11 @@ interface Prospect {
   tags?: string[] | null
   // Set once this Prospect has been converted into a Lead — null until then.
   converted_lead_id: number | null
+  // Mirrors Deal's own business_unit/business_unit_item — a lightweight tag
+  // of which Project or Product this Prospect is interested in, not a real
+  // FK. Carried over to the Lead automatically on conversion (server-side).
+  business_unit: BusinessUnit | null
+  business_unit_item: string | null
   // Present only on trash-listing responses (GET /prospects/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
