@@ -113,10 +113,11 @@
             <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.teamPerformanceHint') }}</p>
           </template>
           <div class="flex flex-col gap-2">
-            <div
+            <NuxtLink
               v-for="member in teamPerformance"
               :key="member.id"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
+              :to="`/crm/deals?assigned_to=${member.id}`"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 transition-colors hover:bg-[var(--color-light-gray-1)]"
             >
               <div class="flex items-center gap-3">
                 <UAvatar :text="member.initials" size="sm" />
@@ -126,7 +127,7 @@
                 </div>
               </div>
               <span class="text-sm font-medium">{{ t('global.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
-            </div>
+            </NuxtLink>
           </div>
         </UCard>
       </div>

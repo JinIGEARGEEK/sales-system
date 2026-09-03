@@ -14,6 +14,7 @@
         icon-class="text-[var(--color-info-toast)]"
         icon-bg-class="bg-[var(--color-info-toast)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        to="/crm/prospects"
       >
         {{ summary?.total_prospects ?? 0 }}
       </CrmStatCard>
@@ -23,6 +24,7 @@
         icon-class="text-[var(--color-warning-hover)]"
         icon-bg-class="bg-[var(--color-warning-hover)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        to="/crm/prospects"
       >
         {{ summary?.open_prospects ?? 0 }}
       </CrmStatCard>
@@ -33,6 +35,7 @@
         icon-class="text-[var(--color-success-toast)]"
         icon-bg-class="bg-[var(--color-success-toast)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
+        to="/crm/reports/prospect-source"
       >
         {{ (summary?.conversion_rate ?? 0).toFixed(1) }}%
       </CrmStatCard>
@@ -53,6 +56,7 @@
             :label="row.status"
             :percent="row.percent"
             :bar-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).bar"
+            :to="`/crm/prospects?status=${encodeURIComponent(row.status)}`"
           >
             <span class="min-w-10 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.count }}</span>
           </CrmMetricBar>
@@ -72,6 +76,7 @@
             :key="row.source"
             :label="row.source"
             :percent="Math.round(row.conversion_rate)"
+            :to="`/crm/prospects?source=${encodeURIComponent(row.source)}`"
           >
             <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.converted }} / {{ row.total }}</span>
             <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.conversion_rate.toFixed(1) }}%</span>

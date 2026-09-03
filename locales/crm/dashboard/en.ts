@@ -37,6 +37,8 @@ export default {
   periodCustom: 'Custom',
   filterBusinessUnit: 'Business Unit',
   filterChannel: 'Channel',
+  filterStage: 'Stage',
+  allStages: 'All Stages',
   filterSalesRep: 'Sales Rep',
   filterCompanyTag: 'Tag',
   filterCompanyTagPlaceholder: 'e.g. Tier 1',

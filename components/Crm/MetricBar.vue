@@ -1,5 +1,10 @@
 <template>
-  <div class="flex items-center gap-3">
+  <component
+    :is="linkTag"
+    :to="linkTo"
+    class="flex items-center gap-3 rounded-md"
+    :class="to ? '-mx-2 px-2 py-0.5 transition-colors hover:bg-[var(--color-light-gray-1)]' : ''"
+  >
     <span class="w-32 shrink-0 truncate text-sm">{{ label }}</span>
     <UTooltip :text="tooltip || `${label} — ${percent}%`">
       <div class="h-3 flex-1 overflow-hidden rounded-full bg-[var(--color-light-gray-2)]">
@@ -11,11 +16,11 @@
       </div>
     </UTooltip>
     <slot />
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
-defineProps({
+const props = defineProps({
   label: {
     type: String,
     required: true,
@@ -36,5 +41,15 @@ defineProps({
     type: String,
     default: '',
   },
+  // Optional deep-link target (e.g. `/crm/deals?stage=Qualified`) — when set,
+  // the whole row becomes a NuxtLink into the filtered list view behind this
+  // bar's data, with a hover affordance; omit to keep the row inert, same as
+  // before this prop existed. See useOptionalLink.
+  to: {
+    type: String,
+    default: '',
+  },
 })
+
+const { linkTag, linkTo } = useOptionalLink(toRef(props, 'to'))
 </script>

@@ -37,6 +37,8 @@ export default {
   periodCustom: 'กำหนดเอง',
   filterBusinessUnit: 'หน่วยธุรกิจ',
   filterChannel: 'ช่องทางการขาย',
+  filterStage: 'สถานะ Pipeline',
+  allStages: 'ทุกสถานะ',
   filterSalesRep: 'พนักงานขาย',
   filterCompanyTag: 'แท็ก',
   filterCompanyTagPlaceholder: 'เช่น Tier 1',
