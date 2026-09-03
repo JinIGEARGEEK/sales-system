@@ -17,6 +17,18 @@ interface ProspectSourceConversionRow {
   conversion_rate: number
 }
 
+// GET /dashboard/prospect-summary — Marketing's own dashboard tab (added
+// 2026-09-03, FR-CRM-107). source_breakdown reuses ProspectSourceConversionRow
+// exactly (backend computes both from the same fetchProspectSourceConversion).
+interface ProspectDashboardSummary {
+  total_prospects: number
+  open_prospects: number
+  converted_count: number
+  conversion_rate: number
+  status_breakdown: { status: ProspectStatus, count: number }[]
+  source_breakdown: ProspectSourceConversionRow[]
+}
+
 // GET /reports/customers-by-product-status — one row per Company/Product link.
 interface CustomerByProductStatusRow {
   company_id: number

@@ -5,68 +5,83 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
-    <DashboardFilterBar
-      :date-range="dateRange"
-      :active-preset="activePreset"
-      :period-presets="PERIOD_PRESETS"
-      :business-unit-filter="businessUnitFilter"
-      :business-unit-options="BUSINESS_UNIT_FILTER_OPTIONS"
-      :channel-filter="channelFilter"
-      :channel-options="channelFilterOptions"
-      :sales-rep-filter="salesRepFilter"
-      :sales-rep-options="salesRepOptions"
-      :company-tag-filter="companyTagFilter"
-      :filtered-count="filteredDeals.length"
-      :total-count="dealsStore.items.length"
-      @update:date-range="dateRange = $event"
-      @apply-preset="applyPeriodPreset"
-      @update:business-unit-filter="businessUnitFilter = $event"
-      @update:channel-filter="channelFilter = $event"
-      @update:sales-rep-filter="salesRepFilter = $event"
-      @update:company-tag-filter="companyTagFilter = $event"
-      @clear-filters="clearFilters"
-    />
+    <!-- Only rendered for a role that can see both tabs (Admin/Sales Manager,
+    the only roles in both SALES_PIPELINE_ROLES and PROSPECT_ROLES) — a Sales
+    Rep or Marketing-only user has just the one tab's content, with no
+    switcher to a tab they can't see anyway. -->
+    <UTabs v-if="showDashboardTabs" v-model="activeDashboardTab" :items="dashboardTabItems" class="mb-4" />
 
-    <!-- Open pipeline value/forecast/win rate/quota, revenue trends, stage
-    breakdown, funnel, and outcome split are all Deal-derived numbers with no
-    meaning outside the sales pipeline — hidden from Marketing/Production
-    (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
-    Contacts nav items and GlobalSearch results. -->
-    <template v-if="canViewSalesPipelineWidgets">
-      <DashboardPipelineOverview
-        :open-pipeline-value="openPipelineValue"
-        :forecasted-revenue="forecastedRevenue"
-        :win-rate="winRate"
-        :open-deals-count="openDealsCount"
-        :won-value="wonValue"
-        :avg-deal-size="avgDealSize"
-        :avg-sales-cycle-days="avgSalesCycleDays"
-        :pipeline-coverage-ratio="pipelineCoverageRatio"
-        :is-pipeline-healthy="isPipelineHealthy"
-        :quarterly-sales-target="quarterlySalesTarget"
-        :annual-goal-progress-percent="annualGoalProgressPercent"
-        :is-annual-goal-on-track="isAnnualGoalOnTrack"
-        :annual-revenue-actual="annualRevenueActual"
-        :annual-revenue-goal="annualRevenueGoal"
+    <template v-if="activeDashboardTab === 'sales'">
+      <DashboardFilterBar
+        :date-range="dateRange"
+        :active-preset="activePreset"
+        :period-presets="PERIOD_PRESETS"
+        :business-unit-filter="businessUnitFilter"
+        :business-unit-options="BUSINESS_UNIT_FILTER_OPTIONS"
+        :channel-filter="channelFilter"
+        :channel-options="channelFilterOptions"
+        :sales-rep-filter="salesRepFilter"
+        :sales-rep-options="salesRepOptions"
+        :company-tag-filter="companyTagFilter"
+        :filtered-count="filteredDeals.length"
+        :total-count="dealsStore.items.length"
+        @update:date-range="dateRange = $event"
+        @apply-preset="applyPeriodPreset"
+        @update:business-unit-filter="businessUnitFilter = $event"
+        @update:channel-filter="channelFilter = $event"
+        @update:sales-rep-filter="salesRepFilter = $event"
+        @update:company-tag-filter="companyTagFilter = $event"
+        @clear-filters="clearFilters"
       />
 
-      <DashboardTrends
-        :revenue-trend="revenueTrend"
-        :forecast-trend="forecastTrend"
-        :annual-revenue-trend-chart="annualRevenueTrendChart"
-      />
+      <!-- Open pipeline value/forecast/win rate/quota, revenue trends, stage
+      breakdown, funnel, and outcome split are all Deal-derived numbers with no
+      meaning outside the sales pipeline — hidden from Marketing/Production
+      (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
+      Contacts nav items and GlobalSearch results. -->
+      <template v-if="canViewSalesPipelineWidgets">
+        <DashboardPipelineOverview
+          :open-pipeline-value="openPipelineValue"
+          :forecasted-revenue="forecastedRevenue"
+          :win-rate="winRate"
+          :open-deals-count="openDealsCount"
+          :won-value="wonValue"
+          :avg-deal-size="avgDealSize"
+          :avg-sales-cycle-days="avgSalesCycleDays"
+          :pipeline-coverage-ratio="pipelineCoverageRatio"
+          :is-pipeline-healthy="isPipelineHealthy"
+          :quarterly-sales-target="quarterlySalesTarget"
+          :annual-goal-progress-percent="annualGoalProgressPercent"
+          :is-annual-goal-on-track="isAnnualGoalOnTrack"
+          :annual-revenue-actual="annualRevenueActual"
+          :annual-revenue-goal="annualRevenueGoal"
+        />
 
-      <DashboardPipelineOpportunities
-        :stage-breakdown="stageBreakdown"
-        :upsell-groups="upsellGroups"
-        :funnel-stages="funnelStages"
-        :funnel-stages-preview="funnelStagesPreview"
-        :outcome-donut-segments="outcomeDonutSegments"
-        :outcome-donut-segments-preview="outcomeDonutSegmentsPreview"
-        :outcome-total="outcomeTotal"
-        :outcome-total-preview-label="outcomeTotalPreviewLabel"
-      />
+        <DashboardTrends
+          :revenue-trend="revenueTrend"
+          :forecast-trend="forecastTrend"
+          :annual-revenue-trend-chart="annualRevenueTrendChart"
+        />
+
+        <DashboardPipelineOpportunities
+          :stage-breakdown="stageBreakdown"
+          :upsell-groups="upsellGroups"
+          :funnel-stages="funnelStages"
+          :funnel-stages-preview="funnelStagesPreview"
+          :outcome-donut-segments="outcomeDonutSegments"
+          :outcome-donut-segments-preview="outcomeDonutSegmentsPreview"
+          :outcome-total="outcomeTotal"
+          :outcome-total-preview-label="outcomeTotalPreviewLabel"
+        />
+      </template>
     </template>
+
+    <!-- Marketing's own tab — Prospect funnel counts/status/source breakdown,
+    hidden from anyone outside PROSPECT_ROLES the same way the tab itself is
+    (canViewProspectSummary gate is still needed here even without the tab
+    switcher, since activeDashboardTab could still equal 'marketing' for a
+    role that only qualifies for one tab). -->
+    <DashboardMarketingSummary v-if="activeDashboardTab === 'marketing' && canViewProspectSummary" :summary="prospectSummary" />
 
     <DashboardFollowUpsTeam
       :upcoming-tasks="upcomingTasks"
@@ -85,7 +100,7 @@ import {
   isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
-import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { SALES_PIPELINE_ROLES, PROSPECT_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const { hasRole } = useRole()
@@ -94,6 +109,25 @@ const { hasRole } = useRole()
 // SALES_PIPELINE_ROLES exclusion as the sidebar nav and GlobalSearch) — this
 // dashboard was the one remaining place that restriction wasn't mirrored.
 const canViewSalesPipelineWidgets = computed(() => hasRole(...SALES_PIPELINE_ROLES))
+// Marketing's own tab — Prospect funnel data, meaningless to a plain Sales
+// Rep (excluded from PROSPECT_ROLES) the same way Deal data is meaningless
+// to Marketing.
+const canViewProspectSummary = computed(() => hasRole(...PROSPECT_ROLES))
+// Only Admin/Sales Manager are in both role lists — everyone else has just
+// one tab's worth of content, so no switcher is shown at all for them.
+const showDashboardTabs = computed(() => canViewSalesPipelineWidgets.value && canViewProspectSummary.value)
+const dashboardTabItems = computed(() => [
+  { label: t('crm.dashboard.tabSales'), value: 'sales' },
+  { label: t('crm.dashboard.tabMarketing'), value: 'marketing' },
+])
+const activeDashboardTab = ref<'sales' | 'marketing'>('sales')
+// Defaults a Marketing-only user straight onto their own tab instead of
+// landing on an empty "sales" tab they can't see anything on. Role
+// resolution can land after mount (hydrate-auth.client.ts), hence `watch`
+// with `immediate` rather than a one-shot computed at setup time.
+watch(canViewSalesPipelineWidgets, (canViewSales) => {
+  if (!canViewSales && canViewProspectSummary.value) activeDashboardTab.value = 'marketing'
+}, { immediate: true })
 const { error } = useNotify()
 // Every fire-and-forget fetch below is a bare `if (...) store.fetchAll()` (no
 // `await`, no caller-side try/catch) — this dashboard has none of the loading
@@ -208,6 +242,25 @@ const fetchSummary = async () => {
 
 onMounted(fetchSummary)
 watch([dateRange, businessUnitFilter, channelFilter, salesRepFilter], fetchSummary)
+
+// Marketing's own tab — deliberately its own fetch/params, not folded into
+// fetchSummary above: this dashboard's date range/business-unit/channel/
+// company-tag filter bar is Deal-specific (only shown on the "sales" tab),
+// so the Prospect summary just refetches once on mount rather than reacting
+// to filters that don't apply to it.
+const prospectSummary = ref<ProspectDashboardSummary | null>(null)
+const fetchProspectSummary = async () => {
+  if (!canViewProspectSummary.value) return
+  try {
+    const response = await $api.get<ApiResponse<ProspectDashboardSummary>>('/dashboard/prospect-summary')
+    prospectSummary.value = response.data.data
+  } catch (err) {
+    notifyFetchError(err)
+  }
+}
+watch(canViewProspectSummary, (canView) => {
+  if (canView && !prospectSummary.value) fetchProspectSummary()
+}, { immediate: true })
 
 let companyTagDebounce: ReturnType<typeof setTimeout> | undefined
 watch(companyTagFilter, () => {
