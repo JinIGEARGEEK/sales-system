@@ -180,12 +180,13 @@ export default {
     save: 'Save Task',
   },
   globalSearch: {
-    placeholder: 'Search deals, companies, contacts, leads...',
+    placeholder: 'Search deals, companies, contacts, leads, prospects...',
     noResults: 'No matches found.',
     deals: 'Deals',
     companies: 'Companies',
     contacts: 'Contacts',
     leads: 'Leads',
+    prospects: 'Prospects',
   },
   // Shared by the Deals table and Leads list's "toggle bulk-select mode"
   // button — both used to declare their own copy of this identical pair.

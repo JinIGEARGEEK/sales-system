@@ -43,11 +43,7 @@ const roleTabValueByRole: Record<Role, string> = {
   'Sales Manager': 'salesManager',
   Admin: 'admin',
   Production: 'production',
-  // No dedicated Marketing guideline tab exists yet (§3.1a's Prospect
-  // funnel is new) — defaults to the closest existing content rather than
-  // leaving this map incomplete. Revisit if/when Marketing gets its own
-  // guideline topics.
-  Marketing: 'salesRep',
+  Marketing: 'marketing',
 }
 
 const activeTab = ref(roleTabValueByRole[role.value] ?? 'salesRep')
@@ -60,14 +56,23 @@ const stepMatchesQuery = (step: GuidelineStep) =>
   matchesQuery(step.text) || matchesQuery(step.restriction ?? '') || matchesQuery(t(`layout.nav.${step.nav}`))
 
 // Which guideline topics are relevant per role — Production only touches
-// project delivery milestones, everyone else sees the full sales workflow.
+// project delivery milestones, Marketing only touches the Prospect funnel
+// (they have no access to Leads/Deals at all), Sales Manager/Admin see both
+// the full sales workflow and Prospect oversight (PROSPECT_ROLES includes
+// both), Sales Rep sees only the sales workflow (excluded from Prospects).
 const ALL_TOPIC_KEYS = ['leadToDeal', 'subscriptionFollowup', 'projectMilestones', 'loyaltyUpsell']
 const topicKeysByTab: Record<string, string[]> = {
   salesRep: ALL_TOPIC_KEYS,
-  salesManager: ALL_TOPIC_KEYS,
-  admin: ALL_TOPIC_KEYS,
+  salesManager: [...ALL_TOPIC_KEYS, 'prospectIntake'],
+  admin: [...ALL_TOPIC_KEYS, 'prospectIntake'],
+  marketing: ['prospectIntake'],
   production: ['projectMilestones'],
 }
+// Superset of every topic key that exists anywhere, regardless of tab —
+// search results should surface a match even if it lives on a tab the
+// reader isn't currently viewing (goToSearchResult below already handles
+// jumping to the right tab for a result outside the current one).
+const EVERY_TOPIC_KEY = [...ALL_TOPIC_KEYS, 'prospectIntake']
 
 // One icon per flow step, keyed by topic — independent of locale text.
 const flowIconsByTopic: Record<string, string[]> = {
@@ -75,6 +80,7 @@ const flowIconsByTopic: Record<string, string[]> = {
   subscriptionFollowup: ['material-symbols:autorenew', 'material-symbols:checklist', 'material-symbols:event-repeat-outline'],
   projectMilestones: ['material-symbols:engineering-outline', 'material-symbols:flag-outline', 'material-symbols:payments-outline'],
   loyaltyUpsell: ['material-symbols:apartment-outline', 'material-symbols:favorite-outline', 'material-symbols:trending-up'],
+  prospectIntake: ['material-symbols:campaign-outline', 'material-symbols:person-search-outline', 'material-symbols:handshake-outline'],
 }
 
 const buildTopic = (key: string): GuidelineTopic => {
@@ -106,11 +112,14 @@ const NAV_META: Record<string, { path: string, icon: string }> = {
   companies: { path: '/crm/companies', icon: 'material-symbols:apartment-outline' },
   contacts: { path: '/crm/contacts', icon: 'material-symbols:contacts-outline' },
   tags: { path: '/crm/tags', icon: 'material-symbols:sell-outline' },
+  prospects: { path: '/crm/prospects', icon: 'material-symbols:contact-mail-outline' },
 }
 
 // The default/unrestricted phrasing used across the locale files whenever a
 // step has no special role limits — used here as the fallback role label for
-// a search result.
+// a search result. Every step authored so far (Sales and Marketing alike)
+// always sets its own restriction text explicitly, so this fallback is a
+// last resort, not something that needs a Marketing-specific variant too.
 const OPEN_TO_ALL_SALES_ROLES = 'Sales Rep, Sales Manager, Admin'
 
 const MAX_SEARCH_RESULTS = 8
@@ -122,7 +131,7 @@ const searchPreviewResults = computed<SearchPreviewResult[]>(() => {
   if (!isSearching.value) return []
   const results: SearchPreviewResult[] = []
 
-  for (const key of ALL_TOPIC_KEYS) {
+  for (const key of EVERY_TOPIC_KEY) {
     const topic = buildTopic(key)
     const matchingSteps = topic.steps.filter(stepMatchesQuery)
 

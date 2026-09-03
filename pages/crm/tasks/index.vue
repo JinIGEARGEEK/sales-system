@@ -1,5 +1,6 @@
 <template>
   <div class="p-5">
+    <AccessGate :can-access="canAccess">
     <div class="mb-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-black">{{ t('crm.tasks.index.heading') }}</h2>
@@ -73,30 +74,40 @@
       @submit="onSubmitTask"
       @update="onUpdateTask"
     />
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS_FILTER_OPTIONS, matchesAssigneeFilter, isTaskOverdue, BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
+import { TASK_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.tasks.index.pageTitle') })
+
+// Matches TASK_ROLES already used to gate this page's own nav entry
+// (layouts/default.vue) — a role outside it reaching this URL directly
+// otherwise got full, ungated access (this page had no guard at all before).
+const { canAccess, guardMounted } = usePageAccess(...TASK_ROLES)
 
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
 const dealsStore = useDealsStore()
+const prospectsStore = useProspectsStore()
 const { resolveRelated } = useRelatedRecord()
 
-onMounted(() => {
+guardMounted(() => {
   if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyApiError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   // Needed both to resolve each task's relatedLabel/path below and to back
-  // the Business Unit filter, which reads the linked Deal's business_unit.
+  // the Business Unit filter, which reads the linked Deal/Prospect's own
+  // business_unit.
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
 })
 
 const search = ref('')
@@ -104,20 +115,28 @@ const statusFilter = ref('pending')
 const assigneeFilter = ref('all')
 const businessUnitFilter = ref('all')
 
-// Business Unit filters by the *linked Deal's* business_unit — Tasks have no
-// business_unit of their own (they only ever relate to a Deal/Contact/
-// Company, api-system-spec.md §7.6). A task related to a Contact/Company
-// (no Deal at all) can't match a specific Business Unit and is excluded once
-// this filter is anything but "all".
-// Relies on dealsStore.items already having this Deal — resolveRelated
-// (called just below, in filteredTasks' own .map over the same tasks) fires
-// a fetchOne for any related Deal not already loaded, so this naturally
-// re-evaluates correctly once that resolves, without needing its own fetch.
+// Business Unit filters by the linked Deal or Prospect's own business_unit —
+// Tasks have no business_unit of their own (they only ever relate to a
+// Deal/Contact/Company/Prospect, api-system-spec.md §7.6). A task related to
+// a Contact/Company (neither has a business_unit field) can't match a
+// specific Business Unit and is excluded once this filter is anything but
+// "all".
+// Relies on dealsStore.items/prospectsStore.items already having this
+// record — resolveRelated (called just below, in filteredTasks' own .map
+// over the same tasks) fires a fetchOne for any related Deal/Prospect not
+// already loaded, so this naturally re-evaluates correctly once that
+// resolves, without needing its own fetch beyond the initial fetchAll above.
 const matchesBusinessUnit = (task: Task) => {
   if (businessUnitFilter.value === 'all') return true
-  if (task.related_type !== 'deal') return false
-  const deal = dealsStore.items.find(d => d.id === task.related_id)
-  return deal?.business_unit === businessUnitFilter.value
+  if (task.related_type === 'deal') {
+    const deal = dealsStore.items.find(d => d.id === task.related_id)
+    return deal?.business_unit === businessUnitFilter.value
+  }
+  if (task.related_type === 'prospect') {
+    const prospect = prospectsStore.items.find(p => p.id === task.related_id)
+    return prospect?.business_unit === businessUnitFilter.value
+  }
+  return false
 }
 
 const filteredTasks = computed(() => {

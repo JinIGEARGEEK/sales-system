@@ -180,12 +180,13 @@ export default {
     save: 'บันทึกงาน',
   },
   globalSearch: {
-    placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ หรือ Lead...',
+    placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ Lead หรือ Prospect...',
     noResults: 'ไม่พบผลลัพธ์ที่ตรงกัน',
     deals: 'Deal',
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
     leads: 'Lead',
+    prospects: 'Prospect',
   },
   tableSelect: {
     selectRows: 'เลือกรายการ',

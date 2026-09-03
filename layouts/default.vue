@@ -135,7 +135,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { PROSPECT_ROLES, SALES_PIPELINE_ROLES, TASK_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -176,7 +176,7 @@ const menuList = computed(() => {
     { icon: 'material-symbols:contact-mail-outline', label: t('layout.nav.prospects'), path: '/crm/prospects', separator: true, roles: PROSPECT_ROLES },
     { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false, roles: SALES_PIPELINE_ROLES },
-    { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: SALES_PIPELINE_ROLES },
+    { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: TASK_ROLES },
     { icon: 'material-symbols:engineering-outline', label: t('layout.nav.projects'), path: '/crm/projects', separator: true },
     { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false, roles: SALES_PIPELINE_ROLES },

@@ -9,6 +9,7 @@ export default {
     salesRep: 'Sales Rep',
     salesManager: 'Sales Manager',
     admin: 'Admin',
+    marketing: 'Marketing',
     production: 'Production',
   },
   topics: {
@@ -120,11 +121,39 @@ export default {
         },
       ],
     },
+    prospectIntake: {
+      title: 'รับ Prospect → ส่งต่อเป็น Lead',
+      description: 'ช่องทางการตลาดของทีม Marketing ก่อนเข้าสู่ขั้นตอน Lead — ดูแล Prospect ใหม่จนพร้อมขาย แล้วแปลงเป็น Lead เพื่อให้ทีมขายรับช่วงต่อได้ทันที',
+      flow: ['Prospect', 'Lead'],
+      steps: [
+        {
+          nav: 'prospects',
+          text: 'สร้าง Prospect พร้อมระบุแหล่งที่มา บริษัท และข้อมูลผู้ติดต่อให้ครบ หากทราบแล้วว่าสนใจ Project หรือ Product ใด ให้ระบุผ่านช่องหน่วยธุรกิจ ข้อมูลนี้จะถูกส่งต่อไปยัง Lead โดยอัตโนมัติ',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'prospects',
+          text: 'ดูแล Prospect ผ่านสถานะ New → Engaging → Nurturing พร้อมบันทึกงานติดตามระหว่างทางเพื่อไม่ให้ตกหล่น',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'prospects',
+          text: 'เมื่อพร้อมส่งต่อให้ทีมขาย ให้กด "แปลงเป็น Lead" ไม่ต้องมีสถานะเฉพาะก่อน ขอแค่ไม่ใช่ Disqualified ระบบจะสร้าง Lead (พร้อมบริษัท/ผู้ติดต่อถ้ายังไม่มี) และย้ายไฟล์แนบให้อัตโนมัติ',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'tasks',
+          text: 'ติดตามงานของคุณจากทุก Prospect ได้ในที่เดียวผ่านหน้ารายการงานทั้งหมด ไม่ต้องไล่ดูทีละ Prospect',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+      ],
+    },
   },
   roleFocus: {
     salesRep: 'ดูแล Lead, Deal, Subscription และ Project ที่ได้รับมอบหมาย — นี่คือขั้นตอนการทำงานประจำวันของคุณ',
     salesManager: 'ทำได้ทุกอย่างเหมือน Sales Rep เพิ่มเติมด้วยมุมมอง Pipeline ของทั้งทีม การมอบหมาย Deal ใหม่ และตรวจสอบการต่ออายุ/Upsell',
     admin: 'มองเห็นทุกขั้นตอนการทำงานทั้งหมด พร้อมตั้งค่า Pipeline Stage ฟิลด์ข้อมูล และ Product Catalog ที่ขั้นตอนด้านล่างต้องใช้',
+    marketing: 'ดูแลช่องทาง Prospect ก่อนเข้าสู่ขั้นตอน Lead — ทำงานกับ Prospect จนพร้อมขาย แล้วแปลงเป็น Lead ไม่มีสิทธิ์เข้าถึง Lead/Deal/Quote/Contract/Payment',
     production: 'ดูเฉพาะขั้นตอนการส่งมอบงานด้านล่าง — อัปเดตสถานะและข้อมูลอ้างอิงของ Project ที่ได้รับมอบหมาย',
   },
 }

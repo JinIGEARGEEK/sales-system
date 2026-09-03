@@ -43,6 +43,16 @@
               name="related_id"
               rules="required"
             />
+            <InputAsyncSelect
+              v-else-if="form.related_type === 'prospect'"
+              v-model="relatedRecordId"
+              :search="searchProspects"
+              :resolve-selected="resolveProspect"
+              :label="t('crm.components.addTaskModal.relatesToRecord')"
+              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+              name="related_id"
+              rules="required"
+            />
           </template>
           <InputText v-model="form.title" :label="t('crm.components.addTaskModal.taskTitle')" name="title" rules="required" />
           <InputTextarea v-model="form.description" :label="t('crm.components.addTaskModal.description')" name="description" />
@@ -97,32 +107,44 @@ const RELATED_TYPE_OPTIONS: Select[] = [
   { label: 'Deal', value: 'deal' },
   { label: 'Contact', value: 'contact' },
   { label: 'Company', value: 'company' },
+  { label: 'Prospect', value: 'prospect' },
 ]
 
-// None of Deal/Contact/Company are preloaded here anymore — each branch
-// above searches the server as the rep types instead of filtering a capped
-// preloaded list (fetchAll() is capped at 200 rows, newest-first, and can
-// miss an older record entirely — see stores/companies.ts's fetchAll doc for
-// the full explanation).
+// None of Deal/Contact/Company/Prospect are preloaded here anymore — each
+// branch above searches the server as the rep types instead of filtering a
+// capped preloaded list (fetchAll() is capped at 200 rows, newest-first, and
+// can miss an older record entirely — see stores/companies.ts's fetchAll doc
+// for the full explanation).
 const dealsStore = useDealsStore()
 const contactsStore = useContactsStore()
+const prospectsStore = useProspectsStore()
 
-const searchDeals = async (term: string): Promise<Select[]> => {
-  const { items } = await dealsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'title' })
-  return items.map(d => ({ label: d.title, value: d.id }))
+// Deal/Contact/Prospect's search+resolve pair for InputAsyncSelect were
+// three near-identical copies of "fetchList → map to {label, value}" /
+// "fetchOne → {label, value}", differing only in which store and which
+// field is the label. Factored into one helper — Company doesn't need this
+// (InputCompanySelect above already owns its own combobox-with-create
+// behavior, not a plain async select).
+function useAsyncRecordPicker<T extends { id: number }> (
+  fetchList: (params: { search?: string, per_page: number, sort: string }) => Promise<{ items: T[] }>,
+  fetchOne: (id: number) => Promise<T>,
+  labelOf: (item: T) => string,
+  sortField: string,
+) {
+  const search = async (term: string): Promise<Select[]> => {
+    const { items } = await fetchList({ search: term || undefined, per_page: 20, sort: sortField })
+    return items.map(item => ({ label: labelOf(item), value: item.id }))
+  }
+  const resolve = async (id: number): Promise<Select | null> => {
+    const item = await fetchOne(id)
+    return { label: labelOf(item), value: item.id }
+  }
+  return { search, resolve }
 }
-const searchContacts = async (term: string): Promise<Select[]> => {
-  const { items } = await contactsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
-  return items.map(c => ({ label: c.name, value: c.id }))
-}
-const resolveDeal = async (id: number): Promise<Select | null> => {
-  const deal = await dealsStore.fetchOne(id)
-  return { label: deal.title, value: deal.id }
-}
-const resolveContact = async (id: number): Promise<Select | null> => {
-  const contact = await contactsStore.fetchOne(id)
-  return { label: contact.name, value: contact.id }
-}
+
+const { search: searchDeals, resolve: resolveDeal } = useAsyncRecordPicker(dealsStore.fetchList, dealsStore.fetchOne, d => d.title, 'title')
+const { search: searchContacts, resolve: resolveContact } = useAsyncRecordPicker(contactsStore.fetchList, contactsStore.fetchOne, c => c.name, 'name')
+const { search: searchProspects, resolve: resolveProspect } = useAsyncRecordPicker(prospectsStore.fetchList, prospectsStore.fetchOne, p => p.name, 'name')
 
 // Every branch above resolves to a number, but form.related_id stays a plain
 // string — this proxy is the one place that converts between the two, so
