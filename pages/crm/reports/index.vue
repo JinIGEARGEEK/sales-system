@@ -122,6 +122,11 @@ const attentionCards = computed(() => [
 
 const analyticsCards = computed(() => [
   { path: '/crm/reports/lead-source', icon: 'material-symbols:person-search-outline', title: t('crm.reports.leadSource.cardTitle'), description: t('crm.reports.leadSource.cardDescription') },
+  // Marketing's own report — shown here too since Admin/Sales Manager (who
+  // can reach this page) are also in PROSPECT_ROLES; Marketing itself never
+  // reaches this page at all (this page is MANAGER_ROLES-only), so discovers
+  // it instead via the "View Report" button on pages/crm/prospects/index.vue.
+  { path: '/crm/reports/prospect-source', icon: 'material-symbols:campaign-outline', title: t('crm.reports.prospectSource.cardTitle'), description: t('crm.reports.prospectSource.cardDescription') },
   { path: '/crm/reports/customer-product-status', icon: 'material-symbols:inventory-2-outline', title: t('crm.reports.customerProductStatus.cardTitle'), description: t('crm.reports.customerProductStatus.cardDescription') },
   { path: '/crm/reports/win-loss', icon: 'material-symbols:balance-outline', title: t('crm.reports.winLoss.cardTitle'), description: t('crm.reports.winLoss.cardDescription') },
   { path: '/crm/reports/sales-cycle', icon: 'material-symbols:schedule-outline', title: t('crm.reports.salesCycle.cardTitle'), description: t('crm.reports.salesCycle.cardDescription') },

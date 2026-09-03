@@ -3,6 +3,7 @@ export default {
     pageTitle: 'Prospects',
     heading: 'Prospects',
     addProspect: 'Add Prospect',
+    viewReport: 'View Report',
     viewKanban: 'Kanban',
     viewList: 'List',
     searchPlaceholder: 'Search by name, company or email...',

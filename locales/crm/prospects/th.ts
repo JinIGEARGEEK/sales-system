@@ -3,6 +3,7 @@ export default {
     pageTitle: 'Prospect',
     heading: 'Prospect',
     addProspect: 'เพิ่ม Prospect',
+    viewReport: 'ดูรายงาน',
     viewKanban: 'Kanban',
     viewList: 'รายการ',
     searchPlaceholder: 'ค้นหาด้วยชื่อ บริษัท หรืออีเมล...',
