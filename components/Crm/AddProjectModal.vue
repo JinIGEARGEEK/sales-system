@@ -18,7 +18,7 @@
             rules="required"
           />
           <InputSelect
-            v-if="!project && !productionEditor && !earlyStage && filterCompanyId"
+            v-if="showDealField"
             v-model="form.deal_id"
             :options="dealOptions"
             :label="t('crm.components.addProjectModal.deal')"
@@ -31,9 +31,9 @@
           was previously the one place capable of showing a Project's linked
           Deal, and it hid that information after creation instead of just
           not letting it be changed. -->
-          <div v-else-if="project?.deal_id && !productionEditor && !earlyStage">
+          <div v-else-if="showLinkedDeal">
             <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addProjectModal.deal') }}</p>
-            <NuxtLink :to="`/crm/deals/${project.deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
+            <NuxtLink :to="`/crm/deals/${project?.deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
               {{ linkedDealTitle }}
             </NuxtLink>
           </div>
@@ -165,6 +165,13 @@ const filterCompanyId = computed(() => {
   if (props.companies) return Number(form.company_id) || null
   return props.companyId ?? null
 })
+
+// Named rather than left as a 4-clause inline v-if — both the picker (fresh
+// create) and its edit-mode read-only counterpart below hide for the same
+// earlyStage reason (see that prop's own doc), on top of their own existing
+// project/productionEditor/filterCompanyId conditions.
+const showDealField = computed(() => !props.project && !productionEditor.value && !props.earlyStage && !!filterCompanyId.value)
+const showLinkedDeal = computed(() => !!props.project?.deal_id && !productionEditor.value && !props.earlyStage)
 
 const linkedDealTitle = computed(() => dealsStore.items.find(d => d.id === props.project?.deal_id)?.title ?? `#${props.project?.deal_id}`)
 watch(() => props.project?.deal_id, (dealId) => {
