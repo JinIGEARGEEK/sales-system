@@ -28,3 +28,13 @@ export const MANAGER_ROLES: Role[] = ['Admin', 'Sales Manager']
 // backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
 // /prospects* in internal/routes/routes.go.
 export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager']
+
+// Tasks are the one page every SALES_PIPELINE_ROLES role AND Marketing
+// legitimately use — Marketing owns Prospect-linked Tasks the same way Sales
+// owns Deal/Contact/Company-linked ones (backend's own `/tasks*` route group
+// has no role restriction at all, internal/routes/routes.go). Kept as its
+// own union rather than folding Marketing into SALES_PIPELINE_ROLES itself,
+// since that constant's whole point is "excludes Marketing" everywhere else
+// (Leads/Deals/Companies/Contacts/Tags nav, GlobalSearch, attachment/project
+// RBAC mirrors) — only Tasks is the exception.
+export const TASK_ROLES: Role[] = [...SALES_PIPELINE_ROLES, 'Marketing']

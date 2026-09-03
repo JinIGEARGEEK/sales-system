@@ -9,6 +9,7 @@ export default {
     salesRep: 'Sales Rep',
     salesManager: 'Sales Manager',
     admin: 'Admin',
+    marketing: 'Marketing',
     production: 'Production',
   },
   topics: {
@@ -120,11 +121,39 @@ export default {
         },
       ],
     },
+    prospectIntake: {
+      title: 'Prospect intake → Lead hand-off',
+      description: 'Marketing\'s own pre-Lead funnel — work a new Prospect until it\'s sales-ready, then convert it into a Lead so Sales picks up exactly where you left off.',
+      flow: ['Prospect', 'Lead'],
+      steps: [
+        {
+          nav: 'prospects',
+          text: 'Create the Prospect with source, company, and contact details filled in. Tag which Project or Product they\'re interested in via Business Unit if it\'s already known — this carries forward automatically once it becomes a Lead.',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'prospects',
+          text: 'Work the Prospect through New → Engaging → Nurturing status, logging follow-up Tasks along the way so nothing falls through the cracks.',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'prospects',
+          text: 'Once it\'s ready for Sales, use Convert to Lead — no specific status is required first, just that it isn\'t Disqualified. This creates the Lead (and Company/Contact if new) and carries over Attachments automatically.',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+        {
+          nav: 'tasks',
+          text: 'Track your own follow-up Tasks across every Prospect from one place on the all-Tasks page, not just one Prospect at a time.',
+          restriction: 'Marketing, Sales Manager, Admin',
+        },
+      ],
+    },
   },
   roleFocus: {
     salesRep: 'Own the Leads, Deals, Subscriptions, and Projects assigned to you — this is your day-to-day workflow.',
     salesManager: 'Everything Sales Reps do, plus team-wide Pipeline visibility, reassigning Deals, and reviewing renewal/upsell coverage.',
     admin: 'Full visibility into every workflow, plus configuring Pipeline stages, fields, and product catalog that the workflows below depend on.',
+    marketing: 'Own the pre-Lead Prospect funnel — work Prospects through to sales-ready, then convert to a Lead. No access to Leads/Deals/Quotes/Contracts/Payments.',
     production: 'Only the delivery-Milestone step below — update status and reference on the Projects assigned to you.',
   },
 }

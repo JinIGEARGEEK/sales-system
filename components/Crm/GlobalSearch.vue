@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { SALES_PIPELINE_ROLES, PROSPECT_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
@@ -54,6 +54,7 @@ const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
+const prospectsStore = useProspectsStore()
 
 // Deals/Companies/Contacts/Leads aren't a primary destination for Production
 // (same SALES_PIPELINE_ROLES exclusion as layouts/default.vue's nav) — this
@@ -61,6 +62,10 @@ const leadsStore = useLeadsStore()
 // so a Production user could still jump straight into a Deal/Company/Contact
 // via search even though those links are hidden from their sidebar.
 const canSearchSalesPipeline = computed(() => hasRole(...SALES_PIPELINE_ROLES))
+// Prospects is Marketing's own group — a separate gate (PROSPECT_ROLES)
+// since Marketing isn't in SALES_PIPELINE_ROLES at all (no Deal/Lead/
+// Company/Contact access), but Admin/Sales Manager still see both groups.
+const canSearchProspects = computed(() => hasRole(...PROSPECT_ROLES))
 
 const RESULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 2
@@ -69,15 +74,17 @@ const query = ref('')
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
 
-// All four groups search the server live as the rep types (useDebouncedSearch)
+// All five groups search the server live as the rep types (useDebouncedSearch)
 // instead of filtering a preloaded-but-capped store cache — fetchAll() is
 // capped at 200 rows, newest-first, per entity (see stores/companies.ts's
 // fetchAll doc for the full explanation), so an older Deal/Company/Contact/
-// Lead would otherwise never surface here at all, no matter how exactly its
-// name was typed. This also means the Leads group properly matches by
-// Company name again (GET /leads?search= joins to companies server-side),
-// which a purely client-side filter here never could reliably do anyway.
+// Lead/Prospect would otherwise never surface here at all, no matter how
+// exactly its name was typed. This also means the Leads group properly
+// matches by Company name again (GET /leads?search= joins to companies
+// server-side), which a purely client-side filter here never could reliably
+// do anyway.
 const shouldSearch = (term: string) => term.trim().length >= MIN_QUERY_LENGTH && canSearchSalesPipeline.value
+const shouldSearchProspects = (term: string) => term.trim().length >= MIN_QUERY_LENGTH && canSearchProspects.value
 
 const dealSearch = useDebouncedSearch(async (term: string) => {
   const { items } = await dealsStore.fetchList({ search: term, per_page: RESULT_LIMIT })
@@ -99,12 +106,18 @@ const leadSearch = useDebouncedSearch(async (term: string) => {
   return items
 }, { shouldSearch })
 
-// One input drives all four independent debounced searches.
+const prospectSearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await prospectsStore.fetchList({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch: shouldSearchProspects })
+
+// One input drives all five independent debounced searches.
 watch(query, (value) => {
   dealSearch.term.value = value
   companySearch.term.value = value
   contactSearch.term.value = value
   leadSearch.term.value = value
+  prospectSearch.term.value = value
 })
 
 // The Leads group's sublabel needs each visible lead's Company name —
@@ -120,7 +133,11 @@ watch(leadSearch.results, (visibleLeads) => {
 })
 
 const resultGroups = computed(() => {
-  if (query.value.trim().length < MIN_QUERY_LENGTH || !canSearchSalesPipeline.value) return []
+  // Not a per-role gate — each group's own search already stays empty unless
+  // its own role check (canSearchSalesPipeline / canSearchProspects) passes,
+  // via shouldSearch/shouldSearchProspects above. This only short-circuits
+  // once the query itself is too short to search anything, regardless of role.
+  if (query.value.trim().length < MIN_QUERY_LENGTH) return []
 
   return [
     {
@@ -142,6 +159,11 @@ const resultGroups = computed(() => {
       key: 'leads',
       label: t('crm.components.globalSearch.leads'),
       items: leadSearch.results.value.map(lead => ({ path: `/crm/leads/${lead.id}`, label: lead.name, sublabel: companiesStore.nameById(lead.company_id) })),
+    },
+    {
+      key: 'prospects',
+      label: t('crm.components.globalSearch.prospects'),
+      items: prospectSearch.results.value.map(prospect => ({ path: `/crm/prospects/${prospect.id}`, label: prospect.name, sublabel: prospect.status })),
     },
   ]
 })

@@ -43,6 +43,16 @@
               name="related_id"
               rules="required"
             />
+            <InputAsyncSelect
+              v-else-if="form.related_type === 'prospect'"
+              v-model="relatedRecordId"
+              :search="searchProspects"
+              :resolve-selected="resolveProspect"
+              :label="t('crm.components.addTaskModal.relatesToRecord')"
+              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+              name="related_id"
+              rules="required"
+            />
           </template>
           <InputText v-model="form.title" :label="t('crm.components.addTaskModal.taskTitle')" name="title" rules="required" />
           <InputTextarea v-model="form.description" :label="t('crm.components.addTaskModal.description')" name="description" />
@@ -97,15 +107,17 @@ const RELATED_TYPE_OPTIONS: Select[] = [
   { label: 'Deal', value: 'deal' },
   { label: 'Contact', value: 'contact' },
   { label: 'Company', value: 'company' },
+  { label: 'Prospect', value: 'prospect' },
 ]
 
-// None of Deal/Contact/Company are preloaded here anymore — each branch
-// above searches the server as the rep types instead of filtering a capped
-// preloaded list (fetchAll() is capped at 200 rows, newest-first, and can
-// miss an older record entirely — see stores/companies.ts's fetchAll doc for
-// the full explanation).
+// None of Deal/Contact/Company/Prospect are preloaded here anymore — each
+// branch above searches the server as the rep types instead of filtering a
+// capped preloaded list (fetchAll() is capped at 200 rows, newest-first, and
+// can miss an older record entirely — see stores/companies.ts's fetchAll doc
+// for the full explanation).
 const dealsStore = useDealsStore()
 const contactsStore = useContactsStore()
+const prospectsStore = useProspectsStore()
 
 const searchDeals = async (term: string): Promise<Select[]> => {
   const { items } = await dealsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'title' })
@@ -115,6 +127,10 @@ const searchContacts = async (term: string): Promise<Select[]> => {
   const { items } = await contactsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
   return items.map(c => ({ label: c.name, value: c.id }))
 }
+const searchProspects = async (term: string): Promise<Select[]> => {
+  const { items } = await prospectsStore.fetchList({ search: term || undefined, per_page: 20, sort: 'name' })
+  return items.map(p => ({ label: p.name, value: p.id }))
+}
 const resolveDeal = async (id: number): Promise<Select | null> => {
   const deal = await dealsStore.fetchOne(id)
   return { label: deal.title, value: deal.id }
@@ -122,6 +138,10 @@ const resolveDeal = async (id: number): Promise<Select | null> => {
 const resolveContact = async (id: number): Promise<Select | null> => {
   const contact = await contactsStore.fetchOne(id)
   return { label: contact.name, value: contact.id }
+}
+const resolveProspect = async (id: number): Promise<Select | null> => {
+  const prospect = await prospectsStore.fetchOne(id)
+  return { label: prospect.name, value: prospect.id }
 }
 
 // Every branch above resolves to a number, but form.related_id stays a plain

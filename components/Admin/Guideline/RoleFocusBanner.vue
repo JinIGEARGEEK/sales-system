@@ -23,6 +23,7 @@ const roleFocusIconByTab: Record<string, string> = {
   salesRep: 'material-symbols:person-outline',
   salesManager: 'material-symbols:supervisor-account-outline',
   admin: 'material-symbols:shield-person-outline',
+  marketing: 'material-symbols:campaign-outline',
   production: 'material-symbols:precision-manufacturing-outline',
 }
 const roleFocusIcon = computed(() => roleFocusIconByTab[props.activeTab] ?? 'material-symbols:person-outline')

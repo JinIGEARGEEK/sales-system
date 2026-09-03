@@ -15,6 +15,7 @@ const tabItems = computed(() => [
   { label: t('admin.guideline.roleTabs.salesRep'), value: 'salesRep' },
   { label: t('admin.guideline.roleTabs.salesManager'), value: 'salesManager' },
   { label: t('admin.guideline.roleTabs.admin'), value: 'admin' },
+  { label: t('admin.guideline.roleTabs.marketing'), value: 'marketing' },
   { label: t('admin.guideline.roleTabs.production'), value: 'production' },
 ])
 </script>

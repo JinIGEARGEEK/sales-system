@@ -103,13 +103,19 @@ const NAV_META: Record<string, { path: string, icon: string }> = {
   companies: { path: '/crm/companies', icon: 'material-symbols:apartment-outline' },
   contacts: { path: '/crm/contacts', icon: 'material-symbols:contacts-outline' },
   tags: { path: '/crm/tags', icon: 'material-symbols:sell-outline' },
+  prospects: { path: '/crm/prospects', icon: 'material-symbols:contact-mail-outline' },
 }
 
 // The default/unrestricted phrasing used across the locale files whenever a
 // step has no special role limits — anything else describes a real
-// restriction and gets the amber "limited" treatment instead.
+// restriction and gets the amber "limited" treatment instead. Two variants:
+// the original Sales-side one, and Marketing's own (Prospects aren't part of
+// the Sales Rep/Sales Manager/Admin set at all, so its "open" phrasing names
+// different roles).
 const OPEN_TO_ALL_SALES_ROLES = 'Sales Rep, Sales Manager, Admin'
-const isOpenToAllSalesRoles = (restriction: string) => restriction === OPEN_TO_ALL_SALES_ROLES
+const OPEN_TO_ALL_MARKETING_ROLES = 'Marketing, Sales Manager, Admin'
+const isOpenToAllSalesRoles = (restriction: string) =>
+  restriction === OPEN_TO_ALL_SALES_ROLES || restriction === OPEN_TO_ALL_MARKETING_ROLES
 
 // The Production tab renders every step of a topic assigned to it (see
 // topicKeysByTab on the page) even when a specific step's own restriction
@@ -129,11 +135,12 @@ const isStepBlockedForActiveTab = (step: GuidelineStep) =>
 // so the regex alternation matches the full phrase first.
 const KEY_TERMS = [
   'Lead Score', 'Sales Rep', 'Sales Manager', 'Pipeline Stage', 'Reminder Task',
-  'Payment Milestone', 'Upsell Deal', 'Company History',
+  'Payment Milestone', 'Upsell Deal', 'Company History', 'Prospect Source', 'Convert to Lead',
   'Leads', 'Lead', 'Deals', 'Deal', 'Tasks', 'Task', 'Projects', 'Project',
   'Contracts', 'Contract', 'Quotes', 'Quote', 'Payments', 'Payment',
   'Activities', 'Activity', 'Tags', 'Tag', 'Milestones', 'Milestone',
   'Subscriptions', 'Subscription', 'Companies', 'Company', 'Contacts', 'Contact',
+  'Prospects', 'Prospect',
   'Pipeline', 'Won', 'Renewed', 'Touchpoint',
 ]
 const KEY_TERMS_REGEX = new RegExp(`\\b(${KEY_TERMS.join('|')})\\b`, 'g')
