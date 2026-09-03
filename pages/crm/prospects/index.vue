@@ -174,11 +174,12 @@ const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 
 // Deep-linked from the Marketing dashboard tab's status/source breakdown rows
 // via a query param — seeded once at setup, same pattern as Deals' own
-// deep-link seeding in pages/crm/deals/index.vue.
+// deep-link seeding in pages/crm/deals/index.vue. See useQueryFilter for the
+// 'all'-fallback convention.
 const search = ref('')
-const statusFilter = ref(typeof route.query.status === 'string' ? route.query.status : 'all')
-const sourceFilter = ref(typeof route.query.source === 'string' ? route.query.source : 'all')
-const assigneeFilter = ref(typeof route.query.assigned_to === 'string' ? route.query.assigned_to : 'all')
+const statusFilter = useQueryFilter(route.query, 'status')
+const sourceFilter = useQueryFilter(route.query, 'source')
+const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
 
 // The Kanban board has no status/source/assignee filter bar at all (only the
 // List view does, via CrmStatusPill + the two InputSelects above it), so a

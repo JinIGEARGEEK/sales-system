@@ -270,13 +270,12 @@ onMounted(async () => {
 // Deep-linked from dashboard cards/breakdown rows (e.g. Team Performance's
 // per-rep rows, Pipeline by Stage's bars) via a query param — seeded once at
 // setup so a bookmarked/shared URL behaves the same as clicking the card.
-// Falls back to 'all' the same as every other filter default here when the
-// param is absent or doesn't match a known value.
+// See useQueryFilter for the 'all'-fallback convention.
 const search = ref('')
-const assigneeFilter = ref(typeof route.query.assigned_to === 'string' ? route.query.assigned_to : 'all')
-const businessUnitFilter = ref(typeof route.query.business_unit === 'string' ? route.query.business_unit : 'all')
-const channelFilter = ref(typeof route.query.channel === 'string' ? route.query.channel : 'all')
-const stageFilter = ref(typeof route.query.stage === 'string' ? route.query.stage : 'all')
+const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
+const businessUnitFilter = useQueryFilter(route.query, 'business_unit')
+const channelFilter = useQueryFilter(route.query, 'channel')
+const stageFilter = useQueryFilter(route.query, 'stage')
 
 const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
 // The Kanban board shows every stage side by side, so a single-stage/assignee
