@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { GLASS_PANEL_UI } from '~/constants/ui'
+import { GUIDELINE_TABS } from './tabs'
 
 const props = defineProps<{
   activeTab: string
@@ -19,12 +20,6 @@ const { t } = useI18n()
 
 const roleFocus = computed(() => t(`admin.guideline.roleFocus.${props.activeTab}`))
 
-const roleFocusIconByTab: Record<string, string> = {
-  salesRep: 'material-symbols:person-outline',
-  salesManager: 'material-symbols:supervisor-account-outline',
-  admin: 'material-symbols:shield-person-outline',
-  marketing: 'material-symbols:campaign-outline',
-  production: 'material-symbols:precision-manufacturing-outline',
-}
-const roleFocusIcon = computed(() => roleFocusIconByTab[props.activeTab] ?? 'material-symbols:person-outline')
+const roleFocusIcon = computed(() =>
+  GUIDELINE_TABS.find(tab => tab.value === props.activeTab)?.icon ?? 'material-symbols:person-outline')
 </script>

@@ -6,16 +6,14 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { GUIDELINE_TABS } from './tabs'
 
 const activeTab = defineModel<string>({ required: true })
 
 const { t } = useI18n()
 
-const tabItems = computed(() => [
-  { label: t('admin.guideline.roleTabs.salesRep'), value: 'salesRep' },
-  { label: t('admin.guideline.roleTabs.salesManager'), value: 'salesManager' },
-  { label: t('admin.guideline.roleTabs.admin'), value: 'admin' },
-  { label: t('admin.guideline.roleTabs.marketing'), value: 'marketing' },
-  { label: t('admin.guideline.roleTabs.production'), value: 'production' },
-])
+const tabItems = computed(() => GUIDELINE_TABS.map(tab => ({
+  label: t(`admin.guideline.roleTabs.${tab.value}`),
+  value: tab.value,
+})))
 </script>
