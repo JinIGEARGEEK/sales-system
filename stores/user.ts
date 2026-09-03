@@ -1,6 +1,7 @@
 export const useUserStore = defineStore('user', {
   state: (): User => {
     return {
+      id: 0,
       first_name: '',
       last_name: '',
       tel: '',
@@ -21,6 +22,7 @@ export const useUserStore = defineStore('user', {
   },
   actions: {
     setUser (user: User) {
+      this.id = user.id
       this.first_name = user.first_name
       this.last_name = user.last_name
       this.tel = user.tel

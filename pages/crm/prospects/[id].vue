@@ -1,5 +1,6 @@
 <template>
   <div class="p-5">
+    <AccessGate :can-access="canAccess">
     <div v-if="prospect">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div class="flex min-w-0 flex-wrap items-center gap-3">
@@ -72,6 +73,7 @@
             <div class="mb-4 flex items-center justify-between">
               <h3 class="text-base font-semibold">{{ t('crm.leads.detail.attachmentsHeading') }}</h3>
               <ButtonPrimary
+                v-if="canManageAttachments"
                 :label="t('crm.leads.detail.addAttachment')"
                 icon="material-symbols:add"
                 small
@@ -142,12 +144,14 @@
       confirm-color="primary"
       @confirm="onConvert"
     />
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, isTaskOverdue } from '~/constants/mockData'
+import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -156,6 +160,16 @@ useHead({ title: t('crm.prospects.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+// Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
+// /prospects* — same reasoning as pages/crm/prospects/index.vue.
+const { canAccess, guardMounted } = usePageAccess(...PROSPECT_ROLES)
+const { hasRole } = useRole()
+// Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
+// not Marketing) — internal/routes/routes.go. Marketing owns Prospects day to
+// day but isn't in this allow-list, so hide the button rather than let it
+// 403 on click, same as Lead/Company/Deal's own canManageAttachments. Same
+// role set as SALES_PIPELINE_ROLES, so reuse it rather than re-listing.
+const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
@@ -167,7 +181,7 @@ const { parseTags } = useFormatter()
 const prospectId = Number(route.params.id)
 const prospect = computed(() => prospectsStore.items.find(p => p.id === prospectId))
 
-onMounted(() => {
+guardMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Prospect, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely.
   if (!prospectsStore.items.some(p => p.id === prospectId)) prospectsStore.fetchOne(prospectId).catch(notifyApiError)

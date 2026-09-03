@@ -34,7 +34,7 @@
         </UCard>
       </div>
 
-      <div v-if="canViewSalesPipelineWidgets" class="lg:col-span-2">
+      <div class="lg:col-span-2">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
@@ -132,7 +132,6 @@ const { priceFormatCompact } = useFormatter()
 
 defineProps<{
   stageBreakdown: { stage: string, value: number, count: number, percent: number, barClass: string }[]
-  canViewSalesPipelineWidgets: boolean
   upsellGroups: { tier: string, label: string, candidates: { company: Company, contact: { color: string, label: string } }[] }[]
   funnelStages: { label: string, value: number, barClass?: string }[]
   funnelStagesPreview: { label: string, value: number, barClass?: string }[]

@@ -6,9 +6,14 @@
 // Companies/Contacts/Tags) as a primary destination — user-story.md §4 is
 // explicit that Production "is not a full user of this CRM; their only
 // interaction is keeping a Project's status/reference current," so
-// Production is excluded here. This is UI-only (nav visibility, search
-// results) — the backend still allows Production's own read access to these
-// resources; nothing here removes that.
+// Production is excluded here. This started as UI-only (nav visibility,
+// search results, dashboard widget visibility) — the backend still allows
+// Production's own read access to these resources; nothing here removes
+// that. It also happens to be the exact role list the backend's own
+// `POST /attachments` and Project-create RBAC enforce (internal/routes/
+// routes.go), so every canManageAttachments/canManageProjects computed
+// across Lead/Company/Contact/Prospect/Deal/Project pages reuses it too,
+// rather than each re-listing the same 3 roles.
 export const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager']
 
 // The other recurring role pairing in this codebase — bulk actions, exports,

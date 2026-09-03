@@ -27,7 +27,7 @@
 
         <UBadge color="neutral" variant="subtle" class="shrink-0">{{ t(`crm.components.attachmentList.categories.${categoryKey(attachment.category)}`) }}</UBadge>
 
-        <UTooltip :text="t('crm.components.attachmentList.remove')">
+        <UTooltip v-if="canDelete(attachment)" :text="t('crm.components.attachmentList.remove')">
           <UButton
             icon="material-symbols:delete-outline"
             variant="ghost"
@@ -54,10 +54,19 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
 const { public: { API_URL } } = useRuntimeConfig()
+const { hasRole } = useRole()
+const userStore = useUserStore()
 
 defineProps<{
   attachments: Attachment[]
 }>()
+
+// Mirrors the backend's DELETE /attachments/:id check exactly — CanWrite(c,
+// &attachment.UploadedByID) in internal/handlers/attachments.go: Admin/Sales
+// Manager can delete any attachment, anyone else only the one they uploaded.
+// Previously the button rendered for every role on every attachment
+// (Production included), so most clicks 403'd — this hides it instead.
+const canDelete = (attachment: Attachment) => hasRole('Admin', 'Sales Manager') || attachment.uploaded_by === userStore.id
 
 const emit = defineEmits<{
   remove: [id: number]

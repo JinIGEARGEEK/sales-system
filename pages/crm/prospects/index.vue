@@ -1,5 +1,6 @@
 <template>
   <div class="p-5">
+    <AccessGate :can-access="canAccess">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-black">{{ t('crm.prospects.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
@@ -130,12 +131,13 @@
       :name="target?.name || ''"
       @confirm="confirmDelete"
     />
+    </AccessGate>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MANAGER_ROLES } from '~/constants/roles'
+import { MANAGER_ROLES, PROSPECT_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { PROSPECT_STATUS_OPTIONS, PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, matchesAssigneeFilter } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -148,6 +150,11 @@ const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
+// Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
+// /prospects* — a Sales Rep/Production user reaching this URL directly (nav
+// hides the link, but nothing else blocks it) gets an explicit "no access"
+// state instead of a page whose fetches silently 403.
+const { canAccess, guardMounted } = usePageAccess(...PROSPECT_ROLES)
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
@@ -171,7 +178,7 @@ const assigneeFilter = ref('all')
 // cards on the Deals board) is enough; Prospect.status IS the column value
 // directly, no lane-mapping needed (unlike Lead's leadLane() on that board).
 
-onMounted(() => {
+guardMounted(() => {
   prospectsStore.fetchAll({ exclude_converted: true }).catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
