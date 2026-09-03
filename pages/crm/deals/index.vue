@@ -65,6 +65,9 @@
         <div class="w-full sm:w-36">
           <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
         </div>
+        <div class="w-full sm:w-40">
+          <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
+        </div>
       </div>
     </UCard>
 
@@ -131,6 +134,7 @@
       :assignee-filter="assigneeFilter"
       :business-unit-filter="businessUnitFilter"
       :channel-filter="channelFilter"
+      :stage-filter="stageFilter"
     />
   </div>
 </template>
@@ -148,6 +152,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
+const route = useRoute()
 const { priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -262,12 +267,28 @@ onMounted(async () => {
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
-const viewMode = ref<'kanban' | 'list'>('kanban')
-
+// Deep-linked from dashboard cards/breakdown rows (e.g. Team Performance's
+// per-rep rows, Pipeline by Stage's bars) via a query param — seeded once at
+// setup so a bookmarked/shared URL behaves the same as clicking the card.
+// Falls back to 'all' the same as every other filter default here when the
+// param is absent or doesn't match a known value.
 const search = ref('')
-const assigneeFilter = ref('all')
-const businessUnitFilter = ref('all')
-const channelFilter = ref('all')
+const assigneeFilter = ref(typeof route.query.assigned_to === 'string' ? route.query.assigned_to : 'all')
+const businessUnitFilter = ref(typeof route.query.business_unit === 'string' ? route.query.business_unit : 'all')
+const channelFilter = ref(typeof route.query.channel === 'string' ? route.query.channel : 'all')
+const stageFilter = ref(typeof route.query.stage === 'string' ? route.query.stage : 'all')
+
+const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
+// The Kanban board shows every stage side by side, so a single-stage/assignee
+// deep link reads better landing on the List view, where the filter bar and
+// results are unambiguous — same reasoning as forcing Prospects into list
+// view for its own deep links (pages/crm/prospects/index.vue).
+const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
+
+const stageFilterOptions = computed(() => [
+  { label: t('crm.dashboard.allStages'), value: 'all' },
+  ...pipelineStagesStore.activeOptions,
+])
 
 // Flattens the currently-loaded pages across every stage bucket — this is
 // what actually renders on the board, so a column only ever shows up to
@@ -283,7 +304,8 @@ const filteredDeals = computed(() => {
     const matchAssignee = matchesAssigneeFilter(deal.assigned_to, assigneeFilter.value)
     if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
     const matchChannel = channelFilter.value === 'all' || deal.channel === channelFilter.value
-    return matchSearch && matchAssignee && matchChannel
+    const matchStage = stageFilter.value === 'all' || deal.stage === stageFilter.value
+    return matchSearch && matchAssignee && matchChannel && matchStage
   })
 })
 

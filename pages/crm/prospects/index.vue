@@ -152,6 +152,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.prospects.index.pageTitle') })
 
+const route = useRoute()
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -171,12 +172,19 @@ const companiesStore = useCompaniesStore()
 // backend, same as Leads' — Marketing itself has no bulk access.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 
-const viewMode = ref<'kanban' | 'list'>('kanban')
-
+// Deep-linked from the Marketing dashboard tab's status/source breakdown rows
+// via a query param — seeded once at setup, same pattern as Deals' own
+// deep-link seeding in pages/crm/deals/index.vue.
 const search = ref('')
-const statusFilter = ref('all')
-const sourceFilter = ref('all')
-const assigneeFilter = ref('all')
+const statusFilter = ref(typeof route.query.status === 'string' ? route.query.status : 'all')
+const sourceFilter = ref(typeof route.query.source === 'string' ? route.query.source : 'all')
+const assigneeFilter = ref(typeof route.query.assigned_to === 'string' ? route.query.assigned_to : 'all')
+
+// The Kanban board has no status/source/assignee filter bar at all (only the
+// List view does, via CrmStatusPill + the two InputSelects above it), so a
+// deep link needs to force List view or the filter would be invisible/inert.
+const hasDeepLinkFilter = statusFilter.value !== 'all' || sourceFilter.value !== 'all' || assigneeFilter.value !== 'all'
+const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
 
 // ── Kanban ─────────────────────────────────────────────────────────────
 // Prospect volume doesn't warrant Deals' per-stage server-paginated bucket

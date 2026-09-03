@@ -61,6 +61,7 @@ const props = defineProps<{
   assigneeFilter: string
   businessUnitFilter: string
   channelFilter: string
+  stageFilter?: string
 }>()
 
 const { t } = useI18n()
@@ -103,6 +104,7 @@ const buildParams = () => ({
   assigned_to: props.assigneeFilter !== 'all' ? props.assigneeFilter : undefined,
   business_unit: props.businessUnitFilter !== 'all' ? props.businessUnitFilter : undefined,
   channel: props.channelFilter !== 'all' ? props.channelFilter : undefined,
+  stage: props.stageFilter && props.stageFilter !== 'all' ? props.stageFilter : undefined,
   sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
 
@@ -121,7 +123,7 @@ const {
 } = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams)
 
 watch(() => props.search, () => refetchDebounced())
-watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.channelFilter], () => refetchFromStart())
+watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.channelFilter, () => props.stageFilter], () => refetchFromStart())
 // Selection is scoped to the currently visible page — a page/filter/sort
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })

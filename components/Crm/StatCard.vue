@@ -1,4 +1,9 @@
 <template>
+  <component
+    :is="to ? 'NuxtLink' : 'div'"
+    :to="to || undefined"
+    :class="to ? 'block transition-shadow hover:shadow-md' : ''"
+  >
   <UCard class="relative overflow-hidden ring-[var(--color-card-border)]" :ui="{ body: 'p-3' }">
     <div
       v-if="accentGlassClass"
@@ -25,6 +30,7 @@
       </div>
     </div>
   </UCard>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -72,6 +78,14 @@ defineProps({
   // above (used for a dynamic on-track/below-target readout, not the
   // static calculation description).
   tooltip: {
+    type: String,
+    default: '',
+  },
+  // Optional deep-link target — when set, the whole card becomes a NuxtLink
+  // into the filtered list view this stat summarizes, with a hover
+  // affordance; omit to keep the card inert, same as before this prop
+  // existed. Mirrors CrmMetricBar's own `to` prop.
+  to: {
     type: String,
     default: '',
   },

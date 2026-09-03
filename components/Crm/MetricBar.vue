@@ -1,5 +1,10 @@
 <template>
-  <div class="flex items-center gap-3">
+  <component
+    :is="to ? 'NuxtLink' : 'div'"
+    :to="to || undefined"
+    class="flex items-center gap-3 rounded-md"
+    :class="to ? '-mx-2 px-2 py-0.5 transition-colors hover:bg-[var(--color-light-gray-1)]' : ''"
+  >
     <span class="w-32 shrink-0 truncate text-sm">{{ label }}</span>
     <UTooltip :text="tooltip || `${label} — ${percent}%`">
       <div class="h-3 flex-1 overflow-hidden rounded-full bg-[var(--color-light-gray-2)]">
@@ -11,7 +16,7 @@
       </div>
     </UTooltip>
     <slot />
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -33,6 +38,14 @@ defineProps({
   // Optional hover-tooltip text; falls back to "label — percent%" so every
   // bar gets a hover affordance even where the caller doesn't pass one.
   tooltip: {
+    type: String,
+    default: '',
+  },
+  // Optional deep-link target (e.g. `/crm/deals?stage=Qualified`) — when set,
+  // the whole row becomes a NuxtLink into the filtered list view behind this
+  // bar's data, with a hover affordance; omit to keep the row inert, same as
+  // before this prop existed.
+  to: {
     type: String,
     default: '',
   },
