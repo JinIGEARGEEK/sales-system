@@ -235,13 +235,9 @@ watch(lead, (value) => {
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   toRef(form, 'company_id'),
+  toRef(form, 'business_unit_item'),
+  () => hydrating,
 )
-
-// Switching business unit (or company) invalidates whichever item was picked
-// under the old context — but not during the hydration above.
-watch([() => form.business_unit, () => form.company_id], () => {
-  if (!hydrating) form.business_unit_item = ''
-})
 
 const { loading, guard } = useSubmitGuard()
 

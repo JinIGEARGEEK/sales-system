@@ -189,15 +189,9 @@ watch(originatingLead, async (lead) => {
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   computed(() => form.company_id),
+  toRef(form, 'business_unit_item'),
+  () => hydratingFromLead,
 )
-
-// Switching business unit (or company) invalidates whichever item was picked
-// under the old context — but not while the Lead pre-fill above is setting
-// both together.
-watch([() => form.business_unit, () => form.company_id], () => {
-  if (hydratingFromLead) return
-  form.business_unit_item = ''
-})
 
 const duplicateDeals = computed(() => findDuplicateDeals(companyDeals.value, form.company_id, form.contact_id))
 

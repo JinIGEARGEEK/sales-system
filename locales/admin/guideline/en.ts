@@ -19,7 +19,7 @@ export default {
       steps: [
         {
           nav: 'leads',
-          text: 'Create the Lead with source, company, and contact details filled in — this is what Sales Managers use to judge lead quality later.',
+          text: 'Create the Lead with source, company, and contact details filled in — this is what Sales Managers use to judge lead quality later. Tag which Project or Product they\'re interested in via Business Unit if it\'s already known; it carries forward automatically once the Lead becomes a Deal.',
           restriction: 'Sales Rep, Sales Manager, Admin',
         },
         {

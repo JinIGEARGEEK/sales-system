@@ -127,13 +127,8 @@ const form = reactive({
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   toRef(form, 'company_id'),
+  toRef(form, 'business_unit_item'),
 )
-
-// Switching business unit (or company) invalidates whichever item was picked
-// under the old context — same as the Deal/Lead create forms.
-watch([() => form.business_unit, () => form.company_id], () => {
-  form.business_unit_item = ''
-})
 
 const duplicateProspects = computed(() => findDuplicateProspects(prospectsStore.items, form.email, form.phone))
 
