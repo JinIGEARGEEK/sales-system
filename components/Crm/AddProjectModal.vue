@@ -18,7 +18,7 @@
             rules="required"
           />
           <InputSelect
-            v-if="!project && !productionEditor && filterCompanyId"
+            v-if="!project && !productionEditor && !earlyStage && filterCompanyId"
             v-model="form.deal_id"
             :options="dealOptions"
             :label="t('crm.components.addProjectModal.deal')"
@@ -31,7 +31,7 @@
           was previously the one place capable of showing a Project's linked
           Deal, and it hid that information after creation instead of just
           not letting it be changed. -->
-          <div v-else-if="project?.deal_id && !productionEditor">
+          <div v-else-if="project?.deal_id && !productionEditor && !earlyStage">
             <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addProjectModal.deal') }}</p>
             <NuxtLink :to="`/crm/deals/${project.deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
               {{ linkedDealTitle }}
@@ -46,10 +46,10 @@
             rules="required"
           />
           <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
-          <InputText v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
+          <InputText v-if="!earlyStage" v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_proposal_date" :label="t('crm.components.addProjectModal.expectedProposalDate')" name="expected_proposal_date" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_start_date" :label="t('crm.components.addProjectModal.expectedStartDate')" name="expected_start_date" />
-          <InputDatePicker v-if="!productionEditor" v-model="form.target_end_date" :label="t('crm.components.addProjectModal.targetEndDate')" name="target_end_date" />
+          <InputDatePicker v-if="!productionEditor && !earlyStage" v-model="form.target_end_date" :label="t('crm.components.addProjectModal.targetEndDate')" name="target_end_date" />
           <InputTextarea v-if="!productionEditor" v-model="form.notes" :label="t('crm.components.addProjectModal.notes')" name="notes" />
         </div>
       </Form>
@@ -97,6 +97,15 @@ const props = defineProps<{
   // Used only to filter the optional Deal picker below — the parent still decides
   // the actual company_id sent on submit via its own defaultCompanyId fallback.
   companyId?: number | null
+  // Set when this create is triggered from a Lead/Prospect's inline "+ Add
+  // Project" (CrmBusinessUnitItemField) rather than a Deal's — at that stage
+  // there's no Deal to link yet (any Deal the Company already has is
+  // unrelated to this not-yet-won opportunity), and PO/target-end-date are
+  // production-fulfillment details that don't exist yet either. Hides all
+  // three; Name/Status/the two "expected" planning dates/Notes stay, since
+  // those are still meaningful this early. Never true in edit mode (this
+  // field only ever creates, never edits — see CrmBusinessUnitItemField).
+  earlyStage?: boolean
 }>()
 
 const emit = defineEmits<{

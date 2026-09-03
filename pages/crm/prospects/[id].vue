@@ -66,6 +66,7 @@
                     :business-unit="form.business_unit"
                     :company-id="form.company_id"
                     :options="businessUnitItemOptions"
+                    early-stage
                   />
                 </div>
                 <div class="md:col-span-2">
