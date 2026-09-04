@@ -25,7 +25,7 @@
           :placeholder="t('crm.dashboard.periodCustom')"
           name="periodPreset"
           size="xs"
-          class="w-full sm:w-32"
+          class="w-full sm:w-40"
           @update:model-value="emit('apply-preset', $event as string)"
         />
         <InputDateRangePicker
@@ -46,7 +46,7 @@
             :label="t('crm.dashboard.filterBusinessUnit')"
             name="businessUnitFilter"
             size="xs"
-            class="w-full sm:w-36"
+            class="w-full sm:w-44"
             @update:model-value="emit('update:businessUnitFilter', $event as string)"
           />
           <InputSelect
@@ -55,7 +55,7 @@
             :label="t('crm.dashboard.filterChannel')"
             name="channelFilter"
             size="xs"
-            class="w-full sm:w-32"
+            class="w-full sm:w-40"
             @update:model-value="emit('update:channelFilter', $event as string)"
           />
           <InputSelect
@@ -64,7 +64,7 @@
             :label="t('crm.dashboard.filterSalesRep')"
             name="salesRepFilter"
             size="xs"
-            class="w-full sm:w-40"
+            class="w-full sm:w-44"
             @update:model-value="emit('update:salesRepFilter', $event as string)"
           />
           <InputText

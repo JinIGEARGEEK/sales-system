@@ -43,7 +43,7 @@
               name="industryFilter"
             />
           </div>
-          <div class="w-full sm:w-40">
+          <div class="w-full sm:w-48">
             <InputSelect
               v-model="tagFilter"
               :options="[{ label: t('crm.companies.index.allTags'), value: 'all' }, ...tagOptions]"

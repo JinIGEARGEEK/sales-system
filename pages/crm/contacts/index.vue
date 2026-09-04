@@ -48,7 +48,7 @@
               class="w-full"
             />
           </div>
-          <div class="w-full sm:w-40">
+          <div class="w-full sm:w-48">
             <InputSelect
               v-model="tagFilter"
               :options="[{ label: t('crm.contacts.index.allTags'), value: 'all' }, ...tagOptions]"

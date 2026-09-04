@@ -43,7 +43,7 @@ export default {
   filterCompanyTag: 'แท็ก',
   filterCompanyTagPlaceholder: 'เช่น Tier 1',
   dateRangePlaceholder: 'เลือกช่วงวันที่',
-  periodAll: 'ทั้งหมด',
+  periodAll: 'ทุกช่วงเวลา',
   periodThisMonth: 'เดือนนี้',
   periodThisQuarter: 'ไตรมาสนี้',
   periodThisYear: 'ปีนี้',

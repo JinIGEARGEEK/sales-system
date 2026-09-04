@@ -60,7 +60,7 @@
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.prospects.index.searchPlaceholder')" name="search" />
           </div>
-          <div class="w-full sm:w-40">
+          <div class="w-full sm:w-48">
             <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.prospects.index.allSources'), value: 'all' }, ...prospectSourcesStore.activeOptions]" :placeholder="t('crm.prospects.index.sourcePlaceholder')" name="sourceFilter" />
           </div>
           <div class="w-full sm:w-48">
