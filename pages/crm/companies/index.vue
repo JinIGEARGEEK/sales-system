@@ -117,7 +117,8 @@
 
     <CrmCreateCampaignModal
       v-model:open="createCampaignOpen"
-      :company-count="selectedIds.length"
+      :company-ids="selectedIds"
+      :company-names="selectedNames"
       @submit="onCreateCampaign"
     />
   </div>
@@ -245,6 +246,7 @@ const displayCompanies = computed(() => rows.value.map((company) => {
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Company>()
 
 const createCampaignOpen = ref(false)
+const selectedNames = computed(() => selected.value.map(company => company.name))
 
 const onCreateCampaign = async (payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
   try {
