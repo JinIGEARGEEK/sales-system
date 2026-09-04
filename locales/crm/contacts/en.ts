@@ -26,9 +26,13 @@ export default {
     actions: {
       viewDetail: 'View Detail',
       edit: 'Edit',
+      addToCampaign: 'Add to Campaign',
       delete: 'Delete',
     },
     deleteSuccess: 'Contact deleted successfully',
+    entityLabel: 'contacts',
+    campaignCreateSuccess: 'Campaign "{name}" created with {count} follow-up tasks',
+    campaignAddSuccess: 'Added {count} follow-up tasks to "{name}"',
   },
   create: {
     pageTitle: 'Add Contact',

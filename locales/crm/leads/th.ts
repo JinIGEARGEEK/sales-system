@@ -24,10 +24,13 @@ export default {
       edit: 'แก้ไข',
       convert: 'แปลงเป็น Deal',
       viewDeal: 'ดู Deal',
+      addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบ Lead สำเร็จ',
     entityLabel: 'Lead',
+    campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
+    campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',
   },
   create: {
     pageTitle: 'เพิ่ม Lead',

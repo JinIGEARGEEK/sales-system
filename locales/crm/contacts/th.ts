@@ -26,9 +26,13 @@ export default {
     actions: {
       viewDetail: 'ดูรายละเอียด',
       edit: 'แก้ไข',
+      addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบผู้ติดต่อสำเร็จ',
+    entityLabel: 'ผู้ติดต่อ',
+    campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
+    campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',
   },
   create: {
     pageTitle: 'เพิ่มผู้ติดต่อ',

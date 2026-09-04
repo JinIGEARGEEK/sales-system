@@ -38,6 +38,12 @@
             icon="material-symbols:swap-horiz"
             @click="requestConvert"
           />
+          <ButtonPrimary
+            :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+            icon="material-symbols:campaign-outline"
+            outline
+            @click="createCampaignOpen = true"
+          />
         </div>
       </div>
 
@@ -111,6 +117,13 @@
         confirm-color="primary"
         @confirm="onConvertToDeal"
       />
+
+      <CrmCreateCampaignModal
+        v-model:open="createCampaignOpen"
+        :targets="campaignTargets"
+        :type-options="['new_channel']"
+        @submit="onSubmitCampaign"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -135,6 +148,7 @@ const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
 const leadSourcesStore = useLeadSourcesStore()
+const campaignsStore = useCampaignsStore()
 const goBack = useBackNavigation('/crm/leads')
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
@@ -169,6 +183,18 @@ const sourceOptions = computed<Select[]>(() => {
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
+
+// Single-record "Add to Campaign" entry point (FR-CRM-112).
+const createCampaignOpen = ref(false)
+const campaignTargets = computed<CampaignTarget[]>(() => (lead.value ? [{ type: 'lead', id: lead.value.id, name: lead.value.name }] : []))
+const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
+  try {
+    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
+    success(t(payload.mode === 'existing' ? 'crm.leads.index.campaignAddSuccess' : 'crm.leads.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 
 const onConvertToDeal = () => {
   if (!lead.value) return

@@ -35,11 +35,13 @@ export default {
     actions: {
       viewDetail: 'View Detail',
       edit: 'Edit',
+      addToCampaign: 'Add to Campaign',
       delete: 'Delete',
     },
     deleteSuccess: 'Company deleted successfully',
     entityLabel: 'companies',
-    campaignCreateSuccess: 'Win-back campaign "{name}" created with {count} tasks',
+    campaignCreateSuccess: 'Campaign "{name}" created with {count} tasks',
+    campaignAddSuccess: 'Added {count} tasks to "{name}"',
   },
   create: {
     pageTitle: 'Add Company',

@@ -94,13 +94,15 @@
       @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
+      @add-to-campaign="(row: Company) => openCampaignModal([row])"
       @delete="requestDelete"
     />
 
     <CrmCampaignBulkActionBar
       v-if="selectedIds.length > 0"
       :selected-ids="selectedIds"
-      @create-campaign="createCampaignOpen = true"
+      :entity-label="t('crm.companies.index.entityLabel')"
+      @create-campaign="openCampaignModal(selected)"
       @cancel="clearSelection"
     />
 
@@ -117,9 +119,9 @@
 
     <CrmCreateCampaignModal
       v-model:open="createCampaignOpen"
-      :company-ids="selectedIds"
-      :company-names="selectedNames"
-      @submit="onCreateCampaign"
+      :targets="campaignTargets"
+      :type-options="['win_back', 'upsell']"
+      @submit="onSubmitCampaign"
     />
   </div>
 </template>
@@ -246,20 +248,17 @@ const displayCompanies = computed(() => rows.value.map((company) => {
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Company>()
 
 const createCampaignOpen = ref(false)
-const selectedNames = computed(() => selected.value.map(company => company.name))
+const campaignTargets = ref<CampaignTarget[]>([])
 
-const onCreateCampaign = async (payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const openCampaignModal = (companies: Company[]) => {
+  campaignTargets.value = companies.map(company => ({ type: 'company', id: company.id, name: company.name }))
+  createCampaignOpen.value = true
+}
+
+const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
   try {
-    const campaign = await campaignsStore.create({ name: payload.name, type: 'win_back' })
-    await campaignsStore.bulkCreateTasks(campaign.id, {
-      company_ids: selectedIds.value,
-      title: payload.title,
-      description: payload.description,
-      due_date: payload.due_date,
-      priority: payload.priority,
-      assigned_to: payload.assigned_to,
-    })
-    success(t('crm.companies.index.campaignCreateSuccess', { name: campaign.name, count: selectedIds.value.length }))
+    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
+    success(t(payload.mode === 'existing' ? 'crm.companies.index.campaignAddSuccess' : 'crm.companies.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
     clearSelection()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -282,7 +281,8 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.companies.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.companies.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('crm.companies.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
       { label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },

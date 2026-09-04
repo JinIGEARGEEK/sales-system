@@ -17,7 +17,10 @@
           </UBadge>
           <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
-        <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+        <div class="flex flex-wrap gap-2">
+          <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
+          <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+        </div>
       </div>
 
       <div class="mb-4 overflow-x-auto">
@@ -249,6 +252,13 @@
           @submit="onAddAttachment"
         />
       </div>
+
+      <CrmCreateCampaignModal
+        v-model:open="createCampaignOpen"
+        :targets="campaignTargets"
+        :type-options="['win_back', 'upsell']"
+        @submit="onSubmitCampaign"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -290,9 +300,25 @@ const attachmentsStore = useAttachmentsStore()
 const industryOptionsStore = useIndustryOptionsStore()
 const companySizeOptionsStore = useCompanySizeOptionsStore()
 const revenueSizeOptionsStore = useRevenueSizeOptionsStore()
+const campaignsStore = useCampaignsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
+
+// Single-record "Add to Campaign" entry point (FR-CRM-112) — mirrors the
+// Companies list's bulk-select flow, but the target array here is always
+// this one Company.
+const createCampaignOpen = ref(false)
+const campaignTargets = computed<CampaignTarget[]>(() => (company.value ? [{ type: 'company', id: company.value.id, name: company.value.name }] : []))
+const openCampaignModal = () => { createCampaignOpen.value = true }
+const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
+  try {
+    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
+    success(t(payload.mode === 'existing' ? 'crm.companies.index.campaignAddSuccess' : 'crm.companies.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 
 onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Company, and

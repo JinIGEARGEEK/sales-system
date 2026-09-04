@@ -24,10 +24,13 @@ export default {
       edit: 'Edit',
       convert: 'Convert to Deal',
       viewDeal: 'View Deal',
+      addToCampaign: 'Add to Campaign',
       delete: 'Delete',
     },
     deleteSuccess: 'Lead deleted successfully',
     entityLabel: 'leads',
+    campaignCreateSuccess: 'Campaign "{name}" created with {count} follow-up tasks',
+    campaignAddSuccess: 'Added {count} follow-up tasks to "{name}"',
   },
   create: {
     pageTitle: 'Add Lead',

@@ -1,17 +1,25 @@
 <template>
   <div class="p-5">
     <div v-if="contact">
-      <div class="mb-4 flex flex-wrap items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-3">
+          <UButton
+            icon="material-symbols:arrow-back"
+            variant="ghost"
+            color="neutral"
+            class="cursor-pointer p-0 hover:bg-transparent"
+            :aria-label="t('global.back')"
+            @click="goBack()"
+          />
+          <h2 class="max-w-full truncate text-xl font-black">{{ contact.name }}</h2>
+          <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
+        </div>
+        <ButtonPrimary
+          :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+          icon="material-symbols:campaign-outline"
+          outline
+          @click="createCampaignOpen = true"
         />
-        <h2 class="max-w-full truncate text-xl font-black">{{ contact.name }}</h2>
-        <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
       </div>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
@@ -139,6 +147,13 @@
       v-model:open="companyPreviewOpen"
       :company-id="contact?.company_id ?? null"
     />
+
+    <CrmCreateCampaignModal
+      v-model:open="createCampaignOpen"
+      :targets="campaignTargets"
+      :type-options="['new_channel']"
+      @submit="onSubmitCampaign"
+    />
   </div>
 </template>
 
@@ -161,11 +176,24 @@ const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
 const activitiesStore = useActivitiesStore()
 const jobTitleOptionsStore = useJobTitleOptionsStore()
+const campaignsStore = useCampaignsStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
 const goBack = useBackNavigation('/crm/contacts')
 const companyPreviewOpen = ref(false)
+
+// Single-record "Add to Campaign" entry point (FR-CRM-112).
+const createCampaignOpen = ref(false)
+const campaignTargets = computed<CampaignTarget[]>(() => (contact.value ? [{ type: 'contact', id: contact.value.id, name: contact.value.name }] : []))
+const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
+  try {
+    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
+    success(t(payload.mode === 'existing' ? 'crm.contacts.index.campaignAddSuccess' : 'crm.contacts.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 
 onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Contact, and
