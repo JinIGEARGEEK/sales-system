@@ -4,7 +4,7 @@
       <h2 class="text-xl font-black">{{ t('crm.leads.index.heading') }}</h2>
       <div class="flex items-center gap-2">
         <ButtonPrimary
-          v-if="canBulkManage"
+          v-if="canBulkManage || canCreateCampaign"
           outline
           :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
           :disabled="!isSelectMode && displayRows.length === 0"
@@ -53,16 +53,27 @@
       @edit="onEdit"
       @convert="onConvert"
       @view-deal="onViewDeal"
+      @add-to-campaign="(row: Lead) => openCampaignModal([row])"
       @delete="requestDelete"
     />
 
     <CrmBulkActionBar
-      v-if="selectedIds.length > 0"
+      v-if="canBulkManage && selectedIds.length > 0"
       :selected-ids="selectedIds"
       :entity-label="t('crm.leads.index.entityLabel')"
+      :show-create-campaign="canCreateCampaign"
       @reassign="onBulkReassign"
       @tag="onBulkTag"
       @archive="onBulkArchive"
+      @create-campaign="openCampaignModal(selected)"
+      @cancel="selected = []"
+    />
+
+    <CrmCampaignBulkActionBar
+      v-else-if="canCreateCampaign && selectedIds.length > 0"
+      :selected-ids="selectedIds"
+      :entity-label="t('crm.leads.index.entityLabel')"
+      @create-campaign="openCampaignModal(selected)"
       @cancel="selected = []"
     />
 
@@ -71,12 +82,19 @@
       :name="target?.name || ''"
       @confirm="confirmDelete"
     />
+
+    <CrmCreateCampaignModal
+      v-model:open="createCampaignOpen"
+      :targets="campaignTargets"
+      :type-options="['new_channel']"
+      @submit="onSubmitCampaign"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MANAGER_ROLES } from '~/constants/roles'
+import { MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { LEAD_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -96,6 +114,9 @@ const companiesStore = useCompaniesStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
+// Campaigns (FR-CRM-112) have no backend role gate — same TASK_ROLES set as
+// the Campaigns/Tasks nav entries, not MANAGER_ROLES.
+const canCreateCampaign = computed(() => hasRole(...TASK_ROLES))
 
 const search = ref('')
 const statusFilter = ref('all')
@@ -220,8 +241,9 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('crm.leads.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       { label: t('crm.leads.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
-      { label: t('crm.leads.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_deal_id },
-      { label: t('crm.leads.index.actions.viewDeal'), emitName: 'viewDeal', isBorderBottom: true, hideIf: row => !row.converted_deal_id },
+      { label: t('crm.leads.index.actions.convert'), emitName: 'convert', isBorderBottom: false, hideIf: row => !!row.converted_deal_id },
+      { label: t('crm.leads.index.actions.viewDeal'), emitName: 'viewDeal', isBorderBottom: false, hideIf: row => !row.converted_deal_id },
+      { label: t('crm.leads.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
       { label: t('crm.leads.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -290,4 +312,10 @@ const onBulkArchive = async () => {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
 }
+
+const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModalFor, onSubmitCampaign } = useCampaignTargeting(
+  { create: 'crm.leads.index.campaignCreateSuccess', add: 'crm.leads.index.campaignAddSuccess' },
+  () => { selected.value = [] },
+)
+const openCampaignModal = (leads: Lead[]) => openCampaignModalFor(leads.map(lead => ({ type: 'lead', id: lead.id, name: lead.name })))
 </script>

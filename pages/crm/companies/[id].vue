@@ -17,7 +17,10 @@
           </UBadge>
           <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
-        <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+        <div class="flex flex-wrap gap-2">
+          <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
+          <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+        </div>
       </div>
 
       <div class="mb-4 overflow-x-auto">
@@ -249,6 +252,13 @@
           @submit="onAddAttachment"
         />
       </div>
+
+      <CrmCreateCampaignModal
+        v-model:open="createCampaignOpen"
+        :targets="campaignTargets"
+        :type-options="['win_back', 'upsell']"
+        @submit="onSubmitCampaign"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -293,6 +303,16 @@ const revenueSizeOptionsStore = useRevenueSizeOptionsStore()
 
 const companyId = Number(route.params.id)
 const company = computed(() => companiesStore.items.find(c => c.id === companyId))
+
+// Single-record "Add to Campaign" entry point (FR-CRM-112) — mirrors the
+// Companies list's bulk-select flow, but the target array here is always
+// this one Company.
+const { createCampaignOpen, campaignTargets, onSubmitCampaign, openCampaignModal: openCampaignModalFor } = useCampaignTargeting(
+  { create: 'crm.companies.index.campaignCreateSuccess', add: 'crm.companies.index.campaignAddSuccess' },
+)
+const openCampaignModal = () => {
+  if (company.value) openCampaignModalFor([{ type: 'company', id: company.value.id, name: company.value.name }])
+}
 
 onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Company, and

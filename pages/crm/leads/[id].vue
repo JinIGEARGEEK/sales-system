@@ -38,6 +38,12 @@
             icon="material-symbols:swap-horiz"
             @click="requestConvert"
           />
+          <ButtonPrimary
+            :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+            icon="material-symbols:campaign-outline"
+            outline
+            @click="openCampaignModal"
+          />
         </div>
       </div>
 
@@ -111,6 +117,13 @@
         confirm-color="primary"
         @confirm="onConvertToDeal"
       />
+
+      <CrmCreateCampaignModal
+        v-model:open="createCampaignOpen"
+        :targets="campaignTargets"
+        :type-options="['new_channel']"
+        @submit="onSubmitCampaign"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -169,6 +182,14 @@ const sourceOptions = computed<Select[]>(() => {
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
+
+// Single-record "Add to Campaign" entry point (FR-CRM-112).
+const { createCampaignOpen, campaignTargets, onSubmitCampaign, openCampaignModal: openCampaignModalFor } = useCampaignTargeting(
+  { create: 'crm.leads.index.campaignCreateSuccess', add: 'crm.leads.index.campaignAddSuccess' },
+)
+const openCampaignModal = () => {
+  if (lead.value) openCampaignModalFor([{ type: 'lead', id: lead.value.id, name: lead.value.name }])
+}
 
 const onConvertToDeal = () => {
   if (!lead.value) return

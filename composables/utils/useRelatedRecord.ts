@@ -6,6 +6,7 @@ export const useRelatedRecord = () => {
   const contactsStore = useContactsStore()
   const companiesStore = useCompaniesStore()
   const prospectsStore = useProspectsStore()
+  const leadsStore = useLeadsStore()
   const { notifyApiError } = useApiErrorNotifier()
 
   // None of the three stores' `items` get a blanket preload wherever this
@@ -21,6 +22,7 @@ export const useRelatedRecord = () => {
   const pendingContacts = new Set<number>()
   const pendingCompanies = new Set<number>()
   const pendingProspects = new Set<number>()
+  const pendingLeads = new Set<number>()
 
   const ensureLoaded = <T extends { id: number }>(
     items: T[], pending: Set<number>, id: number, fetchOne: (id: number) => Promise<T>,
@@ -50,6 +52,16 @@ export const useRelatedRecord = () => {
       const prospect = prospectsStore.items.find(p => p.id === relatedId)
       if (!prospect) ensureLoaded(prospectsStore.items, pendingProspects, relatedId, id => prospectsStore.fetchOne(id))
       return { relatedLabel: prospect?.name || '-', path: `/crm/prospects/${relatedId}` }
+    }
+    // Same bug class as 'prospect' above, for 'lead' (added for FR-CRM-112 —
+    // Tasks bulk-created from a Lead-targeted Campaign carry related_type
+    // 'lead') — Lead and Company are separate tables with independent id
+    // sequences, so without this branch a Lead-linked task resolved to the
+    // wrong Company record (or a 404) at /crm/companies/:id.
+    if (relatedType === 'lead') {
+      const lead = leadsStore.items.find(l => l.id === relatedId)
+      if (!lead) ensureLoaded(leadsStore.items, pendingLeads, relatedId, id => leadsStore.fetchOne(id))
+      return { relatedLabel: lead?.name || '-', path: `/crm/leads/${relatedId}` }
     }
     ensureLoaded(companiesStore.items, pendingCompanies, relatedId, id => companiesStore.fetchOne(id))
     return { relatedLabel: companiesStore.nameById(relatedId), path: `/crm/companies/${relatedId}` }

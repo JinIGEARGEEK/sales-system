@@ -3,13 +3,35 @@
     <h3 v-if="setupHeading" class="text-base font-semibold">{{ setupHeading }}</h3>
     <Form ref="formRef">
       <div class="grid grid-cols-1 gap-3">
-        <InputText
-          v-model="form.name"
-          :label="t('crm.components.createCampaignModal.campaignName')"
-          :placeholder="t('crm.components.createCampaignModal.campaignNamePlaceholder')"
-          name="name"
+        <CrmStatusPill v-model="form.mode" :options="modeOptions" data-cy="campaign-mode-toggle" />
+        <template v-if="form.mode === 'new'">
+          <InputText
+            v-model="form.name"
+            :label="t('crm.components.createCampaignModal.campaignName')"
+            :placeholder="t('crm.components.createCampaignModal.campaignNamePlaceholder')"
+            name="name"
+            rules="required"
+            data-cy="campaign-name-input"
+          />
+          <InputSelect
+            v-if="typeOptions.length > 1"
+            v-model="form.type"
+            :options="typeSelectOptions"
+            :label="t('crm.components.createCampaignModal.campaignType')"
+            name="type"
+            rules="required"
+            data-cy="campaign-type-select"
+          />
+        </template>
+        <InputSelect
+          v-else
+          v-model="form.campaignId"
+          :options="existingCampaignOptions"
+          :label="t('crm.components.createCampaignModal.existingCampaign')"
+          :placeholder="t('crm.components.createCampaignModal.existingCampaignPlaceholder')"
+          name="campaignId"
           rules="required"
-          data-cy="campaign-name-input"
+          data-cy="campaign-existing-select"
         />
         <InputText
           v-model="form.title"
@@ -66,10 +88,10 @@
     <div>
       <h3 v-if="reviewHeading" class="mb-2 text-base font-semibold">{{ reviewHeading }}</h3>
       <p class="text-sm text-[var(--color-black)]">
-        {{ t('crm.components.createCampaignModal.reviewSummary', { count: companyIds.length, date: dueDateDisplay, name: assignedToName }) }}
+        {{ t('crm.components.createCampaignModal.reviewSummary', { count: targets.length, date: dueDateDisplay, name: assignedToName }) }}
       </p>
       <div class="mt-2 flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[var(--color-light-gray-2)] p-3">
-        <UBadge v-for="name in companyNames" :key="name" color="neutral" variant="subtle">{{ name }}</UBadge>
+        <UBadge v-for="target in targets" :key="`${target.type}-${target.id}`" color="neutral" variant="subtle">{{ target.name }}</UBadge>
       </div>
     </div>
   </div>
@@ -82,20 +104,27 @@ import { TASK_PRIORITY_OPTIONS } from '~/constants/mockData'
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
+const campaignsStore = useCampaignsStore()
 const { notifyApiError } = useApiErrorNotifier()
 
 onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
+  if (campaignsStore.items.length === 0) campaignsStore.fetchAll().catch(notifyApiError)
 })
 
 const props = withDefaults(defineProps<{
-  // Ids of every Company this campaign's Tasks will be created against —
-  // the caller (pages/crm/campaigns/new.vue's step 1 matches, or the
-  // Companies list's row bulk-selection) owns resolving these; this
+  // Every target this campaign's Tasks will be created against — the caller
+  // (pages/crm/campaigns/new.vue's step 1 matches, or a list page's
+  // bulk-selection / single-row action) owns resolving these; this
   // component only displays the count/names and builds the rest of the
   // submit payload around them.
-  companyIds: number[]
-  companyNames: string[]
+  targets: CampaignTarget[]
+  // Which CampaignType values 'new' mode may create against — the caller
+  // decides based on what entity/team is creating the campaign (e.g.
+  // Companies offers win_back + upsell, Leads/Contacts offer only
+  // new_channel). The type select only renders when there's an actual
+  // choice to make; a single-value list is applied silently.
+  typeOptions: CampaignType[]
   // Mirrors useModalForm's `isOpen` semantics: flipping this false→true
   // resets the form to its defaults. A modal host passes its own `open`
   // prop through; a full-page host (new.vue, mounted once) can leave the
@@ -119,14 +148,34 @@ const props = withDefaults(defineProps<{
   reviewHeading: '',
 })
 
+// The caller decides whether this creates a brand-new Campaign or appends
+// Tasks to one that already exists — see CampaignTaskSetupSubmitPayload in
+// interfaces/crm.d.ts: 'new' emits `name`, 'existing' emits `campaignId`,
+// everything else is identical either way.
 const emit = defineEmits<{
-  submit: [payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }]
+  submit: [payload: CampaignTaskSetupSubmitPayload]
 }>()
 
 const moreOptionsOpen = ref(false)
 
+const modeOptions = computed<Select[]>(() => [
+  { label: t('crm.components.createCampaignModal.modeNew'), value: 'new' },
+  { label: t('crm.components.createCampaignModal.modeExisting'), value: 'existing' },
+])
+// Deliberately unfiltered — every campaign is selectable regardless of type
+// or which team created it, since campaigns are shared across teams.
+const existingCampaignOptions = computed<Select[]>(() =>
+  campaignsStore.items.map(c => ({ label: c.name, value: String(c.id) })),
+)
+const typeSelectOptions = computed<Select[]>(() =>
+  props.typeOptions.map(type => ({ label: t(`crm.campaigns.index.type.${type}`), value: type })),
+)
+
 const emptyForm = () => ({
+  mode: 'new' as 'new' | 'existing',
   name: props.nameDefault,
+  type: (props.typeOptions[0] ?? 'win_back') as CampaignType,
+  campaignId: '',
   title: '',
   description: '',
   priority: 'medium' as TaskPriority,
@@ -136,19 +185,33 @@ const emptyForm = () => ({
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.active, emptyForm)
 
+// useModalForm only re-runs emptyForm() on an isOpen false→true transition —
+// fine for modal hosts (open toggles each use), but pages/crm/campaigns/new.vue
+// mounts this component once and leaves `active` permanently true while the
+// caller's typeOptions changes live (switching the Who-to-contact entity
+// type). Without this, form.type stays pinned to whatever it was on first
+// mount even after typeOptions no longer includes it — e.g. still 'win_back'
+// after switching from Companies to Leads — with no visible way to fix it
+// since the type select only renders when there's more than one option.
+watch(() => props.typeOptions, (options) => {
+  if (!options.includes(form.type)) form.type = options[0] ?? 'win_back'
+})
+
 const dueDateDisplay = computed(() => (form.due_date ? dateFormat(form.due_date) : '-'))
 const assignedToName = computed(() => teamMembersStore.nameById(form.assigned_to ? Number(form.assigned_to) : null))
 
 const submit = () => {
   validateThenSubmit(() => {
-    emit('submit', {
-      name: form.name,
+    const common = {
       title: form.title,
       description: form.description,
       due_date: new Date(form.due_date),
       priority: form.priority as TaskPriority,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-    })
+    }
+    emit('submit', form.mode === 'existing'
+      ? { mode: 'existing', campaignId: Number(form.campaignId), ...common }
+      : { mode: 'new', name: form.name, type: form.type, ...common })
   })
 }
 

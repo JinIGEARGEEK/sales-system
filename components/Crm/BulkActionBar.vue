@@ -41,6 +41,16 @@
     </UPopover>
 
     <ButtonPrimary outline small fit-content color="error" :label="t('crm.components.bulkActionBar.archive')" @click="requestArchive" />
+    <ButtonPrimary
+      v-if="showCreateCampaign"
+      outline
+      small
+      fit-content
+      icon="material-symbols:campaign-outline"
+      :label="t('crm.components.campaignBulkActionBar.createCampaign')"
+      data-cy="create-campaign-button"
+      @click="emit('createCampaign')"
+    />
     <ButtonPrimary cancel small fit-content :label="t('crm.components.bulkActionBar.cancel')" @click="emit('cancel')" />
 
     <CrmConfirmDeleteModal
@@ -63,12 +73,19 @@ const props = defineProps<{
   selectedIds: number[]
   // Plural noun used in "N <entityLabel> selected" copy, e.g. "deals" / "leads".
   entityLabel: string
+  // Shows a "Create Campaign" button alongside reassign/tag/archive — the
+  // caller decides based on its own role check (campaigns have no backend
+  // role gate, unlike reassign/tag/archive which are manager-only), so a
+  // non-manager who can still create campaigns doesn't need a second,
+  // overlapping sticky bar just for that one button.
+  showCreateCampaign?: boolean
 }>()
 
 const emit = defineEmits<{
   reassign: [assignedTo: number | null]
   tag: [payload: { tags: string[], mode: 'add' | 'set' }]
   archive: []
+  createCampaign: []
   cancel: []
 }>()
 

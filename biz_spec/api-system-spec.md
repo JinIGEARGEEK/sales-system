@@ -496,7 +496,7 @@ interface Deal {
 
 ```ts
 type ActivityType = 'call' | 'email' | 'meeting'
-type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect'   // 'prospect' added 2026-09-01 for Marketing's Prospect Tasks tab (§3a) — Activity/Task share this union
+type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect' | 'lead'   // 'prospect' added 2026-09-01 for Marketing's Prospect Tasks tab (§3a); 'lead' added 2026-09-04 for FR-CRM-112's Lead-targeted Campaigns — Activity/Task share this union
 
 interface Activity {
   id: number
@@ -634,7 +634,7 @@ interface Payment {
 
 ```ts
 type TaskStatus = 'pending' | 'done'
-type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal' | 'prospect'
+type TaskRelatedType = ActivityRelatedType   // 'contact' | 'company' | 'deal' | 'prospect' | 'lead'
 // Plain triage label, no workflow behavior attached (unlike TaskStatus) — added 2026-08-22.
 type TaskPriority = 'low' | 'medium' | 'high'
 
@@ -663,12 +663,18 @@ interface Task {
 | `DELETE` | `/tasks/:id` | 🟢 | Delete. |
 | — | *(reminder notifications)* | 🟢 | `FR-CRM-032`'s "notification on due" is now built as email: a new `internal/notifier` package runs a 15-minute ticker, sends via `internal/utils/mailer.go`, and sets `Task.notified_at` so a Task is only ever notified once. It degrades safely (silently no-ops) if no `SMTP_*` env vars (`SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, see `.env.example`) are configured — an operator must supply real SMTP credentials for reminders to actually send. Push notification is not built. |
 
-### 7.7 Campaigns (`FR-CRM-110`/`111`, added 2026-09-04)
+### 7.7 Campaigns (`FR-CRM-110`/`111`/`112`, added 2026-09-04)
 
-Groups Tasks into a named, dated win-back/upsell push (e.g. "Q3 2026 win-back") so progress can be tracked as a batch rather than via an ad-hoc Task-title convention. Builds on the FR-CRM-108 Companies `stale_days`/`has_won_deal` filters, which remain the way a Sales Manager finds the target Companies in the first place.
+Groups Tasks into a named, dated outreach push (e.g. "Q3 2026 win-back") so progress can be tracked as a batch rather than via an ad-hoc Task-title convention. Company targeting builds on the FR-CRM-108 Companies `stale_days`/`has_won_deal` filters. **FR-CRM-112** extended this from Company-only to also target Leads and Contacts, and added `upsell`/`new_channel` campaign types alongside `win_back` — one Marketing team follows up on existing Companies (upsell), another runs outreach across Leads/Contacts/Companies together (new_channel).
 
 ```ts
-type CampaignType = 'win_back'   // extensible — only one type exists so far
+type CampaignType = 'win_back' | 'upsell' | 'new_channel'
+// win_back/upsell target existing Companies; new_channel is the broader
+// outreach type used when a campaign mixes Lead and Contact targets.
+
+// Every ActivityRelatedType/TaskRelatedType value except deal/prospect is a
+// valid Campaign target — see IsValidCampaignTargetType, internal/models/activity.go.
+type CampaignTargetType = 'company' | 'lead' | 'contact'
 
 interface Campaign {
   id: number
@@ -682,18 +688,23 @@ interface CampaignProgress {
   total: number       // Tasks under this Campaign
   done: number
   pending: number
-  converted: number    // distinct target Companies with a Won Deal created on/after the Campaign's created_at
+  converted: number    // distinct targets with a Won Deal created on/after the Campaign's created_at
 }
 ```
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/campaigns` | 🟢 | List, newest first. |
+| `GET` | `/campaigns` | 🟢 | List, newest first. No filters — small enough dataset, and campaigns are shared across teams so there's no "mine only" view to filter to. |
 | `POST` | `/campaigns` | 🟢 | Create. Body: `{name, type}`. `created_by` set from the authenticated user. |
-| `POST` | `/campaigns/:id/tasks` | 🟢 | Bulk-create outreach Tasks. Body: `{company_ids: number[], title, description, due_date, priority, assigned_to}`. Validates the Campaign exists, runs an ownership (`CanWrite`) check on `assigned_to` once up front, then creates one `Task` per `company_id` (`related_type: 'company'`, `campaign_id` set) inside a single DB transaction, followed by one summary audit-log entry (`bulk_created_campaign_tasks`, `{campaign_id, task_count}`) — deliberately not routed through the existing `BulkUpdate` helper, which is shaped for mutating existing rows rather than creating new ones. |
-| `GET` | `/campaigns/:id/progress` | 🟢 | Returns `CampaignProgress`. `total`/`done`/`pending` count that Campaign's Tasks by status; `converted` reuses the exact `has_won_deal` EXISTS-subquery style from `applyCompanyFilters` (§ FR-CRM-108), scoped to `deals.created_at >= campaign.created_at` — deliberately reuses that existing attribution logic rather than inventing a new one. |
+| `POST` | `/campaigns/:id/tasks` | 🟢 | Bulk-create outreach Tasks. Body: `{targets: [{related_type, related_id}], title, description, due_date, priority, assigned_to}` — **changed 2026-09-04 (FR-CRM-112)** from the old `company_ids: number[]` shape to a polymorphic `targets` array, each `related_type` validated against `IsValidCampaignTargetType` (company/lead/contact only). Validates the Campaign exists, dedupes `targets` on the `(related_type, related_id)` pair, runs an ownership (`CanWrite`) check on `assigned_to` once up front, then creates one `Task` per target (`related_type`/`related_id` taken from that target, `campaign_id` set) inside a single batch DB insert, followed by one summary audit-log entry (`bulk_created_campaign_tasks`, `{campaign_id, task_count}`) — deliberately not routed through the existing `BulkUpdate` helper, which is shaped for mutating existing rows rather than creating new ones. This same endpoint is also how "add to an existing campaign" works (FR-CRM-112) — it just operates on `:id` regardless of whether the Campaign was just created or already has Tasks on it, so no separate endpoint exists for that case. |
+| `GET` | `/campaigns/:id/progress` | 🟢 | Returns `CampaignProgress`. `total`/`done`/`pending` count that Campaign's Tasks by status; `converted` branches per `related_type` — Company Tasks match `deals.company_id` directly (reusing the `has_won_deal` EXISTS-subquery style from `applyCompanyFilters`, § FR-CRM-108), Lead/Contact Tasks join through their own `company_id` to find a Won Deal — all scoped to `deals.created_at >= campaign.created_at`. Distinctness is computed on a concatenated `related_type:related_id` key since Postgres' `COUNT(DISTINCT a, b)` isn't valid multi-column syntax. |
 
-Frontend: `pages/crm/campaigns/index.vue` (new page, `TASK_ROLES`-gated, nav entry alongside Tasks) lists Campaigns with progress rendered as a `UProgress` bar + stat badges, linking through to `pages/crm/tasks/index.vue?campaign_id=<id>`. `pages/crm/companies/index.vue` gained row bulk-selection (reusing the `useBulkSelection` pattern already used on `pages/crm/leads/index.vue`) feeding a "Create win-back campaign" action (`components/Crm/CampaignBulkActionBar.vue` → `components/Crm/CreateCampaignModal.vue`) that calls `POST /campaigns` then `POST /campaigns/:id/tasks`. `stores/campaigns.ts` is the new Pinia store backing all of this, mirroring `stores/tasks.ts`'s conventions.
+Frontend: `pages/crm/campaigns/index.vue` (`TASK_ROLES`-gated, nav entry alongside Tasks) lists Campaigns with progress rendered as a `UProgress` bar + stat badges, linking through to `pages/crm/tasks/index.vue?campaign_id=<id>`. `CampaignTarget{type, id, name}` (`interfaces/crm.d.ts`) is the frontend's own name for one `{related_type, related_id}` pair plus a display name, used throughout instead of the old Company-only `companyIds`/`companyNames` prop pair. Entry points, all routing through `components/Crm/CreateCampaignModal.vue` → `components/Crm/CampaignTaskSetupForm.vue` (the shared core, which also gained a New-vs-Existing-campaign mode toggle):
+- **Bulk-select**: `pages/crm/companies/index.vue`, `pages/crm/leads/index.vue`, `pages/crm/contacts/index.vue` (all three via `useBulkSelection` + `components/Crm/CampaignBulkActionBar.vue`, or folded into `components/Crm/BulkActionBar.vue`'s optional "Create Campaign" button on Leads, which already has manager-only reassign/tag/archive actions in the same bar).
+- **Single-record**: a row-menu "Add to Campaign" action on all three list pages, and a header button on all three detail pages (`pages/crm/companies/[id].vue`, `pages/crm/leads/[id].vue`, `pages/crm/contacts/[id].vue`).
+- **Guided wizard**: `pages/crm/campaigns/new.vue`, which gained an entity-type selector (Company keeps its stale-days/won-deal filter; Lead/Contact are a plain debounced name search).
+
+`stores/campaigns.ts`'s `submitCampaignTasks(targets, payload)` is the one call every entry point routes through (create-then-bulk-create for a new campaign, or bulk-create straight onto an existing campaign id); `composables/utils/useCampaignTargeting.ts` wraps that plus the open-modal/success-toast/error-toast boilerplate shared by all six list/detail entry points.
 
 ---
 

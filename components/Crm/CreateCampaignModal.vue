@@ -5,13 +5,13 @@
     </template>
     <template #body>
       <p class="mb-3 text-sm text-[var(--color-gray)]">
-        {{ t('crm.components.createCampaignModal.description', { count: companyIds.length }) }}
+        {{ t('crm.components.createCampaignModal.description', { count: targets.length }) }}
       </p>
       <CrmCampaignTaskSetupForm
         ref="setupForm"
         :active="open"
-        :company-ids="companyIds"
-        :company-names="companyNames"
+        :targets="targets"
+        :type-options="typeOptions"
         @submit="onSubmit"
       />
     </template>
@@ -31,24 +31,27 @@ const { t } = useI18n()
 
 defineProps<{
   open: boolean
-  // Ids/names of the currently-selected Companies this campaign's Tasks
-  // will be created against — the caller (Companies list page) owns the
+  // The currently-selected targets (Company/Lead/Contact rows, one or many)
+  // this campaign's Tasks will be created against — the caller (a list
+  // page's bulk-selection or a single row/detail-page action) owns the
   // actual selection; this modal just wires them into the shared
   // CampaignTaskSetupForm for its live count + review preview.
-  companyIds: number[]
-  companyNames: string[]
+  targets: CampaignTarget[]
+  // Which CampaignType values a new campaign from here may use — see
+  // CampaignTaskSetupForm's own doc.
+  typeOptions: CampaignType[]
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }]
+  submit: [payload: CampaignTaskSetupSubmitPayload]
 }>()
 
 const setupForm = ref<{ submit: () => void } | null>(null)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = (payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const onSubmit = (payload: CampaignTaskSetupSubmitPayload) => {
   emit('submit', payload)
   onUpdateOpen(false)
 }

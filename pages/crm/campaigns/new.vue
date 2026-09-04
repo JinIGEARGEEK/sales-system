@@ -21,24 +21,34 @@
         <h3 class="mb-3 text-base font-semibold">{{ t('crm.campaigns.new.step1.heading') }}</h3>
         <div class="flex flex-col gap-4">
           <div>
-            <p class="mb-2 text-sm font-medium">{{ t('crm.campaigns.new.step1.staleDaysLabel') }}</p>
-            <CrmStatusPill v-model="staleDays" :options="staleDaysOptions" />
+            <p class="mb-2 text-sm font-medium">{{ t('crm.campaigns.new.step1.entityTypeLabel') }}</p>
+            <CrmStatusPill v-model="entityType" :options="entityTypeOptions" data-cy="campaign-entity-type" />
           </div>
 
-          <div class="flex items-center gap-2">
-            <UCheckbox v-model="hasWonDealOnly" data-cy="campaign-has-won-deal-checkbox" />
-            <span class="text-sm">{{ t('crm.campaigns.new.step1.hasWonDealOnly') }}</span>
+          <template v-if="entityType === 'company'">
+            <div>
+              <p class="mb-2 text-sm font-medium">{{ t('crm.campaigns.new.step1.staleDaysLabel') }}</p>
+              <CrmStatusPill v-model="staleDays" :options="staleDaysOptions" />
+            </div>
+
+            <div class="flex items-center gap-2">
+              <UCheckbox v-model="hasWonDealOnly" data-cy="campaign-has-won-deal-checkbox" />
+              <span class="text-sm">{{ t('crm.campaigns.new.step1.hasWonDealOnly') }}</span>
+            </div>
+          </template>
+          <div v-else class="w-full sm:w-72">
+            <InputText v-model="entitySearch" :placeholder="t('crm.campaigns.new.step1.searchPlaceholder')" name="entitySearch" />
           </div>
 
           <div>
             <p class="mb-2 text-sm font-medium" data-cy="campaign-match-count">
-              {{ loadingMatches ? t('crm.campaigns.new.step1.matchCountLoading') : t('crm.campaigns.new.step1.matchCount', { count: matchedCompanies.length }) }}
+              {{ loadingMatches ? t('crm.campaigns.new.step1.matchCountLoading') : t('crm.campaigns.new.step1.matchCount', { count: matchedTargets.length }) }}
             </p>
-            <p v-if="!loadingMatches && matchedCompanies.length === 0" class="text-sm text-[var(--color-gray)]">
+            <p v-if="!loadingMatches && matchedTargets.length === 0" class="text-sm text-[var(--color-gray)]">
               {{ t('crm.campaigns.new.step1.noMatches') }}
             </p>
             <div v-else class="flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[var(--color-light-gray-2)] p-3">
-              <UBadge v-for="company in matchedCompanies" :key="company.id" color="neutral" variant="subtle">{{ company.name }}</UBadge>
+              <UBadge v-for="target in matchedTargets" :key="`${target.type}-${target.id}`" color="neutral" variant="subtle">{{ target.name }}</UBadge>
             </div>
           </div>
         </div>
@@ -47,8 +57,8 @@
       <ContainerTemplate class="mb-4">
         <CrmCampaignTaskSetupForm
           ref="setupForm"
-          :company-ids="matchedCompanyIds"
-          :company-names="matchedCompanyNames"
+          :targets="matchedTargets"
+          :type-options="typeOptions"
           :name-default="defaultCampaignName"
           :due-date-default="defaultDueDate"
           :assigned-to-default="defaultAssignedTo"
@@ -86,11 +96,31 @@ const { canAccess } = usePageAccess(...TASK_ROLES)
 const { notifyApiError } = useApiErrorNotifier()
 const { success, error } = useNotify()
 const companiesStore = useCompaniesStore()
+const leadsStore = useLeadsStore()
+const contactsStore = useContactsStore()
 const campaignsStore = useCampaignsStore()
 const userStore = useUserStore()
 const { CONTACT_STALE_TIER_DAYS } = useLastContact()
 
 // --- Step 1: who to contact -------------------------------------------
+// Company keeps its own dedicated stale-days/won-deal filter (FR-CRM-108
+// targeting); Lead/Contact are a simple name search — no equivalent
+// staleness concept defined for them yet (FR-CRM-112).
+const entityTypeOptions = computed<Select[]>(() => [
+  { label: t('crm.campaigns.new.step1.entityTypeCompany'), value: 'company' },
+  { label: t('crm.campaigns.new.step1.entityTypeLead'), value: 'lead' },
+  { label: t('crm.campaigns.new.step1.entityTypeContact'), value: 'contact' },
+])
+const entityType = ref<'company' | 'lead' | 'contact'>('company')
+// Switching target entity resets the campaign type to that entity's own
+// default rather than carrying over a choice (e.g. 'upsell') that wouldn't
+// make sense for the newly-selected entity.
+const typeOptions = computed<CampaignType[]>(() => (entityType.value === 'company' ? ['win_back', 'upsell'] : ['new_channel']))
+// A leftover Lead/Contact search term would otherwise silently narrow the
+// next entity type's results too (Company doesn't use it, but switching
+// straight between Lead and Contact would carry it over invisibly).
+watch(entityType, () => { entitySearch.value = '' })
+
 const staleDaysOptions = computed<Select[]>(() => [
   { label: t('crm.campaigns.new.step1.staleDays60'), value: String(CONTACT_STALE_TIER_DAYS.tier1) },
   { label: t('crm.campaigns.new.step1.staleDays90'), value: String(CONTACT_STALE_TIER_DAYS.tier2) },
@@ -98,39 +128,63 @@ const staleDaysOptions = computed<Select[]>(() => [
 ])
 const staleDays = ref(String(CONTACT_STALE_TIER_DAYS.tier1))
 const hasWonDealOnly = ref(false)
+const entitySearch = ref('')
 
-const matchedCompanies = ref<Company[]>([])
+const matchedTargets = ref<CampaignTarget[]>([])
 const loadingMatches = ref(false)
 
 // Capped at the same 200-row per_page ceiling documented on
 // stores/companies.ts's fetchAll (the backend's own hard limit) — fine for
-// a marketing win-back push, which targets a bounded stale-company segment
-// rather than the full customer base.
+// a marketing push, which targets a bounded segment rather than the full
+// customer/lead/contact base.
+//
+// entityType/staleDays/hasWonDealOnly fire this immediately while
+// entitySearch fires it debounced (see below) — two in-flight calls can
+// race (e.g. switching entity type right after typing a search), so a
+// request token guards against an older response overwriting a newer one.
+let matchesRequestId = 0
 const fetchMatches = async () => {
+  const requestId = ++matchesRequestId
   loadingMatches.value = true
   try {
-    const result = await companiesStore.fetchList({
-      stale_days: staleDays.value,
-      has_won_deal: hasWonDealOnly.value ? 'true' : undefined,
-      per_page: 200,
-    })
-    matchedCompanies.value = result.items
+    let targets: CampaignTarget[]
+    if (entityType.value === 'company') {
+      const result = await companiesStore.fetchList({
+        stale_days: staleDays.value,
+        has_won_deal: hasWonDealOnly.value ? 'true' : undefined,
+        per_page: 200,
+      })
+      targets = result.items.map(company => ({ type: 'company' as const, id: company.id, name: company.name }))
+    } else if (entityType.value === 'lead') {
+      const result = await leadsStore.fetchList({ search: entitySearch.value || undefined, per_page: 200 })
+      targets = result.items.map(lead => ({ type: 'lead' as const, id: lead.id, name: lead.name }))
+    } else {
+      const result = await contactsStore.fetchList({ search: entitySearch.value || undefined, per_page: 200 })
+      targets = result.items.map(contact => ({ type: 'contact' as const, id: contact.id, name: contact.name }))
+    }
+    if (requestId === matchesRequestId) matchedTargets.value = targets
   } catch (err) {
-    notifyApiError(err)
+    if (requestId === matchesRequestId) notifyApiError(err)
   } finally {
-    loadingMatches.value = false
+    if (requestId === matchesRequestId) loadingMatches.value = false
   }
 }
-watch([staleDays, hasWonDealOnly], fetchMatches, { immediate: true })
-
-const matchedCompanyIds = computed(() => matchedCompanies.value.map(company => company.id))
-const matchedCompanyNames = computed(() => matchedCompanies.value.map(company => company.name))
+watch([entityType, staleDays, hasWonDealOnly], fetchMatches, { immediate: true })
+// Same manual setTimeout debounce composables/utils/useDebouncedSearch.ts
+// uses elsewhere — this page's search box doubles as a filter for whichever
+// entity is currently selected, rather than owning its own results cache,
+// so it's simpler to debounce inline than to reuse that composable.
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined
+watch(entitySearch, () => {
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(fetchMatches, 400)
+})
 
 // --- Step 2 defaults -----------------------------------------------------
 const now = new Date()
 const defaultCampaignName = computed(() => {
   const monthName = new Intl.DateTimeFormat(locale.value === 'th' ? 'th-TH' : 'en-US', { month: 'long' }).format(now)
-  return `Win-back – ${monthName} ${now.getFullYear()}`
+  return `${t(`crm.campaigns.index.type.${typeOptions.value[0]}`)} – ${monthName} ${now.getFullYear()}`
 })
 const defaultDueDate = computed(() => {
   const due = new Date()
@@ -143,19 +197,11 @@ const defaultAssignedTo = computed(() => (userStore.id ? String(userStore.id) : 
 const setupForm = ref<{ submit: () => void } | null>(null)
 const submitting = ref(false)
 
-const onSubmit = async (payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const onSubmit = async (payload: CampaignTaskSetupSubmitPayload) => {
   submitting.value = true
   try {
-    const campaign = await campaignsStore.create({ name: payload.name, type: 'win_back' })
-    await campaignsStore.bulkCreateTasks(campaign.id, {
-      company_ids: matchedCompanyIds.value,
-      title: payload.title,
-      description: payload.description,
-      due_date: payload.due_date,
-      priority: payload.priority,
-      assigned_to: payload.assigned_to,
-    })
-    success(t('crm.campaigns.new.createSuccess', { name: campaign.name, count: matchedCompanyIds.value.length }))
+    const campaign = await campaignsStore.submitCampaignTasks(matchedTargets.value, payload)
+    success(t(payload.mode === 'existing' ? 'crm.campaigns.new.addSuccess' : 'crm.campaigns.new.createSuccess', { name: campaign.name, count: matchedTargets.value.length }))
     await navigateTo('/crm/campaigns')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

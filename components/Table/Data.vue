@@ -268,6 +268,7 @@ const emit = defineEmits([
   'convert',
   'deactivate',
   'restore',
+  'addToCampaign',
 ])
 
 watch(

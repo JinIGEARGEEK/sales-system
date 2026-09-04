@@ -4,6 +4,13 @@
       <h2 class="text-xl font-black">{{ t('crm.contacts.index.heading') }}</h2>
       <div class="flex flex-wrap gap-2">
         <ButtonPrimary
+          outline
+          :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
+          :disabled="!isSelectMode && displayContacts.length === 0"
+          data-cy="contacts-select-mode-toggle"
+          @click="toggleSelectMode"
+        />
+        <ButtonPrimary
           v-if="canExport"
           :label="t('crm.contacts.index.exportCsv')"
           icon="material-symbols:download"
@@ -62,6 +69,7 @@
 
     <TableData
       v-model:page="page"
+      v-model:select-value="selected"
       server-paginated
       :columns="columns"
       :rows="displayContacts"
@@ -69,12 +77,22 @@
       :total-page="totalPage"
       :per-page="perPage"
       :loading="loading"
+      :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
+      @add-to-campaign="(row: Contact) => openCampaignModal([row])"
       @delete="requestDelete"
+    />
+
+    <CrmCampaignBulkActionBar
+      v-if="selectedIds.length > 0"
+      :selected-ids="selectedIds"
+      :entity-label="t('crm.contacts.index.entityLabel')"
+      @create-campaign="openCampaignModal(selected)"
+      @cancel="clearSelection"
     />
 
     <CrmConfirmDeleteModal
@@ -86,6 +104,13 @@
     <LazyCrmImportContactsModal
       v-model:open="showImport"
       @imported="onImported"
+    />
+
+    <CrmCreateCampaignModal
+      v-model:open="createCampaignOpen"
+      :targets="campaignTargets"
+      :type-options="['new_channel']"
+      @submit="onSubmitCampaign"
     />
   </div>
 </template>
@@ -186,6 +211,10 @@ const {
 
 watch(search, () => refetchDebounced())
 watch([companyFilter, statusFilter, tagFilter], () => refetchFromStart())
+// Selection is scoped to the currently visible page — a page/filter/sort
+// change invalidates whatever was selected before it (same as
+// Companies'/Leads' own list pages).
+watch([page, () => buildParams()], () => { selected.value = [] })
 
 // Companies aren't broadly preloaded anymore (see the filter's own comment
 // above), so the Company column needs each visible page's Contacts' own
@@ -208,7 +237,10 @@ const displayContacts = computed(() => rows.value.map(contact => ({
     : toBadge(t('crm.contacts.index.statusArchived')),
 })))
 
-const columns: TableDataColumn[] = [
+const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Contact>()
+
+const columns = computed<TableDataColumn[]>(() => [
+  ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.contacts.index.columns.name'), align: 'left', field: 'name', isSort: true },
   { label: t('crm.contacts.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.contacts.index.columns.role'), align: 'left', field: 'role_title' },
@@ -222,11 +254,12 @@ const columns: TableDataColumn[] = [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.contacts.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.contacts.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('crm.contacts.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      { label: t('crm.contacts.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
       { label: t('crm.contacts.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Contact>()
 
@@ -255,4 +288,10 @@ const onImported = ({ companies: companyCount, contacts: contactCount }: { compa
   success(t('crm.contacts.index.importSuccess', { companies: companyCount, contacts: contactCount }))
   fetch()
 }
+
+const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModalFor, onSubmitCampaign } = useCampaignTargeting(
+  { create: 'crm.contacts.index.campaignCreateSuccess', add: 'crm.contacts.index.campaignAddSuccess' },
+  clearSelection,
+)
+const openCampaignModal = (contacts: Contact[]) => openCampaignModalFor(contacts.map(contact => ({ type: 'contact', id: contact.id, name: contact.name })))
 </script>

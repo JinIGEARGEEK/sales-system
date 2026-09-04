@@ -35,11 +35,13 @@ export default {
     actions: {
       viewDetail: 'ดูรายละเอียด',
       edit: 'แก้ไข',
+      addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบบริษัทสำเร็จ',
     entityLabel: 'บริษัท',
-    campaignCreateSuccess: 'สร้างแคมเปญ Win-back "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
+    campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
+    campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',
   },
   create: {
     pageTitle: 'เพิ่มบริษัท',

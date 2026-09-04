@@ -26,7 +26,9 @@ type ActivityType = 'call' | 'email' | 'meeting'
 // 'prospect' added 2026-09-01 for Marketing's pre-Lead funnel (§3.1a) — Task
 // shares this same union (TaskRelatedType below), so Prospects get a Tasks
 // tab for free via the existing polymorphic infra.
-type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect'
+// 'lead' added for FR-CRM-112 (multi-entity Campaign targets) — Tasks
+// bulk-created from a Campaign can now point at a Lead, not just a Company.
+type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect' | 'lead'
 // A fixed enum, not admin-configurable (mirrors LeadStatus, not the
 // admin-configurable PipelineStage) — Marketing's funnel stage is a simple
 // closed set. 'Converted' is set only by POST /prospects/:id/convert, never
@@ -43,11 +45,26 @@ type TaskPriority = 'low' | 'medium' | 'high'
 // Shared by Task.related_type and Activity.related_type — both point at whichever
 // record (deal, contact, or company) the follow-up/activity is attached to.
 type TaskRelatedType = ActivityRelatedType
-// Campaign is a batch of Tasks created together against a set of Companies
-// (e.g. bulk win-back outreach from the Companies list) — 'win_back' is the
-// only type today, kept as its own union rather than reusing an existing
-// enum since nothing else models "reason a batch of Tasks was created."
-type CampaignType = 'win_back'
+// Campaign is a batch of Tasks created together against a set of targets
+// (Companies, Leads, or Contacts) — kept as its own union rather than
+// reusing an existing enum since nothing else models "reason a batch of
+// Tasks was created." win_back/upsell target existing Companies (the
+// upsell/account-management team); new_channel is the broader outreach type
+// used when a campaign mixes Lead and Contact targets (the new-channel
+// marketing team) — see FR-CRM-112.
+type CampaignType = 'win_back' | 'upsell' | 'new_channel'
+// A single target a Campaign's Tasks get created against — one Task per
+// entry. 'type' mirrors the Task's own related_type/related_id for that row.
+interface CampaignTarget {
+  type: 'company' | 'lead' | 'contact'
+  id: number
+  name: string
+}
+// Submitted by CampaignTaskSetupForm — 'new' creates a fresh Campaign,
+// 'existing' appends Tasks to one already listed in stores/campaigns.ts.
+type CampaignTaskSetupSubmitPayload =
+  | { mode: 'new', name: string, type: CampaignType, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }
+  | { mode: 'existing', campaignId: number, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
@@ -549,8 +566,8 @@ interface Task {
   campaign_id?: number | null
 }
 
-// A batch of Tasks created together against a set of Companies (e.g. bulk
-// win-back outreach from the Companies list) — see CampaignType above.
+// A batch of Tasks created together against a set of targets (see
+// CampaignTarget/CampaignType above).
 interface Campaign {
   id: number
   name: string
@@ -560,8 +577,9 @@ interface Campaign {
 }
 
 // GET /campaigns/:id/progress response — tallies of the Campaign's own Tasks
-// by status, plus how many of the underlying Companies have since converted
-// (won a Deal) as a result of the outreach.
+// by status, plus how many of the underlying targets have since converted
+// (won a Deal, resolved through the target's own company for Lead/Contact
+// targets) as a result of the outreach.
 interface CampaignProgress {
   total: number
   done: number
