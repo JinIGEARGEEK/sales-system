@@ -8,6 +8,8 @@ export default {
     addTask: 'Add Task',
     addTaskSuccess: 'Task added successfully',
     filterBusinessUnit: 'Business Unit',
+    filterCampaign: 'Campaign',
+    allCampaigns: 'All Campaigns',
     editTaskSuccess: 'Task updated successfully',
     enterSelectMode: 'Select',
     cancelSelectMode: 'Cancel selection',

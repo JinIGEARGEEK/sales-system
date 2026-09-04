@@ -12,6 +12,7 @@ export default {
     deals: 'Deals',
     projects: 'Projects/Products',
     tasks: 'งานติดตาม',
+    campaigns: 'แคมเปญ',
     reports: 'รายงาน',
     trash: 'ถังขยะ',
     guideline: 'คู่มือการใช้งาน',

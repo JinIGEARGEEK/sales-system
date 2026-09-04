@@ -38,6 +38,8 @@ export default {
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบบริษัทสำเร็จ',
+    entityLabel: 'บริษัท',
+    campaignCreateSuccess: 'สร้างแคมเปญ Win-back "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
   },
   create: {
     pageTitle: 'เพิ่มบริษัท',

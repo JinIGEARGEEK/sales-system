@@ -4,6 +4,13 @@
       <h2 class="text-xl font-black">{{ t('crm.companies.index.heading') }}</h2>
       <div class="flex flex-wrap gap-2">
         <ButtonPrimary
+          outline
+          :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
+          :disabled="!isSelectMode && displayCompanies.length === 0"
+          data-cy="companies-select-mode-toggle"
+          @click="toggleSelectMode"
+        />
+        <ButtonPrimary
           v-if="canExport"
           :label="t('crm.companies.index.exportCsv')"
           icon="material-symbols:download"
@@ -73,6 +80,7 @@
 
     <TableData
       v-model:page="page"
+      v-model:select-value="selected"
       server-paginated
       :columns="columns"
       :rows="displayCompanies"
@@ -80,12 +88,20 @@
       :total-page="totalPage"
       :per-page="perPage"
       :loading="loading"
+      :is-show-select="isSelectMode"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @delete="requestDelete"
+    />
+
+    <CrmCampaignBulkActionBar
+      v-if="selectedIds.length > 0"
+      :selected-ids="selectedIds"
+      @create-campaign="createCampaignOpen = true"
+      @cancel="clearSelection"
     />
 
     <CrmConfirmDeleteModal
@@ -97,6 +113,12 @@
     <LazyCrmImportContactsModal
       v-model:open="showImport"
       @imported="onImported"
+    />
+
+    <CrmCreateCampaignModal
+      v-model:open="createCampaignOpen"
+      :company-count="selectedIds.length"
+      @submit="onCreateCampaign"
     />
   </div>
 </template>
@@ -120,6 +142,7 @@ const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const industryOptionsStore = useIndustryOptionsStore()
+const campaignsStore = useCampaignsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
@@ -197,6 +220,10 @@ const {
 
 watch(search, () => refetchDebounced())
 watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilter], () => refetchFromStart())
+// Selection is scoped to the currently visible page — a page/filter/sort
+// change invalidates whatever was selected before it (same as Leads' own
+// list page).
+watch([page, () => buildParams()], () => { selected.value = [] })
 
 const displayCompanies = computed(() => rows.value.map((company) => {
   // Server-computed last_activity_at (most recent company-scoped Activity's
@@ -215,7 +242,30 @@ const displayCompanies = computed(() => rows.value.map((company) => {
   }
 }))
 
-const columns: TableDataColumn[] = [
+const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Company>()
+
+const createCampaignOpen = ref(false)
+
+const onCreateCampaign = async (payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+  try {
+    const campaign = await campaignsStore.create({ name: payload.name, type: 'win_back' })
+    await campaignsStore.bulkCreateTasks(campaign.id, {
+      company_ids: selectedIds.value,
+      title: payload.title,
+      description: payload.description,
+      due_date: payload.due_date,
+      priority: payload.priority,
+      assigned_to: payload.assigned_to,
+    })
+    success(t('crm.companies.index.campaignCreateSuccess', { name: campaign.name, count: selectedIds.value.length }))
+    clearSelection()
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+const columns = computed<TableDataColumn[]>(() => [
+  ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.companies.index.columns.name'), align: 'left', field: 'name', isSort: true },
   { label: t('crm.companies.index.columns.industry'), align: 'left', field: 'industry', isSort: true },
   { label: t('crm.companies.index.columns.size'), align: 'left', field: 'size' },
@@ -234,7 +284,7 @@ const columns: TableDataColumn[] = [
       { label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Company>()
 

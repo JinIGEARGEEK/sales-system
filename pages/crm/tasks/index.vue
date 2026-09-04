@@ -40,6 +40,14 @@
             name="businessUnitFilter"
           />
         </div>
+        <div class="w-full sm:w-48">
+          <InputSelect
+            v-model="campaignFilter"
+            :options="campaignFilterOptions"
+            :placeholder="t('crm.tasks.index.filterCampaign')"
+            name="campaignFilter"
+          />
+        </div>
       </div>
     </UCard>
 
@@ -98,7 +106,9 @@ const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
 const dealsStore = useDealsStore()
 const prospectsStore = useProspectsStore()
+const campaignsStore = useCampaignsStore()
 const { resolveRelated } = useRelatedRecord()
+const route = useRoute()
 
 guardMounted(() => {
   if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyApiError)
@@ -108,12 +118,21 @@ guardMounted(() => {
   // business_unit.
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
   if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
+  if (campaignsStore.items.length === 0) campaignsStore.fetchAll().catch(notifyApiError)
 })
 
 const search = ref('')
 const statusFilter = ref('pending')
 const assigneeFilter = ref('all')
 const businessUnitFilter = ref('all')
+// Preset from /crm/tasks?campaign_id=<id> — the Campaigns list page's own
+// row link (pages/crm/campaigns/index.vue) navigates here that way rather
+// than duplicating a Tasks-filtered-by-campaign view of its own.
+const campaignFilter = ref(typeof route.query.campaign_id === 'string' ? route.query.campaign_id : 'all')
+const campaignFilterOptions = computed<Select[]>(() => [
+  { label: t('crm.tasks.index.allCampaigns'), value: 'all' },
+  ...campaignsStore.items.map(campaign => ({ label: campaign.name, value: String(campaign.id) })),
+])
 
 // Business Unit filters by the linked Deal or Prospect's own business_unit —
 // Tasks have no business_unit of their own (they only ever relate to a
@@ -139,17 +158,23 @@ const matchesBusinessUnit = (task: Task) => {
   return false
 }
 
+const matchesCampaign = (task: Task) => campaignFilter.value === 'all' || String(task.campaign_id ?? '') === campaignFilter.value
+
 const filteredTasks = computed(() => {
   const now = Date.now()
   return tasksStore.items
-    .map(task => ({ ...task, ...resolveRelated(task.related_type, task.related_id) }))
+    .map(task => ({
+      ...task,
+      ...resolveRelated(task.related_type, task.related_id),
+      campaignLabel: task.campaign_id ? campaignsStore.nameById(task.campaign_id) : undefined,
+    }))
     .filter((task) => {
       const matchSearch = !search.value
         || task.title.toLowerCase().includes(search.value.toLowerCase())
         || task.relatedLabel.toLowerCase().includes(search.value.toLowerCase())
       const matchStatus = statusFilter.value === 'all' || task.status === statusFilter.value
       const matchAssignee = matchesAssigneeFilter(task.assigned_to, assigneeFilter.value)
-      return matchSearch && matchStatus && matchAssignee && matchesBusinessUnit(task)
+      return matchSearch && matchStatus && matchAssignee && matchesBusinessUnit(task) && matchesCampaign(task)
     })
     .sort((a, b) => {
       const overdueDiff = Number(isTaskOverdue(b, now)) - Number(isTaskOverdue(a, now))
@@ -206,7 +231,7 @@ const toggleSelectMode = () => {
 
 // A filter/search change can drop a selected task out of view entirely —
 // clear the selection rather than silently bulk-acting on hidden rows.
-watch([search, statusFilter, assigneeFilter, businessUnitFilter], () => { selectedIds.value = [] })
+watch([search, statusFilter, assigneeFilter, businessUnitFilter, campaignFilter], () => { selectedIds.value = [] })
 
 const onBulkMarkDone = async () => {
   try {

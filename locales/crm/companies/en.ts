@@ -38,6 +38,8 @@ export default {
       delete: 'Delete',
     },
     deleteSuccess: 'Company deleted successfully',
+    entityLabel: 'companies',
+    campaignCreateSuccess: 'Win-back campaign "{name}" created with {count} tasks',
   },
   create: {
     pageTitle: 'Add Company',

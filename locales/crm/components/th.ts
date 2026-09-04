@@ -179,6 +179,17 @@ export default {
     cancel: 'ยกเลิก',
     save: 'บันทึกงาน',
   },
+  createCampaignModal: {
+    title: 'สร้างแคมเปญ Win-Back',
+    description: 'สร้างงานติดตาม 1 งานสำหรับแต่ละบริษัทที่เลือกไว้ {count} บริษัท โดยจัดกลุ่มไว้ภายใต้แคมเปญใหม่',
+    campaignName: 'ชื่อแคมเปญ',
+    campaignNamePlaceholder: 'เช่น แคมเปญ Win-Back ไตรมาส 3',
+    cancel: 'ยกเลิก',
+    save: 'สร้างแคมเปญ',
+  },
+  campaignBulkActionBar: {
+    createCampaign: 'สร้างแคมเปญ Win-Back',
+  },
   globalSearch: {
     placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ Lead หรือ Prospect...',
     noResults: 'ไม่พบผลลัพธ์ที่ตรงกัน',

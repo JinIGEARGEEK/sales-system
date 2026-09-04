@@ -14,6 +14,7 @@ import crmContacts from './crm/contacts/th'
 import crmCompanies from './crm/companies/th'
 import crmTags from './crm/tags/th'
 import crmTasks from './crm/tasks/th'
+import crmCampaigns from './crm/campaigns/th'
 import crmProjects from './crm/projects/th'
 import crmComponents from './crm/components/th'
 import crmReports from './crm/reports/th'
@@ -45,6 +46,7 @@ export default {
     companies: crmCompanies,
     tags: crmTags,
     tasks: crmTasks,
+    campaigns: crmCampaigns,
     projects: crmProjects,
     components: crmComponents,
     reports: crmReports,
