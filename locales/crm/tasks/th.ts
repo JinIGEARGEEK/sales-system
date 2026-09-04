@@ -8,6 +8,8 @@ export default {
     addTask: 'เพิ่มงานติดตาม',
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',
     filterBusinessUnit: 'สายธุรกิจ',
+    filterCampaign: 'แคมเปญ',
+    allCampaigns: 'แคมเปญทั้งหมด',
     editTaskSuccess: 'แก้ไขงานติดตามสำเร็จ',
     enterSelectMode: 'เลือกรายการ',
     cancelSelectMode: 'ยกเลิกการเลือก',

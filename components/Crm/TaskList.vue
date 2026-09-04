@@ -51,6 +51,9 @@
             {{ teamMembersStore.nameById(task.assigned_to) }}
           </p>
         </div>
+        <UBadge v-if="task.campaignLabel" color="info" variant="subtle" icon="material-symbols:campaign-outline" class="shrink-0">
+          {{ task.campaignLabel }}
+        </UBadge>
         <UBadge :color="taskPriorityColor(task.priority)" variant="subtle" class="shrink-0">
           {{ t(`crm.components.taskList.priority.${task.priority}`) }}
         </UBadge>
@@ -105,7 +108,7 @@ const props = defineProps<{
   // Callers that already know how to link back to the related record (e.g. the
   // all-tasks list or the dashboard widget) can enrich tasks with these before
   // passing them in — the detail-page call sites just pass plain Task[].
-  tasks: (Task & { relatedLabel?: string, path?: string })[]
+  tasks: (Task & { relatedLabel?: string, path?: string, campaignLabel?: string })[]
   // Bulk-select checkboxes, used only by the all-tasks page — the per-record
   // Tasks tabs (Deal/Contact/Company detail pages) never pass these.
   selectable?: boolean

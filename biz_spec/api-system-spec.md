@@ -648,6 +648,7 @@ interface Task {
   status: TaskStatus
   priority: TaskPriority   // added 2026-08-22 — defaults 'medium'
   assigned_to: number | null
+  campaign_id: number | null   // added 2026-09-04 — optional link to a Campaign (§7.7); null for ordinary, ungrouped Tasks
   notified_at: string | null   // set once the due-date reminder email has been sent for this Task, so the 15-min ticker doesn't re-send it
   created_at: string
 }
@@ -655,12 +656,44 @@ interface Task {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/tasks` | 🟢 | Filters: `related_type`+`related_id`, `status`, `assigned_to`. `status=pending` powers the dashboard's "Upcoming Follow-ups" widget across all related records — support that query without requiring `related_type`/`related_id`. |
+| `GET` | `/tasks` | 🟢 | Filters: `related_type`+`related_id`, `status`, `assigned_to`, `campaign_id` (added 2026-09-04, §7.7). `status=pending` powers the dashboard's "Upcoming Follow-ups" widget across all related records — support that query without requiring `related_type`/`related_id`. **2026-09-04**: filtering logic extracted into `applyTaskFilters` (`internal/handlers/filters.go`), matching the existing `applyCompanyFilters`/`applyDealFilters` pattern — behavior unchanged for the filters that already existed. |
 | `POST` | `/tasks` | 🟢 | Create. Body now also accepts `description`/`priority` (both optional, `priority` defaults `medium` server-side if omitted/blank). |
 | `PATCH` | `/tasks/:id` | 🟢 **added 2026-08-22** | Update `title`/`description`/`due_date`/`priority`/`assigned_to` — `related_type`/`related_id` stay immutable after creation (same immutability rule as Contract's `quote_id` and CustomerProduct's `product_id`), and `status` changes still go through the dedicated toggle endpoint below, not this one. Ownership-gated via `CanWrite` against both the task's current assignee and the incoming `assigned_to`, mirroring `BulkReassign`. |
 | `PATCH` | `/tasks/:id/toggle` | 🟢 | Flips `pending`⇄`done` — mirrors `stores/tasks.ts`'s `toggleDone`. |
 | `DELETE` | `/tasks/:id` | 🟢 | Delete. |
 | — | *(reminder notifications)* | 🟢 | `FR-CRM-032`'s "notification on due" is now built as email: a new `internal/notifier` package runs a 15-minute ticker, sends via `internal/utils/mailer.go`, and sets `Task.notified_at` so a Task is only ever notified once. It degrades safely (silently no-ops) if no `SMTP_*` env vars (`SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM`, see `.env.example`) are configured — an operator must supply real SMTP credentials for reminders to actually send. Push notification is not built. |
+
+### 7.7 Campaigns (`FR-CRM-110`/`111`, added 2026-09-04)
+
+Groups Tasks into a named, dated win-back/upsell push (e.g. "Q3 2026 win-back") so progress can be tracked as a batch rather than via an ad-hoc Task-title convention. Builds on the FR-CRM-108 Companies `stale_days`/`has_won_deal` filters, which remain the way a Sales Manager finds the target Companies in the first place.
+
+```ts
+type CampaignType = 'win_back'   // extensible — only one type exists so far
+
+interface Campaign {
+  id: number
+  name: string
+  type: CampaignType
+  created_by: number | null
+  created_at: string
+}
+
+interface CampaignProgress {
+  total: number       // Tasks under this Campaign
+  done: number
+  pending: number
+  converted: number    // distinct target Companies with a Won Deal created on/after the Campaign's created_at
+}
+```
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/campaigns` | 🟢 | List, newest first. |
+| `POST` | `/campaigns` | 🟢 | Create. Body: `{name, type}`. `created_by` set from the authenticated user. |
+| `POST` | `/campaigns/:id/tasks` | 🟢 | Bulk-create outreach Tasks. Body: `{company_ids: number[], title, description, due_date, priority, assigned_to}`. Validates the Campaign exists, runs an ownership (`CanWrite`) check on `assigned_to` once up front, then creates one `Task` per `company_id` (`related_type: 'company'`, `campaign_id` set) inside a single DB transaction, followed by one summary audit-log entry (`bulk_created_campaign_tasks`, `{campaign_id, task_count}`) — deliberately not routed through the existing `BulkUpdate` helper, which is shaped for mutating existing rows rather than creating new ones. |
+| `GET` | `/campaigns/:id/progress` | 🟢 | Returns `CampaignProgress`. `total`/`done`/`pending` count that Campaign's Tasks by status; `converted` reuses the exact `has_won_deal` EXISTS-subquery style from `applyCompanyFilters` (§ FR-CRM-108), scoped to `deals.created_at >= campaign.created_at` — deliberately reuses that existing attribution logic rather than inventing a new one. |
+
+Frontend: `pages/crm/campaigns/index.vue` (new page, `TASK_ROLES`-gated, nav entry alongside Tasks) lists Campaigns with progress rendered as a `UProgress` bar + stat badges, linking through to `pages/crm/tasks/index.vue?campaign_id=<id>`. `pages/crm/companies/index.vue` gained row bulk-selection (reusing the `useBulkSelection` pattern already used on `pages/crm/leads/index.vue`) feeding a "Create win-back campaign" action (`components/Crm/CampaignBulkActionBar.vue` → `components/Crm/CreateCampaignModal.vue`) that calls `POST /campaigns` then `POST /campaigns/:id/tasks`. `stores/campaigns.ts` is the new Pinia store backing all of this, mirroring `stores/tasks.ts`'s conventions.
 
 ---
 

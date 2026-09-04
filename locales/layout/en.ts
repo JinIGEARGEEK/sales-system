@@ -12,6 +12,7 @@ export default {
     deals: 'Deals',
     projects: 'Projects/Products',
     tasks: 'Tasks',
+    campaigns: 'Campaigns',
     reports: 'Reports',
     trash: 'Trash',
     guideline: 'Guideline',

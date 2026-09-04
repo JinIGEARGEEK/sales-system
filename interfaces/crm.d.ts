@@ -43,6 +43,11 @@ type TaskPriority = 'low' | 'medium' | 'high'
 // Shared by Task.related_type and Activity.related_type — both point at whichever
 // record (deal, contact, or company) the follow-up/activity is attached to.
 type TaskRelatedType = ActivityRelatedType
+// Campaign is a batch of Tasks created together against a set of Companies
+// (e.g. bulk win-back outreach from the Companies list) — 'win_back' is the
+// only type today, kept as its own union rather than reusing an existing
+// enum since nothing else models "reason a batch of Tasks was created."
+type CampaignType = 'win_back'
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
@@ -539,6 +544,29 @@ interface Task {
   priority: TaskPriority
   assigned_to: number | null
   created_at: Date
+  // Set only for a Task created in bulk from a Campaign (e.g. win-back
+  // outreach across many Companies) — null/undefined for every other Task.
+  campaign_id?: number | null
+}
+
+// A batch of Tasks created together against a set of Companies (e.g. bulk
+// win-back outreach from the Companies list) — see CampaignType above.
+interface Campaign {
+  id: number
+  name: string
+  type: CampaignType
+  created_by: number
+  created_at: Date
+}
+
+// GET /campaigns/:id/progress response — tallies of the Campaign's own Tasks
+// by status, plus how many of the underlying Companies have since converted
+// (won a Deal) as a result of the outreach.
+interface CampaignProgress {
+  total: number
+  done: number
+  pending: number
+  converted: number
 }
 
 // A file or external link attached to a Lead/Deal/Company/Project — quotations,

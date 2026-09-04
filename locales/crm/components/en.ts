@@ -179,6 +179,17 @@ export default {
     cancel: 'Cancel',
     save: 'Save Task',
   },
+  createCampaignModal: {
+    title: 'Create Win-Back Campaign',
+    description: 'Creates one follow-up task for each of the {count} selected companies, grouped under a new campaign.',
+    campaignName: 'Campaign Name',
+    campaignNamePlaceholder: 'e.g. Q3 Win-Back Outreach',
+    cancel: 'Cancel',
+    save: 'Create Campaign',
+  },
+  campaignBulkActionBar: {
+    createCampaign: 'Create Win-Back Campaign',
+  },
   globalSearch: {
     placeholder: 'Search deals, companies, contacts, leads, prospects...',
     noResults: 'No matches found.',
