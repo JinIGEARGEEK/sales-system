@@ -134,13 +134,17 @@ const emptyForm = () => ({
   assigned_to: props.assignedToDefault,
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.active, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.active, emptyForm)
 
 const dueDateDisplay = computed(() => (form.due_date ? dateFormat(form.due_date) : '-'))
 const assignedToName = computed(() => teamMembersStore.nameById(form.assigned_to ? Number(form.assigned_to) : null))
 
-const submit = () => {
-  validateThenSubmit(() => {
+// Guarded so a double-click on the host's Save button (which calls
+// submit() directly, before the async validate() call below resolves)
+// can't emit 'submit' twice and have the host create two campaigns —
+// same re-entry protection AddPaymentModal.vue's onSave/guard pair uses.
+const submit = guard(async () => {
+  await validateThenSubmit(() => {
     emit('submit', {
       name: form.name,
       title: form.title,
@@ -150,7 +154,7 @@ const submit = () => {
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
     })
   })
-}
+})
 
-defineExpose({ submit })
+defineExpose({ submit, loading })
 </script>

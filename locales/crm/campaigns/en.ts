@@ -37,6 +37,7 @@ export default {
       hasWonDealOnly: 'Only companies who already bought from us before',
       matchCount: '{count} companies match',
       matchCountLoading: 'Finding matching companies...',
+      matchTruncated: 'Showing the first {shown} of {total} — narrow the time range to target them all in one campaign.',
       noMatches: 'No companies match yet — try a wider time range.',
     },
     cancel: 'Cancel',

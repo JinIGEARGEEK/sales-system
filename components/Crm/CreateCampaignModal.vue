@@ -18,7 +18,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.createCampaignModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.createCampaignModal.save')" data-cy="campaign-save-button" @click="setupForm?.submit()" />
+        <ButtonPrimary :label="t('crm.components.createCampaignModal.save')" :loading="setupForm?.loading" data-cy="campaign-save-button" @click="setupForm?.submit()" />
       </div>
     </template>
   </UModal>
@@ -44,7 +44,7 @@ const emit = defineEmits<{
   submit: [payload: { name: string, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }]
 }>()
 
-const setupForm = ref<{ submit: () => void } | null>(null)
+const setupForm = ref<{ submit: () => void, loading: boolean } | null>(null)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 

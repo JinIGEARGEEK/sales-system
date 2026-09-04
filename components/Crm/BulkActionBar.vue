@@ -1,9 +1,5 @@
 <template>
-  <div class="sticky bottom-4 z-10 mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3 shadow-xl">
-    <span class="text-sm font-medium text-[var(--color-black)]">
-      {{ t('crm.components.bulkActionBar.selectedCount', { count: selectedIds.length, entity: entityLabel }) }}
-    </span>
-
+  <CrmBulkActionBarShell :selected-ids="selectedIds" :entity-label="entityLabel" @cancel="emit('cancel')">
     <UPopover v-model:open="reassignOpen">
       <ButtonPrimary outline small fit-content :label="t('crm.components.bulkActionBar.reassign')" />
       <template #content>
@@ -41,7 +37,6 @@
     </UPopover>
 
     <ButtonPrimary outline small fit-content color="error" :label="t('crm.components.bulkActionBar.archive')" @click="requestArchive" />
-    <ButtonPrimary cancel small fit-content :label="t('crm.components.bulkActionBar.cancel')" @click="emit('cancel')" />
 
     <CrmConfirmDeleteModal
       v-model:open="archiveOpen"
@@ -51,7 +46,7 @@
       confirm-color="error"
       @confirm="confirmArchive"
     />
-  </div>
+  </CrmBulkActionBarShell>
 </template>
 
 <script setup lang="ts">
