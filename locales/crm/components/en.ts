@@ -179,13 +179,23 @@ export default {
     cancel: 'Cancel',
     save: 'Save Task',
   },
+  // Shared by components/Crm/CampaignTaskSetupForm.vue — used both inside
+  // this modal (Companies-list bulk-select path) and inline on
+  // pages/crm/campaigns/new.vue's guided page (crm.campaigns.new.* owns
+  // that page's own step headings/copy, not this namespace).
   createCampaignModal: {
-    title: 'Create Win-Back Campaign',
+    title: 'Set Up the Follow-Up',
     description: 'Creates one follow-up task for each of the {count} selected companies, grouped under a new campaign.',
-    campaignName: 'Campaign Name',
+    campaignName: 'Campaign name',
     campaignNamePlaceholder: 'e.g. Q3 Win-Back Outreach',
+    message: 'What should the follow-up say?',
+    messagePlaceholder: 'Call to check in and mention our new services.',
+    dueDate: 'Follow up by',
+    assignedTo: 'Who will contact them',
+    moreOptions: 'More options',
+    reviewSummary: 'This will create {count} follow-up tasks for these companies, due by {date}, assigned to {name}.',
     cancel: 'Cancel',
-    save: 'Create Campaign',
+    save: 'Save Campaign',
   },
   campaignBulkActionBar: {
     createCampaign: 'Create Win-Back Campaign',
