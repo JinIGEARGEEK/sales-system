@@ -1,7 +1,7 @@
 export default {
   title: 'บันทึกกิจกรรม',
   typePlaceholder: 'ประเภทข้อมูล',
-  allTypes: 'ทั้งหมด',
+  allTypes: 'ประเภทข้อมูลทั้งหมด',
   dateRangePlaceholder: 'ช่วงวันที่',
   clearFilters: 'ล้างตัวกรอง',
   columns: {

@@ -43,7 +43,7 @@
               name="industryFilter"
             />
           </div>
-          <div class="w-full sm:w-40">
+          <div class="w-full sm:w-48">
             <InputSelect
               v-model="tagFilter"
               :options="[{ label: t('crm.companies.index.allTags'), value: 'all' }, ...tagOptions]"
@@ -51,7 +51,7 @@
               name="tagFilter"
             />
           </div>
-          <div class="w-full sm:w-48">
+          <div class="w-full sm:w-56">
             <InputSelect
               v-model="staleDaysFilter"
               :options="STALE_DAYS_OPTIONS"
@@ -59,7 +59,7 @@
               name="staleDaysFilter"
             />
           </div>
-          <div class="w-full sm:w-40">
+          <div class="w-full sm:w-56">
             <InputSelect
               v-model="hasWonDealFilter"
               :options="HAS_WON_DEAL_OPTIONS"

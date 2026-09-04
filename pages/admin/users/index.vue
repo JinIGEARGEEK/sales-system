@@ -21,7 +21,7 @@
                 name="search"
               />
             </div>
-            <div class="w-full sm:w-40">
+            <div class="w-full sm:w-44">
               <InputSelect
                 v-model="roleFilter"
                 :options="ROLE_OPTIONS"

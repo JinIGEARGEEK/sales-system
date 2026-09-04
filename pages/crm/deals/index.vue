@@ -59,13 +59,13 @@
         <div class="w-full sm:w-56">
           <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.deals.index.assigneePlaceholder')" name="assigneeFilter" />
         </div>
-        <div class="w-full sm:w-40">
+        <div class="w-full sm:w-48">
           <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
         </div>
-        <div class="w-full sm:w-36">
+        <div class="w-full sm:w-44">
           <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
         </div>
-        <div class="w-full sm:w-40">
+        <div class="w-full sm:w-48">
           <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
         </div>
       </div>
