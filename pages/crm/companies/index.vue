@@ -51,6 +51,22 @@
               name="tagFilter"
             />
           </div>
+          <div class="w-full sm:w-48">
+            <InputSelect
+              v-model="staleDaysFilter"
+              :options="STALE_DAYS_OPTIONS"
+              :placeholder="t('crm.companies.index.staleDaysPlaceholder')"
+              name="staleDaysFilter"
+            />
+          </div>
+          <div class="w-full sm:w-40">
+            <InputSelect
+              v-model="hasWonDealFilter"
+              :options="HAS_WON_DEAL_OPTIONS"
+              :placeholder="t('crm.companies.index.hasWonDealPlaceholder')"
+              name="hasWonDealFilter"
+            />
+          </div>
         </div>
       </div>
     </UCard>
@@ -97,13 +113,12 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { lastContactInfo } = useLastContact()
+const { lastContactInfo, CONTACT_STALE_TIER_DAYS } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
-const activitiesStore = useActivitiesStore()
 const industryOptionsStore = useIndustryOptionsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
@@ -113,6 +128,21 @@ const search = ref('')
 const industryFilter = ref('all')
 const statusFilter = ref('all')
 const tagFilter = ref('all')
+// Reuses the same 60/90/120 tiers as useLastContact's CONTACT_STALE_TIER_DAYS
+// (dormant-company/upsell targeting, FR-CRM-108) rather than inventing a
+// separate set of thresholds for this filter.
+const STALE_DAYS_OPTIONS: Select[] = [
+  { label: t('crm.companies.index.staleDaysAny'), value: 'all' },
+  { label: t('crm.companies.index.staleDays60'), value: String(CONTACT_STALE_TIER_DAYS.tier1) },
+  { label: t('crm.companies.index.staleDays90'), value: String(CONTACT_STALE_TIER_DAYS.tier2) },
+  { label: t('crm.companies.index.staleDays120'), value: String(CONTACT_STALE_TIER_DAYS.tier3) },
+]
+const staleDaysFilter = ref('all')
+const HAS_WON_DEAL_OPTIONS: Select[] = [
+  { label: t('crm.companies.index.hasWonDealAny'), value: 'all' },
+  { label: t('crm.companies.index.hasWonDealYes'), value: 'true' },
+]
+const hasWonDealFilter = ref('all')
 const showImport = ref(false)
 
 const onExport = () => downloadCsvBlob('/companies/export', 'companies.csv')
@@ -146,6 +176,8 @@ const buildParams = () => ({
   industry: industryFilter.value !== 'all' ? industryFilter.value : undefined,
   status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
   tag: tagFilter.value !== 'all' ? tagFilter.value : undefined,
+  stale_days: staleDaysFilter.value !== 'all' ? staleDaysFilter.value : undefined,
+  has_won_deal: hasWonDealFilter.value !== 'all' ? hasWonDealFilter.value : undefined,
   sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
 
@@ -164,14 +196,14 @@ const {
 } = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams)
 
 watch(search, () => refetchDebounced())
-watch([industryFilter, statusFilter, tagFilter], () => refetchFromStart())
+watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilter], () => refetchFromStart())
 
 const displayCompanies = computed(() => rows.value.map((company) => {
-  // Only reflects activity already cached from visiting the company's detail page —
-  // there's no bulk "activities for these companies" endpoint to fetch this list-wide.
-  const activityDates = activitiesStore.forRelated('company', company.id).map(a => a.created_at)
-  const lastContactDate = activityDates.length ? new Date(Math.max(...activityDates.map(d => d.getTime()))) : null
-  const contact = lastContactInfo(lastContactDate)
+  // Server-computed last_activity_at (most recent company-scoped Activity's
+  // created_at, or null) — authoritative list-wide, unlike the previous
+  // client-cache-derived version which only reflected activity already
+  // cached from visiting a company's detail page.
+  const contact = lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null)
   return {
     ...company,
     tagsDisplay: company.tags.join(', ') || '-',

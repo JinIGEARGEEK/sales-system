@@ -154,6 +154,7 @@ const channelFilterOptions = computed(() => [
 
 const { $api } = useNuxtApp()
 const { priceFormatCompact } = useFormatter()
+const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
@@ -172,9 +173,13 @@ onMounted(() => {
 // has no deal_id/deal_title at all, added 2026-09-03 alongside that entity
 // type, FR-CRM-107) — filter+narrow here rather than loosening the prop
 // type, since this Sales-pipeline widget has nothing sensible to link a
-// Prospect alert to anyway.
+// Prospect alert to anyway. "company" firings (added 2026-09-04, FR-CRM-108)
+// are admitted alongside deal ones since a dormant Company is exactly the
+// kind of pipeline-relevant alert this widget already exists for; prospect/
+// quote/contract rows stay excluded exactly as before.
 const recentAlerts = computed(() => notificationLogStore.items.filter(
-  (item): item is typeof item & { deal_id: number, deal_title: string } => item.deal_id !== undefined,
+  (item): item is typeof item & ({ deal_id: number, deal_title: string } | { company_id: number, company_name: string }) =>
+    item.deal_id !== undefined || item.company_id !== undefined,
 ))
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
@@ -321,13 +326,28 @@ const upcomingTasks = computed(() => {
     .slice(0, UPCOMING_TASKS_LIMIT)
 })
 
-// upsell_opportunities is always [] server-side today (not yet implemented), so every
-// tier's candidate list stays empty until the backend fills it in.
-const upsellGroups = computed(() => [
-  { tier: 'tier1', label: t('crm.dashboard.upsellTier60'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
-  { tier: 'tier2', label: t('crm.dashboard.upsellTier90'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
-  { tier: 'tier3', label: t('crm.dashboard.upsellTier120'), candidates: [] as { company: Company, contact: { color: string, label: string } }[] },
-])
+// GET /dashboard/summary's upsell_opportunities (dormant-company/upsell
+// targeting, added 2026-09-04) always returns all 3 tier objects, so the
+// tier/label mapping here is fixed and only each tier's `companies` varies.
+// The API only sends a subset of full Company fields (id/name/industry/
+// last_activity_at) — PipelineOpportunities.vue's template only dereferences
+// candidate.company.id/name/industry, so that subset is cast to satisfy the
+// prop's `Company` type rather than fetching the full record. The badge
+// {color, label} is derived client-side from last_activity_at via
+// useLastContact(), same tier logic used everywhere else (60/90/120 days).
+const UPSELL_TIER_LABELS: Record<string, () => string> = {
+  tier1: () => t('crm.dashboard.upsellTier60'),
+  tier2: () => t('crm.dashboard.upsellTier90'),
+  tier3: () => t('crm.dashboard.upsellTier120'),
+}
+const upsellGroups = computed(() => (summary.value?.upsell_opportunities ?? []).map(group => ({
+  tier: group.tier,
+  label: UPSELL_TIER_LABELS[group.tier]?.() ?? group.tier,
+  candidates: group.companies.map(company => ({
+    company: company as unknown as Company,
+    contact: lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null),
+  })),
+})))
 
 
 // Every stage always renders a bar (even at zero) — the backend only returns rows for

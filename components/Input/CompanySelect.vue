@@ -156,6 +156,7 @@ const onCreate = async (name: string) => {
       tax_id: null,
       created_at: new Date(),
       updated_at: new Date(),
+      last_activity_at: null,
     })
     if (!searchResults.value.some(c => c.id === company.id)) searchResults.value = [company, ...searchResults.value]
     emit('update:model-value', company.id)

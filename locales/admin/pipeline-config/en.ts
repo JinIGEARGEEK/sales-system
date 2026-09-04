@@ -212,7 +212,7 @@ export default {
   },
   notificationRules: {
     heading: 'Notification Rules',
-    help: 'Each active rule watches Deals, Quotes, or Contracts for a stale/at-risk condition and notifies the owner (or the owner plus Sales Managers) once the threshold is reached: an open Deal sitting in its stage, a Sent Quote nearing its validity date, or a Draft/Sent Contract left unsigned.',
+    help: 'Each active rule watches Deals, Quotes, Contracts, or Companies for a stale/at-risk condition and notifies the owner (or the owner plus Sales Managers) once the threshold is reached: an open Deal sitting in its stage, a Sent Quote nearing its validity date, a Draft/Sent Contract left unsigned, or an active Company with no Activity logged directly against it.',
     addRule: 'Add Rule',
     addTitle: 'Add Notification Rule',
     editTitle: 'Edit Notification Rule',
@@ -225,6 +225,7 @@ export default {
       quote: 'Quote',
       contract: 'Contract',
       prospect: 'Prospect',
+      company: 'Company',
     },
     recipientRoleOptions: {
       owner: 'Owner Only',
