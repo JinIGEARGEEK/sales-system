@@ -111,7 +111,6 @@ const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
 const leadSourcesStore = useLeadSourcesStore()
 const companiesStore = useCompaniesStore()
-const campaignsStore = useCampaignsStore()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
@@ -314,21 +313,9 @@ const onBulkArchive = async () => {
   }
 }
 
-const createCampaignOpen = ref(false)
-const campaignTargets = ref<CampaignTarget[]>([])
-
-const openCampaignModal = (leads: Lead[]) => {
-  campaignTargets.value = leads.map(lead => ({ type: 'lead', id: lead.id, name: lead.name }))
-  createCampaignOpen.value = true
-}
-
-const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
-  try {
-    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
-    success(t(payload.mode === 'existing' ? 'crm.leads.index.campaignAddSuccess' : 'crm.leads.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
-    selected.value = []
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
-}
+const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModalFor, onSubmitCampaign } = useCampaignTargeting(
+  { create: 'crm.leads.index.campaignCreateSuccess', add: 'crm.leads.index.campaignAddSuccess' },
+  () => { selected.value = [] },
+)
+const openCampaignModal = (leads: Lead[]) => openCampaignModalFor(leads.map(lead => ({ type: 'lead', id: lead.id, name: lead.name })))
 </script>

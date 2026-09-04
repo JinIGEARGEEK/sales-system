@@ -185,6 +185,18 @@ const emptyForm = () => ({
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.active, emptyForm)
 
+// useModalForm only re-runs emptyForm() on an isOpen false→true transition —
+// fine for modal hosts (open toggles each use), but pages/crm/campaigns/new.vue
+// mounts this component once and leaves `active` permanently true while the
+// caller's typeOptions changes live (switching the Who-to-contact entity
+// type). Without this, form.type stays pinned to whatever it was on first
+// mount even after typeOptions no longer includes it — e.g. still 'win_back'
+// after switching from Companies to Leads — with no visible way to fix it
+// since the type select only renders when there's more than one option.
+watch(() => props.typeOptions, (options) => {
+  if (!options.includes(form.type)) form.type = options[0] ?? 'win_back'
+})
+
 const dueDateDisplay = computed(() => (form.due_date ? dateFormat(form.due_date) : '-'))
 const assignedToName = computed(() => teamMembersStore.nameById(form.assigned_to ? Number(form.assigned_to) : null))
 

@@ -116,6 +116,10 @@ const entityType = ref<'company' | 'lead' | 'contact'>('company')
 // default rather than carrying over a choice (e.g. 'upsell') that wouldn't
 // make sense for the newly-selected entity.
 const typeOptions = computed<CampaignType[]>(() => (entityType.value === 'company' ? ['win_back', 'upsell'] : ['new_channel']))
+// A leftover Lead/Contact search term would otherwise silently narrow the
+// next entity type's results too (Company doesn't use it, but switching
+// straight between Lead and Contact would carry it over invisibly).
+watch(entityType, () => { entitySearch.value = '' })
 
 const staleDaysOptions = computed<Select[]>(() => [
   { label: t('crm.campaigns.new.step1.staleDays60'), value: String(CONTACT_STALE_TIER_DAYS.tier1) },
@@ -133,27 +137,36 @@ const loadingMatches = ref(false)
 // stores/companies.ts's fetchAll (the backend's own hard limit) — fine for
 // a marketing push, which targets a bounded segment rather than the full
 // customer/lead/contact base.
+//
+// entityType/staleDays/hasWonDealOnly fire this immediately while
+// entitySearch fires it debounced (see below) — two in-flight calls can
+// race (e.g. switching entity type right after typing a search), so a
+// request token guards against an older response overwriting a newer one.
+let matchesRequestId = 0
 const fetchMatches = async () => {
+  const requestId = ++matchesRequestId
   loadingMatches.value = true
   try {
+    let targets: CampaignTarget[]
     if (entityType.value === 'company') {
       const result = await companiesStore.fetchList({
         stale_days: staleDays.value,
         has_won_deal: hasWonDealOnly.value ? 'true' : undefined,
         per_page: 200,
       })
-      matchedTargets.value = result.items.map(company => ({ type: 'company' as const, id: company.id, name: company.name }))
+      targets = result.items.map(company => ({ type: 'company' as const, id: company.id, name: company.name }))
     } else if (entityType.value === 'lead') {
       const result = await leadsStore.fetchList({ search: entitySearch.value || undefined, per_page: 200 })
-      matchedTargets.value = result.items.map(lead => ({ type: 'lead' as const, id: lead.id, name: lead.name }))
+      targets = result.items.map(lead => ({ type: 'lead' as const, id: lead.id, name: lead.name }))
     } else {
       const result = await contactsStore.fetchList({ search: entitySearch.value || undefined, per_page: 200 })
-      matchedTargets.value = result.items.map(contact => ({ type: 'contact' as const, id: contact.id, name: contact.name }))
+      targets = result.items.map(contact => ({ type: 'contact' as const, id: contact.id, name: contact.name }))
     }
+    if (requestId === matchesRequestId) matchedTargets.value = targets
   } catch (err) {
-    notifyApiError(err)
+    if (requestId === matchesRequestId) notifyApiError(err)
   } finally {
-    loadingMatches.value = false
+    if (requestId === matchesRequestId) loadingMatches.value = false
   }
 }
 watch([entityType, staleDays, hasWonDealOnly], fetchMatches, { immediate: true })

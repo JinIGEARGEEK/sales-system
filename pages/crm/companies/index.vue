@@ -145,7 +145,6 @@ const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const industryOptionsStore = useIndustryOptionsStore()
-const campaignsStore = useCampaignsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
@@ -247,23 +246,11 @@ const displayCompanies = computed(() => rows.value.map((company) => {
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Company>()
 
-const createCampaignOpen = ref(false)
-const campaignTargets = ref<CampaignTarget[]>([])
-
-const openCampaignModal = (companies: Company[]) => {
-  campaignTargets.value = companies.map(company => ({ type: 'company', id: company.id, name: company.name }))
-  createCampaignOpen.value = true
-}
-
-const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
-  try {
-    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
-    success(t(payload.mode === 'existing' ? 'crm.companies.index.campaignAddSuccess' : 'crm.companies.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
-    clearSelection()
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
-}
+const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModalFor, onSubmitCampaign } = useCampaignTargeting(
+  { create: 'crm.companies.index.campaignCreateSuccess', add: 'crm.companies.index.campaignAddSuccess' },
+  clearSelection,
+)
+const openCampaignModal = (companies: Company[]) => openCampaignModalFor(companies.map(company => ({ type: 'company', id: company.id, name: company.name })))
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),

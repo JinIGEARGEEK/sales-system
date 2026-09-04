@@ -18,7 +18,7 @@
           :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
           icon="material-symbols:campaign-outline"
           outline
-          @click="createCampaignOpen = true"
+          @click="openCampaignModal"
         />
       </div>
 
@@ -176,7 +176,6 @@ const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
 const activitiesStore = useActivitiesStore()
 const jobTitleOptionsStore = useJobTitleOptionsStore()
-const campaignsStore = useCampaignsStore()
 
 const contactId = Number(route.params.id)
 const contact = computed(() => contactsStore.items.find(c => c.id === contactId))
@@ -184,15 +183,11 @@ const goBack = useBackNavigation('/crm/contacts')
 const companyPreviewOpen = ref(false)
 
 // Single-record "Add to Campaign" entry point (FR-CRM-112).
-const createCampaignOpen = ref(false)
-const campaignTargets = computed<CampaignTarget[]>(() => (contact.value ? [{ type: 'contact', id: contact.value.id, name: contact.value.name }] : []))
-const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
-  try {
-    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
-    success(t(payload.mode === 'existing' ? 'crm.contacts.index.campaignAddSuccess' : 'crm.contacts.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
+const { createCampaignOpen, campaignTargets, onSubmitCampaign, openCampaignModal: openCampaignModalFor } = useCampaignTargeting(
+  { create: 'crm.contacts.index.campaignCreateSuccess', add: 'crm.contacts.index.campaignAddSuccess' },
+)
+const openCampaignModal = () => {
+  if (contact.value) openCampaignModalFor([{ type: 'contact', id: contact.value.id, name: contact.value.name }])
 }
 
 onMounted(() => {

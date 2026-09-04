@@ -133,7 +133,6 @@ const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
-const campaignsStore = useCampaignsStore()
 
 // Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
@@ -290,21 +289,9 @@ const onImported = ({ companies: companyCount, contacts: contactCount }: { compa
   fetch()
 }
 
-const createCampaignOpen = ref(false)
-const campaignTargets = ref<CampaignTarget[]>([])
-
-const openCampaignModal = (contacts: Contact[]) => {
-  campaignTargets.value = contacts.map(contact => ({ type: 'contact', id: contact.id, name: contact.name }))
-  createCampaignOpen.value = true
-}
-
-const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
-  try {
-    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
-    success(t(payload.mode === 'existing' ? 'crm.contacts.index.campaignAddSuccess' : 'crm.contacts.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
-    clearSelection()
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
-}
+const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModalFor, onSubmitCampaign } = useCampaignTargeting(
+  { create: 'crm.contacts.index.campaignCreateSuccess', add: 'crm.contacts.index.campaignAddSuccess' },
+  clearSelection,
+)
+const openCampaignModal = (contacts: Contact[]) => openCampaignModalFor(contacts.map(contact => ({ type: 'contact', id: contact.id, name: contact.name })))
 </script>

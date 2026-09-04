@@ -42,7 +42,7 @@
             :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
             icon="material-symbols:campaign-outline"
             outline
-            @click="createCampaignOpen = true"
+            @click="openCampaignModal"
           />
         </div>
       </div>
@@ -148,7 +148,6 @@ const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
 const leadSourcesStore = useLeadSourcesStore()
-const campaignsStore = useCampaignsStore()
 const goBack = useBackNavigation('/crm/leads')
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
@@ -185,15 +184,11 @@ const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
 
 // Single-record "Add to Campaign" entry point (FR-CRM-112).
-const createCampaignOpen = ref(false)
-const campaignTargets = computed<CampaignTarget[]>(() => (lead.value ? [{ type: 'lead', id: lead.value.id, name: lead.value.name }] : []))
-const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
-  try {
-    const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
-    success(t(payload.mode === 'existing' ? 'crm.leads.index.campaignAddSuccess' : 'crm.leads.index.campaignCreateSuccess', { name: campaign.name, count: campaignTargets.value.length }))
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
+const { createCampaignOpen, campaignTargets, onSubmitCampaign, openCampaignModal: openCampaignModalFor } = useCampaignTargeting(
+  { create: 'crm.leads.index.campaignCreateSuccess', add: 'crm.leads.index.campaignAddSuccess' },
+)
+const openCampaignModal = () => {
+  if (lead.value) openCampaignModalFor([{ type: 'lead', id: lead.value.id, name: lead.value.name }])
 }
 
 const onConvertToDeal = () => {
