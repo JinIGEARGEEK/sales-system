@@ -256,6 +256,7 @@ const onConfirm = async () => {
           status: 'active',
           created_at: new Date(),
           updated_at: new Date(),
+          last_activity_at: null,
         })
         companiesCreated += 1
       } else if (tag) {

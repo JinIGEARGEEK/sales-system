@@ -12,7 +12,11 @@ type LeadScoringCriterionField = 'source' | 'has_company_name' | 'has_phone'
 // Workflow Notification Rules (FR-CRM-100/101/102) — the closed set of record
 // types a rule can watch, and who gets notified when it fires. Mirrors the
 // backend's NotificationRule.EntityType/RecipientRole validation.
-type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect'
+// 'company' added 2026-09-04 for dormant-company/upsell targeting — an active
+// Company with no Activity logged directly against it in at least
+// threshold_days (FR-CRM-108, mirrors the backend's NotificationRule.EntityType
+// validation).
+type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company'
 type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 // Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
@@ -76,6 +80,13 @@ interface Company {
   deleted_at?: Date | null
   created_at: Date
   updated_at: Date
+  // Server-computed: the most recent company-scoped Activity's created_at
+  // (null if none). Added 2026-09-04 for dormant-company/upsell targeting —
+  // the authoritative "last contacted" signal, sent on both list and detail
+  // responses. Kept as a raw ISO string (not parsed to Date in the store),
+  // same convention as other API-only date fields consumed via
+  // useLastContact()'s own `new Date(...)` call.
+  last_activity_at: string | null
 }
 
 interface Contact {
@@ -580,5 +591,14 @@ interface DashboardSummary {
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number }[]
-  upsell_opportunities: unknown[]
+  // Dormant-company/upsell targeting (added 2026-09-04) — always all 3 tier
+  // objects present (possibly with empty `companies` arrays); tier1=60-89
+  // days stale, tier2=90-119, tier3=120+/never-contacted (see
+  // useLastContact's CONTACT_STALE_TIER_DAYS). Each company here is a
+  // subset of the full Company shape — only what the widget needs to render
+  // a candidate row plus link to its detail page.
+  upsell_opportunities: {
+    tier: 'tier1' | 'tier2' | 'tier3'
+    companies: { id: number, name: string, industry: string, last_activity_at: string | null }[]
+  }[]
 }

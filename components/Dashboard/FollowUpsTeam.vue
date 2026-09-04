@@ -55,11 +55,11 @@
           <NuxtLink
             v-for="alert in recentAlerts"
             :key="alert.id"
-            :to="`/crm/deals/${alert.deal_id}`"
+            :to="alert.deal_id !== undefined ? `/crm/deals/${alert.deal_id}` : `/crm/companies/${alert.company_id}`"
             class="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
           >
             <div class="min-w-0">
-              <p class="truncate text-sm font-medium">{{ alert.deal_title }}</p>
+              <p class="truncate text-sm font-medium">{{ alert.deal_id !== undefined ? alert.deal_title : alert.company_name }}</p>
               <p class="truncate text-xs text-[var(--color-gray)]">{{ alert.rule_name }}</p>
             </div>
             <UBadge color="neutral" variant="subtle" class="shrink-0">
@@ -152,7 +152,21 @@ defineProps<{
     assignedToName: string
   }[]
   canViewSalesPipelineWidgets: boolean
-  recentAlerts: { id: number, deal_id: number, deal_title: string, rule_name: string, notified_at: Date }[]
+  // Deal firings keep their existing shape/link; Company firings (added
+  // 2026-09-04, FR-CRM-108) are the one other entity type this widget
+  // renders — link to the Company detail page instead. Icon stays the same
+  // generic one for both; kept as a minimal per-type branch (deal_id present
+  // vs. absent) rather than a generic N-entity-type framework since these
+  // are still the only two types this widget ever receives.
+  recentAlerts: {
+    id: number
+    rule_name: string
+    notified_at: Date
+    deal_id?: number
+    deal_title?: string
+    company_id?: number
+    company_name?: string
+  }[]
   industryBreakdown: { industry: string, wonCount: number, winRate: number, barClass: string }[]
   teamPerformance: { id: number, name: string, initials: string, wonCount: number, wonValue: number, winRate: number }[]
 }>()

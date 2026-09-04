@@ -230,6 +230,7 @@ const onSubmit = guard(async () => {
       tax_id: form.tax_id || null,
       created_at: new Date(),
       updated_at: new Date(),
+      last_activity_at: null,
     })
 
     const contactRows = contacts.value.filter(c => c.name.trim())
