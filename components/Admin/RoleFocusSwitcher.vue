@@ -48,7 +48,13 @@ const menuItems = computed(() => [[
 ], FOCUSABLE_ROLES.map(r => ({
   label: roleLabel(r),
   icon: focusRole.value === r ? 'material-symbols:radio-button-checked' : 'material-symbols:radio-button-unchecked',
-  onSelect: () => userStore.setFocusRole(r),
+  // Navigate home on switch — staying put risked landing the Admin on a
+  // page the newly-focused role can't see (e.g. focusing Sales Rep while
+  // sitting on /admin/users), which AccessGate would immediately cover with
+  // a "no access" alert instead of the page they meant to explore. Not
+  // needed on Exit above: full Admin access is always valid wherever they
+  // already are.
+  onSelect: () => { userStore.setFocusRole(r); navigateTo('/') },
 }))])
 </script>
 

@@ -162,18 +162,27 @@ const activityRows = computed<DisplayRow[]>(() => activitiesStore.items.map(acti
 // real ActivityType — so these read as system-recorded history, not
 // something a rep logged, the visual distinction called out when this
 // feature was scoped.
-const stageChangeRows = computed<DisplayRow[]>(() => stageHistory.value.map(entry => ({
-  kind: 'stage_change',
-  type: 'stage_change',
-  subject: entry.fromStage
-    ? t('crm.activities.index.stageChangeSubject', { from: entry.fromStage, to: entry.toStage })
-    : t('crm.activities.index.stageChangeSubjectNoFrom', { to: entry.toStage }),
-  created_by: entry.actorName,
-  created_at: entry.created_at,
-  related_type: 'deal',
-  typeBadge: toBadge(t('crm.activities.index.stageChangeType'), 'neutral'),
-  ...resolveRelated('deal', entry.dealId),
-})))
+const stageChangeRows = computed<DisplayRow[]>(() => stageHistory.value.map((entry) => {
+  const deal = resolveRelated('deal', entry.dealId)
+  return {
+    kind: 'stage_change',
+    type: 'stage_change',
+    subject: entry.fromStage
+      ? t('crm.activities.index.stageChangeSubject', { from: entry.fromStage, to: entry.toStage })
+      : t('crm.activities.index.stageChangeSubjectNoFrom', { to: entry.toStage }),
+    created_by: entry.actorName,
+    created_at: entry.created_at,
+    related_type: 'deal',
+    typeBadge: toBadge(t('crm.activities.index.stageChangeType'), 'neutral'),
+    relatedLabel: deal.relatedLabel,
+    // resolveRelated's deal path always points at the Overview tab (shared
+    // with Tasks, which has its own reason to land there) — the "Pipeline
+    // History" this row actually describes lives on the Deal's Activity
+    // tab, so send the click straight there instead of making the rep find
+    // it themselves after an extra click.
+    path: `${deal.path}/activity`,
+  }
+}))
 
 const filteredActivities = computed(() => [...activityRows.value, ...stageChangeRows.value]
   .filter((row) => {
