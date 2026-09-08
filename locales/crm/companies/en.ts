@@ -132,6 +132,8 @@ export default {
     projectLinkedDeal: 'From Deal: {title}',
     projectTargetEndDate: 'Target: {date}',
     activityFeed: 'Activity Feed',
+    addActivity: 'Log Activity',
+    addActivitySuccess: 'Activity logged successfully',
     tasksTitle: 'Tasks',
     addTask: 'Add Task',
     addTaskSuccess: 'Task added successfully',

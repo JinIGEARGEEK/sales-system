@@ -205,9 +205,22 @@
 
       <div v-else-if="activeTab === 'activity'">
         <ContainerTemplate>
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
+            <ButtonPrimary
+              :label="t('crm.companies.detail.addActivity')"
+              icon="material-symbols:add"
+              small
+              @click="openAddActivity"
+            />
+          </div>
           <CrmActivityTimeline :items="companyActivity" />
         </ContainerTemplate>
+
+        <CrmAddActivityModal
+          v-model:open="addActivityOpen"
+          @submit="onSubmitActivity"
+        />
       </div>
 
       <div v-else-if="activeTab === 'tasks'">
@@ -404,6 +417,7 @@ const lastContact = computed(() => {
 })
 
 const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
 const activeProducts = computed(() => productsStore.items.filter(p => p.is_active))
@@ -454,7 +468,7 @@ const form = reactive({
   size: company.value?.size || '',
   revenue_size: company.value?.revenue_size || '',
   website: company.value?.website || '',
-  tags: company.value?.tags.join(', ') || '',
+  tags: company.value?.tags?.join(', ') || '',
   status: company.value?.status || 'active',
   legal_name: company.value?.legal_name || '',
   address: company.value?.address || '',
@@ -471,7 +485,7 @@ watch(company, (value) => {
   form.size = value.size
   form.revenue_size = value.revenue_size
   form.website = value.website
-  form.tags = value.tags.join(', ')
+  form.tags = value.tags?.join(', ') || ''
   form.status = value.status
   form.legal_name = value.legal_name || ''
   form.address = value.address || ''

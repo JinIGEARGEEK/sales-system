@@ -75,6 +75,8 @@ export default {
     projectLinkedDeal: 'From Deal: {title}',
     projectTargetEndDate: 'Target: {date}',
     activityTitle: 'Activity',
+    addActivity: 'Log Activity',
+    addActivitySuccess: 'Activity logged successfully',
     tasksTitle: 'Tasks',
     overdueCount: '{count} overdue',
     addTask: 'Add Task',

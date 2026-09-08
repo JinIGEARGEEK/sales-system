@@ -179,6 +179,18 @@ export default {
     cancel: 'ยกเลิก',
     save: 'บันทึกงาน',
   },
+  addActivityModal: {
+    title: 'บันทึกกิจกรรม',
+    relatesToType: 'เกี่ยวข้องกับ',
+    relatesToTypePlaceholder: 'เลือกประเภท',
+    relatesToRecord: 'รายการ',
+    relatesToRecordPlaceholder: 'เลือกรายการ',
+    type: 'ประเภทกิจกรรม',
+    subject: 'หัวข้อ',
+    notes: 'บันทึกเพิ่มเติม',
+    cancel: 'ยกเลิก',
+    save: 'บันทึกกิจกรรม',
+  },
   createCampaignModal: {
     title: 'ตั้งค่าการติดตาม',
     description: 'สร้างงานติดตาม 1 งานสำหรับแต่ละรายการที่เลือกไว้ {count} รายการ โดยจัดกลุ่มไว้ภายใต้แคมเปญ',

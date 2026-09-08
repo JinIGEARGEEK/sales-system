@@ -125,6 +125,8 @@ export default {
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',
     editTaskSuccess: 'แก้ไขงานติดตามสำเร็จ',
     activityTitle: 'กิจกรรม',
+    addActivity: 'เพิ่มกิจกรรม',
+    addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',
     attachmentsTitle: 'ไฟล์แนบ',
     addAttachment: 'เพิ่มไฟล์แนบ',
     addAttachmentSuccess: 'เพิ่มไฟล์แนบสำเร็จ',

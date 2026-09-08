@@ -132,6 +132,8 @@ export default {
     projectLinkedDeal: 'จาก Deal: {title}',
     projectTargetEndDate: 'กำหนดเสร็จ: {date}',
     activityFeed: 'ฟีดกิจกรรม',
+    addActivity: 'เพิ่มกิจกรรม',
+    addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',
     tasksTitle: 'งานติดตาม',
     addTask: 'เพิ่มงานติดตาม',
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',

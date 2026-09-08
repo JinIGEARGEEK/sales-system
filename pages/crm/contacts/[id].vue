@@ -98,7 +98,15 @@
           </UCard>
           <UCard class="mb-4">
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
+                <ButtonPrimary
+                  :label="t('crm.contacts.detail.addActivity')"
+                  icon="material-symbols:add"
+                  small
+                  @click="openAddActivity"
+                />
+              </div>
             </template>
             <CrmActivityTimeline :items="contactActivity" />
           </UCard>
@@ -128,6 +136,11 @@
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
       {{ t('crm.contacts.detail.contactNotFound') }}
     </div>
+
+    <CrmAddActivityModal
+      v-model:open="addActivityOpen"
+      @submit="onSubmitActivity"
+    />
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
@@ -261,6 +274,7 @@ const {
 )
 
 const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('contact', contactId, 'crm.contacts.detail.addActivitySuccess')
 const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 
 const form = reactive({
@@ -269,7 +283,7 @@ const form = reactive({
   role_title: contact.value?.role_title || '',
   email: contact.value?.email || '',
   phone: contact.value?.phone || '',
-  tags: contact.value?.tags.join(', ') || '',
+  tags: contact.value?.tags?.join(', ') || '',
 })
 
 // Contact loads asynchronously now (fetched on mount), so the form is (re)populated
@@ -281,7 +295,7 @@ watch(contact, (value) => {
   form.role_title = value.role_title
   form.email = value.email
   form.phone = value.phone
-  form.tags = value.tags.join(', ')
+  form.tags = value.tags?.join(', ') || ''
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
