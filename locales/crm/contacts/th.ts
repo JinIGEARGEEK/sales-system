@@ -75,6 +75,8 @@ export default {
     projectLinkedDeal: 'จาก Deal: {title}',
     projectTargetEndDate: 'กำหนดเสร็จ: {date}',
     activityTitle: 'กิจกรรม',
+    addActivity: 'เพิ่มกิจกรรม',
+    addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',
     tasksTitle: 'งานติดตาม',
     overdueCount: 'เกินกำหนด {count} รายการ',
     addTask: 'เพิ่มงานติดตาม',

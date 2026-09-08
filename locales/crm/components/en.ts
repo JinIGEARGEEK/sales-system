@@ -179,6 +179,18 @@ export default {
     cancel: 'Cancel',
     save: 'Save Task',
   },
+  addActivityModal: {
+    title: 'Log Activity',
+    relatesToType: 'Relates To',
+    relatesToTypePlaceholder: 'Select type',
+    relatesToRecord: 'Record',
+    relatesToRecordPlaceholder: 'Select record',
+    type: 'Type',
+    subject: 'Subject',
+    notes: 'Notes',
+    cancel: 'Cancel',
+    save: 'Save Activity',
+  },
   // Shared by components/Crm/CampaignTaskSetupForm.vue — used both inside
   // this modal (Companies-list bulk-select path) and inline on
   // pages/crm/campaigns/new.vue's guided page (crm.campaigns.new.* owns

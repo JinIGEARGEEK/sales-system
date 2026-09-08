@@ -4,6 +4,7 @@ export default {
     customers: 'Staff',
     pipelineConfig: 'CRM Settings',
     salesDashboard: 'Dashboard',
+    activities: 'Activities',
     companies: 'Companies',
     contacts: 'Contacts',
     tags: 'Tags',

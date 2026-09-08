@@ -235,7 +235,7 @@ const displayCompanies = computed(() => rows.value.map((company) => {
   const contact = lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null)
   return {
     ...company,
-    tagsDisplay: company.tags.join(', ') || '-',
+    tagsDisplay: company.tags?.join(', ') || '-',
     statusBadge: company.status === 'active'
       ? toBadge(t('crm.companies.index.statusActive'), 'success')
       : toBadge(t('crm.companies.index.statusArchived')),

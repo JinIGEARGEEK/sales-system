@@ -125,6 +125,8 @@ export default {
     addTaskSuccess: 'Task added successfully',
     editTaskSuccess: 'Task updated successfully',
     activityTitle: 'Activity',
+    addActivity: 'Log Activity',
+    addActivitySuccess: 'Activity logged successfully',
     attachmentsTitle: 'Attachments',
     addAttachment: 'Add Attachment',
     addAttachmentSuccess: 'Attachment added successfully',

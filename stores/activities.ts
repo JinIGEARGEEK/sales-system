@@ -14,6 +14,19 @@ export const useActivitiesStore = defineStore('activities', {
       .filter(a => a.related_type === relatedType && a.related_id === relatedId),
   },
   actions: {
+    // Unfiltered GET /activities — omitting related_type/related_id (the
+    // backend requires them together, not that they're required at all)
+    // returns every activity across all related records, for the
+    // cross-entity Activities list page.
+    async fetchAll () {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Activity[]>>('/activities', {
+        params: { per_page: 1000, sort: '-created_at' },
+      })
+      const fetched = response.data.data.map(parseDates)
+      this.items = fetched
+      return fetched
+    },
     async fetchForRelated (relatedType: ActivityRelatedType, relatedId: number) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Activity[]>>('/activities', {

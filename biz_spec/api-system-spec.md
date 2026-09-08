@@ -512,7 +512,7 @@ interface Activity {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/activities` | 🟢 | Filters: `related_type`, `related_id` (required together), `type`. Backs the timeline on Deal/Company/Contact detail pages. |
+| `GET` | `/activities` | 🟢 | Filters: `related_type`, `related_id` (required together, not required at all), `type`. Backs the timeline on Deal/Company/Contact detail pages when filtered; omitting both filters returns every Activity system-wide (paginated, `-created_at` sort) and backs the cross-entity `/crm/activities` list page (**added 2026-09-08**, `FR-CRM-030`). |
 | `POST` | `/activities` | 🟢 | Create — `FR-CRM-031`'s manual entry form. |
 | `DELETE` | `/activities/:id` | 🟢 | Delete. |
 

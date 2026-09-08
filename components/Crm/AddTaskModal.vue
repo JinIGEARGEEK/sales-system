@@ -6,54 +6,14 @@
     <template #body>
       <Form ref="formRef">
         <div class="grid grid-cols-1 gap-3">
-          <template v-if="showRelatedPicker && !task">
-            <InputSelect
-              v-model="form.related_type"
-              :label="t('crm.components.addTaskModal.relatesToType')"
-              :placeholder="t('crm.components.addTaskModal.relatesToTypePlaceholder')"
-              name="related_type"
-              :options="RELATED_TYPE_OPTIONS"
-              rules="required"
-            />
-            <InputCompanySelect
-              v-if="form.related_type === 'company'"
-              v-model="relatedRecordId"
-              :label="t('crm.components.addTaskModal.relatesToRecord')"
-              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
-              name="related_id"
-              rules="required"
-            />
-            <InputAsyncSelect
-              v-else-if="form.related_type === 'deal'"
-              v-model="relatedRecordId"
-              :search="searchDeals"
-              :resolve-selected="resolveDeal"
-              :label="t('crm.components.addTaskModal.relatesToRecord')"
-              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
-              name="related_id"
-              rules="required"
-            />
-            <InputAsyncSelect
-              v-else-if="form.related_type === 'contact'"
-              v-model="relatedRecordId"
-              :search="searchContacts"
-              :resolve-selected="resolveContact"
-              :label="t('crm.components.addTaskModal.relatesToRecord')"
-              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
-              name="related_id"
-              rules="required"
-            />
-            <InputAsyncSelect
-              v-else-if="form.related_type === 'prospect'"
-              v-model="relatedRecordId"
-              :search="searchProspects"
-              :resolve-selected="resolveProspect"
-              :label="t('crm.components.addTaskModal.relatesToRecord')"
-              :placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
-              name="related_id"
-              rules="required"
-            />
-          </template>
+          <CrmRelatedRecordPicker
+            v-if="showRelatedPicker && !task"
+            v-model:form="form"
+            :type-label="t('crm.components.addTaskModal.relatesToType')"
+            :type-placeholder="t('crm.components.addTaskModal.relatesToTypePlaceholder')"
+            :record-label="t('crm.components.addTaskModal.relatesToRecord')"
+            :record-placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+          />
           <InputText v-model="form.title" :label="t('crm.components.addTaskModal.taskTitle')" name="title" rules="required" />
           <InputTextarea v-model="form.description" :label="t('crm.components.addTaskModal.description')" name="description" />
           <InputSelect v-model="form.priority" :options="TASK_PRIORITY_OPTIONS" :label="t('crm.components.addTaskModal.priority')" name="priority" rules="required" />
@@ -101,60 +61,6 @@ const emit = defineEmits<{
   update: [task: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }]
 }>()
 
-// Plain hardcoded labels, matching this codebase's convention for
-// enum-value option lists (e.g. PROJECT_STATUS_OPTIONS) — not localized.
-const RELATED_TYPE_OPTIONS: Select[] = [
-  { label: 'Deal', value: 'deal' },
-  { label: 'Contact', value: 'contact' },
-  { label: 'Company', value: 'company' },
-  { label: 'Prospect', value: 'prospect' },
-]
-
-// None of Deal/Contact/Company/Prospect are preloaded here anymore — each
-// branch above searches the server as the rep types instead of filtering a
-// capped preloaded list (fetchAll() is capped at 200 rows, newest-first, and
-// can miss an older record entirely — see stores/companies.ts's fetchAll doc
-// for the full explanation).
-const dealsStore = useDealsStore()
-const contactsStore = useContactsStore()
-const prospectsStore = useProspectsStore()
-
-// Deal/Contact/Prospect's search+resolve pair for InputAsyncSelect were
-// three near-identical copies of "fetchList → map to {label, value}" /
-// "fetchOne → {label, value}", differing only in which store and which
-// field is the label. Factored into one helper — Company doesn't need this
-// (InputCompanySelect above already owns its own combobox-with-create
-// behavior, not a plain async select).
-function useAsyncRecordPicker<T extends { id: number }> (
-  fetchList: (params: { search?: string, per_page: number, sort: string }) => Promise<{ items: T[] }>,
-  fetchOne: (id: number) => Promise<T>,
-  labelOf: (item: T) => string,
-  sortField: string,
-) {
-  const search = async (term: string): Promise<Select[]> => {
-    const { items } = await fetchList({ search: term || undefined, per_page: 20, sort: sortField })
-    return items.map(item => ({ label: labelOf(item), value: item.id }))
-  }
-  const resolve = async (id: number): Promise<Select | null> => {
-    const item = await fetchOne(id)
-    return { label: labelOf(item), value: item.id }
-  }
-  return { search, resolve }
-}
-
-const { search: searchDeals, resolve: resolveDeal } = useAsyncRecordPicker(dealsStore.fetchList, dealsStore.fetchOne, d => d.title, 'title')
-const { search: searchContacts, resolve: resolveContact } = useAsyncRecordPicker(contactsStore.fetchList, contactsStore.fetchOne, c => c.name, 'name')
-const { search: searchProspects, resolve: resolveProspect } = useAsyncRecordPicker(prospectsStore.fetchList, prospectsStore.fetchOne, p => p.name, 'name')
-
-// Every branch above resolves to a number, but form.related_id stays a plain
-// string — this proxy is the one place that converts between the two, so
-// submit's Number(form.related_id) keeps working unchanged regardless of
-// which related_type was picked.
-const relatedRecordId = computed<number | null>({
-  get: () => form.related_id ? Number(form.related_id) : null,
-  set: value => { form.related_id = value ? String(value) : '' },
-})
-
 const emptyForm = () => ({
   title: props.task?.title ?? '',
   description: props.task?.description ?? '',
@@ -166,13 +72,6 @@ const emptyForm = () => ({
 })
 
 const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
-
-// A record picked before switching type would otherwise submit as e.g. a
-// Deal id under related_type: 'contact' — clear it so the field always
-// reflects only the currently-selected type's records.
-watch(() => form.related_type, () => {
-  form.related_id = ''
-})
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
