@@ -104,6 +104,7 @@ export default {
     deal: 'Deal (optional)',
     dealPlaceholder: 'Link to a Deal',
     name: 'Project Name',
+    namePlaceholder: 'Search or type a new project name',
     status: 'Status',
     productionReference: 'PO (optional)',
     expectedProposalDate: 'Expected Proposal Date',

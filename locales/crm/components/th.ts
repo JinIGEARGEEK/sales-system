@@ -104,6 +104,7 @@ export default {
     deal: 'Deal (ไม่บังคับ)',
     dealPlaceholder: 'เชื่อมโยงกับ Deal',
     name: 'ชื่อ Project',
+    namePlaceholder: 'ค้นหาหรือพิมพ์ชื่อ Project ใหม่',
     status: 'สถานะ',
     productionReference: 'PO (ไม่บังคับ)',
     expectedProposalDate: 'วันที่คาดว่าจะเสนอ',
