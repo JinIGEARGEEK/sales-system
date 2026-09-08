@@ -42,6 +42,7 @@
             v-model="form.name"
             :options="projectNameOptions"
             :label="t('crm.components.addProjectModal.name')"
+            :placeholder="t('crm.components.addProjectModal.namePlaceholder')"
             name="name"
             rules="required"
           />

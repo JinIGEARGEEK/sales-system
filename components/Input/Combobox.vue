@@ -65,12 +65,15 @@ const props = defineProps({
     type: String,
     default: 'md',
   },
-  // Only offer "create new" when the typed text doesn't already match an
-  // option — matches InputSelect's read-only-list feel while still letting
-  // a genuinely new name through.
+  // Default 'always' (not 'empty'): with 'empty', the create row only shows
+  // up once the typed text matches zero existing options, so a field that
+  // opens on an existing list (e.g. AddProjectModal's Project name) reads as
+  // select-only until that happens — same reasoning as CompanySelect's
+  // `when: 'always'`. Callers can still override per-field if a read-only-
+  // list feel is ever wanted instead.
   createItem: {
     type: [Boolean, String, Object] as PropType<boolean | 'always' | { position?: 'top' | 'bottom', when?: 'empty' | 'always' }>,
-    default: () => ({ when: 'empty' }),
+    default: () => ({ when: 'always' }),
   },
 })
 
