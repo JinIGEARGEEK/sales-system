@@ -48,7 +48,7 @@
       <CrmAddProjectModal
         v-model:open="addProjectOpen"
         :project="editingProject"
-        :companies="companiesStore.items"
+        show-company-picker
         @submit="onSaveProject"
       />
     </div>
@@ -127,7 +127,6 @@ const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
 const projectsStore = useProjectsStore()
 const productsStore = useProductsStore()
-const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const productCategoryOptionsStore = useProductCategoryOptionsStore()
 
@@ -153,7 +152,6 @@ onMounted(async () => {
     productsLoading.value = true
     productsStore.fetchAll().catch(notifyApiError).finally(() => { productsLoading.value = false })
   }
-  if (canManageProjects.value && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   // No blanket dealsStore.fetchAll() here anymore — CrmAddProjectModal's own
   // Deal picker scopes its fetch to the chosen Company itself now, and each
   // row's linked-Deal display below (dealName) ensures its own Deal is

@@ -16,20 +16,20 @@
         variant="outline"
         color="neutral"
         :aria-label="t('crm.components.businessUnitItemField.addProjectHint')"
-        @click="openAddProject"
+        @click="openAddProjectModal"
       />
     </UTooltip>
   </div>
 
   <!-- No Company picked on the parent form yet (companyId is nullable here,
   unlike the Company/Contact detail pages' own Projects tabs) — fall back to
-  the same `companies` picker the standalone cross-company Projects page uses,
+  the same Company picker the standalone cross-company Projects page uses,
   instead of forcing the rep to cancel out and pick a Company on this form
   first just to create a Project. -->
   <CrmAddProjectModal
     v-model:open="addProjectOpen"
     :company-id="companyId"
-    :companies="companyId ? undefined : companiesStore.items"
+    :show-company-picker="!companyId"
     :early-stage="earlyStage"
     @submit="onSubmitProject"
   />
@@ -39,8 +39,6 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { notifyApiError } = useApiErrorNotifier()
-const companiesStore = useCompaniesStore()
 
 const props = defineProps<{
   modelValue: string
@@ -74,15 +72,6 @@ const { open: addProjectOpen, openAdd: openAddProjectModal, onSave: onSaveProjec
   'crm.components.businessUnitItemField.addProjectSuccess',
   'crm.components.businessUnitItemField.addProjectSuccess',
 )
-
-const openAddProject = () => {
-  // Only needed for the no-Company-picked-yet path's own company picker
-  // (see the modal's `companies` binding above) — fetchAll() is capped at
-  // 200 rows, newest-first, same as the standalone Projects page's identical
-  // fetch, and only actually runs once.
-  if (!props.companyId && companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  openAddProjectModal()
-}
 
 // Selects the newly-created Project immediately, same as picking an existing
 // one from the dropdown — closes the loop on "create it right from here"

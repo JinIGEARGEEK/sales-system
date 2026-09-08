@@ -7,14 +7,12 @@
       <p v-if="description" class="mb-3 text-sm text-[var(--color-gray)]">{{ description }}</p>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
-          <InputSelect
-            v-if="companies && !project"
+          <InputCompanySelect
+            v-if="showCompanyPicker && !project"
             v-model="form.company_id"
-            :options="companyOptions"
             :label="t('crm.components.addProjectModal.company')"
             :placeholder="t('crm.components.addProjectModal.companyPlaceholder')"
             name="company_id"
-            :disable="companyOptions.length === 0"
             rules="required"
           />
           <InputSelect
@@ -89,10 +87,13 @@ const props = defineProps<{
   description?: string
   // Overrides the default "Add Project"/"Edit Project" header.
   title?: string
-  // When set, a Company field is shown for a fresh create (e.g. the cross-company
-  // Projects list, where there's no company already in context). Omitted entirely
-  // in edit mode and wherever the parent already knows the company.
-  companies?: { id: number, name: string }[]
+  // When true, a Company field is shown for a fresh create (e.g. the cross-company
+  // Projects list, where there's no company already in context) — an
+  // InputCompanySelect (search-as-you-type against the server, same as every
+  // other Company picker in the app) rather than a preloaded list, so the
+  // caller no longer needs to hand over its own array. Omitted entirely in
+  // edit mode and wherever the parent already knows the company.
+  showCompanyPicker?: boolean
   // The fixed company this Project belongs to, when the parent already knows it
   // (e.g. the Company detail page's Projects tab) and so doesn't pass `companies`.
   // Used only to filter the optional Deal picker below — the parent still decides
@@ -131,14 +132,12 @@ const { hasRole } = useRole()
 // the other fields on an edit.
 const productionEditor = computed(() => hasRole('Production') && !!props.project)
 
-const companyOptions = computed(() => (props.companies ?? []).map(c => ({ label: c.name, value: String(c.id) })))
-
 const dealsStore = useDealsStore()
 const projectsStore = useProjectsStore()
 const { notifyApiError } = useApiErrorNotifier()
 
 const emptyForm = () => ({
-  company_id: '',
+  company_id: null as number | null,
   deal_id: '',
   name: props.project?.name ?? props.defaultName ?? '',
   status: (props.project?.status ?? 'Not Started') as ProjectStatus,
@@ -163,7 +162,7 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 // context at all (e.g. the Deal-detail "mark Won" flow, which already knows
 // its own deal_id and doesn't need this picker) hides the field entirely.
 const filterCompanyId = computed(() => {
-  if (props.companies) return Number(form.company_id) || null
+  if (props.showCompanyPicker) return form.company_id
   return props.companyId ?? null
 })
 
@@ -229,7 +228,7 @@ const onSubmit = guard(async () => {
     expected_proposal_date: form.expected_proposal_date ? new Date(form.expected_proposal_date) : null,
     expected_start_date: form.expected_start_date ? new Date(form.expected_start_date) : null,
     notes: form.notes,
-    ...(props.companies && !props.project ? { company_id: Number(form.company_id) } : {}),
+    ...(props.showCompanyPicker && !props.project ? { company_id: form.company_id ?? undefined } : {}),
     ...(!props.project ? { deal_id: form.deal_id ? Number(form.deal_id) : null } : {}),
   })
   onUpdateOpen(false)
