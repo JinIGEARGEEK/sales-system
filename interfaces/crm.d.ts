@@ -391,6 +391,19 @@ interface Activity {
   created_at: Date
 }
 
+// Frontend-only shape composables/utils/useDealStageHistory.ts maps a raw
+// AuditLogEntry (entity_type=deal, action=stage_changed) into — not a real
+// backend model. Deliberately kept separate from Activity: a stage change is
+// system-recorded audit history, not something a rep logged.
+interface DealStageChangeEntry {
+  id: number
+  dealId: number
+  fromStage: string | null
+  toStage: string
+  actorName: string
+  created_at: Date
+}
+
 interface Tag {
   id: number
   name: string

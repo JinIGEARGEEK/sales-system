@@ -1,66 +1,76 @@
 <template>
-  <!-- Sticks below the layout's own sticky header, then turns to glass once it's actually floating -->
+  <!-- Sticks below the layout's own sticky header, then turns to glass once it's
+       actually floating. The sticky positioning lives on this plain wrapper
+       div rather than on the UCard itself — putting it on a real element this
+       component owns avoids depending on Vue's scoped-CSS-into-child-root
+       propagation reaching through UCard's own internal `tv()` class merging.
+       The md+ `top` (header height + --layout-banner-height, 0px unless a
+       role focus is active — this page is reachable while focused into
+       another role) lives in the scoped <style> below on
+       .guideline-search-sticky. -->
   <div ref="searchBarSentinelRef" />
-  <UCard
-    class="sticky top-3 z-20 mb-4 transition-[background-color,backdrop-filter,box-shadow] duration-200 md:top-[calc(var(--layout-header-height)+12px)]"
-    :ui="searchBarCardUi"
-  >
-    <div
-      v-if="isSearchBarStuck"
-      class="pointer-events-none absolute inset-x-4 -bottom-px h-px bg-linear-to-r from-transparent via-[rgba(250,204,21,0.8)] to-[rgba(96,165,250,0.8)] opacity-80 shadow-[0_0_8px_1px_rgba(96,165,250,0.5)]"
-    />
-    <div class="relative">
-      <UInput
-        v-model="modelValue"
-        icon="material-symbols:search"
-        :placeholder="t('admin.guideline.searchPlaceholder')"
-        class="w-full"
-        autocomplete="off"
-        @focus="isSearchFocused = true"
-        @blur="onSearchBlur"
-        @keydown.escape="modelValue = ''"
-      >
-        <template v-if="modelValue" #trailing>
-          <UButton
-            icon="material-symbols:close"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            :aria-label="t('admin.guideline.clearSearch')"
-            @click="modelValue = ''"
-          />
-        </template>
-      </UInput>
-
-      <!-- Live search preview: a command-palette-style dropdown, not a page replacement -->
+  <div class="guideline-search-sticky sticky top-3 z-20 mb-4">
+    <UCard
+      class="relative transition-[background-color,backdrop-filter,box-shadow] duration-200"
+      :ui="searchBarCardUi"
+    >
       <div
-        v-if="showSearchPreview"
-        class="absolute inset-x-0 top-full z-20 mt-1.5 max-h-96 overflow-y-auto rounded-lg border border-[rgba(96,165,250,0.45)] bg-white shadow-xl"
-      >
-        <button
-          v-for="result in results"
-          :key="result.id"
-          type="button"
-          class="flex w-full items-start gap-3 border-b border-[var(--color-gray)]/10 px-3 py-2.5 text-left last:border-b-0 hover:bg-[var(--color-primary-bg)]"
-          @click="emit('select', result)"
+        v-if="isSearchBarStuck"
+        class="pointer-events-none absolute inset-x-4 -bottom-px h-px bg-linear-to-r from-transparent via-[rgba(250,204,21,0.8)] to-[rgba(96,165,250,0.8)] opacity-80 shadow-[0_0_8px_1px_rgba(96,165,250,0.5)]"
+      />
+      <div class="relative">
+        <UInput
+          v-model="modelValue"
+          icon="material-symbols:search"
+          :placeholder="t('admin.guideline.searchPlaceholder')"
+          class="w-full"
+          autocomplete="off"
+          @focus="isSearchFocused = true"
+          @blur="onSearchBlur"
+          @keydown.escape="modelValue = ''"
         >
-          <UIcon :name="result.icon" class="mt-0.5 size-5 shrink-0 text-[var(--color-primary)]" />
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm font-medium">{{ result.title }}</span>
-            <span class="mt-0.5 flex items-center gap-1 truncate text-xs text-[var(--color-gray)]">
-              {{ result.topicTitle }}
-              <UIcon name="material-symbols:chevron-right" class="size-3.5 shrink-0" />
-              <span class="text-[var(--color-accent-green)]">{{ result.roleLabel }}</span>
-            </span>
-          </span>
-        </button>
+          <template v-if="modelValue" #trailing>
+            <UButton
+              icon="material-symbols:close"
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              :aria-label="t('admin.guideline.clearSearch')"
+              @click="modelValue = ''"
+            />
+          </template>
+        </UInput>
 
-        <p v-if="results.length === 0" class="px-3 py-4 text-center text-sm text-[var(--color-gray)]">
-          {{ t('admin.guideline.noResultsTitle') }}
-        </p>
+        <!-- Live search preview: a command-palette-style dropdown, not a page replacement -->
+        <div
+          v-if="showSearchPreview"
+          class="absolute inset-x-0 top-full z-20 mt-1.5 max-h-96 overflow-y-auto rounded-lg border border-[rgba(96,165,250,0.45)] bg-white shadow-xl"
+        >
+          <button
+            v-for="result in results"
+            :key="result.id"
+            type="button"
+            class="flex w-full items-start gap-3 border-b border-[var(--color-gray)]/10 px-3 py-2.5 text-left last:border-b-0 hover:bg-[var(--color-primary-bg)]"
+            @click="emit('select', result)"
+          >
+            <UIcon :name="result.icon" class="mt-0.5 size-5 shrink-0 text-[var(--color-primary)]" />
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-medium">{{ result.title }}</span>
+              <span class="mt-0.5 flex items-center gap-1 truncate text-xs text-[var(--color-gray)]">
+                {{ result.topicTitle }}
+                <UIcon name="material-symbols:chevron-right" class="size-3.5 shrink-0" />
+                <span class="text-[var(--color-accent-green)]">{{ result.roleLabel }}</span>
+              </span>
+            </span>
+          </button>
+
+          <p v-if="results.length === 0" class="px-3 py-4 text-center text-sm text-[var(--color-gray)]">
+            {{ t('admin.guideline.noResultsTitle') }}
+          </p>
+        </div>
       </div>
-    </div>
-  </UCard>
+    </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -125,16 +135,17 @@ const searchBarCardUi = computed(() => ({
  * Search bar stuck border: same yellow-to-blue gradient ring treatment as
  * the sidebar nav items (.sidebar-nav-link in layouts/default.vue), drawn
  * via a mask-clipped ::before since border-color can't take a gradient.
- * Only shown once the bar is actually floating (is-stuck).
- *
- * No `position: relative` here on purpose: this class lives on the same
- * element as the `sticky` Tailwind utility (merged in via UCard's root ui +
- * the component's own `class`). Both are single-class selectors of equal
- * specificity, so adding `position: relative` here risked the cascade
- * flipping `position: sticky` back to `relative` and breaking the float —
- * `position: sticky` already establishes a positioning context for the
- * absolutely-positioned ::before below, so it isn't needed anyway.
+ * Only shown once the bar is actually floating (is-stuck). UCard now carries
+ * its own `relative` class (its sticky positioning moved to the
+ * .guideline-search-sticky wrapper div) so this ::before still anchors to
+ * UCard's own box.
  */
+@media (width >= 48rem) {
+  .guideline-search-sticky {
+    top: calc(var(--layout-header-height) + var(--layout-banner-height, 0px) + 12px);
+  }
+}
+
 .guideline-search-card.is-stuck {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
 }

@@ -127,6 +127,8 @@ export default {
     activityTitle: 'กิจกรรม',
     addActivity: 'เพิ่มกิจกรรม',
     addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',
+    stageHistoryTitle: 'ประวัติการเปลี่ยนสถานะ',
+    stageHistoryBy: 'โดย {actor}',
     attachmentsTitle: 'ไฟล์แนบ',
     addAttachment: 'เพิ่มไฟล์แนบ',
     addAttachmentSuccess: 'เพิ่มไฟล์แนบสำเร็จ',

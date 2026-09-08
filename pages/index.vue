@@ -5,10 +5,10 @@
       <p class="text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
-    <!-- Only rendered for a role that can see both tabs (Admin/Sales Manager,
-    the only roles in both SALES_PIPELINE_ROLES and PROSPECT_ROLES) — a Sales
-    Rep or Marketing-only user has just the one tab's content, with no
-    switcher to a tab they can't see anyway. -->
+    <!-- Only rendered for a role that can see both tabs (Admin/Sales Manager/
+    Sales Rep — every role in both SALES_PIPELINE_ROLES and PROSPECT_ROLES) —
+    a Marketing-only user has just the one tab's content, with no switcher to
+    a tab they can't see anyway. -->
     <UTabs v-if="showDashboardTabs" v-model="activeDashboardTab" :items="dashboardTabItems" class="mb-4" />
 
     <template v-if="activeDashboardTab === 'sales'">
@@ -109,12 +109,12 @@ const { hasRole } = useRole()
 // SALES_PIPELINE_ROLES exclusion as the sidebar nav and GlobalSearch) — this
 // dashboard was the one remaining place that restriction wasn't mirrored.
 const canViewSalesPipelineWidgets = computed(() => hasRole(...SALES_PIPELINE_ROLES))
-// Marketing's own tab — Prospect funnel data, meaningless to a plain Sales
-// Rep (excluded from PROSPECT_ROLES) the same way Deal data is meaningless
-// to Marketing.
+// Marketing's own tab — Prospect funnel data. Sales Rep now also works
+// Prospects (PROSPECT_ROLES), so a Sales Rep sees both tabs, not just Sales.
 const canViewProspectSummary = computed(() => hasRole(...PROSPECT_ROLES))
-// Only Admin/Sales Manager are in both role lists — everyone else has just
-// one tab's worth of content, so no switcher is shown at all for them.
+// Only Admin/Sales Manager/Sales Rep are in both role lists — everyone else
+// has just one tab's worth of content, so no switcher is shown at all for
+// them.
 const showDashboardTabs = computed(() => canViewSalesPipelineWidgets.value && canViewProspectSummary.value)
 const dashboardTabItems = computed(() => [
   { label: t('crm.dashboard.tabSales'), value: 'sales' },

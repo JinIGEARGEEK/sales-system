@@ -127,6 +127,8 @@ export default {
     activityTitle: 'Activity',
     addActivity: 'Log Activity',
     addActivitySuccess: 'Activity logged successfully',
+    stageHistoryTitle: 'Pipeline History',
+    stageHistoryBy: 'by {actor}',
     attachmentsTitle: 'Attachments',
     addAttachment: 'Add Attachment',
     addAttachmentSuccess: 'Attachment added successfully',

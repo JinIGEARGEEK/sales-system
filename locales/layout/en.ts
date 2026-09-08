@@ -24,4 +24,17 @@ export default {
   user: {
     defaultName: 'Admin User',
   },
+  roleFocus: {
+    trigger: 'Use as',
+    triggerActiveLabel: 'Currently using the app as {role}. Click to change or exit.',
+    exit: 'Exit "use as" mode',
+    banner: 'Using the app as {role} — your Admin access is unchanged',
+    roles: {
+      Admin: 'Admin',
+      'Sales Rep': 'Sales Rep',
+      'Sales Manager': 'Sales Manager',
+      Marketing: 'Marketing',
+      Production: 'Production',
+    },
+  },
 }

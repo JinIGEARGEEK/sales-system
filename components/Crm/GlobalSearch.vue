@@ -64,7 +64,8 @@ const prospectsStore = useProspectsStore()
 const canSearchSalesPipeline = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 // Prospects is Marketing's own group — a separate gate (PROSPECT_ROLES)
 // since Marketing isn't in SALES_PIPELINE_ROLES at all (no Deal/Lead/
-// Company/Contact access), but Admin/Sales Manager still see both groups.
+// Company/Contact access), but Admin/Sales Manager/Sales Rep still see both
+// groups (they're in both role lists).
 const canSearchProspects = computed(() => hasRole(...PROSPECT_ROLES))
 
 const RESULT_LIMIT = 5

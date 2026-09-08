@@ -24,10 +24,15 @@ export const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manage
 export const MANAGER_ROLES: Role[] = ['Admin', 'Sales Manager']
 
 // The Prospect funnel's own role grouping (§3.1a) — Marketing owns it
-// day-to-day, Admin/Sales Manager get oversight visibility, matching the
-// backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
-// /prospects* in internal/routes/routes.go.
-export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager']
+// day-to-day; Admin/Sales Manager get oversight visibility, and Sales Rep
+// works Prospects ahead of the Lead hand-off the same way they work
+// Leads/Deals. Matches the backend's RequireRoles(Admin, Marketing,
+// Sales Manager, Sales Rep) gate on /prospects* in internal/routes/
+// routes.go. Set-equal to TASK_ROLES below as of the Sales Rep addition —
+// kept as its own named constant anyway since the two represent different
+// concerns (Prospect access vs. Task access) that happened to converge, not
+// the same rule; they're free to diverge again later.
+export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager', 'Sales Rep']
 
 // Tasks are the one page every SALES_PIPELINE_ROLES role AND Marketing
 // legitimately use — Marketing owns Prospect-linked Tasks the same way Sales
@@ -38,3 +43,8 @@ export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager']
 // (Leads/Deals/Companies/Contacts/Tags nav, GlobalSearch, attachment/project
 // RBAC mirrors) — only Tasks is the exception.
 export const TASK_ROLES: Role[] = [...SALES_PIPELINE_ROLES, 'Marketing']
+
+// Roles an Admin can temporarily "use as" via the header's
+// AdminRoleFocusSwitcher (stores/user.ts's focusRole/effectiveRole) — every
+// other role, i.e. all of them minus Admin itself.
+export const FOCUSABLE_ROLES: Role[] = ['Sales Rep', 'Sales Manager', 'Marketing', 'Production']

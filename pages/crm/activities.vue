@@ -73,6 +73,7 @@ const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
 
 const { dateTimeFormat, toBadge } = useFormatter()
 const { activityTypeOptions, activityTypeLabel, activityTypeBadgeColor } = useActivityTypeMeta()
+const { fetchDealStageHistory } = useDealStageHistory()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const activitiesStore = useActivitiesStore()
@@ -84,10 +85,17 @@ const leadsStore = useLeadsStore()
 const { resolveRelated } = useRelatedRecord()
 
 const loading = ref(false)
+// Deal pipeline stage-change history (audit log, read-only) — kept separate
+// from activitiesStore.items (real logged Activities) since it's a
+// different backend concept, then merged into one sorted/filtered/searched
+// list below (combinedRows) so it shows up as reference context here rather
+// than only in the Admin-only audit log viewer.
+const stageHistory = ref<DealStageChangeEntry[]>([])
 
 guardMounted(() => {
   loading.value = true
   activitiesStore.fetchAll().catch(notifyApiError).finally(() => { loading.value = false })
+  fetchDealStageHistory().then((entries) => { stageHistory.value = entries }).catch(notifyApiError)
   // Preloaded so resolveRelated below can show a name instead of "-" for
   // most rows on first render, same reasoning as pages/crm/tasks/index.vue.
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
@@ -104,6 +112,7 @@ const relatedTypeFilter = ref('all')
 const typeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.allTypes'), value: 'all' },
   ...activityTypeOptions.value,
+  { label: t('crm.activities.index.stageChangeType'), value: 'stage_change' },
 ])
 
 // Ordered by funnel stage (Prospect -> Lead -> Deal) rather than alphabetically,
@@ -119,14 +128,60 @@ const relatedTypeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.relatedTypeContact'), value: 'contact' },
 ])
 
-const filteredActivities = computed(() => activitiesStore.items
-  .map(activity => ({ ...activity, ...resolveRelated(activity.related_type, activity.related_id) }))
-  .filter((activity) => {
+// One shared row shape for both real Activities and stage-change entries —
+// letting them share the same search/filter/sort/pagination pipeline below
+// rather than running two independent ones and interleaving the results.
+// typeBadge is built here (per source), not branched again in `rows` below,
+// so a stage-change row's badge is never accidentally run through
+// activityTypeLabel/activityTypeBadgeColor (which only know real
+// ActivityType values) and `type` stays a plain filter-matching field.
+interface DisplayRow {
+  kind: 'activity' | 'stage_change'
+  type: ActivityType | 'stage_change'
+  subject: string
+  created_by: string
+  created_at: Date
+  related_type: ActivityRelatedType
+  relatedLabel: string
+  path: string
+  typeBadge: { title: string, color: string, isNoData: boolean }
+}
+
+const activityRows = computed<DisplayRow[]>(() => activitiesStore.items.map(activity => ({
+  kind: 'activity',
+  type: activity.type,
+  subject: activity.subject,
+  created_by: activity.created_by,
+  created_at: activity.created_at,
+  related_type: activity.related_type,
+  typeBadge: toBadge(activityTypeLabel(activity.type), activityTypeBadgeColor(activity.type)),
+  ...resolveRelated(activity.related_type, activity.related_id),
+})))
+
+// Distinct neutral "Stage Change" badge — never shares a color/label with a
+// real ActivityType — so these read as system-recorded history, not
+// something a rep logged, the visual distinction called out when this
+// feature was scoped.
+const stageChangeRows = computed<DisplayRow[]>(() => stageHistory.value.map(entry => ({
+  kind: 'stage_change',
+  type: 'stage_change',
+  subject: entry.fromStage
+    ? t('crm.activities.index.stageChangeSubject', { from: entry.fromStage, to: entry.toStage })
+    : t('crm.activities.index.stageChangeSubjectNoFrom', { to: entry.toStage }),
+  created_by: entry.actorName,
+  created_at: entry.created_at,
+  related_type: 'deal',
+  typeBadge: toBadge(t('crm.activities.index.stageChangeType'), 'neutral'),
+  ...resolveRelated('deal', entry.dealId),
+})))
+
+const filteredActivities = computed(() => [...activityRows.value, ...stageChangeRows.value]
+  .filter((row) => {
     const matchesSearch = !search.value
-      || activity.subject.toLowerCase().includes(search.value.toLowerCase())
-      || activity.relatedLabel.toLowerCase().includes(search.value.toLowerCase())
-    const matchesType = typeFilter.value === 'all' || activity.type === typeFilter.value
-    const matchesRelatedType = relatedTypeFilter.value === 'all' || activity.related_type === relatedTypeFilter.value
+      || row.subject.toLowerCase().includes(search.value.toLowerCase())
+      || row.relatedLabel.toLowerCase().includes(search.value.toLowerCase())
+    const matchesType = typeFilter.value === 'all' || row.type === typeFilter.value
+    const matchesRelatedType = relatedTypeFilter.value === 'all' || row.related_type === relatedTypeFilter.value
     return matchesSearch && matchesType && matchesRelatedType
   })
   // fetchAll() sorts server-side (-created_at), but a newly logged activity
@@ -140,11 +195,10 @@ const filteredActivities = computed(() => activitiesStore.items
 // watch on the filters themselves needed.
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredActivities.value.length)
 
-const rows = computed(() => filteredActivities.value.map(activity => ({
-  ...activity,
-  typeBadge: toBadge(activityTypeLabel(activity.type), activityTypeBadgeColor(activity.type)),
-  relatedLink: { label: activity.relatedLabel, path: activity.path },
-  createdAtDisplay: dateTimeFormat(activity.created_at.toISOString()),
+const rows = computed(() => filteredActivities.value.map(row => ({
+  ...row,
+  relatedLink: { label: row.relatedLabel, path: row.path },
+  createdAtDisplay: dateTimeFormat(row.created_at.toISOString()),
 })))
 
 // computed (not a plain const) so column labels stay correct across the

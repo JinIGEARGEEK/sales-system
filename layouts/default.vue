@@ -93,7 +93,7 @@
       </div>
     </aside>
 
-    <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60">
+    <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60" :style="{ '--layout-banner-height': `${bannerHeight}px` }">
       <div ref="headerRef" class="sticky top-0 z-10 flex h-(--layout-header-height) items-center justify-between gap-3 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-3 backdrop-blur-2xl md:gap-4 md:px-5">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
         <!-- Mobile menu trigger — lives in-flow in this always-visible bar
@@ -113,20 +113,41 @@
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
         </div>
-        <Transition
-          enter-active-class="transition duration-200 ease-out"
-          enter-from-class="opacity-0 translate-x-2"
-          leave-active-class="transition duration-150 ease-in"
-          leave-to-class="opacity-0 translate-x-2"
+        <div class="relative ml-auto flex shrink-0 items-center gap-3">
+          <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 translate-x-2"
+            leave-active-class="transition duration-150 ease-in"
+            leave-to-class="opacity-0 translate-x-2"
+          >
+            <!-- Hidden on mobile — the page's own on-page heading right below
+                 already shows this same title, and there's no room to also
+                 duplicate it in this narrower bar alongside the menu trigger
+                 and search box. -->
+            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-bold text-white md:block">
+              {{ currentPageTitle }}
+            </p>
+          </Transition>
+          <AdminRoleFocusSwitcher v-if="isAdmin" />
+        </div>
+      </div>
+      <div
+        v-if="focusRole"
+        ref="bannerRef"
+        class="sticky top-(--layout-header-height) z-10 flex items-center justify-center gap-2 bg-amber-400/90 px-3 py-1 text-xs font-medium text-amber-950 backdrop-blur-sm"
+        data-cy="role-focus-banner"
+      >
+        <UIcon name="material-symbols:switch-account-outline" class="size-3.5" />
+        <span>{{ t('layout.roleFocus.banner', { role: roleLabel(focusRole) }) }}</span>
+        <UButton
+          size="xs"
+          variant="link"
+          color="neutral"
+          class="p-0 font-semibold text-amber-950 underline"
+          @click="userStore.setFocusRole(null)"
         >
-          <!-- Hidden on mobile — the page's own on-page heading right below
-               already shows this same title, and there's no room to also
-               duplicate it in this narrower bar alongside the menu trigger
-               and search box. -->
-          <p v-if="showTitleInHeader" class="hidden truncate text-sm font-bold text-white md:block">
-            {{ currentPageTitle }}
-          </p>
-        </Transition>
+          {{ t('layout.roleFocus.exit') }}
+        </UButton>
       </div>
       <slot />
     </main>
@@ -141,8 +162,10 @@ const { t } = useI18n()
 const route = useRoute()
 const drawer = ref(false)
 const { logout } = useAuth()
-const { hasRole } = useRole()
-const { first_name, last_name, email } = storeToRefs(useUserStore())
+const { hasRole, roleLabel } = useRole()
+const userStore = useUserStore()
+const { first_name, last_name, email, role, focusRole } = storeToRefs(userStore)
+const isAdmin = computed(() => role.value === 'Admin')
 
 const userDisplayName = computed(() => `${first_name.value} ${last_name.value}`.trim() || t('layout.user.defaultName'))
 const userInitials = computed(() => `${first_name.value[0] || ''}${last_name.value[0] || ''}`.toUpperCase() || 'AD')
@@ -204,6 +227,30 @@ const headerRef = ref<HTMLElement | null>(null)
 const currentPageTitle = ref('')
 const showTitleInHeader = ref(false)
 let titleObserver: IntersectionObserver | null = null
+
+// Measures the role-focus banner's real rendered height (it wraps to 2
+// lines on narrow viewports) and exposes it as --layout-banner-height on
+// <main>, so any page's own sticky elements (e.g. Dashboard/FilterBar) can
+// add it to their sticky offset instead of assuming just the fixed header
+// height — otherwise they'd float underneath/behind this banner instead of
+// below it whenever an Admin has a role focus active.
+const bannerRef = ref<HTMLElement | null>(null)
+const bannerHeight = ref(0)
+let bannerObserver: ResizeObserver | null = null
+
+watch(bannerRef, (el) => {
+  bannerObserver?.disconnect()
+  bannerObserver = null
+  if (!el) {
+    bannerHeight.value = 0
+    return
+  }
+  bannerObserver = new ResizeObserver(([entry]) => {
+    bannerHeight.value = entry?.contentRect.height ?? el.offsetHeight
+  })
+  bannerObserver.observe(el)
+}, { immediate: true })
+onUnmounted(() => bannerObserver?.disconnect())
 
 const observePageTitle = () => {
   titleObserver?.disconnect()
