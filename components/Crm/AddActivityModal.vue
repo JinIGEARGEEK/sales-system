@@ -14,7 +14,7 @@
             :record-label="t('crm.components.addActivityModal.relatesToRecord')"
             :record-placeholder="t('crm.components.addActivityModal.relatesToRecordPlaceholder')"
           />
-          <InputSelect v-model="form.type" :options="ACTIVITY_TYPE_OPTIONS" :label="t('crm.components.addActivityModal.type')" name="type" rules="required" />
+          <InputSelect v-model="form.type" :options="activityTypeOptions" :label="t('crm.components.addActivityModal.type')" name="type" rules="required" />
           <InputText v-model="form.subject" :label="t('crm.components.addActivityModal.subject')" name="subject" rules="required" />
           <InputTextarea v-model="form.notes" :label="t('crm.components.addActivityModal.notes')" name="notes" />
         </div>
@@ -31,9 +31,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ACTIVITY_TYPE_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { activityTypeOptions } = useActivityTypeMeta()
 
 const props = defineProps<{
   open: boolean

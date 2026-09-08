@@ -72,6 +72,7 @@ useHead({ title: t('crm.activities.index.pageTitle') })
 const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
 
 const { dateTimeFormat, toBadge } = useFormatter()
+const { activityTypeOptions, activityTypeLabel, activityTypeBadgeColor } = useActivityTypeMeta()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const activitiesStore = useActivitiesStore()
@@ -102,9 +103,7 @@ const relatedTypeFilter = ref('all')
 
 const typeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.allTypes'), value: 'all' },
-  { label: t('crm.activities.index.typeCall'), value: 'call' },
-  { label: t('crm.activities.index.typeEmail'), value: 'email' },
-  { label: t('crm.activities.index.typeMeeting'), value: 'meeting' },
+  ...activityTypeOptions.value,
 ])
 
 // Ordered by funnel stage (Prospect -> Lead -> Deal) rather than alphabetically,
@@ -119,19 +118,6 @@ const relatedTypeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.relatedTypeCompany'), value: 'company' },
   { label: t('crm.activities.index.relatedTypeContact'), value: 'contact' },
 ])
-
-// Single source of truth for how each ActivityType renders as a badge —
-// was two parallel switch statements (label, color) before this merge.
-const typeBadge = (type: ActivityType) => {
-  switch (type) {
-    case 'call':
-      return toBadge(t('crm.activities.index.typeCall'), 'info')
-    case 'email':
-      return toBadge(t('crm.activities.index.typeEmail'), 'warning')
-    case 'meeting':
-      return toBadge(t('crm.activities.index.typeMeeting'), 'success')
-  }
-}
 
 const filteredActivities = computed(() => activitiesStore.items
   .map(activity => ({ ...activity, ...resolveRelated(activity.related_type, activity.related_id) }))
@@ -156,7 +142,7 @@ const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagi
 
 const rows = computed(() => filteredActivities.value.map(activity => ({
   ...activity,
-  typeBadge: typeBadge(activity.type),
+  typeBadge: toBadge(activityTypeLabel(activity.type), activityTypeBadgeColor(activity.type)),
   relatedLink: { label: activity.relatedLabel, path: activity.path },
   createdAtDisplay: dateTimeFormat(activity.created_at.toISOString()),
 })))
