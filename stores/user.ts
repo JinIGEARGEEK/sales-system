@@ -1,5 +1,5 @@
 export const useUserStore = defineStore('user', {
-  state: (): User => {
+  state: (): User & { focusRole: Role | null } => {
     return {
       id: 0,
       first_name: '',
@@ -18,7 +18,18 @@ export const useUserStore = defineStore('user', {
       created_by: 0,
       updated_by: 0,
       deleted_by: 0,
+      // "View as" override — UI-only, Admin-only (see setFocusRole). Never
+      // sent to the backend and never substituted for `role` anywhere that
+      // isn't purely presentational; the backend keeps enforcing the real
+      // `role` on every request regardless of this value.
+      focusRole: null,
     }
+  },
+  getters: {
+    // What role-gated UI (useRole's hasRole) should treat the user as.
+    // Only Admin can be focused into another role's view — for every other
+    // role this always falls back to the real `role`.
+    effectiveRole: (state): Role => (state.role === 'Admin' ? (state.focusRole ?? state.role) : state.role),
   },
   actions: {
     setUser (user: User) {
@@ -39,6 +50,10 @@ export const useUserStore = defineStore('user', {
       this.created_by = user.created_by
       this.updated_by = user.updated_by
       this.deleted_by = user.deleted_by
+    },
+    setFocusRole (role: Role | null) {
+      if (this.role !== 'Admin') return
+      this.focusRole = role
     },
   },
 })

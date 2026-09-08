@@ -138,8 +138,8 @@ Per `feature-spec.md` §2.2 / `user-story.md`. `FR-CRM-080` (RBAC enforcement) i
 | Role | Summary |
 |---|---|
 | **Admin** | Full access to every resource, including Users, Tags, and (once built) Product Catalog / pipeline config |
-| **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records |
-| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts. Also has access to `/prospects*` for oversight, alongside Marketing. |
+| **Sales Rep / Account Manager** | Full CRUD on Leads/Companies/Contacts/Deals/Activities/Tasks/Quotes/Payments they're assigned to or that are unassigned; read access to teammates' records. **Updated 2026-09-08**: also has non-bulk CRUD on `/prospects*` (create/read/update/delete/convert, same as Marketing) and `/reports/prospect-source-conversion` — works Prospects ahead of the Lead hand-off, the same way they work Leads; bulk/trash/restore on Prospects stay Admin/Sales-Manager-only. |
+| **Sales Manager** | Same as Sales Rep, plus read access to all reps' data and all `/reports/*` endpoints, plus deal/lead reassignment, bulk actions (reassign/tag/archive) on Deals and Leads, and trash/restore on Deals, Leads, Companies, and Contacts. Also has access to `/prospects*` for oversight, alongside Marketing and (as of 2026-09-08) Sales Rep. |
 | **Marketing** | Added 2026-09-01 for the Prospect funnel (§3a) — full CRUD on `/prospects*` (bulk/trash/restore stay Admin/Sales-Manager-only, same restriction as Leads), plus whatever Company/Contact access those records need (reuses the existing `/companies`/`/contacts` endpoints, no Marketing-specific restriction there). No access to Leads/Deals/Quotes/Contracts/Payments — a Prospect converting to a Lead is where Marketing's involvement ends. Not part of the original spec's role table — see `feature-spec.md`'s Prospect Management section |
 | **Production (limited)** | Write access to *only* `status` and `production_reference` on `Project` records (§8.3) — no access to any other resource |
 
@@ -324,7 +324,7 @@ interface Prospect {
 
 `Prospect` soft-deletes the same as `Lead`/`Deal` — `DELETE` sets `deleted_at`/`deleted_by`, recoverable via `/trash` + `/:id/restore`.
 
-Every `/prospects*` route requires the **Admin**, **Marketing**, or **Sales Manager** role (§1.7) — a plain Sales Rep has no legitimate reason to see the pre-Lead funnel and is `403`'d at the route group, before any per-record ownership check.
+Every `/prospects*` route requires the **Admin**, **Marketing**, **Sales Manager**, or (as of 2026-09-08) **Sales Rep** role (§1.7) — a Sales Rep works the pre-Lead funnel the same way they work Leads/Deals. Bulk/trash/restore stay Admin/Sales-Manager-only regardless of role, same as Leads.
 
 | Method | Path | Status | Description |
 |---|---|---|---|

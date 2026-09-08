@@ -4,10 +4,16 @@
          md+, hence the same breakpoint here) so the filters stay reachable
          on this long, scroll-heavy dashboard instead of scrolling out of
          view. z-10 matches the layout header's own stacking so page
-         content scrolls underneath both, not just one. -->
+         content scrolls underneath both, not just one. The md+ `top` value
+         (header height + --layout-banner-height, set by layouts/default.vue,
+         0px when no role focus is active) lives in the scoped <style> below,
+         not as a Tailwind arbitrary-value class — a calc() nesting a second
+         var(...,fallback) inside a bracketed utility silently failed to
+         compile under this project's Tailwind v4 setup, which was why this
+         bar kept sticking under the header instead of below the banner. -->
     <div ref="filterBarSentinelRef" />
     <UCard
-      class="sticky top-3 z-10 mb-6 transition-[background-color,backdrop-filter,box-shadow] duration-200 md:top-[calc(var(--layout-header-height)+12px)]"
+      class="filter-bar-card sticky top-3 z-10 mb-6 transition-[background-color,backdrop-filter,box-shadow] duration-200"
       :ui="filterBarCardUi"
     >
       <!-- Laser accent: thin glowing gradient line on the bottom edge,
@@ -223,3 +229,11 @@ const hasActiveFilters = computed(() => {
     || Boolean(props.companyTagFilter)
 })
 </script>
+
+<style scoped>
+@media (width >= 48rem) {
+  .filter-bar-card {
+    top: calc(var(--layout-header-height) + var(--layout-banner-height, 0px) + 12px);
+  }
+}
+</style>

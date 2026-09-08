@@ -1,8 +1,14 @@
 <template>
-  <!-- Sticks below the layout's own sticky header, then turns to glass once it's actually floating -->
+  <!-- Sticks below the layout's own sticky header, then turns to glass once it's
+       actually floating. The md+ `top` (header height + --layout-banner-height,
+       0px unless a role focus is active — this page is reachable while focused
+       into another role) lives in the scoped <style> below on
+       .guideline-search-card, not as a Tailwind arbitrary-value class: a
+       calc() nesting a second var(...,fallback) inside a bracketed utility
+       silently failed to compile under this project's Tailwind v4 setup. -->
   <div ref="searchBarSentinelRef" />
   <UCard
-    class="sticky top-3 z-20 mb-4 transition-[background-color,backdrop-filter,box-shadow] duration-200 md:top-[calc(var(--layout-header-height)+12px)]"
+    class="sticky top-3 z-20 mb-4 transition-[background-color,backdrop-filter,box-shadow] duration-200"
     :ui="searchBarCardUi"
   >
     <div
@@ -135,6 +141,12 @@ const searchBarCardUi = computed(() => ({
  * `position: sticky` already establishes a positioning context for the
  * absolutely-positioned ::before below, so it isn't needed anyway.
  */
+@media (width >= 48rem) {
+  .guideline-search-card {
+    top: calc(var(--layout-header-height) + var(--layout-banner-height, 0px) + 12px);
+  }
+}
+
 .guideline-search-card.is-stuck {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 12px rgba(250, 204, 21, 0.25), 0 0 18px rgba(96, 165, 250, 0.25);
 }

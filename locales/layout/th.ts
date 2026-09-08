@@ -24,4 +24,17 @@ export default {
   user: {
     defaultName: 'ผู้ดูแลระบบ',
   },
+  roleFocus: {
+    trigger: 'ใช้งานในบทบาท',
+    triggerActiveLabel: 'กำลังใช้งานในบทบาท {role} คลิกเพื่อเปลี่ยนหรือออกจากโหมดนี้',
+    exit: 'ออกจากโหมด "ใช้งานในบทบาท"',
+    banner: 'กำลังใช้งานในบทบาท {role} — สิทธิ์ Admin ของคุณยังคงเดิม',
+    roles: {
+      Admin: 'Admin',
+      'Sales Rep': 'Sales Rep',
+      'Sales Manager': 'Sales Manager',
+      Marketing: 'Marketing',
+      Production: 'Production',
+    },
+  },
 }

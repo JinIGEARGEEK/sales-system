@@ -57,12 +57,12 @@ const stepMatchesQuery = (step: GuidelineStep) =>
 
 // Which guideline topics are relevant per role — Production only touches
 // project delivery milestones, Marketing only touches the Prospect funnel
-// (they have no access to Leads/Deals at all), Sales Manager/Admin see both
-// the full sales workflow and Prospect oversight (PROSPECT_ROLES includes
-// both), Sales Rep sees only the sales workflow (excluded from Prospects).
+// (they have no access to Leads/Deals at all), everyone else in
+// PROSPECT_ROLES (Sales Rep/Sales Manager/Admin) sees both the full sales
+// workflow and Prospect intake.
 const ALL_TOPIC_KEYS = ['leadToDeal', 'subscriptionFollowup', 'projectMilestones', 'loyaltyUpsell']
 const topicKeysByTab: Record<string, string[]> = {
-  salesRep: ALL_TOPIC_KEYS,
+  salesRep: [...ALL_TOPIC_KEYS, 'prospectIntake'],
   salesManager: [...ALL_TOPIC_KEYS, 'prospectIntake'],
   admin: [...ALL_TOPIC_KEYS, 'prospectIntake'],
   marketing: ['prospectIntake'],
