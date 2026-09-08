@@ -69,11 +69,17 @@ const props = defineProps({
   // up once the typed text matches zero existing options, so a field that
   // opens on an existing list (e.g. AddProjectModal's Project name) reads as
   // select-only until that happens — same reasoning as CompanySelect's
-  // `when: 'always'`. Callers can still override per-field if a read-only-
-  // list feel is ever wanted instead.
+  // `when: 'always'`. `position: 'top'` is required, not cosmetic: USelectMenu
+  // only renders the create row when `position` is exactly 'top' or 'bottom'
+  // (omitting it — the previous default — meant the row never rendered at
+  // all, regardless of `when`). 'top' also puts it first in the list, which
+  // is what USelectMenu auto-highlights, so typing a new name and pressing
+  // Enter immediately confirms it without first having to arrow down past
+  // existing suggestions. Callers can still override per-field if a
+  // read-only-list feel is ever wanted instead.
   createItem: {
     type: [Boolean, String, Object] as PropType<boolean | 'always' | { position?: 'top' | 'bottom', when?: 'empty' | 'always' }>,
-    default: () => ({ when: 'always' }),
+    default: () => ({ when: 'always', position: 'top' }),
   },
 })
 
