@@ -1043,7 +1043,7 @@ Backend: `internal/handlers/export.go`'s `ExportHandler`, gated by the same `bul
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`, `assigned_to` (Sales Rep user id, `FR-CRM-055`), `company_tag` (`FR-CRM-055`). Returns every stat card + chart the page renders in one response (shape below). |
+| `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`, `assigned_to` (Sales Rep user id, `FR-CRM-055`), `company_tag` (`FR-CRM-055`). Plus one param that's deliberately *not* part of that filter bar: `upsell_min_stale_days` (int, default 60) — the Upsell Opportunities widget's own filter, independent of the rest since that widget is Company-centric, not Deal-scoped (same reasoning as `annual_revenue_trend`/`revenue_trend`/`forecast_trend` ignoring the Deal filters too). Returns every stat card + chart the page renders in one response (shape below). |
 
 The response is cached process-wide for 30s per exact querystring (`internal/handlers/dashboard.go`'s `summaryCache`/`summaryCacheTTL`) — the ~11 underlying aggregate queries are too expensive to repeat on every dashboard refresh under concurrent viewers, and Deal data doesn't need to be second-fresh. `internal/handlers/settings.go`'s `PATCH /admin/settings` (§8.7a) and `internal/handlers/sales_targets.go`'s `POST`/`PATCH`/`DELETE /admin/sales-targets` (§8.7b) are the write paths that change this response's data (`quarterly_sales_target`/`annual_revenue_goal`/`pipeline_coverage_ratio`) without touching the `deals` table the cache is otherwise implicitly kept fresh against, so each explicitly calls `dashboard.go`'s exported `InvalidateDashboardCache()` on a real change — without that call, an Admin who just edited a goal or target would see their own stale pre-write value reflected back for up to the 30s TTL.
 
@@ -1070,7 +1070,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
     "stage_breakdown": [ { "stage": "Qualified", "value": 900000, "count": 4 }, "...per DealStage" ],
     "industry_breakdown": [ { "industry": "Retail", "win_rate": 55, "won_count": 6 }, "..." ],
     "team_performance": [ { "user_id": 3, "name": "...", "won_count": 5, "won_value": 620000, "win_rate": 60 }, "..." ],
-    "upsell_opportunities": [ /* stale-contact candidates grouped by tier, see FR in dashboard hint copy */ ]
+    "upsell_opportunities": [ { "id": 12, "name": "Acme Corp", "industry": "Retail", "last_activity_at": null }, "...most-stale first, capped at 30, filtered by ?upsell_min_stale_days (default 60) — flat list as of 2026-09-09, was 3 fixed tier groups before" ]
   }
 }
 ```

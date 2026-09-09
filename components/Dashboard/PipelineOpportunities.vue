@@ -38,35 +38,39 @@
       <div class="lg:col-span-2">
         <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
-            <div class="flex items-center gap-2">
-              <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-violet)]/15">
-                <UIcon name="material-symbols:sell-outline" class="size-4 text-[var(--color-chart-violet)]" />
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-violet)]/15">
+                  <UIcon name="material-symbols:sell-outline" class="size-4 text-[var(--color-chart-violet)]" />
+                </div>
+                <h3 class="text-lg font-medium">{{ t('crm.dashboard.upsellOpportunities') }}</h3>
               </div>
-              <h3 class="text-lg font-medium">{{ t('crm.dashboard.upsellOpportunities') }}</h3>
+              <InputSelect
+                v-model="upsellMinStaleDays"
+                :options="upsellStaleDaysOptions"
+                small
+                class="w-36"
+                name="upsellMinStaleDays"
+              />
             </div>
             <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.upsellOpportunitiesHint') }}</p>
           </template>
-          <div v-if="upsellGroups.every(group => group.candidates.length === 0)" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="upsellCandidates.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
             {{ t('crm.dashboard.noUpsellCandidates') }}
           </div>
-          <div v-else class="flex flex-col gap-4">
-            <div v-for="group in upsellGroups" v-show="group.candidates.length > 0" :key="group.tier">
-              <p class="mb-2 text-xs font-medium text-[var(--color-gray)]">{{ group.label }}</p>
-              <div class="flex flex-col gap-2">
-                <NuxtLink
-                  v-for="candidate in group.candidates"
-                  :key="candidate.company.id"
-                  :to="`/crm/companies/${candidate.company.id}`"
-                  class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
-                >
-                  <div>
-                    <p class="text-sm font-medium">{{ candidate.company.name }}</p>
-                    <p class="text-xs text-[var(--color-gray)]">{{ candidate.company.industry }}</p>
-                  </div>
-                  <UBadge :color="candidate.contact.color" variant="subtle">{{ candidate.contact.label }}</UBadge>
-                </NuxtLink>
+          <div v-else class="flex flex-col gap-2">
+            <NuxtLink
+              v-for="candidate in upsellCandidates"
+              :key="candidate.company.id"
+              :to="`/crm/companies/${candidate.company.id}`"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ candidate.company.name }}</p>
+                <p class="text-xs text-[var(--color-gray)]">{{ candidate.company.industry }}</p>
               </div>
-            </div>
+              <UBadge :color="candidate.contact.color" variant="subtle">{{ candidate.contact.label }}</UBadge>
+            </NuxtLink>
           </div>
         </UCard>
       </div>
@@ -133,7 +137,8 @@ const { priceFormatCompact } = useFormatter()
 
 defineProps<{
   stageBreakdown: { stage: string, value: number, count: number, percent: number, barClass: string }[]
-  upsellGroups: { tier: string, label: string, candidates: { company: Company, contact: { color: string, label: string } }[] }[]
+  upsellCandidates: { company: Company, contact: { color: string, label: string } }[]
+  upsellStaleDaysOptions: Select[]
   funnelStages: { label: string, value: number, barClass?: string }[]
   funnelStagesPreview: { label: string, value: number, barClass?: string }[]
   outcomeDonutSegments: { label: string, value: number, valueLabel: string, colorVar: string, icon: string }[]
@@ -141,4 +146,6 @@ defineProps<{
   outcomeTotal: number
   outcomeTotalPreviewLabel: string
 }>()
+
+const upsellMinStaleDays = defineModel<number>('upsellMinStaleDays', { required: true })
 </script>
