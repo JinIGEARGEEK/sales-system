@@ -25,7 +25,7 @@ interface ProspectDashboardSummary {
   open_prospects: number
   converted_count: number
   conversion_rate: number
-  status_breakdown: { status: ProspectStatus, count: number }[]
+  status_breakdown: { status: string, count: number }[]
   source_breakdown: ProspectSourceConversionRow[]
 }
 

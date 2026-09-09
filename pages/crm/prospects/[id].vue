@@ -13,7 +13,7 @@
             @click="goBack()"
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ prospect.name }}</h2>
-          <UBadge :color="prospectStatusColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
+          <UBadge :color="statusBadgeColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
           <UBadge v-for="tag in prospect.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -23,7 +23,7 @@
             icon="material-symbols:open-in-new"
             @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
           />
-          <UTooltip v-else-if="prospect.status !== 'Disqualified'" :text="t('crm.prospects.detail.convertToLeadHint')">
+          <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
             <ButtonPrimary
               :label="t('crm.prospects.detail.convertToLead')"
               icon="material-symbols:swap-horiz"
@@ -45,7 +45,7 @@
                 <InputSelect v-model="form.source" :options="prospectSourcesStore.activeOptions" :label="t('crm.prospects.detail.source')" name="source" rules="required" />
                 <InputSelect
                   v-model="form.status"
-                  :options="PROSPECT_STATUS_FORM_OPTIONS"
+                  :options="prospectStagesStore.activeOptions"
                   :label="t('crm.prospects.detail.status')"
                   name="status"
                   rules="required"
@@ -167,7 +167,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
+import { isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -192,6 +192,8 @@ const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
 const activitiesStore = useActivitiesStore()
 const prospectSourcesStore = useProspectSourcesStore()
+const prospectStagesStore = useProspectStagesStore()
+const { statusBadgeColor } = useProspectStageColor()
 const goBack = useBackNavigation('/crm/prospects')
 const { parseTags } = useFormatter()
 
@@ -203,6 +205,7 @@ guardMounted(() => {
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely.
   if (!prospectsStore.items.some(p => p.id === prospectId)) prospectsStore.fetchOne(prospectId).catch(notifyApiError)
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
   activitiesStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
 })
@@ -289,7 +292,7 @@ const onSave = guard(async () => {
       email: form.email,
       phone: form.phone,
       source: form.source,
-      status: form.status as ProspectStatus,
+      status: form.status,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,

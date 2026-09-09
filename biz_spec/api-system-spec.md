@@ -284,11 +284,16 @@ The pre-Lead marketing funnel entity — Marketing works a Prospect (with an opt
 `interfaces/crm.d.ts` → `Prospect`:
 
 ```ts
-type ProspectStatus = 'New' | 'Engaging' | 'Nurturing' | 'Disqualified' | 'Converted'
-// ProspectStatus is a fixed enum, not admin-configurable (mirrors LeadStatus,
-// not the admin-configurable PipelineStage) — Marketing's funnel stage is a
-// simple closed set. 'Converted' is set only by POST /prospects/:id/convert,
-// never chosen directly.
+// Updated 2026-09-09: Prospect's working stages are now Admin-configurable
+// via ProspectStage (`/admin/prospect-stages`, §8.7), mirroring the
+// PipelineStage pattern already used for Deal stages — no longer a fixed
+// enum. `status` is a plain `string`, seeded with the original four
+// (New/Engaging/Nurturing/Disqualified) so existing Prospects keep
+// resolving the same way. `'Converted'` stays a hardcoded, reserved
+// literal — it's never a row in the ProspectStage table (Create/Update on
+// that endpoint reject the name `'Converted'` with `422`), since it's a
+// system-set terminal status set only by `POST /prospects/:id/convert`,
+// never chosen directly by a user.
 
 interface Prospect {
   id: number
@@ -305,7 +310,7 @@ interface Prospect {
   // (Referral/Website/Event/Ads/Other). Originally shared Lead's list; split
   // out same day once Marketing's real channel mix turned out not to fit it.
   source: string
-  status: ProspectStatus
+  status: string   // validated against active ProspectStage rows, or the reserved literal 'Converted' (see above)
   notes: string
   assigned_to: number | null  // User.id
   tags: string[] | null
@@ -329,7 +334,7 @@ Every `/prospects*` route requires the **Admin**, **Marketing**, **Sales Manager
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/prospects` | 🟢 | Filters: `status`, `source`, `assigned_to` (`unassigned` matches `IS NULL`), `company_id` (exact match), `search` (name/email/company name, via the same `LEFT JOIN companies` pattern as `GET /leads`), `exclude_converted=true` (`converted_lead_id IS NULL`). `sort=company_name`/`-company_name` also joins to `companies`. Backs `pages/crm/prospects/index.vue`. |
-| `POST` | `/prospects` | 🟢 | Create. `source` is validated against Prospect's own active `ProspectSourceOption` config (`/admin/prospect-sources`, Admin-only — see below), separate from Lead/Deal's `LeadSourceOption`. `status` defaults to `New` when omitted. `status: 'Converted'` is rejected with `422` (see the Convert row's status guard below) — a client can't fake that state without a Lead behind it. No Lead-style scoring/classification — that's Lead-specific. `tags` is settable directly here, unlike Lead's own `leadForm` (which only exposes tags via `PATCH /leads/bulk-tag`) — mirrors Contact's simpler pattern instead, added 2026-09-02 once single-record tag editing on `pages/crm/prospects/[id].vue` turned out to be a real Marketing workflow, not just a bulk-select action. |
+| `POST` | `/prospects` | 🟢 | Create. `source` is validated against Prospect's own active `ProspectSourceOption` config (`/admin/prospect-sources`, Admin-only — see below), separate from Lead/Deal's `LeadSourceOption`. `status` defaults to `New` when omitted, and (updated 2026-09-09) is validated against active `ProspectStage` rows (`/admin/prospect-stages`, §8.7) the same way `source` is — the literal `'Converted'` is always accepted through that check too, since it's a reserved status outside the stage table (see §3a's `Prospect.status` comment). `status: 'Converted'` is separately rejected with `422` here regardless (see the Convert row's status guard below) — a client can't fake that state without a Lead behind it. No Lead-style scoring/classification — that's Lead-specific. `tags` is settable directly here, unlike Lead's own `leadForm` (which only exposes tags via `PATCH /leads/bulk-tag`) — mirrors Contact's simpler pattern instead, added 2026-09-02 once single-record tag editing on `pages/crm/prospects/[id].vue` turned out to be a real Marketing workflow, not just a bulk-select action. |
 | `GET` | `/prospects/:id` | 🟢 | Single prospect. |
 | `PUT` | `/prospects/:id` | 🟢 | Update (including status transitions). Not a true partial update — every field is overwritten from the request body, same as `PUT /leads/:id`. Same `status: 'Converted'` guard as Create: rejected with `422` unless the Prospect is already `Converted` (a client harmlessly resubmitting an unchanged record's status is allowed through — only an attempted *transition* into `Converted` from anything else is blocked). |
 | `DELETE` | `/prospects/:id` | 🟢 | Soft-delete. |
@@ -913,6 +918,23 @@ interface ProspectSourceOption {
   name: string
   is_active: boolean
 }
+
+// Added 2026-09-09 — Prospect's own working-stage list, replacing the
+// previously hardcoded ProspectStatus enum (§3a), mirroring PipelineStage
+// above minus is_won_stage/is_lost_stage (Prospect stages are a straight
+// funnel sequence, no win/loss outcome). 'Converted' is deliberately never a
+// row here — see §3a's Prospect.status comment.
+interface ProspectStage {
+  id: number
+  name: string
+  sort_order: number
+  is_active: boolean
+  // Mirrors is_won_stage/is_lost_stage's role: lets frontend code (the
+  // "Convert to Lead" action's visibility, the status badge color) resolve
+  // the disqualified-equivalent stage without hardcoding the literal name
+  // "Disqualified", since an Admin can rename it like any other stage.
+  is_disqualified_stage: boolean
+}
 ```
 
 | Method | Path | Auth | Description |
@@ -923,8 +945,10 @@ interface ProspectSourceOption {
 | `PUT` / `DELETE` | `/admin/lead-sources/:id` | Admin | Update/deactivate a Lead source. |
 | `GET` / `POST` | `/admin/prospect-sources` | Admin | List/create Prospect source rows — Marketing's own funnel-source taxonomy (§3a), Admin-only same as every other option list here even though Marketing owns day-to-day Prospect data. Seeded with 6 defaults on first run: Social Media, LINE OA, Email Campaign, Content/SEO, Cold Outreach, Marketing Campaign. |
 | `PATCH` / `DELETE` | `/admin/prospect-sources/:id` | Admin | Update/deactivate a Prospect source (soft `is_active: false` flip, not a hard delete). |
+| `GET` / `POST` | `/admin/prospect-stages` | Admin (`GET` open to every authenticated role, from day one — same 2026-09-09 rationale as §8.5's sweep, since Marketing's own Prospect create/edit/Kanban pages need this dropdown/board too) | List/create Prospect stage rows (`FR-CRM-105`, updated 2026-09-09). Seeded with 4 defaults on first run: New, Engaging, Nurturing, Disqualified (`Disqualified` seeded with `is_disqualified_stage: true`). `'Converted'` is rejected as a stage name with `422` — it's a reserved, system-set literal outside this table (see §3a). |
+| `PATCH` / `DELETE` | `/admin/prospect-stages/:id` | Admin | Update/deactivate a Prospect stage (soft `is_active: false` flip, not a hard delete). `is_disqualified_stage` is read by the frontend's `useProspectStageColor`/Convert-action visibility instead of a hardcoded `status === 'Disqualified'` check, so renaming the stage is honored consistently. |
 
-Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`/`stores/prospectSources.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS` constants (`constants/mockData/deals.ts`, `leads.ts`) were removed — these stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
+Frontend: `pages/admin/pipeline-config.vue`, backed by `stores/pipelineStages.ts`/`stores/leadSources.ts`/`stores/prospectSources.ts`/`stores/prospectStages.ts`. The old frontend-only `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS`/`PROSPECT_STATUS_OPTIONS`/`PROSPECT_STATUS_COLORS` constants (`constants/mockData/deals.ts`, `leads.ts`, `prospects.ts`) were removed — these stores are now the source of truth. Tags and Product Catalog remain outside this config screen (`FR-CRM-081` is still partial on those two).
 
 ### 8.7a Admin app settings (`FR-CRM-058`, `FR-CRM-091`, `FR-CRM-045`)
 
@@ -1007,7 +1031,7 @@ Per-`entity_type` condition (fixed, not configurable beyond `threshold_days`):
 | `deal` | An open Deal (`status: 'open'`) has held its current stage for at least `threshold_days`, measured from its most recent `"deal"`/`"stage_changed"` audit log entry (or `Deal.created_at` if it never changed stage) — `FR-CRM-100`. | New — no prior report matched this exactly. |
 | `quote` | A `sent` Quote's `validity_date` falls within `threshold_days` from now — `FR-CRM-101`. | `GET /reports/quotes-expiring-soon` (`FR-CRM-096`). |
 | `contract` | A `draft`/`sent` Contract has been unsigned for at least `threshold_days` since `created_at` — `FR-CRM-101`. | `GET /reports/contracts-stuck` (`FR-CRM-097`). |
-| `prospect` | **Added 2026-09-03.** A Prospect not yet `Converted`/`Disqualified` (still actively worked) has gone at least `threshold_days` since `updated_at` with no change — `FR-CRM-107`. Uses `updated_at` rather than an audit-log stage-history lookup like `deal` — Prospect status changes aren't separately audited the way Deal stage is, so `updated_at` is the closest available "last touched" signal. | New — Marketing's own funnel had no staleness signal at all before this. |
+| `prospect` | **Added 2026-09-03.** A Prospect not yet `Converted`/`Disqualified` (still actively worked) has gone at least `threshold_days` since `updated_at` with no change — `FR-CRM-107`. Uses `updated_at` rather than an audit-log stage-history lookup like `deal` — Prospect status changes aren't separately audited the way Deal stage is, so `updated_at` is the closest available "last touched" signal. **Updated 2026-09-09**: now that Prospect stages are Admin-configurable (§8.7), the "disqualified" exclusion resolves the `ProspectStage` row flagged `is_disqualified_stage` instead of the hardcoded name `"Disqualified"`, so renaming that stage doesn't leave genuinely-disqualified Prospects eligible for this rule. | New — Marketing's own funnel had no staleness signal at all before this. |
 
 `recipient_role` resolves to the owner's email (`owner`), or the owner plus every currently-active Sales Manager (`owner_and_managers`) — there's no per-rep manager hierarchy in this schema to notify one specific manager (this also applies to `prospect` rules: "managers" still means Sales Manager, who already has oversight visibility into Prospects per `PROSPECT_ROLES`, not Marketing itself). Idempotency is per `(rule_id, entity_id, context)` via a `NotificationLog` row (`context` is the Deal's stage at fire time for `deal` rules, or the Prospect's status for `prospect` rules — so re-idling in a new stage/status can re-fire; empty string for `quote`/`contract` rules, which only ever need to fire once per entity). Degrades safely (no-op) with no `SMTP_*` env vars configured, same as the Task reminder ticker.
 

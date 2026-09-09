@@ -7,6 +7,7 @@ export default {
     viewKanban: 'Kanban',
     viewList: 'List',
     searchPlaceholder: 'Search by name, company or email...',
+    allStatus: 'All Status',
     allSources: 'All Sources',
     sourcePlaceholder: 'Source',
     assigneePlaceholder: 'Assigned To',

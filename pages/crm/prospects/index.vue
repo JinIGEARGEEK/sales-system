@@ -61,7 +61,7 @@
         also has List as an alternative, so a status-filtered deep link needs
         somewhere to land without losing the board view entirely (see
         viewMode's own comment below). -->
-        <CrmStatusPill v-model="statusFilter" :options="PROSPECT_STATUS_OPTIONS" />
+        <CrmStatusPill v-model="statusFilter" :options="[{ label: t('crm.prospects.index.allStatus'), value: 'all' }, ...prospectStagesStore.activeOptions]" />
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.prospects.index.searchPlaceholder')" name="search" />
@@ -88,7 +88,7 @@
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
-      :columns="PROSPECT_STATUS_FORM_OPTIONS"
+      :columns="prospectStagesStore.activeOptions"
       :items="pipelineItems"
       @move="onMove"
       @select="onSelect"
@@ -151,7 +151,7 @@
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES, PROSPECT_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { PROSPECT_STATUS_OPTIONS, PROSPECT_STATUS_FORM_OPTIONS, prospectStatusColor, matchesAssigneeFilter } from '~/constants/mockData'
+import { matchesAssigneeFilter } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -172,7 +172,9 @@ const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
 const prospectSourcesStore = useProspectSourcesStore()
+const prospectStagesStore = useProspectStagesStore()
 const companiesStore = useCompaniesStore()
+const { statusBadgeColor } = useProspectStageColor()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the
 // backend, same as Leads' — Marketing itself has no bulk access.
@@ -207,6 +209,7 @@ guardMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
 })
 
 const filteredProspects = computed(() => prospectsStore.items.filter((prospect) => {
@@ -235,7 +238,7 @@ watch(pipelineItems, (items) => {
 const onMove = async (item: Prospect & { _type: 'prospect' }, newStatus: string) => {
   if (item.status === newStatus) return
   try {
-    await prospectsStore.update(item.id, { status: newStatus as ProspectStatus })
+    await prospectsStore.update(item.id, { status: newStatus })
     success(t('crm.prospects.index.prospectStatusUpdated', { status: newStatus }))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -299,7 +302,7 @@ watch([page, () => buildParams()], () => { selected.value = [] })
 
 const displayRows = computed(() => rows.value.map(prospect => ({
   ...prospect,
-  statusBadge: toBadge(prospect.status, prospectStatusColor(prospect.status)),
+  statusBadge: toBadge(prospect.status, statusBadgeColor(prospect.status)),
   createdDate: dateFormat(prospect.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(prospect.assigned_to),
   companyName: companiesStore.nameById(prospect.company_id),
@@ -323,7 +326,7 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('crm.prospects.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       { label: t('crm.prospects.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
-      { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === 'Disqualified' },
+      { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === prospectStagesStore.disqualifiedStageName },
       { label: t('crm.prospects.index.actions.viewLead'), emitName: 'viewLead', isBorderBottom: true, hideIf: row => !row.converted_lead_id },
       { label: t('crm.prospects.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],

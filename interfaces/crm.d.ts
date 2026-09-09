@@ -29,11 +29,13 @@ type ActivityType = 'call' | 'email' | 'meeting'
 // 'lead' added for FR-CRM-112 (multi-entity Campaign targets) — Tasks
 // bulk-created from a Campaign can now point at a Lead, not just a Company.
 type ActivityRelatedType = 'contact' | 'company' | 'deal' | 'prospect' | 'lead'
-// A fixed enum, not admin-configurable (mirrors LeadStatus, not the
-// admin-configurable PipelineStage) — Marketing's funnel stage is a simple
-// closed set. 'Converted' is set only by POST /prospects/:id/convert, never
-// chosen directly in the create/edit form.
-type ProspectStatus = 'New' | 'Engaging' | 'Nurturing' | 'Disqualified' | 'Converted'
+// Admin-configurable via ProspectStage (GET/POST/PATCH/DELETE
+// /admin/prospect-stages) — mirrors PipelineStage, not a fixed enum, so
+// Prospect.status is typed as a plain string, not this union. 'Converted' is
+// the one reserved exception: it's excluded from the ProspectStage table
+// entirely and set only by POST /prospects/:id/convert, never chosen
+// directly in the create/edit form — see PROSPECT_CONVERTED_STATUS in
+// constants/mockData/prospects.ts.
 // 'expired' is a read-derived value computed server-side (Quote.EffectiveStatus)
 // for display/filtering only — never a value the create/edit status picker sets.
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired'
@@ -187,7 +189,11 @@ interface Prospect {
   // Media, LINE OA, Email Campaign, ...) don't overlap well with Sales's
   // lead-capture sources. Added 2026-09-01.
   source: string
-  status: ProspectStatus
+  // A plain string, not a fixed union — Prospect's working stages
+  // (ProspectStage, /admin/prospect-stages) are admin-configurable, same as
+  // Deal's PipelineStage. 'Converted' is the one reserved value outside that
+  // table (see ProspectStage's own doc / PROSPECT_CONVERTED_STATUS).
+  status: string
   notes: string
   assigned_to: number | null
   tags?: string[] | null
@@ -257,6 +263,25 @@ interface ProspectSourceOption {
   id: number
   name: string
   is_active: boolean
+  created_at: Date
+}
+
+// An Admin-configurable Prospect funnel stage — GET/POST/PATCH/DELETE
+// /admin/prospect-stages. Replaces the previously hardcoded ProspectStatus
+// working-stage enum, mirroring PipelineStage above minus the won/lost
+// flags (Prospect stages are a straight funnel sequence, no win/loss
+// concept) — except is_disqualified_stage, which mirrors is_won_stage/
+// is_lost_stage so frontend code (the "Convert to Lead" action's
+// visibility, the status badge color) can resolve the disqualified-
+// equivalent stage without hardcoding the literal name "Disqualified",
+// since an Admin can rename it. 'Converted' is deliberately never a row
+// here — see Prospect.status's own comment.
+interface ProspectStage {
+  id: number
+  name: string
+  sort_order: number
+  is_active: boolean
+  is_disqualified_stage: boolean
   created_at: Date
 }
 
