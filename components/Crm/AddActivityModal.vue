@@ -13,6 +13,7 @@
             :type-placeholder="t('crm.components.addActivityModal.relatesToTypePlaceholder')"
             :record-label="t('crm.components.addActivityModal.relatesToRecord')"
             :record-placeholder="t('crm.components.addActivityModal.relatesToRecordPlaceholder')"
+            :company-record-placeholder="t('crm.components.addActivityModal.relatesToCompanyPlaceholder')"
           />
           <InputSelect v-model="form.type" :options="activityTypeOptions" :label="t('crm.components.addActivityModal.type')" name="type" rules="required" />
           <InputText v-model="form.subject" :label="t('crm.components.addActivityModal.subject')" name="subject" rules="required" />

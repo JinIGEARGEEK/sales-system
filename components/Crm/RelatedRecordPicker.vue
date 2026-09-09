@@ -11,7 +11,7 @@
     v-if="form.related_type === 'company'"
     v-model="relatedRecordId"
     :label="recordLabel"
-    :placeholder="recordPlaceholder"
+    :placeholder="companyRecordPlaceholder ?? recordPlaceholder"
     name="related_id"
     rules="required"
   />
@@ -65,6 +65,13 @@ defineProps<{
   typePlaceholder: string
   recordLabel: string
   recordPlaceholder: string
+  // Only the 'company' branch above is creatable (InputCompanySelect) —
+  // Deal/Contact/Prospect are search-only (InputAsyncSelect, no create-item
+  // support). recordPlaceholder alone would either read select-only for
+  // Company or falsely imply creatability for the other three, so this is a
+  // separate, optional override applied only when related_type === 'company';
+  // falls back to recordPlaceholder when a caller doesn't pass one.
+  companyRecordPlaceholder?: string
 }>()
 
 const { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, relatedRecordId } = useRelatedRecordPicker(form.value)
