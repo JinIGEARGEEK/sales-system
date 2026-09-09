@@ -24,7 +24,7 @@
         icon-class="text-[var(--color-warning-hover)]"
         icon-bg-class="bg-[var(--color-warning-hover)]/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
-        to="/crm/projects?status=Not+Started"
+        :to="`/crm/projects?status=${encodeURIComponent('Not Started')}`"
       >
         {{ notStartedCount }}
       </CrmStatCard>

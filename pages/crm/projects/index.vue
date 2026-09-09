@@ -184,7 +184,11 @@ const tabItems = computed(() => [
 // ── Projects tab ──────────────────────────────────────────────
 
 const search = ref('')
-const statusFilter = ref('all')
+// Seeded from ?status= (the Dashboard's own Production widget deep-links a
+// stat card here, e.g. ?status=Not+Started) — same useQueryFilter convention
+// as Deals'/Prospects' own dashboard deep-link seeding. Was a plain ref('all')
+// before, so that query param was silently ignored on arrival.
+const statusFilter = useQueryFilter(route.query, 'status')
 
 const statusFilterOptions = computed(() => [
   { label: t('crm.projects.index.allStatuses'), value: 'all' },
