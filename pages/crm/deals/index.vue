@@ -453,6 +453,14 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     // correct total.
     await refetchStageDeals(deal.stage)
     success(t('crm.deals.index.leadConvertedToDeal'))
+    // Unlike the manual "Convert to Deal" button (which routes to
+    // /crm/deals/create?lead_id=... and makes value/expected_close_date
+    // required before the Deal even exists), a drag-convert creates the Deal
+    // immediately with a placeholder value: 0 — there's no form in the way of
+    // the drag gesture. Land the rep straight on the new Deal's own edit page
+    // right after, where value is a required field front and center, instead
+    // of leaving a $0 Deal sitting unnoticed on the board.
+    navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

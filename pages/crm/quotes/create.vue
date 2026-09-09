@@ -13,6 +13,12 @@
         <h2 class="text-xl font-black">{{ t('crm.quotes.create.heading') }}</h2>
       </div>
       <p v-if="deal" class="text-sm text-[var(--color-gray)]">{{ t('crm.quotes.create.subheading', { title: deal.title }) }}</p>
+      <!-- This form only covers the line items/scope/status/validity date —
+      reference number, credit days, price type, VAT/WHT, discounts, and notes
+      all live on the full editor this redirects to right after creation. That
+      split isn't obvious from "Create Quote" alone, so spell it out rather
+      than letting a rep think the quote got cut off partway. -->
+      <p v-if="deal" class="mt-1 text-xs font-medium text-[var(--color-primary)]">{{ t('crm.quotes.create.stepLabel') }}</p>
     </div>
 
     <div v-if="!deal" class="py-12 text-center text-[var(--color-gray)]">
@@ -62,7 +68,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.quotes.create.pageTitle') })
 
 const route = useRoute()
-const { error } = useNotify()
+const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
@@ -115,7 +121,12 @@ const onSubmit = guard(async () => {
       validity_date: form.validity_date ? new Date(form.validity_date) : null,
       status: form.status,
     })
-    navigateTo(`/crm/quotes/${created.id}`)
+    success(t('crm.quotes.create.createSuccess'))
+    // `continue=1` tells the editor page (pages/crm/quotes/[id].vue) this is
+    // a fresh landing from step 1, not a rep coming back to an existing
+    // quote later — it shows a one-time "add the rest of the details" banner
+    // there only for this navigation, not every time the quote is opened.
+    navigateTo(`/crm/quotes/${created.id}?continue=1`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

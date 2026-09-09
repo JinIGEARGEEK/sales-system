@@ -126,10 +126,12 @@ const teamMembersStore = useTeamMembersStore()
 const usersStore = useUsersStore()
 const auditLogStore = useAuditLogStore()
 
-// Owner History mirrors admin/activity-log.vue's Admin-only gating — GET
-// /audit-log is Admin-only server-side, so non-Admins never get entries back
-// anyway; this just avoids the doomed request and hides the section for them.
-const canViewOwnerHistory = computed(() => hasRole('Admin'))
+// Admin/Sales Manager only (FR-CRM-025/M-8) — GET /audit-log hard-restricts
+// everyone else server-side to stage_changed entries only (see
+// internal/handlers/auditlog.go's List), so a Sales Rep would never get
+// reassigned/bulk_reassigned entries back anyway; this just avoids the
+// doomed request and hides the section for them.
+const canViewOwnerHistory = computed(() => hasRole('Admin', 'Sales Manager'))
 
 // Prefers the configured PipelineStage row's is_lost_stage flag (so a custom,
 // admin-renamed Lost stage still shows/requires lost_reason), falling back to
@@ -158,7 +160,12 @@ onMounted(() => {
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
   if (canViewOwnerHistory.value) {
     if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
-    if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
+    // usersStore.fetchAll() hits the Admin-only /users endpoint (see
+    // TestRBAC_RouteGates) — only call it as Admin, or a Sales Manager
+    // viewing this page would hit a 403 here, which the app's axios
+    // interceptor turns into a hard redirect away from this very page.
+    // actorName() below falls back to teamMembersStore for a Sales Manager.
+    if (hasRole('Admin') && usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
     // auditLogStore.fetchAll defaults to per_page: 20 (sized for the paginated
     // admin/activity-log.vue list view). This call wants every audit-log row
     // for one Deal so client-side filtering below doesn't miss older
@@ -178,7 +185,12 @@ const ownerHistory = computed(() => auditLogStore.items
 
 const actorName = (actorId: number) => {
   const user = usersStore.items.find(u => u.id === actorId)
-  return user ? `${user.first_name} ${user.last_name}` : '-'
+  if (user) return `${user.first_name} ${user.last_name}`
+  // usersStore is never populated for a Sales Manager (see onMounted above) —
+  // teamMembersStore (the non-Admin-only /team-members endpoint) covers the
+  // same active-staff names instead, just without inactive users.
+  const member = teamMembersStore.items.find(m => m.id === actorId)
+  return member?.name ?? '-'
 }
 
 // Deal loads asynchronously (dealsStore.fetchAll, in the parent [id].vue), so

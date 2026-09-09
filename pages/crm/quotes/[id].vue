@@ -17,6 +17,21 @@
         <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
       </div>
 
+      <!-- Only right after landing here from Create Quote's own "Step 1 of 2"
+      (pages/crm/quotes/create.vue navigates here with ?continue=1) — closes
+      the loop on that page's step label so it's clear this editor is step 2
+      of the same flow, not a separate page the rep ended up on by mistake.
+      Never shown again once the query param is stripped below, including on
+      a later visit to edit the same (by-then-finished) Quote. -->
+      <UAlert
+        v-if="justCreated"
+        class="mb-4"
+        color="success"
+        variant="subtle"
+        icon="material-symbols:check-circle-outline"
+        :title="t('crm.quotes.detail.continueEditingTitle')"
+      />
+
       <!-- Only for Quotes created via PDF upload (extraction_status is unset
       for every manually-created Quote) — see interfaces/crm.d.ts's Quote
       docblock and api-system-spec.md §7.4's Upload row. 'partial' still
@@ -177,6 +192,16 @@ const { t } = useI18n()
 useHead({ title: t('crm.quotes.detail.pageTitle') })
 
 const route = useRoute()
+const router = useRouter()
+// Captured once before the query param is stripped below — read directly off
+// the initial route rather than a reactive route.query lookup, since the
+// whole point is to notice only the landing from Create Quote's redirect,
+// not any subsequent state.
+const justCreated = ref(route.query.continue === '1')
+if (justCreated.value) {
+  const { continue: _continue, ...rest } = route.query
+  router.replace({ query: rest })
+}
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { priceFormat } = useFormatter()
