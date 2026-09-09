@@ -3,17 +3,17 @@
     <UButton
       :variant="isFocused ? 'soft' : 'ghost'"
       :color="isFocused ? 'warning' : 'neutral'"
-      size="xs"
+      size="md"
       trailing-icon="material-symbols:keyboard-arrow-down-rounded"
-      class="role-focus-trigger gap-1.5 px-2.5 font-medium transition-colors"
+      class="role-focus-trigger gap-2 rounded-full px-3 font-semibold transition-colors"
       :class="isFocused
         ? 'role-focus-trigger-active'
-        : 'text-white/70 hover:bg-white/10 hover:text-white'"
+        : 'role-focus-trigger-idle border border-white/20 bg-white/10 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-md hover:bg-white/20'"
       :aria-label="isFocused ? t('layout.roleFocus.triggerActiveLabel', { role: triggerLabel }) : t('layout.roleFocus.trigger')"
       data-cy="role-focus-switcher"
     >
       <span v-if="isFocused" class="role-focus-trigger-dot" aria-hidden="true" />
-      <UIcon name="material-symbols:switch-account-outline" class="size-3.5" />
+      <UIcon name="material-symbols:switch-account-outline" class="size-4" />
       <span class="max-w-24 truncate sm:max-w-none">{{ triggerLabel }}</span>
     </UButton>
   </UDropdownMenu>

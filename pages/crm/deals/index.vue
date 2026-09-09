@@ -48,13 +48,6 @@
             @click="navigateTo('/crm/deals/create')"
           />
         </div>
-
-        <!-- Trailing, separately-divided from the primary actions above —
-        Admin-only utility shortcut, deliberately last in scan order and its
-        own group so it doesn't compete with Export/Add for attention. -->
-        <div v-if="hasRole('Admin')" class="flex items-center border-l border-[var(--color-light-gray-2)] pl-3">
-          <AdminPipelineConfigShortcut tab="stages" :tooltip="t('crm.deals.index.manageStages')" />
-        </div>
       </div>
     </div>
 
@@ -77,6 +70,14 @@
         </div>
       </div>
     </UCard>
+
+    <!-- Small, low-emphasis Admin-only shortcut to this board's stage
+    config — sits just above the lanes it configures rather than in the
+    header action row, so it reads as "settings for what's below" instead
+    of competing with the primary Export/Add actions up top. -->
+    <div v-if="viewMode === 'kanban' && hasRole('Admin')" class="mb-2">
+      <AdminPipelineConfigShortcut tab="stages" :tooltip="t('crm.deals.index.manageStages')" />
+    </div>
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
