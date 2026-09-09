@@ -41,7 +41,7 @@ export default {
     fullName: 'Full Name',
     fullNamePlaceholder: 'Enter full name',
     company: 'Company',
-    companyPlaceholder: 'Select company',
+    companyPlaceholder: 'Search or type a new company name',
     roleTitle: 'Role / Title',
     roleTitlePlaceholder: 'Enter role or title',
     email: 'Email',

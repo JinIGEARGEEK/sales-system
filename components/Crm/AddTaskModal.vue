@@ -13,6 +13,7 @@
             :type-placeholder="t('crm.components.addTaskModal.relatesToTypePlaceholder')"
             :record-label="t('crm.components.addTaskModal.relatesToRecord')"
             :record-placeholder="t('crm.components.addTaskModal.relatesToRecordPlaceholder')"
+            :company-record-placeholder="t('crm.components.addTaskModal.relatesToCompanyPlaceholder')"
           />
           <InputText v-model="form.title" :label="t('crm.components.addTaskModal.taskTitle')" name="title" rules="required" />
           <InputTextarea v-model="form.description" :label="t('crm.components.addTaskModal.description')" name="description" />

@@ -40,7 +40,7 @@ export default {
     dealTitle: 'Deal Title',
     dealTitlePlaceholder: 'Enter deal title',
     company: 'Company',
-    companyPlaceholder: 'Select company',
+    companyPlaceholder: 'Search or type a new company name',
     primaryContact: 'Primary Contact',
     primaryContactPlaceholder: 'Select contact',
     dealValue: 'Deal Value (THB)',
