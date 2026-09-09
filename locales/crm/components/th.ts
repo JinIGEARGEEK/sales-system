@@ -100,7 +100,7 @@ export default {
     title: 'เพิ่ม Project',
     editTitle: 'แก้ไข Project',
     company: 'บริษัท',
-    companyPlaceholder: 'เลือกบริษัท',
+    companyPlaceholder: 'ค้นหาหรือพิมพ์ชื่อบริษัทใหม่',
     deal: 'Deal (ไม่บังคับ)',
     dealPlaceholder: 'เชื่อมโยงกับ Deal',
     name: 'ชื่อ Project',

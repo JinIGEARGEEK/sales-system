@@ -41,7 +41,7 @@ export default {
     fullName: 'ชื่อ-นามสกุล',
     fullNamePlaceholder: 'กรอกชื่อ-นามสกุล',
     company: 'บริษัท',
-    companyPlaceholder: 'เลือกบริษัท',
+    companyPlaceholder: 'ค้นหาหรือพิมพ์ชื่อบริษัทใหม่',
     roleTitle: 'ตำแหน่งงาน',
     roleTitlePlaceholder: 'กรอกตำแหน่งงาน',
     email: 'อีเมล',

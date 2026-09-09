@@ -40,7 +40,7 @@ export default {
     dealTitle: 'ชื่อ Deal',
     dealTitlePlaceholder: 'กรอกชื่อ Deal',
     company: 'บริษัท',
-    companyPlaceholder: 'เลือกบริษัท',
+    companyPlaceholder: 'ค้นหาหรือพิมพ์ชื่อบริษัทใหม่',
     primaryContact: 'ผู้ติดต่อหลัก',
     primaryContactPlaceholder: 'เลือกผู้ติดต่อ',
     dealValue: 'มูลค่า Deal (บาท)',

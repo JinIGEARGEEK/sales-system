@@ -100,7 +100,7 @@ export default {
     title: 'Add Project',
     editTitle: 'Edit Project',
     company: 'Company',
-    companyPlaceholder: 'Select a company',
+    companyPlaceholder: 'Search or type a new company name',
     deal: 'Deal (optional)',
     dealPlaceholder: 'Link to a Deal',
     name: 'Project Name',
