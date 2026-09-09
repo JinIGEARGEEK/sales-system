@@ -460,7 +460,7 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     // the drag gesture. Land the rep straight on the new Deal's own edit page
     // right after, where value is a required field front and center, instead
     // of leaving a $0 Deal sitting unnoticed on the board.
-    await navigateTo(`/crm/deals/${deal.id}`)
+    navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }
