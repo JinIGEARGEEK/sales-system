@@ -4,6 +4,7 @@ export default {
     heading: 'Deals Pipeline',
     addDeal: 'เพิ่ม Deal',
     exportCsv: 'ส่งออก CSV',
+    manageStages: 'จัดการขั้นตอนไปป์ไลน์',
     dealMovedTo: 'ย้าย Deal ไปยัง {stage} แล้ว',
     searchPlaceholder: 'ค้นหาด้วยชื่อ Deal หรือบริษัท...',
     assigneePlaceholder: 'ผู้รับผิดชอบ',

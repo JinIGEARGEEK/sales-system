@@ -4,6 +4,7 @@ export default {
     heading: 'Prospect',
     addProspect: 'เพิ่ม Prospect',
     viewReport: 'ดูรายงาน',
+    manageStages: 'จัดการขั้นตอน Prospect',
     viewKanban: 'Kanban',
     viewList: 'รายการ',
     searchPlaceholder: 'ค้นหาด้วยชื่อ บริษัท หรืออีเมล...',

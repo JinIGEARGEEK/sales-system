@@ -79,6 +79,7 @@ import { useI18n } from 'vue-i18n'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
+const route = useRoute()
 
 useHead({ title: t('admin.pipelineConfig.pageTitle') })
 
@@ -108,8 +109,13 @@ const productCategoryOptionsStore = useProductCategoryOptionsStore()
 // Local-state tabs (no child routes, resets to the default on reload) —
 // same convention as pages/crm/companies/[id].vue/pages/admin/trash.vue,
 // used instead of one long scrolling page of stacked UCards now that this
-// page has grown to 6 config sections.
-const activeTab = ref('stages')
+// page has grown to 6 config sections. Seeded once from ?tab= (added
+// 2026-09-09) so a "Manage Stages" shortcut button on e.g. Deals/Prospects'
+// own list pages can deep-link straight to the right tab — one-time only,
+// same as the status-filter deep links elsewhere; switching tabs afterward
+// doesn't rewrite the URL.
+const VALID_TABS = ['stages', 'revenue', 'leads', 'prospects', 'company', 'notifications']
+const activeTab = ref(VALID_TABS.includes(route.query.tab as string) ? route.query.tab as string : 'stages')
 
 const tabItems = computed(() => [
   { label: t('admin.pipelineConfig.tabs.stages'), value: 'stages' },

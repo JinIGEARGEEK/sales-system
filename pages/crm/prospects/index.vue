@@ -31,6 +31,16 @@
         </div>
 
         <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
+          <UTooltip v-if="hasRole('Admin')" :text="t('crm.prospects.index.manageStages')">
+            <UButton
+              icon="material-symbols:settings-outline"
+              variant="ghost"
+              color="neutral"
+              size="sm"
+              :aria-label="t('crm.prospects.index.manageStages')"
+              @click="navigateTo('/admin/pipeline-config?tab=prospects')"
+            />
+          </UTooltip>
           <ButtonPrimary
             v-if="canBulkManage && viewMode === 'list'"
             outline
