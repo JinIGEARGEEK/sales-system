@@ -50,13 +50,6 @@
             @click="navigateTo('/crm/prospects/create')"
           />
         </div>
-
-        <!-- Trailing, separately-divided from the primary actions above —
-        Admin-only utility shortcut, deliberately last in scan order and its
-        own group so it doesn't compete with Report/Add for attention. -->
-        <div v-if="hasRole('Admin')" class="flex items-center border-l border-[var(--color-light-gray-2)] pl-3">
-          <AdminPipelineConfigShortcut tab="prospects" :tooltip="t('crm.prospects.index.manageStages')" />
-        </div>
       </div>
     </div>
 
@@ -92,6 +85,14 @@
       :description="t('crm.prospects.index.convertInfoBody')"
       :ui="{ root: 'p-2', icon: 'size-4', description: 'text-xs text-[var(--color-black)]' }"
     />
+
+    <!-- Small, low-emphasis Admin-only shortcut to this board's stage
+    config — sits just above the lanes it configures rather than in the
+    header action row, so it reads as "settings for what's below" instead
+    of competing with the primary Report/Add actions up top. -->
+    <div v-if="viewMode === 'kanban' && hasRole('Admin')" class="mb-2">
+      <AdminPipelineConfigShortcut tab="prospects" :tooltip="t('crm.prospects.index.manageStages')" />
+    </div>
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
