@@ -31,7 +31,6 @@
         </div>
 
         <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
-          <AdminPipelineConfigShortcut tab="prospects" :tooltip="t('crm.prospects.index.manageStages')" />
           <ButtonPrimary
             v-if="canBulkManage && viewMode === 'list'"
             outline
@@ -50,6 +49,13 @@
             icon="material-symbols:add"
             @click="navigateTo('/crm/prospects/create')"
           />
+        </div>
+
+        <!-- Trailing, separately-divided from the primary actions above —
+        Admin-only utility shortcut, deliberately last in scan order and its
+        own group so it doesn't compete with Report/Add for attention. -->
+        <div v-if="hasRole('Admin')" class="flex items-center border-l border-[var(--color-light-gray-2)] pl-3">
+          <AdminPipelineConfigShortcut tab="prospects" :tooltip="t('crm.prospects.index.manageStages')" />
         </div>
       </div>
     </div>
