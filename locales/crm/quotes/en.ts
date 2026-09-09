@@ -52,6 +52,7 @@ export default {
     pageTitle: 'Create Quote',
     heading: 'Create Quote',
     subheading: 'For deal: {title}',
+    stepLabel: 'Step 1 of 2 · Basic details — reference number, VAT/WHT, discounts, and notes come next',
     missingDeal: 'No deal specified — open this page from a Deal\'s Quotes tab.',
     save: 'Create Quote',
     createSuccess: 'Quote created successfully',
@@ -65,5 +66,6 @@ export default {
     removeAttachmentSuccess: 'Attachment removed successfully',
     extractionPartialTitle: 'Pre-filled from the uploaded PDF — please review',
     extractionFailedTitle: 'Could not read this PDF automatically — fields below are blank, fill them in manually',
+    continueEditingTitle: 'Quote created — step 2: add reference number, VAT/WHT, discounts, and notes below to finish it up',
   },
 }

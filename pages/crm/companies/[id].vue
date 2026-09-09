@@ -128,6 +128,53 @@
         </ContainerTemplate>
       </div>
 
+      <div v-else-if="activeTab === 'quotesContracts'">
+        <ContainerTemplate>
+          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.quotesHeading') }}</h3>
+          <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.companies.detail.noQuotes') }}
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <NuxtLink
+              v-for="quote in companyQuotes"
+              :key="quote.id"
+              :to="`/crm/deals/${quote.deal_id}/quotes`"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ quote.number || `#${quote.id}` }}</p>
+                <p class="text-xs text-[var(--color-gray)]">
+                  {{ t('crm.companies.detail.fromDeal', { title: dealTitleById(quote.deal_id) }) }}
+                  <template v-if="quote.validity_date"> · {{ t('crm.companies.detail.validUntil', { date: dateFormat(quote.validity_date.toISOString()) }) }}</template>
+                </p>
+              </div>
+              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+            </NuxtLink>
+          </div>
+        </ContainerTemplate>
+
+        <ContainerTemplate class="mt-4">
+          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.contractsHeading') }}</h3>
+          <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            {{ t('crm.companies.detail.noContracts') }}
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <NuxtLink
+              v-for="contract in companyContracts"
+              :key="contract.id"
+              :to="`/crm/deals/${contract.deal_id}/contracts`"
+              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ t('crm.companies.detail.fromDeal', { title: dealTitleById(contract.deal_id) }) }}</p>
+                <p v-if="contract.signed_date" class="text-xs text-[var(--color-gray)]">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
+              </div>
+              <UBadge color="neutral" variant="subtle">{{ contract.status }}</UBadge>
+            </NuxtLink>
+          </div>
+        </ContainerTemplate>
+      </div>
+
       <div v-else-if="activeTab === 'products'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
@@ -305,6 +352,9 @@ const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
+const quotesStore = useQuotesStore()
+const contractsStore = useContractsStore()
+const { quoteStatusBadgeColor } = useQuoteStatusColor()
 const activitiesStore = useActivitiesStore()
 const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()
@@ -379,6 +429,7 @@ const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.companies.detail.tabs.contacts'), value: 'contacts' },
   { label: t('crm.companies.detail.tabs.deals'), value: 'deals' },
+  { label: t('crm.companies.detail.tabs.quotesContracts'), value: 'quotesContracts' },
   { label: t('crm.companies.detail.tabs.products'), value: 'products' },
   { label: t('crm.companies.detail.tabs.projects'), value: 'projects' },
   { label: t('crm.companies.detail.tabs.activity'), value: 'activity' },
@@ -402,7 +453,19 @@ const fetchCompanyDeals = async () => {
     return { items: [] as Deal[] }
   })
   companyDeals.value = items
+  // Quotes/Contracts have no company_id filter server-side (only ever fetched
+  // scoped to one Deal — GET /deals/:dealId/quotes|contracts), so the new
+  // Quotes & Contracts tab below fans out over this Company's own Deals
+  // (just fetched above) rather than requiring the rep to open each Deal
+  // individually to find them.
+  await Promise.all(items.flatMap(deal => [
+    quotesStore.fetchForDeal(deal.id).catch(notifyApiError),
+    contractsStore.fetchForDeal(deal.id).catch(notifyApiError),
+  ]))
 }
+const companyDealIds = computed(() => new Set(companyDeals.value.map(d => d.id)))
+const companyQuotes = computed(() => quotesStore.items.filter(q => companyDealIds.value.has(q.deal_id)))
+const companyContracts = computed(() => contractsStore.items.filter(c => companyDealIds.value.has(c.deal_id)))
 // Resolves a Project's deal_id (settable at creation, never surfaced anywhere
 // afterward until now) to its Deal title for display on the Projects tab —
 // a Project's linked Deal always belongs to this same Company, so
