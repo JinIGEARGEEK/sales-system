@@ -357,6 +357,11 @@ interface AppSettings {
   // the Admin config UI as a "last updated" hint so a stale value (e.g. last
   // year's annual goal still sitting there in February) doesn't go unnoticed.
   updated_at: Date
+  // Read-only, derived server-side from whether SMTP_HOST is set (never
+  // Admin-settable — there's no UI to change it, just to see it). Task
+  // due-date email reminders silently no-op with no SMTP configured; this is
+  // the only place that's visible from the app itself.
+  smtp_configured: boolean
 }
 
 // An Admin-configurable target for one specific (year, quarter) period —

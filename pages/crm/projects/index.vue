@@ -143,11 +143,26 @@ const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv
 const projectsLoading = ref(false)
 const productsLoading = ref(false)
 
+const route = useRoute()
+// ?edit=<project id> deep-links straight into that Project's edit modal —
+// Projects have no per-record detail route, only this list + a modal, so a
+// raw id from elsewhere (the Dashboard's Production widget) can't resolve on
+// its own without this. Only meaningful once projectsStore is populated,
+// hence living after the fetch below rather than a plain onMounted check.
+const openEditProjectFromQuery = () => {
+  const editId = route.query.edit ? Number(route.query.edit) : null
+  if (!editId) return
+  const project = projectsStore.items.find(p => p.id === editId)
+  if (project) openEditProject(project)
+}
+
 onMounted(async () => {
   if (projectsStore.items.length === 0) {
     projectsLoading.value = true
-    projectsStore.fetchAll().catch(notifyApiError).finally(() => { projectsLoading.value = false })
+    await projectsStore.fetchAll().catch(notifyApiError)
+    projectsLoading.value = false
   }
+  openEditProjectFromQuery()
   if (productsStore.items.length === 0) {
     productsLoading.value = true
     productsStore.fetchAll().catch(notifyApiError).finally(() => { productsLoading.value = false })
