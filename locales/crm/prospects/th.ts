@@ -7,6 +7,7 @@ export default {
     viewKanban: 'Kanban',
     viewList: 'รายการ',
     searchPlaceholder: 'ค้นหาด้วยชื่อ บริษัท หรืออีเมล...',
+    allStatus: 'สถานะทั้งหมด',
     allSources: 'แหล่งที่มาทั้งหมด',
     sourcePlaceholder: 'แหล่งที่มา',
     assigneePlaceholder: 'ผู้รับผิดชอบ',

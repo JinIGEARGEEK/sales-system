@@ -1,28 +1,19 @@
-export const PROSPECT_STATUS_OPTIONS: Select[] = [
-  { label: 'All Status', value: 'all' },
-  { label: 'New', value: 'New' },
-  { label: 'Engaging', value: 'Engaging' },
-  { label: 'Nurturing', value: 'Nurturing' },
-  { label: 'Disqualified', value: 'Disqualified' },
-]
+// 'Converted' is a reserved, system-set terminal status — excluded from the
+// admin-configurable ProspectStage table entirely (see its own doc) and set
+// only by POST /prospects/:id/convert, never chosen directly in the
+// create/edit form or the Kanban board's drop targets.
+export const PROSPECT_CONVERTED_STATUS = 'Converted'
 
-export const PROSPECT_STATUS_FORM_OPTIONS: Select[] = PROSPECT_STATUS_OPTIONS.filter(o => o.value !== 'all')
+// Prospect statuses are now admin-configurable (ProspectStage,
+// /admin/prospect-stages, stores/prospectStages.ts) — replacing what used to
+// be the hardcoded PROSPECT_STATUS_OPTIONS/PROSPECT_STATUS_FORM_OPTIONS/
+// PROSPECT_STATUS_COLORS constants here. Callers now build their columns/
+// filter options from useProspectStagesStore().activeOptions (plus an
+// appended read-only PROSPECT_CONVERTED_STATUS entry where the Kanban board
+// or a filter needs it) instead of importing a fixed list from this file.
 
-// Per-status colors for the Prospect Kanban board (components/Crm/PipelineBoard.vue)
-// — mirrors DEAL_STAGE_COLORS' role for Deal stages. 'Converted' isn't a
-// droppable column (see pages/crm/prospects/index.vue), but still needs a
-// color in case a converted Prospect briefly renders before its card is
-// removed from the board.
-export const PROSPECT_STATUS_COLORS: Record<ProspectStatus, string> = {
-  New: '#5B5FE9',
-  Engaging: '#4A9FE8',
-  Nurturing: '#F5A623',
-  Disqualified: '#E2445C',
-  Converted: '#00C875',
-}
-
-export const prospectStatusColor = (status: ProspectStatus) => {
-  if (status === 'Converted') return 'success'
+export const prospectStatusColor = (status: string) => {
+  if (status === PROSPECT_CONVERTED_STATUS) return 'success'
   if (status === 'Disqualified') return 'error'
   if (status === 'Engaging') return 'info'
   return 'neutral'

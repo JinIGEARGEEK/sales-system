@@ -45,6 +45,7 @@
     </div>
 
     <div v-else-if="activeTab === 'prospects'">
+      <AdminPipelineConfigProspectStagesPanel :loading="prospectStagesLoading" />
       <AdminPipelineConfigProspectSourcesPanel :loading="prospectSourcesLoading" />
     </div>
 
@@ -93,6 +94,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const pipelineStagesStore = usePipelineStagesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const prospectSourcesStore = useProspectSourcesStore()
+const prospectStagesStore = useProspectStagesStore()
 const appSettingsStore = useAppSettingsStore()
 const salesTargetsStore = useSalesTargetsStore()
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
@@ -121,6 +123,7 @@ const tabItems = computed(() => [
 const stagesLoading = ref(false)
 const sourcesLoading = ref(false)
 const prospectSourcesLoading = ref(false)
+const prospectStagesLoading = ref(false)
 const targetsLoading = ref(false)
 const criteriaLoading = ref(false)
 const rulesLoading = ref(false)
@@ -137,6 +140,8 @@ guardMounted(async () => {
   leadSourcesStore.fetchAll().catch(notifyApiError).finally(() => { sourcesLoading.value = false })
   prospectSourcesLoading.value = true
   prospectSourcesStore.fetchAll().catch(notifyApiError).finally(() => { prospectSourcesLoading.value = false })
+  prospectStagesLoading.value = true
+  prospectStagesStore.fetchAll().catch(notifyApiError).finally(() => { prospectStagesLoading.value = false })
   targetsLoading.value = true
   salesTargetsStore.fetchAll().catch(notifyApiError).finally(() => { targetsLoading.value = false })
   criteriaLoading.value = true

@@ -49,7 +49,7 @@
           <InputSelect v-model="form.source" :options="prospectSourcesStore.activeOptions" :label="t('crm.prospects.create.source')" :placeholder="t('crm.prospects.create.sourcePlaceholder')" name="source" rules="required" />
           <InputSelect
             v-model="form.status"
-            :options="PROSPECT_STATUS_FORM_OPTIONS"
+            :options="prospectStagesStore.activeOptions"
             :label="t('crm.prospects.create.status')"
             :placeholder="t('crm.prospects.create.statusPlaceholder')"
             name="status"
@@ -93,7 +93,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROSPECT_STATUS_FORM_OPTIONS, findDuplicateProspects, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
+import { findDuplicateProspects, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -103,11 +103,13 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const prospectsStore = useProspectsStore()
 const prospectSourcesStore = useProspectSourcesStore()
+const prospectStagesStore = useProspectStagesStore()
 const goBack = useBackNavigation('/crm/prospects')
 
 onMounted(() => {
   if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
+  if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
   // Companies aren't fetched here — InputCompanySelect below loads its own
   // options and handles creating a new Company on demand.
 })
@@ -143,7 +145,7 @@ const onSubmit = guard(async () => {
       email: form.email,
       phone: form.phone,
       source: form.source,
-      status: form.status as ProspectStatus,
+      status: form.status,
       notes: form.notes,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,

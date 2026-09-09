@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { DEAL_STAGE_COLORS, PROSPECT_STATUS_COLORS } from '~/constants/mockData'
+import { DEAL_STAGE_COLORS, PROSPECT_CONVERTED_STATUS } from '~/constants/mockData'
 
 const { t } = useI18n()
 const pipelineStagesStore = usePipelineStagesStore()
@@ -87,7 +87,12 @@ const STAGE_DESCRIPTION_KEYS: Record<DealStage, string> = {
   Lost: 'lost',
 }
 
-const PROSPECT_STATUS_DESCRIPTION_KEYS: Record<ProspectStatus, string> = {
+// Legacy default-name descriptions, kept as a fallback for Prospect's four
+// seeded stage names + the reserved "Converted" status — same accepted
+// limitation Deal's STAGE_DESCRIPTION_KEYS already has: a custom Admin-added
+// stage (Deal or Prospect) simply gets no subtitle, since stage config has no
+// description field of its own.
+const PROSPECT_STATUS_DESCRIPTION_KEYS: Record<string, string> = {
   New: 'prospectNew',
   Engaging: 'prospectEngaging',
   Nurturing: 'prospectNurturing',
@@ -96,27 +101,43 @@ const PROSPECT_STATUS_DESCRIPTION_KEYS: Record<ProspectStatus, string> = {
 }
 
 const getStageDescription = (value: string) => {
-  const key = STAGE_DESCRIPTION_KEYS[value as DealStage] || PROSPECT_STATUS_DESCRIPTION_KEYS[value as ProspectStatus]
+  const key = STAGE_DESCRIPTION_KEYS[value as DealStage] || PROSPECT_STATUS_DESCRIPTION_KEYS[value]
   return key ? t(`crm.components.pipelineBoard.stageDescriptions.${key}`) : ''
 }
 
 const WON_COLOR = '#00C875'
 const LOST_COLOR = '#E2445C'
+// Legacy default colors, kept as a fallback for Prospect's four seeded stage
+// names + the reserved "Converted" status (not a droppable column — see
+// pages/crm/prospects/index.vue — but still needs a color in case a
+// converted Prospect briefly renders before its card is removed from the
+// board). A custom Admin-added Prospect stage has no per-stage color field
+// (ProspectStage, unlike PipelineStage, has no won/lost-style flag to key
+// off either — Prospect stages are a straight funnel sequence), so it falls
+// through to FALLBACK_COLOR, same as an in-between (non-Won/Lost) custom
+// Deal stage already does below.
+const DEFAULT_PROSPECT_STAGE_COLORS: Record<string, string> = {
+  New: '#5B5FE9',
+  Engaging: '#4A9FE8',
+  Nurturing: '#F5A623',
+  Disqualified: '#E2445C',
+  Converted: '#00C875',
+}
 
-// Prefers the hardcoded DEAL_STAGE_COLORS/PROSPECT_STATUS_COLORS maps (kept
-// for each board's default columns' exact existing look), then falls back to
-// the configured PipelineStage's is_won_stage/is_lost_stage flags so a custom
-// Admin-added Deal stage still renders sensibly (green/red/primary) without
-// needing a per-stage hardcoded color. Prospect statuses are a fixed enum
-// (not admin-configurable, see PROSPECT_STATUS_COLORS' own doc), so they
-// never reach the pipelineStagesStore fallback — that store only knows Deal
-// stages, and would just return undefined for a Prospect status.
+// Prefers the hardcoded DEAL_STAGE_COLORS/DEFAULT_PROSPECT_STAGE_COLORS maps
+// (kept for each board's default columns' exact existing look), then falls
+// back to the configured PipelineStage's is_won_stage/is_lost_stage flags so
+// a custom Admin-added Deal stage still renders sensibly (green/red/primary)
+// without needing a per-stage hardcoded color, or — for a Prospect lane — to
+// the prospectStagesStore just confirming the name is a real active stage
+// (no won/lost equivalent there, so it renders the generic fallback color).
 const getColumnColor = (value: string) => {
   if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
-  if (PROSPECT_STATUS_COLORS[value as ProspectStatus]) return PROSPECT_STATUS_COLORS[value as ProspectStatus]
-  const row = pipelineStagesStore.byName(value)
-  if (row?.is_won_stage) return WON_COLOR
-  if (row?.is_lost_stage) return LOST_COLOR
+  if (DEFAULT_PROSPECT_STAGE_COLORS[value]) return DEFAULT_PROSPECT_STAGE_COLORS[value]
+  if (value === PROSPECT_CONVERTED_STATUS) return WON_COLOR
+  const dealStage = pipelineStagesStore.byName(value)
+  if (dealStage?.is_won_stage) return WON_COLOR
+  if (dealStage?.is_lost_stage) return LOST_COLOR
   return FALLBACK_COLOR
 }
 
