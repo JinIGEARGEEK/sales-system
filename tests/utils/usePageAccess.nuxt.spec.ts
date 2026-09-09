@@ -2,6 +2,17 @@ import { describe, it, expect, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 
+// usePageAccess -> useRole() calls useI18n(), which needs the full i18n
+// plugin installed to resolve real translations — not provided by
+// mountSuspended's isolated component-mount harness. Same gap and same fix
+// as tests/AccessGate/AccessGate.nuxt.spec.ts (that file's own comment: "no
+// other spec yet exercising an i18n-dependent component to have hit this" —
+// this is that other spec). useRole()'s `t` only backs `roleLabel`, which
+// none of these tests call, so the stub's return value doesn't matter here.
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+
 // usePageAccess/guardMounted rely on an active component instance (the watch
 // inside guardMounted needs an effect scope), so — like the composable's own
 // real call sites — these are exercised through a tiny host component
