@@ -4,6 +4,7 @@ export default {
     heading: 'Deals Pipeline',
     addDeal: 'Add Deal',
     exportCsv: 'Export CSV',
+    manageStages: 'Manage Pipeline Stages',
     dealMovedTo: 'Deal moved to {stage}',
     searchPlaceholder: 'Search by title or company...',
     assigneePlaceholder: 'Assigned To',

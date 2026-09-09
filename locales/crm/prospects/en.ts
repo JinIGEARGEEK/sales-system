@@ -4,6 +4,7 @@ export default {
     heading: 'Prospects',
     addProspect: 'Add Prospect',
     viewReport: 'View Report',
+    manageStages: 'Manage Prospect Stages',
     viewKanban: 'Kanban',
     viewList: 'List',
     searchPlaceholder: 'Search by name, company or email...',

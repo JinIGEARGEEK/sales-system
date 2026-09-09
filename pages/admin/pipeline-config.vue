@@ -79,6 +79,7 @@ import { useI18n } from 'vue-i18n'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
+const route = useRoute()
 
 useHead({ title: t('admin.pipelineConfig.pageTitle') })
 
@@ -108,17 +109,26 @@ const productCategoryOptionsStore = useProductCategoryOptionsStore()
 // Local-state tabs (no child routes, resets to the default on reload) —
 // same convention as pages/crm/companies/[id].vue/pages/admin/trash.vue,
 // used instead of one long scrolling page of stacked UCards now that this
-// page has grown to 6 config sections.
-const activeTab = ref('stages')
+// page has grown to 6 config sections. Seeded once from ?tab= (added
+// 2026-09-09) so a "Manage Stages" shortcut button on e.g. Deals/Prospects'
+// own list pages can deep-link straight to the right tab — one-time only,
+// same as the status-filter deep links elsewhere; switching tabs afterward
+// doesn't rewrite the URL.
+// Single source of truth for tab values — tabItems below derives its labels
+// from this same list instead of re-listing the six values a second time,
+// so adding/renaming a tab can't drift the two lists out of sync (which
+// would otherwise make a deep link silently fall back to 'stages' with no
+// error). `typeof … === 'string'` (not an `as string` cast) matches the
+// narrowing useQueryFilter/other query-param reads use elsewhere in this
+// codebase, since route.query.tab is string | string[] | undefined.
+const TAB_VALUES = ['stages', 'revenue', 'leads', 'prospects', 'company', 'notifications'] as const
+const activeTab = ref<string>(
+  typeof route.query.tab === 'string' && TAB_VALUES.includes(route.query.tab as typeof TAB_VALUES[number])
+    ? route.query.tab
+    : 'stages',
+)
 
-const tabItems = computed(() => [
-  { label: t('admin.pipelineConfig.tabs.stages'), value: 'stages' },
-  { label: t('admin.pipelineConfig.tabs.revenue'), value: 'revenue' },
-  { label: t('admin.pipelineConfig.tabs.leads'), value: 'leads' },
-  { label: t('admin.pipelineConfig.tabs.prospects'), value: 'prospects' },
-  { label: t('admin.pipelineConfig.tabs.company'), value: 'company' },
-  { label: t('admin.pipelineConfig.tabs.notifications'), value: 'notifications' },
-])
+const tabItems = computed(() => TAB_VALUES.map(value => ({ label: t(`admin.pipelineConfig.tabs.${value}`), value })))
 
 const stagesLoading = ref(false)
 const sourcesLoading = ref(false)

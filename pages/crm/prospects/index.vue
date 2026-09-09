@@ -31,6 +31,7 @@
         </div>
 
         <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
+          <AdminPipelineConfigShortcut tab="prospects" :tooltip="t('crm.prospects.index.manageStages')" />
           <ButtonPrimary
             v-if="canBulkManage && viewMode === 'list'"
             outline
