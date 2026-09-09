@@ -655,14 +655,13 @@ interface DashboardSummary {
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number }[]
-  // Dormant-company/upsell targeting (added 2026-09-04) — always all 3 tier
-  // objects present (possibly with empty `companies` arrays); tier1=60-89
-  // days stale, tier2=90-119, tier3=120+/never-contacted (see
-  // useLastContact's CONTACT_STALE_TIER_DAYS). Each company here is a
-  // subset of the full Company shape — only what the widget needs to render
-  // a candidate row plus link to its detail page.
-  upsell_opportunities: {
-    tier: 'tier1' | 'tier2' | 'tier3'
-    companies: { id: number, name: string, industry: string, last_activity_at: string | null }[]
-  }[]
+  // Dormant-company/upsell targeting (added 2026-09-04). **Updated
+  // 2026-09-09**: was always all 3 fixed 60/90/120-day tier objects
+  // (possibly empty); now a flat, most-stale-first list filtered by the
+  // widget's own `?upsell_min_stale_days` query param (defaults to 60 when
+  // omitted, matching the old tier1 cutoff) — see
+  // UPSELL_STALE_DAYS_OPTIONS/pages/index.vue's upsellMinStaleDays ref. Each
+  // company here is a subset of the full Company shape — only what the
+  // widget needs to render a candidate row plus link to its detail page.
+  upsell_opportunities: { id: number, name: string, industry: string, last_activity_at: string | null }[]
 }

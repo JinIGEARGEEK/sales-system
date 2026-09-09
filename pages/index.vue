@@ -64,8 +64,10 @@
         />
 
         <DashboardPipelineOpportunities
+          v-model:upsell-min-stale-days="upsellMinStaleDays"
           :stage-breakdown="stageBreakdown"
-          :upsell-groups="upsellGroups"
+          :upsell-candidates="upsellCandidates"
+          :upsell-stale-days-options="UPSELL_STALE_DAYS_OPTIONS"
           :funnel-stages="funnelStages"
           :funnel-stages-preview="funnelStagesPreview"
           :outcome-donut-segments="outcomeDonutSegments"
@@ -214,6 +216,11 @@ const businessUnitFilter = ref('all')
 const channelFilter = ref('all')
 const salesRepFilter = ref('all')
 const companyTagFilter = ref('')
+// Upsell Opportunities widget's own filter (added 2026-09-09) — independent
+// of the Deal-side filters above (date range/business unit/channel/rep/tag),
+// same reasoning as the widget itself being Company-centric, not Deal-scoped.
+// Options mirror the request: 30/60/90/120 days, 6 months, 1 year+.
+const upsellMinStaleDays = ref(60)
 
 // teamMembersStore.filterOptions already provides a correct "All Team
 // Members" catch-all — reuse it instead of reimplementing it here (the
@@ -252,6 +259,7 @@ const fetchSummary = async () => {
         channel: channelFilter.value !== 'all' ? channelFilter.value : undefined,
         assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
         company_tag: companyTagFilter.value || undefined,
+        upsell_min_stale_days: upsellMinStaleDays.value,
       },
     })
     summary.value = response.data.data
@@ -261,7 +269,7 @@ const fetchSummary = async () => {
 }
 
 onMounted(fetchSummary)
-watch([dateRange, businessUnitFilter, channelFilter, salesRepFilter], fetchSummary)
+watch([dateRange, businessUnitFilter, channelFilter, salesRepFilter, upsellMinStaleDays], fetchSummary)
 
 // Marketing's own tab — deliberately its own fetch/params, not folded into
 // fetchSummary above: this dashboard's date range/business-unit/channel/
@@ -348,27 +356,33 @@ const upcomingTasks = computed(() => {
 })
 
 // GET /dashboard/summary's upsell_opportunities (dormant-company/upsell
-// targeting, added 2026-09-04) always returns all 3 tier objects, so the
-// tier/label mapping here is fixed and only each tier's `companies` varies.
+// targeting, added 2026-09-04). **Updated 2026-09-09**: was always 3 fixed
+// 60/90/120-day tiers; now a flat list filtered server-side by
+// upsellMinStaleDays above, so this just maps each company into the
+// candidate shape the widget renders — no more tier/label bucketing.
 // The API only sends a subset of full Company fields (id/name/industry/
 // last_activity_at) — PipelineOpportunities.vue's template only dereferences
 // candidate.company.id/name/industry, so that subset is cast to satisfy the
 // prop's `Company` type rather than fetching the full record. The badge
 // {color, label} is derived client-side from last_activity_at via
-// useLastContact(), same tier logic used everywhere else (60/90/120 days).
-const UPSELL_TIER_LABELS: Record<string, () => string> = {
-  tier1: () => t('crm.dashboard.upsellTier60'),
-  tier2: () => t('crm.dashboard.upsellTier90'),
-  tier3: () => t('crm.dashboard.upsellTier120'),
-}
-const upsellGroups = computed(() => (summary.value?.upsell_opportunities ?? []).map(group => ({
-  tier: group.tier,
-  label: UPSELL_TIER_LABELS[group.tier]?.() ?? group.tier,
-  candidates: group.companies.map(company => ({
-    company: company as unknown as Company,
-    contact: lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null),
-  })),
+// useLastContact(), same tier logic used everywhere else (60/90/120 days) —
+// unrelated to (and unaffected by) the widget's own filter threshold above.
+const upsellCandidates = computed(() => (summary.value?.upsell_opportunities ?? []).map(company => ({
+  company: company as unknown as Company,
+  contact: lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null),
 })))
+// Options for the widget's own filter dropdown — 30/60/90/120 days, 6
+// months, 1 year+. Plain days everywhere (including the two calendar-unit
+// entries) so the value stays a single number the API's ?upsell_min_stale_days
+// takes directly, no unit conversion needed at the call site.
+const UPSELL_STALE_DAYS_OPTIONS = computed(() => [
+  { label: t('crm.dashboard.upsellStale30'), value: 30 },
+  { label: t('crm.dashboard.upsellStale60'), value: 60 },
+  { label: t('crm.dashboard.upsellStale90'), value: 90 },
+  { label: t('crm.dashboard.upsellStale120'), value: 120 },
+  { label: t('crm.dashboard.upsellStale180'), value: 180 },
+  { label: t('crm.dashboard.upsellStale365'), value: 365 },
+])
 
 
 // Every stage always renders a bar (even at zero) — the backend only returns rows for
