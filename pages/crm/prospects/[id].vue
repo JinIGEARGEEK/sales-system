@@ -13,7 +13,7 @@
             @click="goBack()"
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ prospect.name }}</h2>
-          <UBadge :color="prospectStatusColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
+          <UBadge :color="statusBadgeColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
           <UBadge v-for="tag in prospect.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -23,7 +23,7 @@
             icon="material-symbols:open-in-new"
             @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
           />
-          <UTooltip v-else-if="prospect.status !== 'Disqualified'" :text="t('crm.prospects.detail.convertToLeadHint')">
+          <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
             <ButtonPrimary
               :label="t('crm.prospects.detail.convertToLead')"
               icon="material-symbols:swap-horiz"
@@ -167,7 +167,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { prospectStatusColor, isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
+import { isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -193,6 +193,7 @@ const attachmentsStore = useAttachmentsStore()
 const activitiesStore = useActivitiesStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const prospectStagesStore = useProspectStagesStore()
+const { statusBadgeColor } = useProspectStageColor()
 const goBack = useBackNavigation('/crm/prospects')
 const { parseTags } = useFormatter()
 

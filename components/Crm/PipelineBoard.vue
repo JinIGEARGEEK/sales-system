@@ -54,6 +54,7 @@ import { DEAL_STAGE_COLORS, PROSPECT_CONVERTED_STATUS } from '~/constants/mockDa
 
 const { t } = useI18n()
 const pipelineStagesStore = usePipelineStagesStore()
+const prospectStagesStore = useProspectStagesStore()
 
 // A card can be a Deal or a Lead being shown ahead of conversion (on the
 // unified Deals board), or a Prospect on its own standalone board (§3.1a) —
@@ -125,16 +126,22 @@ const DEFAULT_PROSPECT_STAGE_COLORS: Record<string, string> = {
 }
 
 // Prefers the hardcoded DEAL_STAGE_COLORS/DEFAULT_PROSPECT_STAGE_COLORS maps
-// (kept for each board's default columns' exact existing look), then falls
-// back to the configured PipelineStage's is_won_stage/is_lost_stage flags so
-// a custom Admin-added Deal stage still renders sensibly (green/red/primary)
-// without needing a per-stage hardcoded color, or — for a Prospect lane — to
-// the prospectStagesStore just confirming the name is a real active stage
-// (no won/lost equivalent there, so it renders the generic fallback color).
+// (kept for each board's default columns' exact existing look), then checks
+// prospectStagesStore *before* pipelineStagesStore — a Prospect lane's value
+// is never a Deal stage, but the two admin-configurable tables have no
+// shared namespace, so if a custom Prospect stage happened to share a name
+// with a custom Deal stage (e.g. both renamed to "Follow Up"), checking
+// prospectStagesStore first stops that collision from leaking a Deal's Won/
+// Lost color onto an unrelated Prospect column. Falls back to
+// pipelineStagesStore's is_won_stage/is_lost_stage flags so a custom
+// Admin-added Deal stage still renders sensibly (green/red/primary) without
+// needing a per-stage hardcoded color.
 const getColumnColor = (value: string) => {
   if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
   if (DEFAULT_PROSPECT_STAGE_COLORS[value]) return DEFAULT_PROSPECT_STAGE_COLORS[value]
   if (value === PROSPECT_CONVERTED_STATUS) return WON_COLOR
+  const prospectStage = prospectStagesStore.byName(value)
+  if (prospectStage) return prospectStage.is_disqualified_stage ? LOST_COLOR : FALLBACK_COLOR
   const dealStage = pipelineStagesStore.byName(value)
   if (dealStage?.is_won_stage) return WON_COLOR
   if (dealStage?.is_lost_stage) return LOST_COLOR

@@ -151,7 +151,7 @@
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES, PROSPECT_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { prospectStatusColor, matchesAssigneeFilter } from '~/constants/mockData'
+import { matchesAssigneeFilter } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -174,6 +174,7 @@ const teamMembersStore = useTeamMembersStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const prospectStagesStore = useProspectStagesStore()
 const companiesStore = useCompaniesStore()
+const { statusBadgeColor } = useProspectStageColor()
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the
 // backend, same as Leads' — Marketing itself has no bulk access.
@@ -301,7 +302,7 @@ watch([page, () => buildParams()], () => { selected.value = [] })
 
 const displayRows = computed(() => rows.value.map(prospect => ({
   ...prospect,
-  statusBadge: toBadge(prospect.status, prospectStatusColor(prospect.status)),
+  statusBadge: toBadge(prospect.status, statusBadgeColor(prospect.status)),
   createdDate: dateFormat(prospect.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(prospect.assigned_to),
   companyName: companiesStore.nameById(prospect.company_id),
@@ -325,7 +326,7 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('crm.prospects.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       { label: t('crm.prospects.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
-      { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === 'Disqualified' },
+      { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === prospectStagesStore.disqualifiedStageName },
       { label: t('crm.prospects.index.actions.viewLead'), emitName: 'viewLead', isBorderBottom: true, hideIf: row => !row.converted_lead_id },
       { label: t('crm.prospects.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],

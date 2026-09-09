@@ -22,6 +22,11 @@ export const useProspectStagesStore = defineStore('prospectStages', {
       .sort((a, b) => a.sort_order - b.sort_order)
       .map(s => ({ label: s.name, value: s.name })),
     byName: state => (name: string) => state.items.find(s => s.name === name),
+    // Resolves the actual disqualified-flagged stage's configured `name` (an
+    // Admin can rename it away from the literal "Disqualified") — falls back
+    // to the literal name only if no row is flagged yet (e.g. store hasn't
+    // loaded), same pattern as usePipelineStagesStore's wonStageName/lostStageName.
+    disqualifiedStageName: (state): string => state.items.find(s => s.is_disqualified_stage)?.name ?? 'Disqualified',
   },
   actions: {
     async fetchAll () {

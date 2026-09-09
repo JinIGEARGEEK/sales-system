@@ -8,7 +8,10 @@
         <div class="grid grid-cols-1 gap-3">
           <InputText v-model="form.name" :label="t('admin.pipelineConfig.prospectStages.name')" name="name" rules="required" />
           <InputText v-model.number="form.sort_order" type="number" :label="t('admin.pipelineConfig.prospectStages.sortOrder')" name="sort_order" rules="required" />
-          <UCheckbox v-model="form.is_active" :label="t('admin.pipelineConfig.stages.isActive')" />
+          <div class="flex flex-col gap-2">
+            <UCheckbox v-model="form.is_disqualified_stage" :label="t('admin.pipelineConfig.prospectStages.isDisqualifiedStage')" />
+            <UCheckbox v-model="form.is_active" :label="t('admin.pipelineConfig.stages.isActive')" />
+          </div>
         </div>
       </Form>
     </template>
@@ -25,6 +28,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { error } = useNotify()
 
 const props = defineProps<{
   open: boolean
@@ -34,20 +38,28 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { name: string, sort_order: number, is_active: boolean }]
+  submit: [payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean }]
 }>()
 
 const emptyForm = () => ({
   name: props.stage?.name ?? '',
   sort_order: props.stage?.sort_order ?? 0,
   is_active: props.stage?.is_active ?? true,
+  is_disqualified_stage: props.stage?.is_disqualified_stage ?? false,
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// "Converted" is a reserved, system-set stage (see ProspectStage's own doc)
+// — the backend rejects it too, but catching it here avoids a round trip
+// for a mistake that's cheap to catch client-side.
 const onSubmit = guard(async () => {
+  if (form.name.trim() === 'Converted') {
+    error(t('admin.pipelineConfig.prospectStages.reservedNameError'))
+    return
+  }
   emit('submit', { ...form })
   onUpdateOpen(false)
 })

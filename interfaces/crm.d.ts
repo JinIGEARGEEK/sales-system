@@ -270,13 +270,18 @@ interface ProspectSourceOption {
 // /admin/prospect-stages. Replaces the previously hardcoded ProspectStatus
 // working-stage enum, mirroring PipelineStage above minus the won/lost
 // flags (Prospect stages are a straight funnel sequence, no win/loss
-// concept). 'Converted' is deliberately never a row here — see
-// Prospect.status's own comment.
+// concept) — except is_disqualified_stage, which mirrors is_won_stage/
+// is_lost_stage so frontend code (the "Convert to Lead" action's
+// visibility, the status badge color) can resolve the disqualified-
+// equivalent stage without hardcoding the literal name "Disqualified",
+// since an Admin can rename it. 'Converted' is deliberately never a row
+// here — see Prospect.status's own comment.
 interface ProspectStage {
   id: number
   name: string
   sort_order: number
   is_active: boolean
+  is_disqualified_stage: boolean
   created_at: Date
 }
 

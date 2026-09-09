@@ -11,13 +11,9 @@ export const PROSPECT_CONVERTED_STATUS = 'Converted'
 // filter options from useProspectStagesStore().activeOptions (plus an
 // appended read-only PROSPECT_CONVERTED_STATUS entry where the Kanban board
 // or a filter needs it) instead of importing a fixed list from this file.
-
-export const prospectStatusColor = (status: string) => {
-  if (status === PROSPECT_CONVERTED_STATUS) return 'success'
-  if (status === 'Disqualified') return 'error'
-  if (status === 'Engaging') return 'info'
-  return 'neutral'
-}
+// Status badge coloring moved to composables/utils/useProspectStageColor.ts
+// (a plain function here couldn't resolve a renamed "Disqualified" stage
+// against the store — see that composable's own doc).
 
 // ── Duplicate detection (mirrors findDuplicateLeads) ─────────────────────
 

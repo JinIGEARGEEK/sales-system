@@ -67,7 +67,7 @@ const onEditStage = (row: ProspectStage) => {
   stageModalOpen.value = true
 }
 
-const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean }) => {
+const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean }) => {
   try {
     if (editingStage.value) {
       await prospectStagesStore.update(editingStage.value.id, payload)
@@ -97,6 +97,7 @@ const stageRows = computed(() => [...prospectStagesStore.items]
   .sort((a, b) => a.sort_order - b.sort_order)
   .map(stage => ({
     ...stage,
+    flagsBadge: stage.is_disqualified_stage ? t('admin.pipelineConfig.prospectStages.disqualifiedBadge') : '-',
     statusBadge: stage.is_active
       ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
       : toBadge(t('admin.pipelineConfig.statusInactive')),
@@ -105,6 +106,7 @@ const stageRows = computed(() => [...prospectStagesStore.items]
 const stageColumns: TableDataColumn[] = [
   { label: t('admin.pipelineConfig.prospectStages.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.prospectStages.columns.sortOrder'), align: 'left', field: 'sort_order' },
+  { label: t('admin.pipelineConfig.prospectStages.columns.flags'), align: 'left', field: 'flagsBadge' },
   { label: t('admin.pipelineConfig.prospectStages.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.prospectStages.columns.action'),
