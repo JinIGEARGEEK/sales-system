@@ -18,9 +18,14 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
-          a rep can set directly; mql/none stay entirely score-driven. -->
+          a rep can set directly; mql/none stay entirely score-driven. Both this
+          and Convert to Deal are Sales-pipeline actions (backend-enforced too,
+          PUT/convert on /leads/:id — see internal/routes/routes.go): a Marketing
+          viewer can still reach this page read-only (the Prospect detail page's
+          "View Lead" link, once converted) without these buttons implying
+          actions that aren't theirs to take. -->
           <ButtonPrimary
-            v-if="lead.classification !== 'sql'"
+            v-if="canManageLead && lead.classification !== 'sql'"
             :label="t('crm.leads.detail.markSql')"
             icon="material-symbols:star-outline"
             outline
@@ -33,7 +38,7 @@
             @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
           />
           <ButtonPrimary
-            v-else-if="lead.status !== 'Disqualified'"
+            v-else-if="canManageLead && lead.status !== 'Disqualified'"
             :label="t('crm.leads.detail.convertToDeal')"
             icon="material-symbols:swap-horiz"
             @click="requestConvert"
@@ -84,7 +89,11 @@
               <InputTextarea v-model="form.notes" :label="t('crm.leads.detail.notes')" name="notes" />
             </div>
           </div>
-          <div class="mt-4 flex gap-3">
+          <!-- Hidden (not just left to 403 on submit) for a Marketing viewer who
+          reached this page read-only via the Prospect "View Lead" link — same
+          canManageLead gate as Mark SQL/Convert to Deal above, now that
+          PUT /leads/:id is backend-restricted to SALES_PIPELINE_ROLES too. -->
+          <div v-if="canManageLead" class="mt-4 flex gap-3">
             <ButtonPrimary :label="t('crm.leads.detail.saveChanges')" type="submit" :loading="loading" />
           </div>
         </Form>
@@ -154,6 +163,10 @@ const goBack = useBackNavigation('/crm/leads')
 // not Production) — internal/routes/routes.go. Same role set as
 // SALES_PIPELINE_ROLES, so reuse it rather than re-listing the same 3 roles.
 const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
+// Matches the backend's PUT/convert RBAC on /leads/:id (same SALES_PIPELINE_ROLES
+// set) — Mark SQL and Convert to Deal are Sales-pipeline actions, not something
+// Marketing does even though they can reach this page read-only.
+const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))

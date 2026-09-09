@@ -83,6 +83,11 @@
     role that only qualifies for one tab). -->
     <DashboardMarketingSummary v-if="activeDashboardTab === 'marketing' && canViewProspectSummary" :summary="prospectSummary" />
 
+    <!-- Production's own section — Projects still awaiting a status update.
+    Neither SALES_PIPELINE_ROLES nor PROSPECT_ROLES, so without this the
+    Dashboard renders nothing meaningful for this role at all. -->
+    <DashboardProductionSummary v-if="canViewProductionWidgets" :projects="projectsStore.items" />
+
     <DashboardFollowUpsTeam
       :upcoming-tasks="upcomingTasks"
       :can-view-sales-pipeline-widgets="canViewSalesPipelineWidgets"
@@ -112,6 +117,11 @@ const canViewSalesPipelineWidgets = computed(() => hasRole(...SALES_PIPELINE_ROL
 // Marketing's own tab — Prospect funnel data. Sales Rep now also works
 // Prospects (PROSPECT_ROLES), so a Sales Rep sees both tabs, not just Sales.
 const canViewProspectSummary = computed(() => hasRole(...PROSPECT_ROLES))
+// Production is in neither SALES_PIPELINE_ROLES nor PROSPECT_ROLES, so
+// without this the entire Dashboard renders nothing for them except the
+// (irrelevant, Deal-oriented) filter bar and an empty team-tasks widget —
+// this is the one thing their role actually needs to see here.
+const canViewProductionWidgets = computed(() => hasRole('Production'))
 // Only Admin/Sales Manager/Sales Rep are in both role lists — everyone else
 // has just one tab's worth of content, so no switcher is shown at all for
 // them.
@@ -160,11 +170,16 @@ const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 const teamMembersStore = useTeamMembersStore()
 const notificationLogStore = useNotificationLogStore()
+const projectsStore = useProjectsStore()
 
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
   if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyFetchError)
+  // Scoped to Production only — no other role sees this widget, and
+  // fetchAll's per_page:1000 cross-company pull isn't worth firing for
+  // everyone just to sit unused.
+  if (canViewProductionWidgets.value && projectsStore.items.length === 0) projectsStore.fetchAll().catch(notifyFetchError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyFetchError)
   notificationLogStore.fetchRecent().catch(notifyFetchError)
 })
@@ -308,14 +323,20 @@ const { resolveRelated } = useRelatedRecord()
 // Marketing/Production (SALES_PIPELINE_ROLES) — previously this widget
 // surfaced them to every role regardless, so a Marketing/Production user
 // could click straight into a Deal detail page with no nav trail back.
-// Prospect-linked tasks stay visible to everyone since Marketing owns that
-// entity; Production has no task-linked entity of its own (Tasks aren't
-// tied to Projects), so it sees none here, matching its "not a full CRM
-// user" scope.
+// Prospect-linked tasks stay visible to PROSPECT_ROLES (Marketing owns that
+// entity) — gated on that, not just "not a pipeline role", since Production
+// is also outside SALES_PIPELINE_ROLES but isn't in PROSPECT_ROLES either;
+// the previous `|| task.related_type === 'prospect'` had no role check at
+// all, so a Production viewer with any prospect-linked task in the shared
+// tasksStore.pending list would still have it resolveRelated()'d below —
+// hitting GET /prospects/:id, which 403s for Production (not a PROSPECT_ROLES
+// member) and surfaced as a stray error toast on an otherwise-unrelated page
+// load. Production has no task-linked entity of its own (Tasks aren't tied
+// to Projects), so it now correctly sees none here.
 const upcomingTasks = computed(() => {
   const now = Date.now()
   return tasksStore.pending
-    .filter(task => canViewSalesPipelineWidgets.value || task.related_type === 'prospect')
+    .filter(task => canViewSalesPipelineWidgets.value || (canViewProspectSummary.value && task.related_type === 'prospect'))
     .map(task => ({
       ...task,
       ...resolveRelated(task.related_type, task.related_id),

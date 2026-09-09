@@ -55,7 +55,13 @@
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3">
-        <CrmStatusPill v-if="viewMode === 'list'" v-model="statusFilter" :options="PROSPECT_STATUS_OPTIONS" />
+        <!-- Kanban's own columns already separate by status, but this stays
+        visible there too (not list-only, as it used to be) — Kanban is
+        Marketing's only primary dashboard/nav view, unlike Sales Rep who
+        also has List as an alternative, so a status-filtered deep link needs
+        somewhere to land without losing the board view entirely (see
+        viewMode's own comment below). -->
+        <CrmStatusPill v-model="statusFilter" :options="PROSPECT_STATUS_OPTIONS" />
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.prospects.index.searchPlaceholder')" name="search" />
@@ -181,11 +187,14 @@ const statusFilter = useQueryFilter(route.query, 'status')
 const sourceFilter = useQueryFilter(route.query, 'source')
 const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
 
-// The Kanban board has no status/source/assignee filter bar at all (only the
-// List view does, via CrmStatusPill + the two InputSelects above it), so a
-// deep link needs to force List view or the filter would be invisible/inert.
-const hasDeepLinkFilter = statusFilter.value !== 'all' || sourceFilter.value !== 'all' || assigneeFilter.value !== 'all'
-const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
+// Status/source/assignee filters are visible and functional in both views
+// now (CrmStatusPill above used to be List-only) — pipelineItems below is
+// already derived from the same filteredProspects the List view uses, so
+// Kanban has always technically respected these filters, it just had no
+// visible controls to set them while filters were List-only. A deep link no
+// longer needs to force List view to make its filter visible; it stays on
+// Kanban, Marketing's primary view, with the filter already applied.
+const viewMode = ref<'kanban' | 'list'>('kanban')
 
 // ── Kanban ─────────────────────────────────────────────────────────────
 // Prospect volume doesn't warrant Deals' per-stage server-paginated bucket

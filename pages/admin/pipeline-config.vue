@@ -12,9 +12,13 @@
           <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.relatedConfig.heading') }}</h3>
           <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
         </div>
+        <!-- open-in-new (not sell-outline) — this card sits above the tab bar
+        and could otherwise read as one more tab, when it actually navigates
+        clean away to a whole separate page; the icon signals that at a
+        glance instead of relying on the hint text alone. -->
         <ButtonPrimary
           :label="t('admin.pipelineConfig.relatedConfig.manageTags')"
-          icon="material-symbols:sell-outline"
+          icon="material-symbols:open-in-new"
           outline
           fit-content
           @click="navigateTo('/crm/tags')"
@@ -53,6 +57,16 @@
     </div>
 
     <div v-else-if="activeTab === 'notifications'">
+      <UAlert
+        v-if="appSettingsStore.settings"
+        class="mb-4"
+        :color="appSettingsStore.settings.smtp_configured ? 'success' : 'warning'"
+        variant="subtle"
+        :icon="appSettingsStore.settings.smtp_configured ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
+        :title="appSettingsStore.settings.smtp_configured
+          ? t('admin.pipelineConfig.notifications.smtpConfigured')
+          : t('admin.pipelineConfig.notifications.smtpNotConfigured')"
+      />
       <AdminPipelineConfigNotificationRulesPanel :loading="rulesLoading" />
     </div>
     </AccessGate>
