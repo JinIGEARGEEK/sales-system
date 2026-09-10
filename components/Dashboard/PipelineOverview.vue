@@ -9,6 +9,7 @@
          which always left 3 empty trailing cells in the second row.) -->
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.openPipelineValue')"
         :tooltip="t('crm.dashboard.openPipelineValueTooltip')"
         icon="material-symbols:account-balance-wallet-outline"
@@ -19,6 +20,7 @@
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.forecastedRevenue')"
         :tooltip="t('crm.dashboard.forecastedRevenueHint')"
         icon="material-symbols:query-stats"
@@ -29,6 +31,7 @@
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.winRate')"
         :tooltip="t('crm.dashboard.winRateTooltip')"
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
@@ -39,6 +42,7 @@
         {{ winRate }}%
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.openDeals')"
         :tooltip="t('crm.dashboard.openDealsTooltip')"
         icon="material-symbols:work-outline"
@@ -49,6 +53,7 @@
         {{ openDealsCount }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.wonThisPeriod')"
         :tooltip="t('crm.dashboard.wonThisPeriodTooltip')"
         icon="material-symbols:workspace-premium-outline"
@@ -59,6 +64,7 @@
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.avgDealSize')"
         :tooltip="t('crm.dashboard.avgDealSizeTooltip')"
         icon="material-symbols:payments-outline"
@@ -69,6 +75,7 @@
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.avgSalesCycle')"
         :tooltip="t('crm.dashboard.avgSalesCycleTooltip')"
         icon="material-symbols:schedule-outline"
@@ -79,6 +86,7 @@
         {{ t('crm.dashboard.avgSalesCycleDays', { days: avgSalesCycleDays }) }}
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.pipelineCoverage')"
         :tooltip="t('crm.dashboard.pipelineCoverageTooltip')"
         :icon="isPipelineHealthy ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
@@ -93,6 +101,7 @@
         </template>
       </CrmStatCard>
       <CrmStatCard
+        reserve-hint-space
         :label="t('crm.dashboard.annualRevenueGoal')"
         :tooltip="t('crm.dashboard.annualRevenueGoalTooltip')"
         :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
