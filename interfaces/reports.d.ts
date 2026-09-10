@@ -29,6 +29,21 @@ interface ProspectDashboardSummary {
   source_breakdown: ProspectSourceConversionRow[]
 }
 
+// GET /dashboard/lead-summary — Sales tab's own Lead stats widget.
+// source_breakdown reuses LeadSourceConversionRow exactly (backend computes
+// both from the same fetchLeadSourceConversion used by
+// GET /reports/lead-source-conversion), so any Lead Source configured in
+// Admin > Lead Sources (e.g. "Marketing") shows up here automatically once
+// leads use it.
+interface LeadDashboardSummary {
+  total_leads: number
+  new_leads: number
+  qualified_leads: number
+  disqualified_leads: number
+  status_breakdown: { status: string, count: number }[]
+  source_breakdown: LeadSourceConversionRow[]
+}
+
 // GET /reports/customers-by-product-status — one row per Company/Product link.
 interface CustomerByProductStatusRow {
   company_id: number

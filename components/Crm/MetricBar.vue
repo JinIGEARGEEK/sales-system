@@ -5,8 +5,10 @@
     class="flex items-center gap-3 rounded-md"
     :class="to ? '-mx-2 px-2 py-0.5 transition-colors hover:bg-[var(--color-light-gray-1)]' : ''"
   >
-    <span class="w-32 shrink-0 truncate text-sm">{{ label }}</span>
-    <UTooltip :text="tooltip || `${label} — ${percent}%`">
+    <UTooltip :text="tooltipText">
+      <span class="w-32 shrink-0 truncate text-sm">{{ label }}</span>
+    </UTooltip>
+    <UTooltip :text="tooltipText">
       <div class="h-3 flex-1 overflow-hidden rounded-full bg-[var(--color-light-gray-2)]">
         <div
           class="h-full rounded-full transition-[filter] duration-150 hover:brightness-110"
@@ -52,4 +54,8 @@ const props = defineProps({
 })
 
 const { linkTag, linkTo } = useOptionalLink(toRef(props, 'to'))
+// Shared by both the label and the bar's UTooltip — hovering either one
+// surfaces the same text, so this is computed once rather than repeating
+// the fallback expression at each call site.
+const tooltipText = computed(() => props.tooltip || `${props.label} — ${props.percent}%`)
 </script>
