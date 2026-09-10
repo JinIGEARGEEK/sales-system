@@ -40,6 +40,8 @@
       (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
       Contacts nav items and GlobalSearch results. -->
       <template v-if="canViewSalesPipelineWidgets">
+        <DashboardLeadSummary :summary="leadSummary" />
+
         <DashboardPipelineOverview
           :open-pipeline-value="openPipelineValue"
           :forecasted-revenue="forecastedRevenue"
@@ -288,6 +290,24 @@ const fetchProspectSummary = async () => {
 }
 watch(canViewProspectSummary, (canView) => {
   if (canView && !prospectSummary.value) fetchProspectSummary()
+}, { immediate: true })
+
+// Sales tab's own Lead stats — deliberately its own fetch/params rather than
+// folded into fetchSummary above, same reasoning as fetchProspectSummary:
+// refetches once on mount rather than reacting to the Deal-specific filter
+// bar above it.
+const leadSummary = ref<LeadDashboardSummary | null>(null)
+const fetchLeadSummary = async () => {
+  if (!canViewSalesPipelineWidgets.value) return
+  try {
+    const response = await $api.get<ApiResponse<LeadDashboardSummary>>('/dashboard/lead-summary')
+    leadSummary.value = response.data.data
+  } catch (err) {
+    notifyFetchError(err)
+  }
+}
+watch(canViewSalesPipelineWidgets, (canView) => {
+  if (canView && !leadSummary.value) fetchLeadSummary()
 }, { immediate: true })
 
 let companyTagDebounce: ReturnType<typeof setTimeout> | undefined

@@ -9,7 +9,7 @@
       <div class="relative flex items-center justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-1">
-            <p class="truncate text-xs font-medium text-[var(--color-dark-gray)]">{{ label }}</p>
+            <p class="truncate text-xs font-medium text-[var(--color-dark-gray)]" :title="label">{{ label }}</p>
             <UTooltip v-if="tooltip" :text="tooltip">
               <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-[var(--color-gray)]" />
             </UTooltip>

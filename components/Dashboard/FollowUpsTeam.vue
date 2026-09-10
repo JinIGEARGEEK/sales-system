@@ -26,8 +26,8 @@
             class="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
           >
             <div class="min-w-0">
-              <p class="truncate text-sm font-medium">{{ task.title }}</p>
-              <p class="truncate text-xs text-[var(--color-gray)]">{{ task.relatedLabel }} · {{ task.assignedToName }}</p>
+              <p class="truncate text-sm font-medium" :title="task.title">{{ task.title }}</p>
+              <p class="truncate text-xs text-[var(--color-gray)]" :title="`${task.relatedLabel} · ${task.assignedToName}`">{{ task.relatedLabel }} · {{ task.assignedToName }}</p>
             </div>
             <UBadge :color="task.isOverdue ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
               {{ dateFormat(task.due_date) }}
@@ -59,8 +59,8 @@
             class="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
           >
             <div class="min-w-0">
-              <p class="truncate text-sm font-medium">{{ alert.deal_id !== undefined ? alert.deal_title : alert.company_name }}</p>
-              <p class="truncate text-xs text-[var(--color-gray)]">{{ alert.rule_name }}</p>
+              <p class="truncate text-sm font-medium" :title="alertTitle(alert)">{{ alertTitle(alert) }}</p>
+              <p class="truncate text-xs text-[var(--color-gray)]" :title="alert.rule_name">{{ alert.rule_name }}</p>
             </div>
             <UBadge color="neutral" variant="subtle" class="shrink-0">
               {{ dateTimeFormat(alert.notified_at.toISOString()) }}
@@ -170,4 +170,7 @@ defineProps<{
   industryBreakdown: { industry: string, wonCount: number, winRate: number, barClass: string }[]
   teamPerformance: { id: number, name: string, initials: string, wonCount: number, wonValue: number, winRate: number }[]
 }>()
+
+const alertTitle = (alert: { deal_id?: number, deal_title?: string, company_name?: string }) =>
+  alert.deal_id !== undefined ? alert.deal_title : alert.company_name
 </script>
