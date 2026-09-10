@@ -115,7 +115,6 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
-const appSettingsStore = useAppSettingsStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 
 const { dealId, deal } = useCurrentDeal()
@@ -127,16 +126,13 @@ const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 // Same FR-CRM-045 gate as pages/crm/deals/[id]/index.vue's own warning — this
 // is the tab a rep actually fixes it from, so it gets the same banner.
-const showContractGateWarning = computed(() =>
-  appSettingsStore.settings?.require_signed_contract_before_won === true
-  && deal.value?.status !== 'won'
-  && !dealContracts.value.some(c => c.status === 'signed'),
-)
+// useContractGate also owns the Contracts/AppSettings fetch-on-mount
+// (guarded on already-loaded), so there's nothing left to fetch here beyond
+// Quotes.
+const { showContractGateWarning } = useContractGate(dealId, deal)
 
 onMounted(() => {
-  contractsStore.fetchForDeal(dealId).catch(notifyApiError)
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
-  if (!appSettingsStore.settings) appSettingsStore.fetchAll().catch(notifyApiError)
 })
 
 const addContractOpen = ref(false)

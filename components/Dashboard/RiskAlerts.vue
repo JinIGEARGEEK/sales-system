@@ -4,7 +4,7 @@
       {{ t('crm.dashboard.sectionRiskAlerts') }}
     </h3>
 
-    <UCard :ui="{ body: 'p-0 divide-y divide-[var(--color-light-gray-2)]' }">
+    <UCard :ui="{ body: 'p-0 divide-y divide-(--color-light-gray-2)' }">
       <NuxtLink
         v-for="item in items"
         :key="item.key"
@@ -41,14 +41,15 @@ defineProps<{
   counts: Record<string, number | null>
 }>()
 
-// Same 5 metrics as pages/crm/reports/index.vue's own "Needs Attention"
-// section, just condensed into single rows for the Dashboard — labels reuse
-// the Reports page's own i18n strings so the two never drift apart.
-const items = [
-  { key: 'stalledDeals', path: '/crm/reports/stalled-deals', icon: 'material-symbols:hourglass-empty', title: t('crm.reports.stalledDeals.cardTitle') },
-  { key: 'outstandingBalance', path: '/crm/reports/outstanding-balance', icon: 'material-symbols:request-quote-outline', title: t('crm.reports.outstandingBalance.cardTitle') },
-  { key: 'quotesExpiringSoon', path: '/crm/reports/quotes-expiring-soon', icon: 'material-symbols:schedule-outline', title: t('crm.reports.quotesExpiringSoon.cardTitle') },
-  { key: 'contractsStuck', path: '/crm/reports/contracts-stuck', icon: 'material-symbols:draft-outline', title: t('crm.reports.contractsStuck.cardTitle') },
-  { key: 'projectsAtRisk', path: '/crm/reports/projects-at-risk', icon: 'material-symbols:engineering-outline', title: t('crm.reports.projectsAtRisk.cardTitle') },
-]
+// Derived from the shared ATTENTION_ITEMS catalog (stores/attentionCounts.ts)
+// — same 5 metrics as pages/crm/reports/index.vue's own "Needs Attention"
+// section, condensed into single rows here. A computed (not a plain array)
+// so titles stay reactive to a live locale switch, and mapping over the
+// shared catalog means this list can't drift out of sync with Reports'.
+const items = computed(() => ATTENTION_ITEMS.map(item => ({
+  key: item.key,
+  path: item.path,
+  icon: item.icon,
+  title: t(`crm.reports.${item.key}.cardTitle`),
+})))
 </script>

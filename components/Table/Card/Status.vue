@@ -8,13 +8,18 @@
     </div>
     <!-- Compact icon-only variant (e.g. a "Primary" flag star) — set
     `items.icon` instead of `items.title` when a full text pill would be
-    noisier than useful in a dense table column. -->
-    <UIcon
-      v-else-if="props.items.icon"
-      :name="props.items.icon"
-      class="size-4"
-      :class="ICON_COLOR_CLASS[props.items.color as keyof typeof ICON_COLOR_CLASS] || ICON_COLOR_CLASS.neutral"
-    />
+    noisier than useful in a dense table column. `items.title` still carries
+    the accessible name (screen-reader-only) so removing the visible text
+    pill doesn't also remove what a screen reader announces for this cell. -->
+    <span v-else-if="props.items.icon" class="inline-flex">
+      <UIcon
+        :name="props.items.icon"
+        class="size-4"
+        :class="ICON_COLOR_CLASS[props.items.color as keyof typeof ICON_COLOR_CLASS] || ICON_COLOR_CLASS.neutral"
+        aria-hidden="true"
+      />
+      <span v-if="props.items.title" class="sr-only">{{ props.items.title }}</span>
+    </span>
     <UBadge v-else :color="props.items.color || 'neutral'" variant="subtle" size="sm">
       {{ props.items.title }}
     </UBadge>

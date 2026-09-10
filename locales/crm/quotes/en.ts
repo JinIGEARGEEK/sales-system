@@ -61,6 +61,7 @@ export default {
     useTemplatePlaceholder: 'Blank quote',
     deleteTemplate: 'Delete this template',
     deleteTemplateSuccess: 'Quote template deleted',
+    templateApplyFailed: 'Quote created, but applying the template\'s pricing/tax settings failed — please review them on the next screen.',
   },
   detail: {
     pageTitle: 'Edit Quote',

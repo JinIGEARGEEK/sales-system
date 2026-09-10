@@ -57,6 +57,7 @@ export default {
     useTemplatePlaceholder: 'ใบเสนอราคาเปล่า',
     deleteTemplate: 'ลบเทมเพลตนี้',
     deleteTemplateSuccess: 'ลบเทมเพลตใบเสนอราคาแล้ว',
+    templateApplyFailed: 'สร้างใบเสนอราคาสำเร็จ แต่การใช้ค่าราคา/ภาษีจากเทมเพลตล้มเหลว — กรุณาตรวจสอบในหน้าถัดไป',
   },
   detail: {
     pageTitle: 'แก้ไขใบเสนอราคา',

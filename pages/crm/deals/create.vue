@@ -86,7 +86,6 @@ useHead({ title: t('crm.deals.create.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { forecastCategoryColor } = useForecastCategoryColor()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
@@ -283,7 +282,11 @@ const onSubmit = guard(async () => {
     discardDraft()
     navigateTo('/crm/deals')
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
+      error(t('crm.deals.detail.contractRequiredToast'))
+    } else {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
   }
 })
 </script>

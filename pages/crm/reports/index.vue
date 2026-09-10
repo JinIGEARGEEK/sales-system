@@ -113,13 +113,17 @@ const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROL
 // (rows.length is literally "how many need a look") — Lead Source/Customer-
 // Product-Status/Win-Loss are breakdowns, not counts of at-risk items, so a
 // badge on them wouldn't mean the same thing and is deliberately left off.
-const attentionCards = computed(() => [
-  { key: 'stalledDeals', path: '/crm/reports/stalled-deals', icon: 'material-symbols:hourglass-empty', title: t('crm.reports.stalledDeals.cardTitle'), description: t('crm.reports.stalledDeals.cardDescription') },
-  { key: 'outstandingBalance', path: '/crm/reports/outstanding-balance', icon: 'material-symbols:request-quote-outline', title: t('crm.reports.outstandingBalance.cardTitle'), description: t('crm.reports.outstandingBalance.cardDescription') },
-  { key: 'quotesExpiringSoon', path: '/crm/reports/quotes-expiring-soon', icon: 'material-symbols:schedule-outline', title: t('crm.reports.quotesExpiringSoon.cardTitle'), description: t('crm.reports.quotesExpiringSoon.cardDescription') },
-  { key: 'contractsStuck', path: '/crm/reports/contracts-stuck', icon: 'material-symbols:draft-outline', title: t('crm.reports.contractsStuck.cardTitle'), description: t('crm.reports.contractsStuck.cardDescription') },
-  { key: 'projectsAtRisk', path: '/crm/reports/projects-at-risk', icon: 'material-symbols:engineering-outline', title: t('crm.reports.projectsAtRisk.cardTitle'), description: t('crm.reports.projectsAtRisk.cardDescription') },
-])
+// Derived from the shared ATTENTION_ITEMS catalog (stores/attentionCounts.ts)
+// — title/description come from `crm.reports.<key>.cardTitle`/`cardDescription`,
+// the key doubling as the i18n namespace segment, so this and the Dashboard's
+// Risk Alerts widget can never drift out of sync on which metrics exist.
+const attentionCards = computed(() => ATTENTION_ITEMS.map(item => ({
+  key: item.key,
+  path: item.path,
+  icon: item.icon,
+  title: t(`crm.reports.${item.key}.cardTitle`),
+  description: t(`crm.reports.${item.key}.cardDescription`),
+})))
 
 const analyticsCards = computed(() => [
   { path: '/crm/reports/lead-source', icon: 'material-symbols:person-search-outline', title: t('crm.reports.leadSource.cardTitle'), description: t('crm.reports.leadSource.cardDescription') },
@@ -134,7 +138,8 @@ const analyticsCards = computed(() => [
   { path: '/crm/reports/forecast-accuracy', icon: 'material-symbols:target', title: t('crm.reports.forecastAccuracy.cardTitle'), description: t('crm.reports.forecastAccuracy.cardDescription') },
 ])
 
-const { counts, fetchCounts } = useAttentionCounts()
+const attentionCountsStore = useAttentionCountsStore()
+const counts = computed(() => attentionCountsStore.counts)
 
-guardMounted(fetchCounts)
+guardMounted(() => attentionCountsStore.fetchCounts())
 </script>

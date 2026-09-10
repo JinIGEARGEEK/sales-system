@@ -347,9 +347,7 @@ watch(quote, (value) => {
 const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
 
 const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload => ({
-  items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
-    description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
-  })),
+  items: serializeQuoteItems(items.value),
   scope_of_work: form.scope_of_work,
   validity_date: form.validity_date ? new Date(form.validity_date) : null,
   status: statusOverride ?? form.status,
@@ -383,9 +381,7 @@ const onSaveTemplate = async ({ name }: { name: string }) => {
   try {
     await quoteTemplatesStore.add({
       name,
-      items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
-        description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
-      })),
+      items: serializeQuoteItems(items.value),
       scope_of_work: form.scope_of_work,
       price_type: form.price_type,
       vat_enabled: form.vat_enabled,

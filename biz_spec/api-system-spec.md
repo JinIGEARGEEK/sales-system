@@ -3,8 +3,8 @@
 **Companion document to:** `feature-spec.md` (business requirements), `user-story.md` (role acceptance criteria), `design-system.md` (frontend conventions)
 **Purpose:** The contract for the backend API this frontend is built against. This frontend (`sales-system`) is now wired up to a real Go/Postgres backend (the sibling `sales-system-api` repo) for the resources marked 🟢 below — those Pinia stores make real `$api` calls (via `plugins/axios.ts` / `composables/utils/useAPI.ts`) instead of reading from `constants/mockData/`. A handful of narrower items are still mock-only or unbuilt; check each endpoint's status marker rather than assuming everything below is live. This document remains the contract the backend repo is kept in sync against as remaining resources get wired up.
 **Audience:** Backend engineering team / AI coding agent implementing the API in another repository.
-**Version:** 1.3 (adds `forecast_trend` to `/dashboard/summary`, documents Quote `EffectiveStatus`/`expired` derivation across all Quote endpoints, corrects Quote CRUD status markers to 🟢, notes the Kanban board's per-stage pagination fix, and documents Owner History as an `/audit-log` consumer)
-**Date:** 2026-08-17
+**Version:** 1.4 (adds `Deal.forecast_category`/`forecast_by_category`/`GET /dashboard/forecast-accuracy`, `Contact.is_primary`, Quote Templates §7.4a, and widens `GET /admin/settings` to salesPipelineRoles — backfills 2026-09-10/11 work not previously documented here)
+**Date:** 2026-08-17 (see inline "Added"/"Updated" notes for anything past this date)
 
 > **Status legend** (mirrors `feature-spec.md`'s legend, applied per endpoint):
 > 🟢 **Built** — a real backend endpoint exists and the matching frontend Pinia store calls it (no more mock data for this resource).
@@ -410,6 +410,11 @@ interface Contact {
   role_title: string
   tags: string[]
   status: ActiveArchivedStatus
+  // FR-CRM-012 — the one Contact per Company a Sales rep should reach first.
+  // Enforced as at-most-one-per-company at the handler layer (not a DB
+  // constraint): Create/Update wrap the save in a transaction that first
+  // clears is_primary on every other Contact in the same company_id.
+  is_primary: boolean
   created_at: string
 }
 ```
@@ -425,7 +430,7 @@ interface Contact {
 | `POST` | `/contacts/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |
 | `POST` | `/contacts/import` | 🟢 | Bulk import — see §6.2, same FlowAccount-export path as Companies. |
 
-> `FR-CRM-012` ("one Contact marked Primary per Company") is 🔜 **Planned** — no `is_primary` field exists in the frontend interface today. If added, it should live here as a boolean with a uniqueness constraint per `company_id`.
+> `FR-CRM-012` ("one Contact marked Primary per Company") — ✅ **Built 2026-09-10**, backfilled into this doc 2026-09-11. `is_primary` (above) is set via `POST`/`PUT /contacts` (`contactForm.is_primary`); `ContactHandler.Create`/`Update` wrap the save in a transaction that clears `is_primary` on every other Contact with the same `company_id` when it's set `true`, so "one Primary per Company" is a handler-level invariant, not a DB uniqueness constraint. Frontend: a checkbox on the Contact create/edit forms and a compact star-icon indicator (not a text badge) on the global Contacts table, Contact detail header, and a Company's Contacts tab.
 
 ---
 
@@ -461,6 +466,7 @@ type DealStatus = 'open' | 'won' | 'lost'
 type BusinessUnit = 'Project' | 'Product'
 
 type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
+type ForecastCategory = 'Commit' | 'Best Case' | 'Pipeline'
 
 interface Deal {
   id: number
@@ -471,6 +477,15 @@ interface Deal {
   stage: DealStage
   status: DealStatus
   probability: number | null   // 0-100; defaulted per-stage (StageDefaultProbability) at write time, always manually overridable — feeds /dashboard/summary's forecasted_revenue (§9)
+  // Added 2026-09-10 — buckets an open Deal's forecast confidence for
+  // /dashboard/summary's forecast_by_category (§9), breaking the single
+  // blended forecasted_revenue figure into three auditable numbers.
+  // Defaulted per-stage (StageDefaultForecastCategory: Negotiation->Commit,
+  // Proposal Sent->Best Case, else Pipeline) at write time on Create/Update
+  // and re-derived unconditionally on PATCH /deals/:id/stage (mirrors
+  // probability's own default/re-derive behavior exactly), always manually
+  // overridable afterwards.
+  forecast_category: ForecastCategory | null
   lost_reason: LostReason | null   // required once stage/status resolves to Lost; cleared automatically if the Deal moves off Lost
   expected_close_date: string | null
   assigned_to: number | null
@@ -625,6 +640,36 @@ interface Quote {
 > **`expired` is read-derived, never stored.** `Quote.Status` in the database is only ever `draft`/`sent`/`accepted`/`rejected` — `expired` is computed at read time by `Quote.EffectiveStatus()` (`internal/models/quote.go`): a `sent` Quote whose `validity_date` has passed reports as `expired` without mutating the stored `status` column. `internal/handlers/quotes.go` applies this via `withEffectiveStatus`/`withEffectiveStatuses` so **every** endpoint above that serializes a Quote — List, Get, Create, Update, and Export-PDF — returns/renders the effective status, not the raw stored one.
 
 > **`FR-CRM-046` data hand-off is frontend-only, no API change.** `POST /deals/:dealId/quotes`'s request body is unchanged — `pages/crm/quotes/create.vue` (the modal's 2026-08-23 full-page replacement, `CrmAddQuoteModal` before it) pre-fills `scope_of_work` with `deal.title` and one `items[]` row with `qty: 1, price: deal.value` (description left blank, all fields editable) client-side before the same request fires, so the request the backend receives looks identical to a manually-typed one. `QuoteItem.description` has never had a backend-side non-empty check — it's only ever been a frontend `rules="required"` on the form field, and that rule was removed 2026-08-23 alongside this change.
+
+### 7.4a Quote Templates (`FR-CRM-116`, added 2026-09-11)
+
+A named, deal-independent snapshot of a Quote's items/scope/pricing — a reusable starting point for a *future* Quote, not attached to any Deal itself. Any Sales role (Admin/Sales Rep/Sales Manager — `salesPipelineRoles`, same group as `/deals`) can save, list, use, and delete one; there is deliberately no Update endpoint (delete-and-resave covers the rare case a saved template needs changing) and no soft-delete/trash (plain hard delete, mirroring `Quote`'s own "hard-deleted server-side" convention).
+
+```ts
+interface QuoteTemplate {
+  id: number
+  name: string
+  items: QuoteItem[]        // same shape as Quote.items (§7.4) — re-snapshotted from the current Product catalog on save, same as Quote's own snapshotQuoteItems
+  scope_of_work: string
+  price_type: QuotePriceType
+  vat_enabled: boolean
+  wht_enabled: boolean
+  wht_rate: number
+  discount_total: number
+  notes: string
+  created_at: string
+}
+```
+
+Deliberately excludes every deal-specific `Quote` field (`validity_date`, `reference_number`, `status`, `issue_date`, `credit_days`, `internal_notes`) — a template is meant to be applied to a brand-new Quote, not carry forward state that only makes sense for the Quote it was saved from.
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/quote-templates` | 🟢 | List every saved template, newest first. Not paginated — expected to stay small. |
+| `POST` | `/quote-templates` | 🟢 | Save one — `name` required, everything else optional (defaults `price_type` to `excl_tax`). Frontend: a "Save as Template" button on `pages/crm/quotes/[id].vue`'s full editor, capturing its current `items`/`scope_of_work`/pricing-and-tax form state. |
+| `DELETE` | `/quote-templates/:id` | 🟢 | Hard delete, no confirmation gate server-side (frontend shows `CrmConfirmDeleteModal` before calling this). |
+
+> **Applying a template on `pages/crm/quotes/create.vue`** is frontend-only, no dedicated "create from template" endpoint. Picking one from a "Start from Template" dropdown pre-fills `items`/`scope_of_work` (this step-1 form's only fields) directly; the template's `price_type`/`vat_enabled`/`wht_enabled`/`wht_rate`/`discount_total`/`notes` (fields this step doesn't expose) are stashed and applied via a follow-up `PUT /quotes/:id` immediately after the normal `POST /deals/:dealId/quotes` create call succeeds — two requests, not one, since the create endpoint's DTO doesn't accept those fields. If that second call fails, the Quote still exists (created with the template's items/scope but default pricing) — the rep is warned to double-check pricing/tax on the next screen rather than shown a blocking error that would invite a duplicate-creating retry.
 
 ### 7.5 Payments
 
@@ -981,10 +1026,12 @@ interface AppSettings {
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `GET` | `/admin/settings` | Admin | Loads the singleton `AppSettings` row (`id: 1`), falling back to the seeded default rather than erroring if it's somehow missing. |
+| `GET` | `/admin/settings` | Admin/Sales Rep/Sales Manager | Loads the singleton `AppSettings` row (`id: 1`), falling back to the seeded default rather than erroring if it's somehow missing. **Widened from Admin-only 2026-09-11** so a Deal's Overview/Contracts tabs can read `require_signed_contract_before_won` and warn a rep *before* they hit the FR-CRM-045 422 below, not just after — same "reads open, writes gated" split Tags/PipelineStage already use. |
 | `PATCH` | `/admin/settings` | Admin | Updates it — `quarterly_sales_target` and `annual_revenue_goal` are required on every PATCH (this predates `lead_scoring_mql_threshold`/`require_signed_contract_before_won` and existing callers/tests only ever sent these two), each must be `>= 0`. `lead_scoring_mql_threshold` and `require_signed_contract_before_won` are both **optional** on PATCH — added later, so omitting either just leaves its current value in place rather than 422ing a PATCH that predates it; `lead_scoring_mql_threshold` must also be `>= 0` when present. Writes an `audit_log_entries` row (`entity_type: "settings"`, `action: "updated"`, before/after values, actor) whenever any of the four values actually changes — a no-op PATCH (identical values) does not write one. A real change also clears `GET /dashboard/summary`'s response cache (§9) immediately, rather than leaving the Admin who just changed a figure looking at their own stale pre-PATCH value for up to that cache's TTL. |
 
-> **FR-CRM-045 enforcement lives in `DealHandler`, not here.** `PATCH /admin/settings` only stores the toggle — the actual block happens in `internal/handlers/deals.go`'s `Create`/`Update`/`UpdateStage` (§7.1), via a shared `validateContractSignedBeforeWon(dealID)` helper: when the toggle is true and the submitted form would move the Deal into Won (by stage or by `status`), it counts that Deal's Contracts with `status: 'signed'` and 422s (`"a signed contract is required before marking this deal Won"`) if that count is 0. `dealID` is `0` for a brand-new Deal created directly as Won, which naturally also blocks (a Deal can't have a Contract before it exists) with no special-casing needed.
+> **FR-CRM-045 enforcement lives in `DealHandler`, not here.** `PATCH /admin/settings` only stores the toggle — the actual block happens in `internal/handlers/deals.go`'s `Create`/`Update`/`UpdateStage` (§7.1), via a shared `validateContractSignedBeforeWon(dealID)` helper: when the toggle is true and the submitted form would move the Deal into Won (by stage or by `status`), it counts that Deal's Contracts with `status: 'signed'` and 422s (`{"error":{"message":"a signed contract is required before marking this deal Won","fields":{"stage":["requires_signed_contract"]}}}`) if that count is 0. `dealID` is `0` for a brand-new Deal created directly as Won, which naturally also blocks (a Deal can't have a Contract before it exists) with no special-casing needed.
+>
+> **Discoverability, added 2026-09-11**: this gate previously surfaced only as that 422's generic message, after the fact. The frontend now reads the `fields.stage: ["requires_signed_contract"]` code (`composables/utils/useAPI.ts`'s `apiErrorHasFieldCode`) to show a specific "add a signed contract before marking this deal Won" toast instead of a generic error, at every call site that can hit this gate (`pages/crm/deals/create.vue`, `pages/crm/deals/[id]/index.vue`, the Kanban board's drag-move in `pages/crm/deals/index.vue`). It also shows the same warning *proactively* — before a rep even tries — as a banner on the Deal Overview and Contracts tabs whenever the toggle is on and the Deal has no signed Contract yet (shared logic: `composables/utils/useContractGate.ts`).
 
 Backend: `internal/models/settings.go` (`AppSettings`, seeded via `DefaultAppSettings` the same way `PipelineStage`/`LeadSourceOption` seed), `internal/handlers/settings.go` (its `Update` handler uses `utils.SaveWithAudit`, the same helper `deals.go`'s stage-change/reassign endpoints use, rather than a plain `db.Save` — this was a gap until FR-CRM-091 added it, since app settings changes previously left no audit trail unlike every other Admin-configurable resource; on a real change it also calls `dashboard.go`'s `InvalidateDashboardCache()`). `internal/handlers/dashboard.go`'s `appSettings()` reads this row instead of the old hardcoded `QUARTERLY_SALES_TARGET`-style constant (§9 below), feeding both `quarterlySalesTarget` (FR-CRM-058) and `annualRevenueGoal` (FR-CRM-091). Frontend: a "Sales Quota & Revenue Goals" card on `pages/admin/pipeline-config.vue`, backed by `stores/appSettings.ts`, showing a "last updated" hint sourced from `updated_at`.
 
@@ -1088,6 +1135,7 @@ Backend: `internal/handlers/export.go`'s `ExportHandler`, gated by the same `bul
 | `GET` | `/dashboard/summary` | 🟢 | Query params mirror the dashboard's filter bar exactly: `date_from`, `date_to` (or a `period` preset: `all\|month\|quarter\|year\|last6\|last12`), `business_unit`, `business_unit_item`, `channel`, `assigned_to` (Sales Rep user id, `FR-CRM-055`), `company_tag` (`FR-CRM-055`). Plus one param that's deliberately *not* part of that filter bar: `upsell_min_stale_days` (int, default 60) — the Upsell Opportunities widget's own filter, independent of the rest since that widget is Company-centric, not Deal-scoped (same reasoning as `annual_revenue_trend`/`revenue_trend`/`forecast_trend` ignoring the Deal filters too). Returns every stat card + chart the page renders in one response (shape below). |
 | `GET` | `/dashboard/prospect-summary` | 🟢 | Marketing's own dashboard tab (`FR-CRM-107`). Params: `assigned_to`, `date_from`, `date_to`. Not role-gated at the route — any authenticated role, same as `/dashboard/summary`; the frontend decides which role sees which tab. Response: `{ total_prospects, open_prospects, converted_count, conversion_rate, status_breakdown: [{status, count}], source_breakdown: [{source, total, converted, conversion_rate}] }` — `source_breakdown` reuses `GET /reports/prospect-source-conversion`'s own computation (`ReportHandler.fetchProspectSourceConversion`), not a separate query. |
 | `GET` | `/dashboard/lead-summary` | 🟢 | Sales tab's Lead Funnel widget (`FR-CRM-115`), mirroring `/dashboard/prospect-summary` one funnel stage later. Params: `assigned_to`, `date_from`, `date_to`. Not role-gated at the route, same convention as the two rows above. Response: `{ total_leads, new_leads, qualified_leads, disqualified_leads, status_breakdown: [{status, count}], source_breakdown: [{source, total, qualified, conversion_rate}] }` — `source_breakdown` reuses `GET /reports/lead-source-conversion`'s own computation (`ReportHandler.fetchLeadSourceConversion`), not a separate query, so any admin-configured Lead Source (`/admin/lead-sources`) shows up here automatically once Leads use it. |
+| `GET` | `/dashboard/forecast-accuracy` | 🟢 | **Added 2026-09-10**, `FR-CRM-052`. Not role-gated at the route (same "frontend decides" convention). Param: `quarters` (int, default 8) — how many most-recent `(year, quarter)` periods to return, oldest first. Backed by a new daily background job (`internal/notifier/forecast_snapshots.go`, `StartForecastSnapshots`) that writes one `ForecastSnapshot` row per day into a new `forecast_snapshots` table: that day's Commit/Best Case/Pipeline weighted-forecast split (same formula as `forecast_by_category` below, but scoped to Deals whose `expected_close_date` falls in that snapshot's `(year, quarter)`), that period's `SalesTarget`/`AppSettings` quota, and Won Deal value so far in that period (`actual_won_to_date`). This endpoint returns the *last* snapshot of each closed quarter (or the most recent one so far, for the still-open current quarter) with an `accuracy_ratio` (`actual_won_to_date ÷ weighted_forecast`, 0 if no snapshots yet) — the history accrues over time; a fresh install has nothing to show here until the daily job has run for a while. Frontend: `pages/crm/reports/forecast-accuracy.vue` (Reports → Analytics). |
 
 The response is cached process-wide for 30s per exact querystring (`internal/handlers/dashboard.go`'s `summaryCache`/`summaryCacheTTL`) — the ~11 underlying aggregate queries are too expensive to repeat on every dashboard refresh under concurrent viewers, and Deal data doesn't need to be second-fresh. `internal/handlers/settings.go`'s `PATCH /admin/settings` (§8.7a) and `internal/handlers/sales_targets.go`'s `POST`/`PATCH`/`DELETE /admin/sales-targets` (§8.7b) are the write paths that change this response's data (`quarterly_sales_target`/`annual_revenue_goal`/`pipeline_coverage_ratio`) without touching the `deals` table the cache is otherwise implicitly kept fresh against, so each explicitly calls `dashboard.go`'s exported `InvalidateDashboardCache()` on a real change — without that call, an Admin who just edited a goal or target would see their own stale pre-write value reflected back for up to the 30s TTL.
 
@@ -1101,6 +1149,7 @@ Response shape (one object covering every widget on `pages/index.vue`):
     "win_rate": 42,
     "open_deals_count": 18,
     "forecasted_revenue": 1740000,
+    "forecast_by_category": { "commit": 620000, "best_case": 540000, "pipeline": 580000 },
     "avg_deal_size": 185000,
     "avg_sales_cycle_days": 34,
     "pipeline_coverage_ratio": 1.6,
@@ -1126,6 +1175,8 @@ Response shape (one object covering every widget on `pages/index.vue`):
 `annual_revenue_trend` (`internal/handlers/dashboard.go`'s `annualRevenueTrend()`) is the same annual-goal figure broken out by month instead of one snapshot ratio: one point per elapsed month (Jan through the current month), each `actual` a *cumulative* running total (not that month's own delta) and each `goal_pace` a straight-line `annual_revenue_goal × months-elapsed/12` for the same point — lets the "Annual Goal Pace" chart on `pages/index.vue` show whether the company is ahead of or behind pace over the year, not just infer it from today's single ratio. Its last point's `actual` is also where `annual_revenue_actual` above comes from — one grouped query, not a duplicate `SUM`.
 
 `forecast_trend` (`internal/handlers/dashboard.go`'s `forecastTrend()`) is the forward-looking counterpart to `revenue_trend`: instead of bucketing *won* Deal value by month for the trailing 6 months, it buckets *open* Deal value × probability by `expected_close_date` for the current month + 5 forward, mirroring `revenueTrend()`'s exact shape (`{label, value}[]`). Deals with no `expected_close_date` are excluded from these monthly buckets but are still counted in the headline `forecasted_revenue` total above — the two numbers are not required to reconcile bucket-by-bucket. Backs the new "Forecast Trend" chart card on `pages/index.vue`, next to Revenue Trend.
+
+**Added 2026-09-10**, `FR-CRM-052`: `forecast_by_category` (`dashboard.go`'s `forecastByCategory()`) splits `forecasted_revenue`'s exact same weighted formula (open Deal `value × probability/100`) across the three `ForecastCategory` buckets (§7.1) instead of one blended number — the three fields always sum to `forecasted_revenue`. A Deal with no `forecast_category` set (a pre-migration row never backfilled) counts under `pipeline`, matching `StageDefaultForecastCategory`'s own fallback. Backs the "Forecast Breakdown" dashboard section (`components/Dashboard/ForecastBreakdown.vue`) — four stat cards: Commit, Best Case, Pipeline, and their total.
 
 ---
 

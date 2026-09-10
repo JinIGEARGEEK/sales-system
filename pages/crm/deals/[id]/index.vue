@@ -131,7 +131,6 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
-const { forecastCategoryColor } = useForecastCategoryColor()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -141,8 +140,6 @@ const pipelineStagesStore = usePipelineStagesStore()
 const teamMembersStore = useTeamMembersStore()
 const usersStore = useUsersStore()
 const auditLogStore = useAuditLogStore()
-const contractsStore = useContractsStore()
-const appSettingsStore = useAppSettingsStore()
 
 // Admin/Sales Manager only (FR-CRM-025/M-8) — GET /audit-log hard-restricts
 // everyone else server-side to stage_changed entries only (see
@@ -171,15 +168,9 @@ const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
 // FR-CRM-045's Won gate — surfaced here proactively (instead of only as a
 // generic 422 toast after the fact) so a rep sees it before trying to move
-// Stage to Won at all. Already-Won deals never show this — the gate only
-// matters on the way in.
-const dealContracts = computed(() => contractsStore.forDeal(dealId))
-const hasSignedContract = computed(() => dealContracts.value.some(c => c.status === 'signed'))
-const showContractGateWarning = computed(() =>
-  appSettingsStore.settings?.require_signed_contract_before_won === true
-  && deal.value?.status !== 'won'
-  && !hasSignedContract.value,
-)
+// Stage to Won at all. Shared with the Contracts tab (useContractGate) so
+// the rule can't drift between the two.
+const { showContractGateWarning } = useContractGate(dealId, deal)
 
 // Targeted fetchOne for this Deal's own Company/Contact, not a blanket
 // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
@@ -197,8 +188,6 @@ watch(deal, (value) => {
 onMounted(() => {
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
-  if (!appSettingsStore.settings) appSettingsStore.fetchAll().catch(notifyApiError)
-  contractsStore.fetchForDeal(dealId).catch(notifyApiError)
   if (canViewOwnerHistory.value) {
     if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
     // usersStore.fetchAll() hits the Admin-only /users endpoint (see

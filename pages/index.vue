@@ -140,15 +140,17 @@ const canViewProspectSummary = computed(() => hasRole(...PROSPECT_ROLES))
 // this is the one thing their role actually needs to see here.
 const canViewProductionWidgets = computed(() => hasRole('Production'))
 // Risk Alerts reuses the 4 Reports-page "needs attention" endpoints directly
-// (see useAttentionCounts) — those are Admin/Sales-Manager-only server-side,
-// so a Sales Rep calling them here would just 403; gate on MANAGER_ROLES
-// (narrower than canViewSalesPipelineWidgets) rather than exposing that.
+// (see stores/attentionCounts.ts) — those are Admin/Sales-Manager-only
+// server-side, so a Sales Rep calling them here would just 403; gate on
+// MANAGER_ROLES (narrower than canViewSalesPipelineWidgets) rather than
+// exposing that.
 const canViewRiskAlerts = computed(() => hasRole(...MANAGER_ROLES))
-const { counts: riskAlertCounts, fetchCounts: fetchRiskAlertCounts } = useAttentionCounts()
+const attentionCountsStore = useAttentionCountsStore()
+const riskAlertCounts = computed(() => attentionCountsStore.counts)
 // Role resolution can land after mount (hydrate-auth.client.ts) — same
 // `watch` + `immediate` reasoning as the dashboard-tab default above, rather
 // than a plain onMounted that could fire before hasRole is trustworthy.
-watch(canViewRiskAlerts, (canView) => { if (canView) fetchRiskAlertCounts() }, { immediate: true })
+watch(canViewRiskAlerts, (canView) => { if (canView) attentionCountsStore.fetchCounts() }, { immediate: true })
 // Only Admin/Sales Manager/Sales Rep are in both role lists — everyone else
 // has just one tab's worth of content, so no switcher is shown at all for
 // them.
