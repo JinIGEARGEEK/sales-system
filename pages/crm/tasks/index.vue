@@ -57,13 +57,22 @@
       </div>
       <CrmTaskList
         v-else
-        :tasks="filteredTasks"
+        :tasks="paginatedTasks"
         :selectable="isSelectMode"
         :selected-ids="selectedIds"
         @toggle="onToggleTask"
         @remove="onRemoveTask"
         @edit="openEditTask"
         @update:selected-ids="selectedIds = $event"
+      />
+      <TablePagination
+        v-if="filteredTasks.length > 0"
+        :page="page"
+        :total="filteredTasks.length"
+        :total-page="totalPage"
+        :per-page="perPage"
+        @change-page="onChangePage"
+        @change-per-page="onChangePerPage"
       />
     </ContainerTemplate>
 
@@ -180,6 +189,12 @@ const filteredTasks = computed(() => {
       const overdueDiff = Number(isTaskOverdue(b, now)) - Number(isTaskOverdue(a, now))
       return overdueDiff !== 0 ? overdueDiff : a.due_date.getTime() - b.due_date.getTime()
     })
+})
+
+const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredTasks.value.length)
+const paginatedTasks = computed(() => {
+  const start = (page.value - 1) * perPage.value
+  return filteredTasks.value.slice(start, start + perPage.value)
 })
 
 const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
