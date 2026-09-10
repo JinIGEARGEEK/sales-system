@@ -18,6 +18,7 @@
           <InputSelect v-model="form.type" :options="activityTypeOptions" :label="t('crm.components.addActivityModal.type')" name="type" rules="required" />
           <InputText v-model="form.subject" :label="t('crm.components.addActivityModal.subject')" name="subject" rules="required" />
           <InputTextarea v-model="form.notes" :label="t('crm.components.addActivityModal.notes')" name="notes" />
+          <InputDatePicker v-model="form.date" :label="t('crm.components.addActivityModal.date')" name="date" rules="required" />
         </div>
       </Form>
     </template>
@@ -35,6 +36,7 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const { activityTypeOptions } = useActivityTypeMeta()
+const { toDateInputValue } = useFormatter()
 
 const props = defineProps<{
   open: boolean
@@ -50,13 +52,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [activity: { type: ActivityType, subject: string, notes: string, related_type?: ActivityRelatedType, related_id?: number }]
+  submit: [activity: { type: ActivityType, subject: string, notes: string, created_at?: string, related_type?: ActivityRelatedType, related_id?: number }]
 }>()
 
 const emptyForm = () => ({
   type: 'call' as ActivityType,
   subject: '',
   notes: '',
+  // Defaults to today — logging with today's date is the common case
+  // (including "mark as contacted now" from the Company page), backdating
+  // is just picking an earlier date here.
+  date: toDateInputValue(new Date()),
   related_type: '' as ActivityRelatedType | '',
   related_id: '',
 })
@@ -70,6 +76,7 @@ const onSubmit = guard(async () => {
     type: form.type,
     subject: form.subject,
     notes: form.notes,
+    created_at: new Date(form.date).toISOString(),
     ...(props.showRelatedPicker
       ? { related_type: form.related_type as ActivityRelatedType, related_id: Number(form.related_id) }
       : {}),

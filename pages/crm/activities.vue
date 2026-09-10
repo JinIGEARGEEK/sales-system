@@ -230,13 +230,14 @@ const columns = computed<TableDataColumn[]>(() => [
 // itself, so this calls activitiesStore.add() directly rather than going
 // through that composable.
 const addActivityOpen = ref(false)
-const onSubmitActivity = async (payload: { type: ActivityType, subject: string, notes: string, related_type?: ActivityRelatedType, related_id?: number }) => {
+const onSubmitActivity = async (payload: { type: ActivityType, subject: string, notes: string, created_at?: string, related_type?: ActivityRelatedType, related_id?: number }) => {
   if (!payload.related_type || !payload.related_id) return
   try {
     await activitiesStore.add({
       type: payload.type,
       subject: payload.subject,
       notes: payload.notes,
+      created_at: payload.created_at,
       related_type: payload.related_type,
       related_id: payload.related_id,
     })

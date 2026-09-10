@@ -55,7 +55,10 @@ export const useActivitiesStore = defineStore('activities', {
       ]
       return fetched
     },
-    async add (activity: Omit<Activity, 'id' | 'created_by' | 'created_at'>): Promise<Activity> {
+    // created_at lets a caller backdate a manually-logged Activity (e.g.
+    // "mark as contacted on <past date>" from the Company page's Add
+    // Activity modal). Omitted, the backend stamps the current time as usual.
+    async add (activity: Omit<Activity, 'id' | 'created_by' | 'created_at'> & { created_at?: string }): Promise<Activity> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Activity>>('/activities', activity)
       const created = parseDates(response.data.data)

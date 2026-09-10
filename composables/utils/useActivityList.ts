@@ -4,6 +4,7 @@ interface ActivityFormPayload {
   type: ActivityType
   subject: string
   notes: string
+  created_at?: string
 }
 
 // Shared by the deal/company/contact detail pages' own Activity section, each

@@ -43,6 +43,8 @@ const iconFor = (type: ActivityType) => {
       return 'material-symbols:mail-outline'
     case 'meeting':
       return 'material-symbols:groups-outline'
+    case 'note':
+      return 'material-symbols:sticky-note-2-outline'
   }
 }
 </script>

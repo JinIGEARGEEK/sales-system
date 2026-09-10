@@ -36,6 +36,8 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 หัวหน้าทีมเปิด Dashboard กรองตามช่วงเวลา ดู Win Rate, มูลค่า Pipeline, และ Leaderboard รายบุคคล พร้อมรายชื่อบัญชีลูกค้าที่ไม่ได้ติดต่อมานานเพื่อตามหาโอกาส Upsell. (สอดคล้องกับ M-1, M-2, M-4, M-9, M-10 ด้านล่าง)
 
 > ✅ **Built 2026-09-04** (FR-CRM-108/109) — the "accounts not contacted in a while" list was UI-only until now: the Dashboard's "Upsell Opportunities" widget is backed by real data (active Companies grouped into 60/90/120-day staleness tiers), and the Companies list also gained `stale_days`/`has_won_deal` filters plus a reliable server-computed "Last Contact" badge (previously only accurate for companies already visited that session) for building an ad-hoc win-back list directly.
+>
+> ✅ **Updated 2026-09-10** (FR-CRM-113/114) — "last contacted" previously only advanced when someone manually logged a call/email/meeting Activity, which under-counted real contact: a rep moving a Prospect/Lead/Deal to a new stage (following up, disqualifying, closing Won or Lost) is itself evidence of a touchpoint, so that now logs a company-scoped Activity automatically too. A Sales Manager can also manually mark a Company as contacted "now" or on a chosen past date from its Activity tab, for outreach that happened outside the system (e.g. a phone call not otherwise logged).
 
 > หมายเหตุ: กรณีการใช้งานที่เกี่ยวกับ Quote/Contract และ Product/Project Tracking (§2.4, §2.5 ด้านล่าง) ยังใช้งานจริงไม่ได้ เนื่องจากยังไม่ได้พัฒนา
 
