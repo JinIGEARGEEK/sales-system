@@ -7,7 +7,7 @@
   >
     <template #header>
       <div class="flex items-center gap-2">
-        <UIcon :name="topic.flowIcons[0] ?? 'material-symbols:info-outline'" class="size-4 text-[var(--color-primary)]" />
+        <UIcon :name="topic.flowIcons[0] ?? 'material-symbols:info-outline'" class="size-4 text-(--color-primary)" />
         <h3 class="text-sm font-bold">{{ topic.title }}</h3>
       </div>
     </template>
@@ -15,34 +15,34 @@
     <!-- Flow diagram: the record types this guideline moves through, left to right -->
     <div class="mb-4 flex flex-wrap items-center gap-2">
       <template v-for="(step, index) in topic.flow" :key="step">
-        <div class="flex items-center gap-1.5 rounded-full bg-[var(--color-primary-bg)] px-3 py-1.5">
-          <UIcon :name="topic.flowIcons[index] ?? 'material-symbols:circle'" class="size-4 text-[var(--color-primary)]" />
-          <span class="text-xs font-semibold text-[var(--color-primary)]">{{ step }}</span>
+        <div class="flex items-center gap-1.5 rounded-full bg-(--color-primary-bg) px-3 py-1.5">
+          <UIcon :name="topic.flowIcons[index] ?? 'material-symbols:circle'" class="size-4 text-(--color-primary)" />
+          <span class="text-xs font-semibold text-(--color-primary)">{{ step }}</span>
         </div>
         <UIcon
           v-if="index < topic.flow.length - 1"
           name="material-symbols:arrow-forward-rounded"
-          class="size-4 shrink-0 text-[var(--color-gray)]"
+          class="size-4 shrink-0 text-(--color-gray)"
         />
       </template>
     </div>
 
-    <p class="mb-4 text-sm leading-relaxed text-[var(--color-gray)]">{{ topic.description }}</p>
+    <p class="mb-4 text-sm leading-relaxed text-(--color-gray)">{{ topic.description }}</p>
 
     <div class="flex flex-col">
       <div v-for="(step, index) in topic.steps" :key="index" class="flex gap-3">
         <div class="flex flex-col items-center">
-          <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white">
+          <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--color-primary) text-xs font-bold text-white">
             {{ index + 1 }}
           </div>
-          <div v-if="index < topic.steps.length - 1" class="my-1 w-px flex-1 bg-[var(--color-gray)]/15" />
+          <div v-if="index < topic.steps.length - 1" class="my-1 w-px flex-1 bg-(--color-gray)/15" />
         </div>
 
         <div class="flex-1 space-y-1.5 pb-4">
           <NuxtLink
             v-if="!isStepBlockedForActiveTab(step)"
             :to="NAV_META[step.nav]?.path ?? '/'"
-            class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-gray)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-gray)] transition-colors hover:bg-[var(--color-primary-bg)] hover:text-[var(--color-primary)]"
+            class="inline-flex items-center gap-1.5 rounded-full bg-(--color-gray)/10 px-2.5 py-1 text-xs font-medium text-(--color-gray) transition-colors hover:bg-(--color-primary-bg) hover:text-(--color-primary)"
           >
             <UIcon :name="NAV_META[step.nav]?.icon ?? 'material-symbols:menu-open-rounded'" class="size-3.5" />
             <span>{{ t(`layout.nav.${step.nav}`) }}</span>
@@ -53,7 +53,7 @@
           would contradict what the chip is telling the reader. -->
           <span
             v-else
-            class="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-gray)]/10 px-2.5 py-1 text-xs font-medium text-[var(--color-gray)] opacity-60"
+            class="inline-flex items-center gap-1.5 rounded-full bg-(--color-gray)/10 px-2.5 py-1 text-xs font-medium text-(--color-gray) opacity-60"
           >
             <UIcon :name="NAV_META[step.nav]?.icon ?? 'material-symbols:menu-open-rounded'" class="size-3.5" />
             <span>{{ t(`layout.nav.${step.nav}`) }}</span>
@@ -65,7 +65,7 @@
           <p
             v-if="step.restriction"
             class="flex items-start gap-1 text-xs"
-            :class="isOpenToAllSalesRoles(step.restriction) ? 'text-[var(--color-gray)]' : 'font-medium text-amber-600'"
+            :class="isOpenToAllSalesRoles(step.restriction) ? 'text-(--color-gray)' : 'font-medium text-amber-600'"
           >
             <UIcon
               :name="isOpenToAllSalesRoles(step.restriction) ? 'material-symbols:check-circle-outline' : 'material-symbols:lock-outline'"

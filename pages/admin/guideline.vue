@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-black">{{ t('admin.guideline.title') }}</h2>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('admin.guideline.subtitle') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('admin.guideline.subtitle') }}</p>
     </div>
 
     <AdminGuidelineSearchBar v-model="searchQuery" :results="searchPreviewResults" @select="goToSearchResult" />
@@ -21,7 +21,7 @@
       />
     </div>
 
-    <p class="mt-5 flex items-center gap-1.5 text-xs text-[var(--color-gray)]">
+    <p class="mt-5 flex items-center gap-1.5 text-xs text-(--color-gray)">
       <UIcon name="material-symbols:info-outline" class="size-3.5 shrink-0" />
       {{ t('admin.guideline.legendHint') }}
     </p>

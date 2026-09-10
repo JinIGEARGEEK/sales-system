@@ -20,7 +20,7 @@
         :items="prop.item"
       />
     </div>
-    <div v-else class="whitespace-pre-wrap static-body-sm text-[var(--color-black)]">
+    <div v-else class="whitespace-pre-wrap static-body-sm text-(--color-black)">
       {{ prop.item }}
     </div>
   </div>

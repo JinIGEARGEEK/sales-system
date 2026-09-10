@@ -50,21 +50,21 @@
             v-for="result in results"
             :key="result.id"
             type="button"
-            class="flex w-full items-start gap-3 border-b border-[var(--color-gray)]/10 px-3 py-2.5 text-left last:border-b-0 hover:bg-[var(--color-primary-bg)]"
+            class="flex w-full items-start gap-3 border-b border-(--color-gray)/10 px-3 py-2.5 text-left last:border-b-0 hover:bg-(--color-primary-bg)"
             @click="emit('select', result)"
           >
-            <UIcon :name="result.icon" class="mt-0.5 size-5 shrink-0 text-[var(--color-primary)]" />
+            <UIcon :name="result.icon" class="mt-0.5 size-5 shrink-0 text-(--color-primary)" />
             <span class="min-w-0 flex-1">
               <span class="block truncate text-sm font-medium">{{ result.title }}</span>
-              <span class="mt-0.5 flex items-center gap-1 truncate text-xs text-[var(--color-gray)]">
+              <span class="mt-0.5 flex items-center gap-1 truncate text-xs text-(--color-gray)">
                 {{ result.topicTitle }}
                 <UIcon name="material-symbols:chevron-right" class="size-3.5 shrink-0" />
-                <span class="text-[var(--color-accent-green)]">{{ result.roleLabel }}</span>
+                <span class="text-(--color-accent-green)">{{ result.roleLabel }}</span>
               </span>
             </span>
           </button>
 
-          <p v-if="results.length === 0" class="px-3 py-4 text-center text-sm text-[var(--color-gray)]">
+          <p v-if="results.length === 0" class="px-3 py-4 text-center text-sm text-(--color-gray)">
             {{ t('admin.guideline.noResultsTitle') }}
           </p>
         </div>

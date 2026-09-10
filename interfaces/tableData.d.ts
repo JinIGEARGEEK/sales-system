@@ -11,6 +11,10 @@ interface TableDataColumn {
   width?: number
   isSort?: boolean
   type?: string
+  // Explanatory text for column headers whose values aren't self-evident
+  // (e.g. abbreviations like MQL/SQL) — rendered as an info icon + UTooltip
+  // next to the label. Omit for self-explanatory columns.
+  tooltip?: string
 }
 
 interface TableDataColumnActions {

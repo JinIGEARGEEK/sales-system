@@ -22,29 +22,42 @@
       </UInput>
     </div>
 
-    <div
-      v-if="open && query.trim().length >= MIN_QUERY_LENGTH"
-      class="absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border border-white/60 bg-white/95 shadow-xl backdrop-blur-2xl"
-    >
-      <div v-if="totalResults === 0" class="px-4 py-6 text-center text-sm text-[var(--color-gray)]">
-        {{ t('crm.components.globalSearch.noResults') }}
-      </div>
-      <template v-else>
-        <div v-for="group in resultGroups" v-show="group.items.length > 0" :key="group.key" class="border-b border-white/50 last:border-none">
-          <p class="px-4 pt-3 pb-1 text-xs font-medium text-[var(--color-gray)]">{{ group.label }}</p>
-          <NuxtLink
-            v-for="item in group.items"
-            :key="item.path"
-            :to="item.path"
-            class="global-search-result flex items-center justify-between gap-3 px-4 py-2 text-sm"
-            @click="onSelect"
-          >
-            <span class="truncate">{{ item.label }}</span>
-            <span class="shrink-0 text-xs text-[var(--color-gray)]">{{ item.sublabel }}</span>
-          </NuxtLink>
+    <!--
+      Teleported to <body> rather than left as an absolutely-positioned
+      descendant of rootRef: the header bar this component sits in
+      (layouts/default.vue's `headerRef`) has `overflow-hidden` for its own
+      decorative corner-gradient overlay, which was clipping this panel
+      whenever it extended past the header's bottom edge (i.e. always, since
+      it opens right below the input). Positioned via `dropdownStyle`
+      instead of Tailwind's `absolute`/`mt-1` now that it's no longer a
+      normal-flow descendant of the input.
+    -->
+    <Teleport to="body">
+      <div
+        v-if="open && query.trim().length >= MIN_QUERY_LENGTH"
+        class="fixed z-30 max-h-96 overflow-y-auto rounded-lg border border-white/60 bg-white/95 shadow-xl backdrop-blur-2xl"
+        :style="dropdownStyle"
+      >
+        <div v-if="totalResults === 0" class="px-4 py-6 text-center text-sm text-(--color-gray)">
+          {{ t('crm.components.globalSearch.noResults') }}
         </div>
-      </template>
-    </div>
+        <template v-else>
+          <div v-for="group in resultGroups" v-show="group.items.length > 0" :key="group.key" class="border-b border-white/50 last:border-none">
+            <p class="px-4 pt-3 pb-1 text-xs font-medium text-(--color-gray)">{{ group.label }}</p>
+            <NuxtLink
+              v-for="item in group.items"
+              :key="item.path"
+              :to="item.path"
+              class="global-search-result flex items-center justify-between gap-3 px-4 py-2 text-sm"
+              @click="onSelect"
+            >
+              <span class="truncate">{{ item.label }}</span>
+              <span class="shrink-0 text-xs text-(--color-gray)">{{ item.sublabel }}</span>
+            </NuxtLink>
+          </div>
+        </template>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -80,6 +93,24 @@ const query = ref('')
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
 const inputRef = useTemplateRef<{ inputRef: Ref<HTMLInputElement | null> }>('inputRef')
+
+// Tracks rootRef's viewport position so the teleported (see template)
+// results panel can be pinned under the input via `position: fixed` — it's
+// no longer a normal-flow descendant once teleported to <body>, so it can't
+// rely on the input's own layout for placement.
+const dropdownStyle = ref<{ top: string, left: string, width: string }>({ top: '0px', left: '0px', width: '0px' })
+const updateDropdownPosition = () => {
+  const rect = rootRef.value?.getBoundingClientRect()
+  if (!rect) return
+  dropdownStyle.value = {
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+  }
+}
+watch(open, (isOpen) => {
+  if (isOpen) nextTick(updateDropdownPosition)
+})
 
 // Mouse-only otherwise (the survey that flagged this found zero keyboard
 // entry point at all) — Cmd+K on Mac, Ctrl+K elsewhere, mirroring the
@@ -206,10 +237,17 @@ const onClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   document.addEventListener('mousedown', onClickOutside)
   document.addEventListener('keydown', onGlobalKeydown)
+  // `main`'s own scroll (the sticky header stays put, but the page below it
+  // scrolls independently) as well as window resize can both move/resize
+  // rootRef relative to the viewport while the teleported panel is open.
+  window.addEventListener('resize', updateDropdownPosition)
+  window.addEventListener('scroll', updateDropdownPosition, true)
 })
 onUnmounted(() => {
   document.removeEventListener('mousedown', onClickOutside)
   document.removeEventListener('keydown', onGlobalKeydown)
+  window.removeEventListener('resize', updateDropdownPosition)
+  window.removeEventListener('scroll', updateDropdownPosition, true)
 })
 </script>
 

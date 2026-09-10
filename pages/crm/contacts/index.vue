@@ -237,9 +237,15 @@ const displayContacts = computed(() => rows.value.map(contact => ({
   statusBadge: contact.status === 'active'
     ? toBadge(t('crm.contacts.index.statusActive'), 'success')
     : toBadge(t('crm.contacts.index.statusArchived')),
+  // Compact star icon rather than a full text pill — scans faster in a dense
+  // table column than "Primary" repeated down the page (see Status.vue's icon
+  // branch). `title` isn't rendered visibly here, only as the icon's
+  // screen-reader label, so removing the visible pill doesn't also remove
+  // what gets announced for this cell. Non-primary rows stay blank via
+  // isNoData, same as before.
   primaryBadge: contact.is_primary
-    ? toBadge(t('crm.contacts.index.primaryBadge'), 'primary')
-    : { ...toBadge(''), isNoData: true },
+    ? { icon: 'material-symbols:star', color: 'warning', title: t('crm.contacts.index.primaryBadge') }
+    : { isNoData: true },
 })))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Contact>()

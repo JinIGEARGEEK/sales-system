@@ -132,7 +132,7 @@
       </div>
     </div>
 
-    <div v-else class="py-12 text-center text-[var(--color-gray)]">
+    <div v-else class="py-12 text-center text-(--color-gray)">
       {{ t('crm.prospects.detail.prospectNotFound') }}
     </div>
 

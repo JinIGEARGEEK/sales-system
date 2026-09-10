@@ -13,32 +13,32 @@
         </div>
         <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.industry') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.industry') }}</p>
             <p>{{ company.industry || '-' }}</p>
           </div>
           <div>
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.companySize') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.companySize') }}</p>
             <p>{{ company.size || '-' }}</p>
           </div>
           <div>
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.revenueSize') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.revenueSize') }}</p>
             <p>{{ company.revenue_size || '-' }}</p>
           </div>
           <div>
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.website') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.website') }}</p>
             <p>{{ company.website || '-' }}</p>
           </div>
           <div class="sm:col-span-2">
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.address') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.address') }}</p>
             <p class="whitespace-pre-wrap">{{ company.address || '-' }}</p>
           </div>
           <div class="sm:col-span-2">
-            <p class="text-[var(--color-gray)]">{{ t('crm.companies.detail.notes') }}</p>
+            <p class="text-(--color-gray)">{{ t('crm.companies.detail.notes') }}</p>
             <p class="whitespace-pre-wrap">{{ company.notes || '-' }}</p>
           </div>
         </div>
       </div>
-      <div v-else class="py-8 text-center text-sm text-[var(--color-gray)]">
+      <div v-else class="py-8 text-center text-sm text-(--color-gray)">
         {{ loading ? t('crm.components.companyPreviewModal.loading') : t('crm.components.companyPreviewModal.notFound') }}
       </div>
     </template>

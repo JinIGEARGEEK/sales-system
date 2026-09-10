@@ -1,7 +1,7 @@
 <template>
   <UCard :ui="{ root: `${GLASS_PANEL_UI.root} border-l-4 border-l-[var(--color-primary)]` }" class="mb-4">
     <div class="flex items-start gap-2.5">
-      <UIcon :name="roleFocusIcon" class="mt-0.5 size-5 shrink-0 text-[var(--color-primary)]" />
+      <UIcon :name="roleFocusIcon" class="mt-0.5 size-5 shrink-0 text-(--color-primary)" />
       <p class="text-sm">{{ roleFocus }}</p>
     </div>
   </UCard>

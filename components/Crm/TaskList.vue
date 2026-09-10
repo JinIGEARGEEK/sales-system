@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="tasks.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+    <div v-if="tasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
       {{ t('crm.components.taskList.noTasks') }}
     </div>
     <div v-else class="flex flex-col gap-2">
@@ -10,12 +10,12 @@
           :aria-label="t('crm.components.taskList.selectAll')"
           @update:model-value="toggleSelectAll"
         />
-        <span class="text-xs text-[var(--color-gray)]">{{ t('crm.components.taskList.selectAll') }}</span>
+        <span class="text-xs text-(--color-gray)">{{ t('crm.components.taskList.selectAll') }}</span>
       </div>
       <div
         v-for="task in tasks"
         :key="task.id"
-        class="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
+        class="flex flex-wrap items-center gap-2 rounded-lg border border-(--color-light-gray-2) px-4 py-3"
       >
         <UCheckbox
           v-if="selectable"
@@ -40,12 +40,12 @@
             :aria-label="t('crm.components.taskList.editTask')"
             @click="emit('edit', task)"
           >
-            <p class="truncate text-sm" :class="task.status === 'done' ? 'text-[var(--color-gray)] line-through' : 'font-medium'">
+            <p class="truncate text-sm" :class="task.status === 'done' ? 'text-(--color-gray) line-through' : 'font-medium'">
               {{ task.title }}
             </p>
-            <p v-if="task.description" class="truncate text-xs text-[var(--color-gray)]">{{ task.description }}</p>
+            <p v-if="task.description" class="truncate text-xs text-(--color-gray)">{{ task.description }}</p>
           </button>
-          <p class="truncate text-xs text-[var(--color-gray)]">
+          <p class="truncate text-xs text-(--color-gray)">
             <NuxtLink v-if="task.path" :to="task.path" class="hover:underline">{{ task.relatedLabel }}</NuxtLink>
             <span v-if="task.path"> · </span>
             {{ teamMembersStore.nameById(task.assigned_to) }}

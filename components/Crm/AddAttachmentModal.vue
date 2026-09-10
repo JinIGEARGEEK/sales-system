@@ -16,14 +16,14 @@
 
             <template v-if="mode === 'file'">
               <label
-                class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--color-light-gray-2)] p-6 text-center hover:bg-[var(--color-light-gray-1)]"
+                class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
               >
-                <UIcon name="material-symbols:upload-file-outline" class="size-8 text-[var(--color-gray)]" />
+                <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
                 <span class="text-sm font-medium">{{ fileName || t('crm.components.addAttachmentModal.chooseFile') }}</span>
-                <span class="text-xs text-[var(--color-gray)]">{{ t('crm.components.addAttachmentModal.acceptedFormats') }}</span>
+                <span class="text-xs text-(--color-gray)">{{ t('crm.components.addAttachmentModal.acceptedFormats') }}</span>
                 <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv" class="hidden" @change="onFileChange" >
               </label>
-              <p v-if="fileError" class="text-xs text-[var(--color-danger-toast)]">{{ fileError }}</p>
+              <p v-if="fileError" class="text-xs text-(--color-danger-toast)">{{ fileError }}</p>
             </template>
 
             <template v-else>

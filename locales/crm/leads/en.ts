@@ -13,6 +13,7 @@ export default {
       source: 'Source',
       status: 'Status',
       classification: 'Score',
+      classificationTooltip: 'MQL = scored above threshold · SQL = manually marked sales-ready · "-" = neither yet',
       assignedTo: 'Assigned To',
       created: 'Created',
       action: 'Action',

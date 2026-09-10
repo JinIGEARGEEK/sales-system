@@ -1,6 +1,14 @@
 <template>
   <div>
     <ContainerTemplate>
+      <UAlert
+        v-if="showContractGateWarning"
+        class="mb-4"
+        color="warning"
+        variant="subtle"
+        icon="material-symbols:warning-outline"
+        :title="t('crm.deals.detail.contractRequiredWarning')"
+      />
       <div class="mb-4 flex items-center justify-between">
         <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
         <div class="flex gap-2">
@@ -20,11 +28,11 @@
         </div>
       </div>
 
-      <div v-if="dealContracts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+      <div v-if="dealContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.contracts.detail.noContracts') }}
       </div>
       <div v-else class="flex flex-col gap-3">
-        <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
+        <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <div class="mb-2 flex items-center justify-between">
             <InputSelect
               :model-value="contract.status"
@@ -35,7 +43,7 @@
               @update:model-value="(value: string) => onUpdateContractStatus(contract, value as ContractStatus)"
             />
             <div class="flex items-center gap-3">
-              <span class="text-xs text-[var(--color-gray)]">
+              <span class="text-xs text-(--color-gray)">
                 {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
               </span>
               <UButton
@@ -49,9 +57,9 @@
             </div>
           </div>
 
-          <div v-if="contract.signed_file_url" class="flex items-center justify-between gap-3 rounded-lg bg-[var(--color-light-gray-1)] p-3">
+          <div v-if="contract.signed_file_url" class="flex items-center justify-between gap-3 rounded-lg bg-(--color-light-gray-1) p-3">
             <div class="flex min-w-0 items-center gap-3">
-              <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-[var(--color-danger-toast)]" />
+              <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-(--color-danger-toast)" />
               <p class="truncate text-sm font-medium">
                 {{ contract.signed_date ? t('crm.contracts.detail.uploadedOn', { date: dateTimeFormat(contract.signed_date.toISOString()) }) : '-' }}
               </p>
@@ -116,8 +124,14 @@ const dealContracts = computed(() => contractsStore.forDeal(dealId))
 // been visited yet in this session.
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
+// Same FR-CRM-045 gate as pages/crm/deals/[id]/index.vue's own warning — this
+// is the tab a rep actually fixes it from, so it gets the same banner.
+// useContractGate also owns the Contracts/AppSettings fetch-on-mount
+// (guarded on already-loaded), so there's nothing left to fetch here beyond
+// Quotes.
+const { showContractGateWarning } = useContractGate(dealId, deal)
+
 onMounted(() => {
-  contractsStore.fetchForDeal(dealId).catch(notifyApiError)
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 

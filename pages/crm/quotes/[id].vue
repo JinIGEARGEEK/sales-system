@@ -17,6 +17,12 @@
         <div class="flex gap-2">
           <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
           <ButtonPrimary
+            :label="t('crm.quotes.detail.saveAsTemplate')"
+            outline
+            icon="material-symbols:bookmark-add-outline"
+            @click="saveTemplateOpen = true"
+          />
+          <ButtonPrimary
             v-if="canSend"
             :label="t('crm.quotes.detail.sendToCustomer')"
             icon="material-symbols:send-outline"
@@ -80,25 +86,25 @@
               re-store what's already implicit via deal_id). -->
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <p class="text-xs text-[var(--color-gray)]">{{ t('crm.quotes.editor.company') }}</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.company') }}</p>
                   <p class="text-sm font-medium">{{ company?.name }}</p>
-                  <p v-if="company?.address" class="mt-1 whitespace-pre-wrap text-xs text-[var(--color-gray)]">{{ company.address }}</p>
+                  <p v-if="company?.address" class="mt-1 whitespace-pre-wrap text-xs text-(--color-gray)">{{ company.address }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-[var(--color-gray)]">{{ t('crm.quotes.editor.contactPerson') }}</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.contactPerson') }}</p>
                   <p class="text-sm font-medium">{{ contact?.name }}</p>
-                  <p v-if="contact?.phone" class="text-xs text-[var(--color-gray)]">{{ contact.phone }}</p>
+                  <p v-if="contact?.phone" class="text-xs text-(--color-gray)">{{ contact.phone }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-[var(--color-gray)]">{{ t('crm.quotes.editor.salesRep') }}</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.salesRep') }}</p>
                   <p class="text-sm font-medium">{{ teamMembersStore.nameById(deal.assigned_to) }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-[var(--color-gray)]">{{ t('crm.quotes.editor.currency') }}</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.currency') }}</p>
                   <p class="text-sm font-medium">THB</p>
                 </div>
                 <div>
-                  <p class="text-xs text-[var(--color-gray)]">{{ t('crm.quotes.editor.project') }}</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.project') }}</p>
                   <p class="text-sm font-medium">{{ dealProject?.name ?? t('crm.quotes.editor.projectNone') }}</p>
                 </div>
               </div>
@@ -145,11 +151,11 @@
                 />
               </div>
 
-              <div class="mt-4 flex flex-col gap-1 border-t border-[var(--color-light-gray-2)] pt-3 text-sm">
-                <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.subtotal) }}</span></div>
-                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.discountTotal) }}</span></div>
-                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.vat) }}</span></div>
-                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.wht) }}</span></div>
+              <div class="mt-4 flex flex-col gap-1 border-t border-(--color-light-gray-2) pt-3 text-sm">
+                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.subtotal) }}</span></div>
+                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.discountTotal) }}</span></div>
+                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.vat) }}</span></div>
+                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.wht) }}</span></div>
                 <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</span></div>
               </div>
 
@@ -168,7 +174,7 @@
                 <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.grandTotal') }}</h3>
               </div>
             </template>
-            <p class="text-2xl font-black text-[var(--color-primary)]">{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</p>
+            <p class="text-2xl font-black text-(--color-primary)">{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</p>
           </UCard>
 
           <UCard class="mt-4">
@@ -185,6 +191,8 @@
 
       <CrmAddAttachmentModal v-model:open="addAttachmentOpen" @submit="onAddAttachment" />
 
+      <CrmSaveQuoteTemplateModal v-model:open="saveTemplateOpen" @submit="onSaveTemplate" />
+
       <CrmConfirmDeleteModal
         v-model:open="sendConfirmOpen"
         :title="t('crm.quotes.detail.sendConfirmTitle')"
@@ -195,7 +203,7 @@
       />
     </div>
 
-    <div v-else class="py-12 text-center text-[var(--color-gray)]">
+    <div v-else class="py-12 text-center text-(--color-gray)">
       {{ t('crm.quotes.detail.quoteNotFound') }}
     </div>
   </div>
@@ -227,6 +235,7 @@ const { priceFormat } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 
 const quotesStore = useQuotesStore()
+const quoteTemplatesStore = useQuoteTemplatesStore()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -338,9 +347,7 @@ watch(quote, (value) => {
 const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
 
 const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload => ({
-  items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
-    description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
-  })),
+  items: serializeQuoteItems(items.value),
   scope_of_work: form.scope_of_work,
   validity_date: form.validity_date ? new Date(form.validity_date) : null,
   status: statusOverride ?? form.status,
@@ -367,6 +374,27 @@ const onSave = guard(async () => {
 })
 
 const onSaveClick = () => validateThenSubmit(onSave)
+
+const saveTemplateOpen = ref(false)
+
+const onSaveTemplate = async ({ name }: { name: string }) => {
+  try {
+    await quoteTemplatesStore.add({
+      name,
+      items: serializeQuoteItems(items.value),
+      scope_of_work: form.scope_of_work,
+      price_type: form.price_type,
+      vat_enabled: form.vat_enabled,
+      wht_enabled: form.wht_enabled,
+      wht_rate: form.wht_rate,
+      discount_total: form.discount_total,
+      notes: form.notes,
+    })
+    success(t('crm.quotes.detail.saveAsTemplateSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 
 // "Send to Customer" is kept separate from the generic Save button —
 // transitioning a Quote to `sent` is a one-way, customer-facing action (once

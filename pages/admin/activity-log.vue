@@ -4,13 +4,13 @@
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-xl font-black">{{ t('admin.activityLog.title') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ dateFormat(new Date().toISOString()) }}</p>
+          <p class="text-sm text-(--color-gray)">{{ dateFormat(new Date().toISOString()) }}</p>
         </div>
       </div>
 
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-wrap items-center gap-2">
-          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-[var(--color-gray)]" />
+          <UIcon name="material-symbols:filter-alt-outline" class="size-4 shrink-0 text-(--color-gray)" />
           <div class="w-full sm:w-48">
             <InputSelect
               v-model="entityTypeFilter"
@@ -57,19 +57,19 @@
         </template>
         <template #body>
           <div v-if="selectedEntry" class="flex flex-col gap-1 text-sm">
-            <p v-if="changedFields.length === 0" class="text-[var(--color-gray)]">
+            <p v-if="changedFields.length === 0" class="text-(--color-gray)">
               {{ t('admin.activityLog.detail.noChange') }}
             </p>
             <div
               v-for="field in changedFields"
               :key="field.key"
-              class="flex flex-col gap-1 border-b border-[var(--color-light-gray-1)] py-2 last:border-b-0"
+              class="flex flex-col gap-1 border-b border-(--color-light-gray-1) py-2 last:border-b-0"
             >
-              <p class="text-xs font-medium text-[var(--color-gray)]">{{ field.key }}</p>
+              <p class="text-xs font-medium text-(--color-gray)">{{ field.key }}</p>
               <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="rounded bg-[var(--color-light-gray-1)] px-2 py-1 line-through">{{ field.before }}</span>
-                <UIcon name="material-symbols:arrow-forward" class="size-3 shrink-0 text-[var(--color-gray)]" />
-                <span class="rounded bg-[var(--color-light-gray-1)] px-2 py-1">{{ field.after }}</span>
+                <span class="rounded bg-(--color-light-gray-1) px-2 py-1 line-through">{{ field.before }}</span>
+                <UIcon name="material-symbols:arrow-forward" class="size-3 shrink-0 text-(--color-gray)" />
+                <span class="rounded bg-(--color-light-gray-1) px-2 py-1">{{ field.after }}</span>
               </div>
             </div>
           </div>

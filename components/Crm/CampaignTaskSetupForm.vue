@@ -57,7 +57,7 @@
         <UCollapsible v-model:open="moreOptionsOpen">
           <button
             type="button"
-            class="flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
+            class="flex items-center gap-1 text-sm font-medium text-(--color-primary)"
             data-cy="campaign-more-options-toggle"
           >
             <UIcon :name="moreOptionsOpen ? 'material-symbols:expand-less' : 'material-symbols:expand-more'" />
@@ -87,10 +87,10 @@
 
     <div>
       <h3 v-if="reviewHeading" class="mb-2 text-base font-semibold">{{ reviewHeading }}</h3>
-      <p class="text-sm text-[var(--color-black)]">
+      <p class="text-sm text-(--color-black)">
         {{ t('crm.components.createCampaignModal.reviewSummary', { count: targets.length, date: dueDateDisplay, name: assignedToName }) }}
       </p>
-      <div class="mt-2 flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[var(--color-light-gray-2)] p-3">
+      <div class="mt-2 flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-lg border border-(--color-light-gray-2) p-3">
         <UBadge v-for="target in targets" :key="`${target.type}-${target.id}`" color="neutral" variant="subtle">{{ target.name }}</UBadge>
       </div>
     </div>

@@ -5,14 +5,14 @@
     </template>
     <template #body>
       <div class="flex flex-col gap-4">
-        <p class="text-sm text-[var(--color-gray)]">{{ t('crm.components.importModal.description') }}</p>
+        <p class="text-sm text-(--color-gray)">{{ t('crm.components.importModal.description') }}</p>
 
         <label
-          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--color-light-gray-2)] p-6 text-center hover:bg-[var(--color-light-gray-1)]"
+          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
         >
-          <UIcon name="material-symbols:upload-file-outline" class="size-8 text-[var(--color-gray)]" />
+          <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
           <span class="text-sm font-medium">{{ fileName || t('crm.components.importModal.chooseFile') }}</span>
-          <span class="text-xs text-[var(--color-gray)]">{{ t('crm.components.importModal.acceptedFormats') }}</span>
+          <span class="text-xs text-(--color-gray)">{{ t('crm.components.importModal.acceptedFormats') }}</span>
           <input type="file" accept=".csv,.xls,.xlsx" class="hidden" @change="onFileChange" >
         </label>
 
@@ -24,9 +24,9 @@
           :title="error"
         />
 
-        <div v-if="preview" class="flex flex-col gap-2 rounded-lg bg-[var(--color-light-gray-1)] p-3 text-sm">
+        <div v-if="preview" class="flex flex-col gap-2 rounded-lg bg-(--color-light-gray-1) p-3 text-sm">
           <p>{{ t('crm.components.importModal.previewSummary', { rows: preview.totalRows }) }}</p>
-          <ul class="list-disc pl-5 text-[var(--color-gray)]">
+          <ul class="list-disc pl-5 text-(--color-gray)">
             <li>{{ t('crm.components.importModal.previewCompanies', { count: preview.newCompanies, existing: preview.existingCompanies }) }}</li>
             <li>{{ t('crm.components.importModal.previewContacts', { count: preview.newContacts }) }}</li>
             <li v-if="preview.skipped > 0">{{ t('crm.components.importModal.previewSkipped', { count: preview.skipped }) }}</li>

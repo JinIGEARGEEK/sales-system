@@ -24,7 +24,7 @@
         style="text-align: left"
       >
         <template #trailing>
-          <UIcon name="material-symbols:date-range-outline" class="shrink-0 text-[var(--color-dark-gray)]" />
+          <UIcon name="material-symbols:date-range-outline" class="shrink-0 text-(--color-dark-gray)" />
         </template>
       </UInput>
       <template #content>

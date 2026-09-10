@@ -33,10 +33,10 @@
             errors.length ? 'justify-between' : 'justify-end'
           ]"
         >
-          <div v-if="errors.length" :id="errorId" class="text-xs text-[var(--color-danger-toast)]" :data-cy="`error-input-${props.dataCy}`">
+          <div v-if="errors.length" :id="errorId" class="text-xs text-(--color-danger-toast)" :data-cy="`error-input-${props.dataCy}`">
             {{ errors[0] }}
           </div>
-          <div v-if="props.counter" class="text-xs text-[var(--color-dark-gray)]">
+          <div v-if="props.counter" class="text-xs text-(--color-dark-gray)">
             {{ props.modelValue.length }} / {{ props.maxlength }}
           </div>
         </div>

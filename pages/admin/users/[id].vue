@@ -24,7 +24,7 @@
         </Form>
       </ContainerTemplate>
 
-      <div v-else class="py-12 text-center text-[var(--color-gray)]">
+      <div v-else class="py-12 text-center text-(--color-gray)">
         {{ t('admin.users.detail.staffNotFound') }}
       </div>
     </AccessGate>

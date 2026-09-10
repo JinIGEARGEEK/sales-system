@@ -13,7 +13,7 @@
             <NuxtLink
               :to="menuItem.path"
               class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
-              :class="{ 'bg-[var(--color-primary-bg)] text-[var(--color-primary)]': isActive(menuItem.path) }"
+              :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(menuItem.path) }"
               @click="drawer = false"
             >
               <UIcon :name="menuItem.icon" class="size-5" />
@@ -43,7 +43,7 @@
       </template>
     </USlideover>
 
-    <aside class="relative hidden overflow-hidden border-r border-white/15 bg-[var(--color-sidebar-bg)]/90 text-white backdrop-blur-2xl md:flex md:w-44 md:flex-col">
+    <aside class="relative hidden overflow-hidden border-r border-white/15 bg-(--color-sidebar-bg)/90 text-white backdrop-blur-2xl md:flex md:w-44 md:flex-col">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
 
       <NuxtLink to="/" class="relative flex h-(--layout-header-height) items-center gap-2 px-4 border-b border-white/15">
@@ -93,7 +93,7 @@
       </div>
     </aside>
 
-    <main ref="mainRef" class="flex-1 overflow-y-auto bg-[var(--color-content-bg)]/60" :style="{ '--layout-banner-height': `${bannerHeight}px` }">
+    <main ref="mainRef" class="flex-1 overflow-y-auto bg-(--color-content-bg)/60" :style="{ '--layout-banner-height': `${bannerHeight}px` }">
       <div ref="headerRef" class="sticky top-0 z-10 flex h-(--layout-header-height) items-center justify-between gap-3 overflow-hidden border-b border-white/15 bg-(--color-sidebar-bg)/90 px-3 backdrop-blur-2xl md:gap-4 md:px-5">
         <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/10 via-transparent to-transparent" />
         <!-- Mobile menu trigger — lives in-flow in this always-visible bar

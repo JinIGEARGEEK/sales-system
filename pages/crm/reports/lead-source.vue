@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.leadSource.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.leadSource.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.leadSource.subheading') }}</p>
         </div>
       </div>
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
@@ -89,8 +89,8 @@
             :label="row.source"
             :percent="Math.round(row.conversion_rate)"
           >
-            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.qualified }} / {{ row.total }}</span>
-            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.conversion_rate.toFixed(1) }}%</span>
+            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ row.qualified }} / {{ row.total }}</span>
+            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.conversion_rate.toFixed(1) }}%</span>
           </CrmMetricBar>
         </div>
       </UCard>

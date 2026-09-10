@@ -9,8 +9,8 @@
            continuously scrolling form rather than gated wizard steps, so
            the three labels below just orient the reader to the sections
            beneath them. -->
-      <div class="mb-4 flex flex-wrap items-center gap-2 text-sm text-[var(--color-gray)]">
-        <span class="font-semibold text-[var(--color-primary)]">1. {{ t('crm.campaigns.new.steps.who') }}</span>
+      <div class="mb-4 flex flex-wrap items-center gap-2 text-sm text-(--color-gray)">
+        <span class="font-semibold text-(--color-primary)">1. {{ t('crm.campaigns.new.steps.who') }}</span>
         <UIcon name="material-symbols:chevron-right" />
         <span>2. {{ t('crm.campaigns.new.steps.setup') }}</span>
         <UIcon name="material-symbols:chevron-right" />
@@ -44,10 +44,10 @@
             <p class="mb-2 text-sm font-medium" data-cy="campaign-match-count">
               {{ loadingMatches ? t('crm.campaigns.new.step1.matchCountLoading') : t('crm.campaigns.new.step1.matchCount', { count: matchedTargets.length }) }}
             </p>
-            <p v-if="!loadingMatches && matchedTargets.length === 0" class="text-sm text-[var(--color-gray)]">
+            <p v-if="!loadingMatches && matchedTargets.length === 0" class="text-sm text-(--color-gray)">
               {{ t('crm.campaigns.new.step1.noMatches') }}
             </p>
-            <div v-else class="flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-lg border border-[var(--color-light-gray-2)] p-3">
+            <div v-else class="flex max-h-48 flex-wrap gap-2 overflow-y-auto rounded-lg border border-(--color-light-gray-2) p-3">
               <UBadge v-for="target in matchedTargets" :key="`${target.type}-${target.id}`" color="neutral" variant="subtle">{{ target.name }}</UBadge>
             </div>
           </div>

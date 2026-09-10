@@ -32,14 +32,14 @@
           v-for="item in grouped[column.value] || []"
           :key="`${item._type}-${item.id}`"
           draggable="true"
-          class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-[var(--color-card-border)] bg-white p-3 active:cursor-grabbing"
+          class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing"
           @dragstart="onDragStart(item)"
           @click="emit('select', item)"
         >
           <slot name="card" :item="item" />
         </div>
 
-        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-[var(--color-gray)]">
+        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 
@@ -89,7 +89,7 @@
         <div
           v-for="item in grouped[column.value] || []"
           :key="`${item._type}-${item.id}`"
-          class="flex flex-col gap-2 rounded-lg border border-[var(--color-card-border)] bg-white p-3"
+          class="flex flex-col gap-2 rounded-lg border border-(--color-card-border) bg-white p-3"
         >
           <div @click="emit('select', item)">
             <slot name="card" :item="item" />
@@ -105,7 +105,7 @@
           />
         </div>
 
-        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-[var(--color-gray)]">
+        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 

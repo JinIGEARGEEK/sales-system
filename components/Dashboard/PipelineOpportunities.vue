@@ -1,6 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+    <h3 class="mb-3 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
       {{ t('crm.dashboard.sectionPipelineOpportunities') }}
     </h3>
 
@@ -23,11 +23,11 @@
               </div>
               <UTabs v-model="activeTab" :items="tabItems" size="xs" />
             </div>
-            <p v-if="activeTabMeta.hint" class="mt-1 text-xs text-[var(--color-gray)]">{{ activeTabMeta.hint }}</p>
+            <p v-if="activeTabMeta.hint" class="mt-1 text-xs text-(--color-gray)">{{ activeTabMeta.hint }}</p>
           </template>
 
           <div v-if="activeTab === 'byStage'">
-            <div v-if="stageBreakdown.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+            <div v-if="stageBreakdown.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
               {{ t('crm.dashboard.noPipelineStages') }}
             </div>
             <div v-else class="flex flex-col gap-3">
@@ -40,8 +40,8 @@
                 :tooltip="`${row.stage}: ${t('global.currencySymbol')}${priceFormatCompact(row.value)} · ${row.count} ${t('crm.dashboard.dealsUnit')}`"
                 :to="`/crm/deals?stage=${encodeURIComponent(row.stage)}`"
               >
-                <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
-                <span class="min-w-20 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
+                <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
+                <span class="min-w-20 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
               </CrmMetricBar>
             </div>
           </div>
@@ -52,7 +52,7 @@
               <div class="opacity-50 grayscale-50">
                 <CrmFunnelChart :stages="funnelStagesPreview" />
               </div>
-              <p class="mt-2 text-center text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.noDataPreviewHint') }}</p>
+              <p class="mt-2 text-center text-xs text-(--color-gray)">{{ t('crm.dashboard.noDataPreviewHint') }}</p>
             </div>
             <CrmFunnelChart v-else :stages="funnelStages" />
           </div>
@@ -67,7 +67,7 @@
                   :total-sub-label="t('crm.dashboard.outcomeSplitTotal')"
                 />
               </div>
-              <p class="mt-2 text-center text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.noDataPreviewHint') }}</p>
+              <p class="mt-2 text-center text-xs text-(--color-gray)">{{ t('crm.dashboard.noDataPreviewHint') }}</p>
             </div>
             <CrmDonutChart
               v-else
@@ -84,8 +84,8 @@
           <template #header>
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-violet)]/15">
-                  <UIcon name="material-symbols:sell-outline" class="size-4 text-[var(--color-chart-violet)]" />
+                <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
+                  <UIcon name="material-symbols:sell-outline" class="size-4 text-(--color-chart-violet)" />
                 </div>
                 <h3 class="text-lg font-medium">{{ t('crm.dashboard.upsellOpportunities') }}</h3>
               </div>
@@ -97,9 +97,9 @@
                 name="upsellMinStaleDays"
               />
             </div>
-            <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.upsellOpportunitiesHint') }}</p>
+            <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.upsellOpportunitiesHint') }}</p>
           </template>
-          <div v-if="upsellCandidates.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="upsellCandidates.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.dashboard.noUpsellCandidates') }}
           </div>
           <!-- Capped + scrollable rather than left to grow unbounded — this
@@ -111,11 +111,11 @@
               v-for="candidate in upsellCandidates"
               :key="candidate.company.id"
               :to="`/crm/companies/${candidate.company.id}`"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
               <div>
                 <p class="text-sm font-medium">{{ candidate.company.name }}</p>
-                <p class="text-xs text-[var(--color-gray)]">{{ candidate.company.industry }}</p>
+                <p class="text-xs text-(--color-gray)">{{ candidate.company.industry }}</p>
               </div>
               <UBadge :color="candidate.contact.color" variant="subtle">{{ candidate.contact.label }}</UBadge>
             </NuxtLink>
@@ -159,9 +159,9 @@ const tabItems = computed(() => [
 // computeds — keeps each tab's presentation together instead of spread
 // across the file.
 const TAB_META: Record<AnalyticsTab, { icon: string, iconBg: string, iconColor: string, hint: string }> = {
-  byStage: { icon: 'material-symbols:stacked-bar-chart-outline', iconBg: 'bg-[var(--color-accent-green)]/15', iconColor: 'text-[var(--color-accent-green)]', hint: '' },
-  funnel: { icon: 'material-symbols:filter-alt-outline', iconBg: 'bg-[var(--color-info-toast)]/15', iconColor: 'text-[var(--color-info-toast)]', hint: '' },
-  outcome: { icon: 'material-symbols:donut-large-outline', iconBg: 'bg-[var(--color-success-toast)]/15', iconColor: 'text-[var(--color-success-toast)]', hint: '' },
+  byStage: { icon: 'material-symbols:stacked-bar-chart-outline', iconBg: 'bg-(--color-accent-green)/15', iconColor: 'text-(--color-accent-green)', hint: '' },
+  funnel: { icon: 'material-symbols:filter-alt-outline', iconBg: 'bg-(--color-info-toast)/15', iconColor: 'text-(--color-info-toast)', hint: '' },
+  outcome: { icon: 'material-symbols:donut-large-outline', iconBg: 'bg-(--color-success-toast)/15', iconColor: 'text-(--color-success-toast)', hint: '' },
 }
 const activeTabMeta = computed(() => ({
   ...TAB_META[activeTab.value],

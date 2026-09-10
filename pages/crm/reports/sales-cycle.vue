@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.salesCycle.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.salesCycle.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.salesCycle.subheading') }}</p>
         </div>
       </div>
     </div>

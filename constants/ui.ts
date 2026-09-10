@@ -12,9 +12,9 @@ export const GLASS_PANEL_UI = { root: 'bg-white/65 backdrop-blur-2xl border bord
 // via the dataviz skill's validate_palette.js. Never cycle past this list; a
 // 5th+ item should fall back to CHART_FALLBACK_COLOR rather than reusing a hue.
 export const CHART_CATEGORICAL_COLORS = [
-  { bar: 'bg-[var(--color-accent-green)]', iconClass: 'text-[var(--color-accent-green)]', iconBgClass: 'bg-[var(--color-accent-green)]/25' },
-  { bar: 'bg-[var(--color-info-toast)]', iconClass: 'text-[var(--color-info-toast)]', iconBgClass: 'bg-[var(--color-info-toast)]/25' },
-  { bar: 'bg-[var(--color-warning-hover)]', iconClass: 'text-[var(--color-warning-hover)]', iconBgClass: 'bg-[var(--color-warning-hover)]/25' },
-  { bar: 'bg-[var(--color-chart-violet)]', iconClass: 'text-[var(--color-chart-violet)]', iconBgClass: 'bg-[var(--color-chart-violet)]/25' },
+  { bar: 'bg-(--color-accent-green)', iconClass: 'text-(--color-accent-green)', iconBgClass: 'bg-(--color-accent-green)/25' },
+  { bar: 'bg-(--color-info-toast)', iconClass: 'text-(--color-info-toast)', iconBgClass: 'bg-(--color-info-toast)/25' },
+  { bar: 'bg-(--color-warning-hover)', iconClass: 'text-(--color-warning-hover)', iconBgClass: 'bg-(--color-warning-hover)/25' },
+  { bar: 'bg-(--color-chart-violet)', iconClass: 'text-(--color-chart-violet)', iconBgClass: 'bg-(--color-chart-violet)/25' },
 ]
-export const CHART_FALLBACK_COLOR = { bar: 'bg-[var(--color-gray)]/50', iconClass: 'text-[var(--color-gray)]', iconBgClass: 'bg-[var(--color-gray)]/15' }
+export const CHART_FALLBACK_COLOR = { bar: 'bg-(--color-gray)/50', iconClass: 'text-(--color-gray)', iconBgClass: 'bg-(--color-gray)/15' }

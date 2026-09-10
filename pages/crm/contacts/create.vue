@@ -12,7 +12,7 @@
         />
         <h2 class="text-xl font-black">{{ t('crm.contacts.create.heading') }}</h2>
       </div>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.contacts.create.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.contacts.create.subheading') }}</p>
     </div>
 
     <ContainerTemplate>

@@ -4,13 +4,13 @@
       <UTooltip :text="tooltipFor(stage, index)">
         <div
           class="flex h-9 items-center justify-center rounded-md text-xs font-medium text-white transition-[filter] duration-150 hover:brightness-110"
-          :class="stage.value > 0 ? (stage.barClass || 'bg-sky-400') : 'bg-[var(--color-light-gray-2)] text-[var(--color-gray)]'"
+          :class="stage.value > 0 ? (stage.barClass || 'bg-sky-400') : 'bg-(--color-light-gray-2) text-(--color-gray)'"
           :style="{ width: `${widthPercent(stage.value)}%`, minWidth: '3.5rem' }"
         >
           {{ stage.value }}
         </div>
       </UTooltip>
-      <span class="text-[11px] text-[var(--color-gray)]">
+      <span class="text-[11px] text-(--color-gray)">
         {{ stage.label }}
         <template v-if="index > 0 && (stages[0]?.value ?? 0) > 0">· {{ conversionFromFirst(stage) }}%</template>
       </span>

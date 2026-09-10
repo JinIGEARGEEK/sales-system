@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.outstandingBalance.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.outstandingBalance.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.outstandingBalance.subheading') }}</p>
         </div>
       </div>
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
@@ -49,7 +49,7 @@
               @click="clearFilters"
             />
           </div>
-          <span v-if="rows.length > 0" class="ml-auto text-xs text-[var(--color-gray)]">
+          <span v-if="rows.length > 0" class="ml-auto text-xs text-(--color-gray)">
             {{ t('crm.reports.outstandingBalance.totalOutstanding', { amount: `${t('global.currencySymbol')}${priceFormatCompact(totalOutstanding)}` }) }}
           </span>
         </div>

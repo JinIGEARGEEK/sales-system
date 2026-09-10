@@ -12,7 +12,7 @@
         />
         <h2 class="text-xl font-black">{{ t('crm.deals.create.heading') }}</h2>
       </div>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.deals.create.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.deals.create.subheading') }}</p>
     </div>
 
     <UAlert
@@ -28,7 +28,7 @@
         <ul class="mt-2 list-disc pl-5">
           <li v-for="dup in duplicateDeals" :key="dup.id">
             <NuxtLink :to="`/crm/deals/${dup.id}`" class="font-medium hover:underline">{{ dup.title }}</NuxtLink>
-            <span class="text-[var(--color-gray)]"> — {{ dup.stage }}</span>
+            <span class="text-(--color-gray)"> — {{ dup.stage }}</span>
           </li>
         </ul>
       </template>
@@ -42,7 +42,10 @@
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
           <InputText v-model.number="form.value" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" type="number" rules="required" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
-          <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.create.forecastCategory')" name="forecast_category" />
+          <div>
+            <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.create.forecastCategory')" name="forecast_category" />
+            <UBadge v-if="form.forecast_category" class="mt-1" :color="forecastCategoryColor(form.forecast_category)" variant="subtle">{{ form.forecast_category }}</UBadge>
+          </div>
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
           <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
@@ -279,7 +282,11 @@ const onSubmit = guard(async () => {
     discardDraft()
     navigateTo('/crm/deals')
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
+      error(t('crm.deals.detail.contractRequiredToast'))
+    } else {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
   }
 })
 </script>

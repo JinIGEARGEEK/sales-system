@@ -4,7 +4,7 @@
       <h3 class="text-lg font-medium">{{ title || (project ? t('crm.components.addProjectModal.editTitle') : t('crm.components.addProjectModal.title')) }}</h3>
     </template>
     <template #body>
-      <p v-if="description" class="mb-3 text-sm text-[var(--color-gray)]">{{ description }}</p>
+      <p v-if="description" class="mb-3 text-sm text-(--color-gray)">{{ description }}</p>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
           <InputCompanySelect
@@ -30,8 +30,8 @@
           Deal, and it hid that information after creation instead of just
           not letting it be changed. -->
           <div v-else-if="showLinkedDeal">
-            <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addProjectModal.deal') }}</p>
-            <NuxtLink :to="`/crm/deals/${project?.deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
+            <p class="mb-1 text-xs text-(--color-gray)">{{ t('crm.components.addProjectModal.deal') }}</p>
+            <NuxtLink :to="`/crm/deals/${project?.deal_id}`" class="text-sm font-medium text-(--color-primary) hover:underline">
               {{ linkedDealTitle }}
             </NuxtLink>
           </div>

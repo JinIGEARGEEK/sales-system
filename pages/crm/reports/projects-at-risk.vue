@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.projectsAtRisk.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.projectsAtRisk.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.projectsAtRisk.subheading') }}</p>
         </div>
       </div>
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />

@@ -4,7 +4,7 @@
       <h3 class="text-lg font-medium">{{ t('crm.components.createCampaignModal.title') }}</h3>
     </template>
     <template #body>
-      <p class="mb-3 text-sm text-[var(--color-gray)]">
+      <p class="mb-3 text-sm text-(--color-gray)">
         {{ t('crm.components.createCampaignModal.description', { count: targets.length }) }}
       </p>
       <CrmCampaignTaskSetupForm

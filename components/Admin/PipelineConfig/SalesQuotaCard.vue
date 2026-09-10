@@ -39,7 +39,7 @@
             >
               <UIcon
                 name="material-symbols:info-outline"
-                class="ml-1 size-3 shrink-0 cursor-pointer align-middle text-[var(--color-gray)]"
+                class="ml-1 size-3 shrink-0 cursor-pointer align-middle text-(--color-gray)"
                 @click="mqlThresholdTooltipOpen = !mqlThresholdTooltipOpen"
               />
             </UTooltip>
@@ -51,18 +51,18 @@
       <!-- FR-CRM-045 — a Deal-stage policy, not a revenue figure, but
       shares this same AppSettings singleton/save flow rather than
       standing up a second Form+submit for one checkbox. -->
-      <div class="mt-4 border-t border-[var(--color-light-gray-2)] pt-4">
+      <div class="mt-4 border-t border-(--color-light-gray-2) pt-4">
         <UCheckbox
           v-model="salesQuotaForm.require_signed_contract_before_won"
           :label="t('admin.pipelineConfig.salesQuota.requireSignedContractLabel')"
         />
-        <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.requireSignedContractHelp') }}</p>
+        <p class="mt-1 text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.salesQuota.requireSignedContractHelp') }}</p>
       </div>
     </Form>
-    <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
-    <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.annualGoalHelp') }}</p>
-    <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.salesQuota.mqlThresholdHelp') }}</p>
-    <p v-if="salesQuotaUpdatedAt" class="mt-2 text-xs text-[var(--color-gray)]">
+    <p class="mt-1 text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.salesQuota.help') }}</p>
+    <p class="mt-1 text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.salesQuota.annualGoalHelp') }}</p>
+    <p class="mt-1 text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.salesQuota.mqlThresholdHelp') }}</p>
+    <p v-if="salesQuotaUpdatedAt" class="mt-2 text-xs text-(--color-gray)">
       {{ t('admin.pipelineConfig.salesQuota.lastUpdated', { date: dateTimeFormat(salesQuotaUpdatedAt) }) }}
     </p>
   </UCard>

@@ -80,6 +80,8 @@ export default {
     forecastCategory: 'หมวดหมู่การคาดการณ์',
     lostReason: 'เหตุผลที่ Deal เสีย',
     lostReasonPlaceholder: 'เลือกเหตุผล',
+    contractRequiredWarning: 'ต้องมีสัญญาที่เซ็นแล้วก่อนจึงจะปิด Deal นี้เป็นสำเร็จได้',
+    contractRequiredToast: 'กรุณาเพิ่มสัญญาที่เซ็นแล้วก่อนปิด Deal นี้เป็นสำเร็จ',
     expectedCloseDate: 'วันที่คาดว่าจะปิด Deal',
     businessUnit: 'หน่วยธุรกิจ',
     businessUnitPlaceholder: 'เลือกหน่วยธุรกิจ (ไม่บังคับ)',

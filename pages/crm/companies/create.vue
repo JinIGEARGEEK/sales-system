@@ -12,7 +12,7 @@
         />
         <h2 class="text-xl font-black">{{ t('crm.companies.create.heading') }}</h2>
       </div>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.companies.create.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.companies.create.subheading') }}</p>
     </div>
 
     <ContainerTemplate>
@@ -108,11 +108,11 @@
               @click="addContactRow"
             />
           </div>
-          <p class="mb-3 text-sm text-[var(--color-gray)]">{{ t('crm.companies.create.contactsSubheading') }}</p>
+          <p class="mb-3 text-sm text-(--color-gray)">{{ t('crm.companies.create.contactsSubheading') }}</p>
 
-          <p v-if="contacts.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.companies.create.noContacts') }}</p>
+          <p v-if="contacts.length === 0" class="text-sm text-(--color-gray)">{{ t('crm.companies.create.noContacts') }}</p>
 
-          <div v-for="(contact, index) in contacts" :key="contact.key" class="mb-3 rounded-lg border border-[var(--color-light-gray-1)] p-3">
+          <div v-for="(contact, index) in contacts" :key="contact.key" class="mb-3 rounded-lg border border-(--color-light-gray-1) p-3">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-sm font-medium">{{ t('crm.companies.create.contactRowLabel', { index: index + 1 }) }}</span>
               <UButton
