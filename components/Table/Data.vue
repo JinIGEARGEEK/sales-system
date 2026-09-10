@@ -103,7 +103,18 @@
                 >
                   <b>{{ col.label }}</b>
                   <UIcon v-if="col.isSort" :name="sortIcon(col.field)" class="inline size-4" />
-                  <UTooltip v-if="col.tooltip" :text="col.tooltip">
+                  <!-- Nuxt UI's Tooltip defaults to a fixed-height, single-line
+                  (`truncate`/`nowrap`) content box, sized for short labels —
+                  a longer explanation (e.g. classificationTooltip's MQL/SQL
+                  definitions) has nothing to wrap it, so it lays out as one
+                  very long line and runs off narrow/mobile viewports instead
+                  of wrapping responsively. Override to a capped width that
+                  wraps normally, safe for short tooltips too. -->
+                  <UTooltip
+                    v-if="col.tooltip"
+                    :text="col.tooltip"
+                    :ui="{ content: 'h-auto max-w-[min(20rem,80vw)] px-2.5 py-1.5', text: 'whitespace-normal' }"
+                  >
                     <UIcon name="material-symbols:info-outline" class="inline size-4 text-(--color-gray)" />
                   </UTooltip>
                 </div>
