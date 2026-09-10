@@ -129,6 +129,12 @@ const form = reactive({
   business_unit_item: '',
 })
 
+// Declared here (before the Lead-hydration watch below) rather than at the
+// bottom near onSubmit, so that watch can call `markClean()` once its async
+// pre-fill settles — otherwise a Deal created from a Lead link would read as
+// "dirty" the instant the page loads, before the rep has touched anything.
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 // Scoped to the currently-picked Company, not the global contactsStore/
 // dealsStore caches — see the onMounted comment above. useScopedFetch
 // guards against a slow request for a previously-picked Company resolving
@@ -183,7 +189,10 @@ watch(originatingLead, async (lead) => {
   // already are (see dealFields.channel below).
   if (!form.business_unit && lead.business_unit) form.business_unit = lead.business_unit
   if (!form.business_unit_item && lead.business_unit_item) form.business_unit_item = lead.business_unit_item
-  nextTick(() => { hydratingFromLead = false })
+  nextTick(() => {
+    hydratingFromLead = false
+    markClean()
+  })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -201,6 +210,14 @@ const duplicateDeals = computed(() => findDuplicateDeals(companyDeals.value, for
 watch(() => form.company_id, () => {
   form.contact_id = ''
 })
+
+// Keyed by the originating Lead (or 'new' for a plain create): a Deal
+// created from a Lead is pre-filled with that Lead's own company/business
+// unit/owner, so a stale draft left over from a *different* Lead (or a
+// standalone create) must never be offered here — restoring it would
+// silently overwrite the correct pre-filled data with unrelated one.
+const { discardDraft, offerRestoreIfFound } = useDraftAutosave(`crm-deal-create:${leadOriginId.value ?? 'new'}`, () => form, saved => Object.assign(form, saved))
+onMounted(offerRestoreIfFound)
 
 const { loading, guard } = useSubmitGuard()
 
@@ -248,6 +265,8 @@ const onSubmit = guard(async () => {
       })
     }
     success(t('crm.deals.create.createSuccess'))
+    markClean()
+    discardDraft()
     navigateTo('/crm/deals')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

@@ -29,12 +29,23 @@
         @update:model-value="emit('update:model-value', $event)"
       >
         <slot />
+        <!-- Distinguish "still debouncing/awaiting the server" (handled by
+        the `loading` spinner above) from "the search actually came back
+        empty" — without this, USelectMenu's default empty copy can flash
+        briefly before results land, reading as a false "no matches". -->
+        <template #empty>
+          <span class="text-sm text-[var(--color-dark-gray)]">
+            {{ searching ? t('global.input.searching') : t('global.input.noResults') }}
+          </span>
+        </template>
       </USelectMenu>
     </InputFormField>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 // Generic search-as-you-type picker backed by a caller-supplied server
 // search function — for entities that can be picked but not created inline
 // (Deal, Contact, Lead), unlike components/Input/CompanySelect.vue, which
@@ -83,6 +94,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:model-value'])
 
+const { t } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
 const selectedOption = ref<Select | null>(null)
 

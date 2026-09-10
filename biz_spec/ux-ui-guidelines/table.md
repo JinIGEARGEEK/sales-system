@@ -305,6 +305,10 @@ Table ควรประกอบด้วยองค์ประกอบด�
 - `Delete 5 items`
 - `Export selected`
 
+> **Implementation จริงในระบบนี้:**
+> - **Keyboard**: `Table/Data.vue` รองรับ `Esc` เพื่อล้างการเลือกทั้งหมด และ `Cmd/Ctrl+A` เพื่อเลือกทุกแถวในหน้าปัจจุบัน (ทำงานเฉพาะเมื่อ table เองมี focus และเปิดโหมด selection อยู่)
+> - **Undo หลัง Bulk Archive**: เนื่องจาก Archive เป็น soft-delete (ย้ายไป Trash, กู้คืนได้ผ่าน `restore` ต่อ record) — toast ที่ขึ้นหลัง archive สำเร็จมีปุ่ม "Undo" แนบมาด้วยเสมอ (`useBulkArchiveUndo` composable) ผู้ใช้ไม่ต้องไปหน้า Trash เพื่อกู้คืนกรณี archive ผิด
+
 ---
 
 ## 11. Pagination, Load More, Infinite Scroll
@@ -320,6 +324,10 @@ Table ควรประกอบด้วยองค์ประกอบด�
 - จำนวนหน้า
 - current page
 - ปุ่ม previous / next
+
+> **Implementation จริงในระบบนี้ (`Table/Pagination.vue`):**
+> - เมื่อจำนวนหน้ามากกว่า 5 หน้า จะมีช่อง "ไปหน้าที่..." ให้พิมพ์เลขหน้าโดยตรง แทนที่จะต้องกด previous/next ทีละครั้ง
+> - ค่า "แถวต่อหน้า" ที่ผู้ใช้เลือกล่าสุดจะถูกจำไว้ผ่าน `localStorage` ข้ามเซสชัน **แยก key ตาม route path ของแต่ละหน้า** — ตารางจะไม่รีเซ็ตกลับไป 10 แถวทุกครั้งที่เปิดใหม่ และการเลือก 100 แถวในตาราง Leads จะไม่ไปเปลี่ยนค่า default ของตาราง Contacts/Companies อื่นที่ไม่เกี่ยวข้องกัน
 
 ### 11.2 Load More
 เหมาะเมื่อผู้ใช้ต้องการดูต่อเนื่อง แต่ไม่ต้องการรู้หมายเลขหน้า
@@ -338,6 +346,8 @@ Table ควรประกอบด้วยองค์ประกอบด�
 - ใช้ skeleton row หรือ progress indicator
 - ควรรักษาโครงสร้าง table เดิมไว้ เพื่อไม่ให้ layout กระแทก
 
+> **Implementation จริงในระบบนี้:** `Table/Data.vue` ใช้ `USkeleton` แสดง 5 แถวคงที่ทั้ง desktop และ mobile ระหว่างโหลด แทนข้อความ "Loading..." เดิม
+
 ### 12.2 Empty State
 แยกให้ชัดระหว่าง:
 - ยังไม่มีข้อมูลเลย
@@ -351,6 +361,8 @@ Table ควรประกอบด้วยองค์ประกอบด�
 - แสดงปัญหาให้เห็นได้ง่าย
 - มีปุ่ม retry หากเหมาะสม
 - หลีกเลี่ยงข้อความเทคนิคที่ผู้ใช้ทั่วไปไม่เข้าใจ
+
+> **Implementation จริงในระบบนี้:** `useApiErrorNotifier`/`useSubmitGuard`'s safety-net error path แนบปุ่ม "Retry" ไว้ใน error toast เสมอ (เรียก submit เดิมซ้ำด้วย argument เดิม) สำหรับ error ที่ไม่ได้ถูก catch เฉพาะจุดไว้แล้ว
 
 ---
 

@@ -402,11 +402,18 @@ const onBulkTag = async ({ tags, mode }: { tags: string[], mode: 'add' | 'set' }
   }
 }
 
+const { notifyArchivedWithUndo } = useBulkArchiveUndo()
+
 const onBulkArchive = async () => {
+  const ids = [...selectedIds.value]
   try {
-    await prospectsStore.bulkArchive(selectedIds.value)
-    success(t('crm.components.bulkActionBar.archiveSuccess', { count: selectedIds.value.length, entity: t('crm.prospects.index.entityLabel') }))
+    await prospectsStore.bulkArchive(ids)
+    // Notify right after the archive itself succeeds — matching
+    // onBulkReassign/onBulkTag above — rather than after the refetch below,
+    // so a refetch failure can't misreport an already-successful archive as
+    // a generic error with no success/undo feedback.
     selected.value = []
+    notifyArchivedWithUndo({ ids, entity: t('crm.prospects.index.entityLabel'), restore: prospectsStore.restore, refetch: fetch })
     await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

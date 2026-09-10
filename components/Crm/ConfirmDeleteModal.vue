@@ -15,7 +15,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="cancelLabel || t('crm.components.confirmDeleteModal.cancel')" cancel @click="emit('update:open', false)" />
-        <ButtonPrimary :label="confirmLabel || t('crm.components.confirmDeleteModal.delete')" :color="confirmColor" @click="onConfirm" />
+        <ButtonPrimary ref="confirmButtonRef" :label="confirmLabel || t('crm.components.confirmDeleteModal.delete')" :color="confirmColor" @click="onConfirm" />
       </div>
     </template>
   </UModal>
@@ -28,7 +28,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const instance = getCurrentInstance()
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean
   // Default copy asks "delete <name>?" — pass `body` to override with a
   // fully custom question for non-delete confirmations (e.g. marking done).
@@ -51,6 +51,15 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
   confirm: []
 }>()
+
+// Focus the confirm button whenever the modal opens so a keyboard/Enter-key
+// user can confirm without reaching for the mouse — matches native dialog
+// expectations (Enter activates the focused/default action).
+const confirmButtonRef = useTemplateRef<{ $el: HTMLElement }>('confirmButtonRef')
+watch(() => props.open, (isOpen) => {
+  if (!isOpen) return
+  nextTick(() => confirmButtonRef.value?.$el?.focus())
+})
 
 // NOTE: Vue's emit() always returns `undefined` at runtime — it never forwards
 // the bound listener's return value — so `await emit('confirm')` would be a

@@ -100,6 +100,8 @@ const form = reactive({
   tags: '',
 })
 
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
@@ -115,6 +117,7 @@ const onSubmit = guard(async () => {
       created_at: new Date(),
     })
     success(t('crm.contacts.create.createSuccess'))
+    markClean()
     navigateTo('/crm/contacts')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

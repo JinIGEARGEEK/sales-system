@@ -212,6 +212,8 @@ const removeContactRow = (index: number) => {
   contacts.value.splice(index, 1)
 }
 
+const { markClean } = useUnsavedChangesGuard(() => [form, contacts.value])
+
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
@@ -251,6 +253,7 @@ const onSubmit = guard(async () => {
     if (results.some(r => r.status === 'rejected')) {
       error(t('crm.companies.create.contactCreateFailed'))
     }
+    markClean()
     navigateTo('/crm/companies')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

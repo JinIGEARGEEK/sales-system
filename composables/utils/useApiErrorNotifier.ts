@@ -9,8 +9,11 @@ export function useApiErrorNotifier() {
   const { t } = useI18n()
   const { error } = useNotify()
 
-  const notifyApiError = (err: unknown) => {
-    error(getApiErrorMessage(err, t('global.genericError')))
+  const notifyApiError = (err: unknown, retry?: () => void) => {
+    error(
+      getApiErrorMessage(err, t('global.genericError')),
+      retry ? { label: t('global.retry'), onClick: retry } : undefined,
+    )
   }
 
   return { notifyApiError }

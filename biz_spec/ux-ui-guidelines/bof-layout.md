@@ -48,6 +48,23 @@ Form ทั้งหมดอยู่ในกล่องขาว มีข�
 
 > **หมายเหตุ:** ชื่อ section **ห้ามใช้** `text-static-body` เนื่องจาก class นั้น set `font-weight: var(--font-body-weight)` (400) ทำให้ `font-semibold` ถูก override เสมอ — ให้ใช้ `text-base font-semibold` แทน
 
+### Field-level Hint
+
+`InputFormField.vue` รองรับ prop `hint` (ข้อความช่วยอธิบาย field แสดงระหว่าง label กับ input) — ใช้แทนการเขียนคำอธิบายแยกเองที่แต่ละหน้า เพื่อให้ตำแหน่ง/สไตล์ของ hint text สม่ำเสมอกันทั้งระบบ
+
+### ป้องกันข้อมูลหาย (Unsaved Changes / Draft Autosave)
+
+Form สร้าง/แก้ไขที่ยาวหรือมีความเสี่ยงสูงที่จะพิมพ์ทิ้งโดยไม่ตั้งใจ ควรใช้ 2 composable นี้ร่วมกัน:
+
+- **`useUnsavedChangesGuard(getState)`** — เตือนก่อนออกจากหน้า (เปลี่ยนเส้นทางในแอป, ปิดแท็บ, รีเฟรช) หากฟอร์มมีการแก้ไขที่ยังไม่บันทึก เรียก `markClean()` หลัง submit สำเร็จเพื่อไม่ให้ navigate ต่อจากนั้นถูกนับเป็น "มีการเปลี่ยนแปลง"
+- **`useDraftAutosave(key, getState, applyState)`** — debounce-save ฟอร์มลง `localStorage` ระหว่างที่พิมพ์ และเสนอ toast "กู้คืนแบบร่าง?" (`offerRestoreIfFound()`) ตอนเปิดหน้าใหม่ถ้ามีแบบร่างค้างอยู่ — เรียก `discardDraft()` หลัง submit สำเร็จ
+  - **`key` ต้อง unique ตาม record ต้นทางด้วย ไม่ใช่แค่ตามชนิดฟอร์ม** — เช่น Quote ผูกกับ Deal หนึ่งใบเสมอ จึง key ด้วย `crm-quote-create:${dealId}` ไม่ใช่ `crm-quote-create` เฉยๆ มิฉะนั้นแบบร่างที่ค้างจากการสร้าง Quote ให้ Deal หนึ่งจะถูกเสนอกู้คืนผิดใบตอนเปิดสร้าง Quote ให้ Deal อื่น
+- ปัจจุบันใช้กับฟอร์มที่เสี่ยงสูงสุด/ยาวที่สุดก่อน: Deal, Lead, Contact, Company, Quote, Prospect (create) — ฟอร์มอื่นที่มี field น้อยความเสี่ยงต่ำ (เช่น Tag, Campaign) ยังไม่จำเป็นต้องใช้
+
+### Session หมดอายุระหว่างกรอกฟอร์ม
+
+เมื่อ API ตอบ 401 (session หมดอายุ) ระบบจะแจ้งเตือนด้วย toast ("session หมดอายุ กรุณาเข้าสู่ระบบใหม่") ก่อน redirect ไปหน้า login พร้อมพารามิเตอร์ `?redirect=` เพื่อพากลับมาหน้าเดิมหลัง login สำเร็จ — ไม่ redirect เงียบๆ แบบเดิมที่ผู้ใช้ไม่รู้สาเหตุ
+
 ---
 
 ## Tab Strip

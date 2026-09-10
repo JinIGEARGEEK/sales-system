@@ -256,6 +256,8 @@ export default {
     archiveConfirmBody: 'This will move {count} {entity} to Trash. You can restore them later.',
     archiveConfirmButton: 'Archive',
     archiveSuccess: '{count} {entity} archived',
+    archiveUndo: 'Undo',
+    archiveRestoreSuccess: '{count} {entity} restored',
     cancel: 'Cancel',
   },
 }

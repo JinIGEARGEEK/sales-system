@@ -250,6 +250,8 @@ export default {
     archiveConfirmBody: 'รายการนี้จะถูกย้ายไปถังขยะ {count} {entity} คุณสามารถกู้คืนได้ในภายหลัง',
     archiveConfirmButton: 'ย้ายไปถังขยะ',
     archiveSuccess: 'ย้าย {entity} {count} รายการไปถังขยะแล้ว',
+    archiveUndo: 'เลิกทำ',
+    archiveRestoreSuccess: 'กู้คืน {entity} {count} รายการแล้ว',
     cancel: 'ยกเลิก',
   },
 }
