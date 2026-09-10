@@ -7,6 +7,7 @@ const lang = {
   next: 'Next',
   backToHome: 'Back To Home',
   back: 'Back',
+  retry: 'Retry',
   // Shared default for <AccessGate> — pages/crm/reports/*.vue pass their own
   // more specific accessDeniedTitle/Message instead of these; admin-only
   // pages (Trash, Activity Log, Pipeline Config, Users) use these defaults.
@@ -46,7 +47,13 @@ const lang = {
   input: {
     showPassword: 'Show password',
     hidePassword: 'Hide password',
+    searching: 'Searching...',
+    noResults: 'No matches found',
   },
+  sessionExpired: 'Your session has expired. Please sign in again.',
+  unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
+  draftFound: 'We found a draft you didn\'t finish. Restore it?',
+  draftRestore: 'Restore draft',
 }
 
 export default lang

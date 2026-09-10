@@ -19,6 +19,7 @@
           this, so it renders nothing by default. -->
           <slot name="label-suffix" />
         </div>
+        <p v-if="hint" class="mb-1 text-xs text-[var(--color-dark-gray)]">{{ hint }}</p>
         <slot :field="field" :errors="errors" :field-id="fieldId" :error-id="errorId" />
         <slot name="footer" :errors="errors">
           <div v-if="errors.length" :id="errorId" class="text-xs text-[var(--color-danger-toast)] mt-1" :data-cy="`error-input-${dataCy}`">
@@ -49,6 +50,13 @@ const props = defineProps({
     default: '',
   },
   dataCy: {
+    type: String,
+    default: '',
+  },
+  // Optional field-level help text rendered between the label and the input
+  // (e.g. format hints, "visible to customer" notes) — standardizes what
+  // would otherwise be hand-rolled differently at each call site.
+  hint: {
     type: String,
     default: '',
   },

@@ -9,6 +9,15 @@ const sleep = (ms: number) => {
 export default defineNuxtPlugin((nuxtApp) => {
   const router = useRouter()
   const loadingStore = useLoadingStore()
+  // useNotify() (built on Nuxt's context-based useState()) is safe to call
+  // here in the plugin body. vue-i18n's useI18n() is NOT — it requires
+  // getCurrentInstance() (a component's setup()), which a Nuxt plugin never
+  // has; calling it here throws synchronously ("Must be called at the top of
+  // a `setup` function") and aborts this entire plugin before `$api` is ever
+  // provided, breaking every API call in the app. `nuxtApp.$i18n` (injected
+  // by @nuxtjs/i18n) exposes the same translator without that restriction.
+  const { warning } = useNotify()
+  const t = (nuxtApp.$i18n as { t: (key: string) => string }).t
 
   const loadingFinished = async () => {
     await sleep(100)
@@ -26,7 +35,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
   })
 
-  const { getAccessToken } = useAuth()
+  const { getAccessToken, removeAccessToken } = useAuth()
   api.interceptors.request.use((config) => {
     loadingStore.disable()
     loading += 1
@@ -46,7 +55,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // those directly instead of force-redirecting away from the request itself.
     const isAuthRequest = (error.config?.url || '').includes('/auth/login')
     if (error.response?.status === 401 && !isAuthRequest) {
-      router.push('/login')
+      // Otherwise the user is silently bounced to a blank login form with no
+      // explanation for why their in-progress work just vanished, and has no
+      // way back to where they were once they sign back in.
+      // The stale token MUST be cleared before navigating: middleware/auth.global.ts
+      // treats any present token as "authenticated" and immediately bounces an
+      // authenticated visit to '/login' back to '/' — without this, the redirect
+      // below would be undone instantly (and ?redirect= lost) by that guard.
+      removeAccessToken()
+      warning(t('global.sessionExpired'))
+      const redirect = router.currentRoute.value.fullPath
+      router.push({ path: '/login', query: redirect !== '/' ? { redirect } : undefined })
     } else if (error.response?.status === 403) {
       router.push('/')
     } else if (error.response?.status === 404) {

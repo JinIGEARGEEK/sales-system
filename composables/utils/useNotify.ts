@@ -26,11 +26,20 @@ const TOAST_UI: Record<NotifyColor, { root: string, title: string, icon: string,
   info: { root: `${TOAST_BASE_UI} bg-[var(--color-info-toast-bg)] border-l-[var(--color-info-toast)]`, icon: 'text-[var(--color-info-toast)]', ...TOAST_TITLE_UI },
 }
 
+type NotifyAction = { label: string, onClick: () => void }
+
 export const useNotify = () => {
   const toast = useToast()
 
-  const show = (message: string, color: NotifyColor) => {
-    toast.add({ title: message, color, ui: TOAST_UI[color] })
+  const show = (message: string, color: NotifyColor, action?: NotifyAction) => {
+    toast.add({
+      title: message,
+      color,
+      ui: TOAST_UI[color],
+      actions: action
+        ? [{ label: action.label, color, variant: 'outline', onClick: action.onClick }]
+        : undefined,
+    })
   }
 
   return {
@@ -40,9 +49,9 @@ export const useNotify = () => {
     }) => {
       show(options.message, options.type ?? 'info')
     },
-    success: (message: string) => show(message, 'success'),
-    error: (message: string) => show(message, 'error'),
-    info: (message: string) => show(message, 'info'),
-    warning: (message: string) => show(message, 'warning'),
+    success: (message: string, action?: NotifyAction) => show(message, 'success', action),
+    error: (message: string, action?: NotifyAction) => show(message, 'error', action),
+    info: (message: string, action?: NotifyAction) => show(message, 'info', action),
+    warning: (message: string, action?: NotifyAction) => show(message, 'warning', action),
   }
 }

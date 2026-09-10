@@ -10,7 +10,7 @@ export const useSubmitGuard = () => {
   const { notifyApiError } = useApiErrorNotifier()
 
   const guard = <Args extends unknown[]>(fn: (...args: Args) => Promise<void> | void) => {
-    return async (...args: Args) => {
+    const run = async (...args: Args) => {
       if (loading.value) return
       loading.value = true
       try {
@@ -20,12 +20,15 @@ export const useSubmitGuard = () => {
         // `fn` (to show a specific message), so this never fires for those.
         // It exists for the handful that didn't wrap their submit body in its
         // own try/catch, where a failure would otherwise be an unhandled
-        // rejection with zero user-facing feedback.
-        notifyApiError(err)
+        // rejection with zero user-facing feedback. Form state is untouched
+        // on failure (this never navigates away or resets anything), so a
+        // Retry action can just re-run the exact same submit.
+        notifyApiError(err, () => run(...args))
       } finally {
         loading.value = false
       }
     }
+    return run
   }
 
   return { loading, guard }

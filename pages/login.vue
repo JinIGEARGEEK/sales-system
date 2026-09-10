@@ -144,6 +144,16 @@ const { success, error } = useNotify()
 const userStore = useUserStore()
 const { post } = useMutateApi<{ access_token: string, user: User }, { email: string, password: string }>('/auth/login')
 
+// Session-expiry redirects (plugins/axios.ts) land here with `?redirect=` so
+// the user goes back to what they were doing instead of always to '/'. Only
+// accept a same-origin relative path (starts with a single '/') to rule out
+// an open-redirect via a crafted `?redirect=` query value.
+const route = useRoute()
+const redirectTarget = computed(() => {
+  const target = route.query.redirect
+  return typeof target === 'string' && target.startsWith('/') && !target.startsWith('//') ? target : '/'
+})
+
 const state = reactive({
   email: '',
   password: '',
@@ -159,7 +169,7 @@ const onSubmit = guard(async () => {
       setAccessToken(MOCK_DEV_TOKEN)
       userStore.setUser(MOCK_DEV_USER)
       success(t('global.auth.loginSuccess'))
-      await navigateTo('/')
+      await navigateTo(redirectTarget.value)
       return
     }
 
@@ -167,7 +177,7 @@ const onSubmit = guard(async () => {
     setAccessToken(response.data.access_token)
     userStore.setUser(response.data.user)
     success(t('global.auth.loginSuccess'))
-    await navigateTo('/')
+    await navigateTo(redirectTarget.value)
   } catch {
     error(t('global.auth.loginFailed'))
   }

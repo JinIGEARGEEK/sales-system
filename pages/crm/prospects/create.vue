@@ -135,6 +135,8 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 
 const duplicateProspects = computed(() => findDuplicateProspects(prospectsStore.items, form.email, form.phone))
 
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
@@ -154,6 +156,7 @@ const onSubmit = guard(async () => {
       created_at: new Date(),
     })
     success(t('crm.prospects.create.createSuccess'))
+    markClean()
     navigateTo('/crm/prospects')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

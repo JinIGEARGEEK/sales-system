@@ -1,5 +1,9 @@
 <template>
-  <div class="rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3">
+  <div
+    tabindex="-1"
+    class="rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3 outline-none"
+    @keydown="onTableKeydown"
+  >
     <!-- Mobile View -->
     <div class="md:hidden">
       <div v-if="!prop.loading">
@@ -65,8 +69,8 @@
           {{ t('global.noData') }}
         </div>
       </div>
-      <div v-else class="text-[var(--color-black)] text-center">
-        {{ t('global.loading') }}
+      <div v-else class="flex flex-col gap-2">
+        <USkeleton v-for="i in SKELETON_ROWS" :key="`mobile-skeleton-${i}`" class="h-14 w-full rounded-lg" />
       </div>
     </div>
 
@@ -103,55 +107,57 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(row, rowIndex) in paginatedRows"
-              :key="`row-${rowIndex}`"
-              class="hover:bg-[var(--color-primary-bg)] border-t border-[var(--color-light-gray-2)]"
-            >
-              <td
-                v-for="col in prop.columns"
-                :key="col.field"
-                :class="[
-                  'px-2 py-2 text-sm text-[var(--color-black)] align-top',
-                  { 'text-center': col.type === TABLE_CARD_TYPE.ACTION },
-                ]"
-                :style="columnStyle(col)"
+            <template v-if="!prop.loading">
+              <tr
+                v-for="(row, rowIndex) in paginatedRows"
+                :key="`row-${rowIndex}`"
+                class="hover:bg-[var(--color-primary-bg)] border-t border-[var(--color-light-gray-2)]"
               >
-                <div v-if="col.type === TABLE_CARD_TYPE.ACTION" class="flex justify-center">
-                  <UDropdownMenu
-                    :items="getActionMenuItems(col, row, rowIndex)"
-                  >
-                    <UButton
-                      data-cy="action-btn-desktop"
-                      icon="material-symbols:more-vert"
-                      variant="ghost"
-                      color="neutral"
-                      size="xs"
+                <td
+                  v-for="col in prop.columns"
+                  :key="col.field"
+                  :class="[
+                    'px-2 py-2 text-sm text-[var(--color-black)] align-top',
+                    { 'text-center': col.type === TABLE_CARD_TYPE.ACTION },
+                  ]"
+                  :style="columnStyle(col)"
+                >
+                  <div v-if="col.type === TABLE_CARD_TYPE.ACTION" class="flex justify-center">
+                    <UDropdownMenu
+                      :items="getActionMenuItems(col, row, rowIndex)"
+                    >
+                      <UButton
+                        data-cy="action-btn-desktop"
+                        icon="material-symbols:more-vert"
+                        variant="ghost"
+                        color="neutral"
+                        size="xs"
+                      />
+                    </UDropdownMenu>
+                  </div>
+                  <div v-else-if="col.type === TABLE_CARD_TYPE.SELECTED">
+                    <UCheckbox
+                      :model-value="selected.includes(row)"
+                      @update:model-value="toggleRowSelection(row)"
                     />
-                  </UDropdownMenu>
-                </div>
-                <div v-else-if="col.type === TABLE_CARD_TYPE.SELECTED">
-                  <UCheckbox
-                    :model-value="selected.includes(row)"
-                    @update:model-value="toggleRowSelection(row)"
-                  />
-                </div>
-                <div v-else>
-                  <TableCardType
-                    :type="col.type"
-                    :item="row[col.field]"
-                    @print="emit('print', row)"
-                  />
-                </div>
-              </td>
-            </tr>
-            <tr v-if="prop.loading">
-              <td :colspan="prop.columns.length">
-                <div class="flex justify-center pt-10 text-[var(--color-black)]">
-                  {{ t('global.loading') }}
-                </div>
-              </td>
-            </tr>
+                  </div>
+                  <div v-else>
+                    <TableCardType
+                      :type="col.type"
+                      :item="row[col.field]"
+                      @print="emit('print', row)"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </template>
+            <template v-if="prop.loading">
+              <tr v-for="i in SKELETON_ROWS" :key="`desktop-skeleton-${i}`">
+                <td v-for="col in prop.columns" :key="col.field" class="px-2 py-2" :style="columnStyle(col)">
+                  <USkeleton class="h-5 w-full" />
+                </td>
+              </tr>
+            </template>
             <tr v-else-if="paginatedRows.length === 0">
               <td :colspan="prop.columns.length">
                 <div class="flex justify-center pt-10">
@@ -238,6 +244,11 @@ const prop = defineProps({
 })
 
 const { t } = useI18n()
+
+// Fixed row count for the loading skeleton — doesn't need to match `perPage`,
+// just needs to read as "a table's worth of rows" without layout jumping once
+// real data (any length) replaces it.
+const SKELETON_ROWS = 5
 
 const paginatedRows = computed(() => {
   if (prop.serverPaginated) return prop.rows
@@ -360,5 +371,18 @@ const onChangePage = (value: number) => {
 
 const onChangePerPage = (value: number) => {
   emit('changePerPage', value)
+}
+
+// Esc clears the current selection; Cmd/Ctrl+A selects every row on the
+// current page — only while the table itself (not some unrelated input) has
+// focus, and only when row selection is actually enabled.
+const onTableKeydown = (event: KeyboardEvent) => {
+  if (!prop.isShowSelect) return
+  if (event.key === 'Escape' && selected.value.length > 0) {
+    selected.value = []
+  } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+    event.preventDefault()
+    selected.value = [...prop.rows]
+  }
 }
 </script>

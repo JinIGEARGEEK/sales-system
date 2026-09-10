@@ -94,6 +94,12 @@ const form = reactive({
 let nextItemKey = 0
 const items = ref<QuoteItemRow[]>([])
 
+// Declared here (before the Deal pre-fill watch below) so that watch can
+// call `markClean()` once it settles — otherwise this page would read as
+// "dirty" the instant the Deal resolves, before the rep has touched
+// anything, since every quote here is created pre-filled from its Deal.
+const { markClean } = useUnsavedChangesGuard(() => [form, items.value])
+
 // Pre-fills from the parent Deal (FR-CRM-046): Scope of Work gets the Deal's
 // title (project-level narrative), and one line item seeds qty:1/price:
 // deal.value so a simple one-line quote doesn't start from a completely
@@ -106,7 +112,22 @@ watch(deal, (value) => {
   if (items.value.length === 0) {
     items.value = [{ key: nextItemKey++, description: '', qty: 1, price: value.value, product_id: null, kind: 'scope', discount_percent: 0 }]
   }
+  markClean()
 }, { immediate: true })
+
+// Keyed by dealId: a quote's line items/pricing/scope_of_work are specific
+// to the Deal being quoted, so a stale draft left over from creating a quote
+// for a *different* Deal must never be offered here — restoring it would
+// silently attach that other Deal's pricing/items to this one.
+const { discardDraft, offerRestoreIfFound } = useDraftAutosave(
+  `crm-quote-create:${dealId.value}`,
+  () => ({ form, items: items.value }),
+  (saved) => {
+    Object.assign(form, saved.form)
+    items.value = saved.items
+  },
+)
+onMounted(offerRestoreIfFound)
 
 const { loading, guard } = useSubmitGuard()
 
@@ -122,6 +143,8 @@ const onSubmit = guard(async () => {
       status: form.status,
     })
     success(t('crm.quotes.create.createSuccess'))
+    markClean()
+    discardDraft()
     // `continue=1` tells the editor page (pages/crm/quotes/[id].vue) this is
     // a fresh landing from step 1, not a rep coming back to an existing
     // quote later — it shows a one-time "add the rest of the details" banner
