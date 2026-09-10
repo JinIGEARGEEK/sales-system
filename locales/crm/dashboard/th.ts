@@ -76,6 +76,7 @@ export default {
   revenueTrendHint: 'รายได้จาก Deal ที่ปิดสำเร็จใน 6 เดือนที่ผ่านมา',
   forecastTrend: 'แนวโน้มพยากรณ์',
   forecastTrendHint: 'มูลค่า Deal ที่ยังเปิดอยู่ ถ่วงน้ำหนักด้วยความน่าจะเป็น แบ่งตามเดือนที่คาดว่าจะปิดใน 6 เดือนข้างหน้า Deal ที่ไม่ได้ระบุวันที่คาดว่าจะปิดจะไม่แสดงในนี้ ยอดรวมจึงอาจน้อยกว่ารายได้พยากรณ์ด้านบน',
+  pipelineAnalytics: 'การวิเคราะห์ Pipeline',
   pipelineByStage: 'Pipeline ตามขั้นตอน',
   noPipelineStages: 'ยังไม่มีการตั้งค่าขั้นตอน Pipeline',
   previewBadge: 'ตัวอย่าง',
