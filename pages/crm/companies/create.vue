@@ -245,6 +245,7 @@ const onSubmit = guard(async () => {
         phone: c.phone,
         tags: [],
         status: 'active',
+        is_primary: false,
         created_at: new Date(),
       })),
     )

@@ -237,6 +237,9 @@ const displayContacts = computed(() => rows.value.map(contact => ({
   statusBadge: contact.status === 'active'
     ? toBadge(t('crm.contacts.index.statusActive'), 'success')
     : toBadge(t('crm.contacts.index.statusArchived')),
+  primaryBadge: contact.is_primary
+    ? toBadge(t('crm.contacts.index.primaryBadge'), 'primary')
+    : { ...toBadge(''), isNoData: true },
 })))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Contact>()
@@ -244,6 +247,7 @@ const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.contacts.index.columns.name'), align: 'left', field: 'name', isSort: true },
+  { label: t('crm.contacts.index.columns.primary'), align: 'left', field: 'primaryBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.contacts.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.contacts.index.columns.role'), align: 'left', field: 'role_title' },
   { label: t('crm.contacts.index.columns.email'), align: 'left', field: 'email', isSort: true },

@@ -73,6 +73,11 @@ type CampaignTaskSetupSubmitPayload =
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
+// Commit/Best Case/Pipeline forecast bucket for an open Deal — defaulted
+// server-side per-stage (Negotiation -> Commit, Proposal Sent -> Best Case,
+// everything else -> Pipeline) but manually overridable, same
+// default/override pattern as probability.
+type ForecastCategory = 'Commit' | 'Best Case' | 'Pipeline'
 type BusinessUnit = 'Project' | 'Product'
 type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled'
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
@@ -125,6 +130,10 @@ interface Contact {
   role_title: string
   tags: string[]
   status: ActiveArchivedStatus
+  // The one Contact per Company a Sales rep should reach first (FR-CRM-012).
+  // Server-enforced at most one per company_id — setting this true on one
+  // Contact clears it on every other Contact in the same Company.
+  is_primary: boolean
   // Present only on trash-listing responses (GET /contacts/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -232,6 +241,9 @@ interface Deal {
   probability: number | null
   // Required (server-validated) only while stage/status is Lost; cleared once it moves elsewhere.
   lost_reason: LostReason | null
+  // Commit/Best Case/Pipeline forecast bucket, defaulted server-side per-stage but
+  // manually overridable — see ForecastCategory's own doc.
+  forecast_category: ForecastCategory | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -658,6 +670,10 @@ interface DashboardSummary {
   win_rate: number
   open_deals_count: number
   forecasted_revenue: number
+  // Same probability-weighted formula as forecasted_revenue, split by open
+  // Deals' ForecastCategory — breaks the single blended figure above into
+  // three auditable numbers (a Deal with no category counts as Pipeline).
+  forecast_by_category: { commit: number, best_case: number, pipeline: number }
   avg_deal_size: number
   avg_sales_cycle_days: number
   pipeline_coverage_ratio: number
@@ -692,4 +708,22 @@ interface DashboardSummary {
   // company here is a subset of the full Company shape — only what the
   // widget needs to render a candidate row plus link to its detail page.
   upsell_opportunities: { id: number, name: string, industry: string, last_activity_at: string | null }[]
+}
+
+// GET /dashboard/forecast-accuracy — one row per (year, quarter), oldest
+// first: the last daily ForecastSnapshot taken during that quarter (or the
+// most recent one so far, for the still-open current quarter) paired with
+// its own actual_won_to_date. accuracy_ratio is actual ÷ weighted_forecast
+// (0 when weighted_forecast is 0, e.g. a quarter with no snapshots yet).
+interface ForecastAccuracyQuarter {
+  year: number
+  quarter: number
+  snapshot_date: string
+  commit_value: number
+  best_case_value: number
+  pipeline_value: number
+  weighted_forecast: number
+  sales_target: number
+  actual_won_to_date: number
+  accuracy_ratio: number
 }

@@ -93,7 +93,10 @@
               class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
             >
               <div>
-                <p class="text-sm font-medium">{{ contact.name }}</p>
+                <p class="flex items-center gap-2 text-sm font-medium">
+                  {{ contact.name }}
+                  <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.index.primaryBadge') }}</UBadge>
+                </p>
                 <p class="text-xs text-[var(--color-gray)]">{{ contact.role_title }} · {{ contact.email }}</p>
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-[var(--color-gray)]" />

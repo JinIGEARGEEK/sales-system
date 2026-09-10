@@ -57,6 +57,7 @@
             :placeholder="t('crm.contacts.create.tagsPlaceholder')"
             name="tags"
           />
+          <UCheckbox v-model="form.is_primary" :label="t('crm.contacts.create.isPrimary')" />
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -98,6 +99,7 @@ const form = reactive({
   email: '',
   phone: '',
   tags: '',
+  is_primary: false,
 })
 
 const { markClean } = useUnsavedChangesGuard(() => form)
@@ -114,6 +116,7 @@ const onSubmit = guard(async () => {
       phone: form.phone,
       tags: parseTags(form.tags),
       status: 'active',
+      is_primary: form.is_primary,
       created_at: new Date(),
     })
     success(t('crm.contacts.create.createSuccess'))

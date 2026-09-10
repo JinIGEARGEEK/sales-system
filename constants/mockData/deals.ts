@@ -28,6 +28,26 @@ const STAGE_DEFAULT_PROBABILITY: Record<DealStage, number> = {
 
 export const stageDefaultProbability = (stage: string): number => STAGE_DEFAULT_PROBABILITY[stage as DealStage] ?? 10
 
+// Mirrors the backend's StageDefaultForecastCategory (internal/models/deal.go)
+// — prefills Deal.forecast_category per-stage, always manually overridable.
+const STAGE_DEFAULT_FORECAST_CATEGORY: Record<DealStage, ForecastCategory> = {
+  Lead: 'Pipeline',
+  Qualified: 'Pipeline',
+  'Proposal Sent': 'Best Case',
+  Negotiation: 'Commit',
+  Won: 'Pipeline',
+  Lost: 'Pipeline',
+}
+
+export const stageDefaultForecastCategory = (stage: string): ForecastCategory =>
+  STAGE_DEFAULT_FORECAST_CATEGORY[stage as DealStage] ?? 'Pipeline'
+
+export const FORECAST_CATEGORY_OPTIONS: Select[] = [
+  { label: 'Commit', value: 'Commit' },
+  { label: 'Best Case', value: 'Best Case' },
+  { label: 'Pipeline', value: 'Pipeline' },
+]
+
 export const LOST_REASON_OPTIONS: Select[] = [
   { label: 'Price', value: 'price' },
   { label: 'Timing', value: 'timing' },
