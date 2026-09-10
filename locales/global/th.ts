@@ -8,6 +8,7 @@ export default {
   backToHome: 'กลับหน้าแรก',
   back: 'ย้อนกลับ',
   retry: 'ลองอีกครั้ง',
+  goToStageSetting: 'ไปที่การตั้งค่าขั้นตอน',
   noAccessTitle: 'จำกัดการเข้าถึง',
   noAccess: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
   updated: {
