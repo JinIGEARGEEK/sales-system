@@ -232,7 +232,13 @@ const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.leads.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source' },
   { label: t('crm.leads.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.leads.index.columns.classification'), align: 'left', field: 'classificationBadge', type: TABLE_CARD_TYPE.STATUS },
+  {
+    label: t('crm.leads.index.columns.classification'),
+    align: 'left',
+    field: 'classificationBadge',
+    type: TABLE_CARD_TYPE.STATUS,
+    tooltip: t('crm.leads.index.columns.classificationTooltip'),
+  },
   { label: t('crm.leads.index.columns.assignedTo'), align: 'left', field: 'assignedToName' },
   { label: t('crm.leads.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   {

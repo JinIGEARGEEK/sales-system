@@ -415,6 +415,11 @@ Table ควรประกอบด้วยองค์ประกอบด�
 - ใช้เมื่อข้อความยาวเกินพื้นที่
 - ควรมีวิธีดูข้อความเต็ม เช่น tooltip, detail panel หรือ expandable cell
 
+### 15.4 คำย่อใน Column Header (เช่น MQL, SQL)
+- เมื่อคอลัมน์แสดงค่าเป็นคำย่อ/ศัพท์เฉพาะที่ผู้ใช้ทั่วไปอาจไม่คุ้นเคย (เช่น badge "MQL"/"SQL" ในคอลัมน์คะแนนของ Lead) ให้ใส่ไอคอน info (`material-symbols:info-outline`) ต่อท้าย header label พร้อม `UTooltip` อธิบายความหมายของแต่ละค่าแบบสั้น กระชับ (แนวเดียวกับ tooltip อื่นในระบบ ไม่ใช่ย่อหน้ายาว)
+- นี่คือทางเลือกที่เบากว่าการเปลี่ยนชื่อ column header ทั้งหมด (§15.1) — ใช้เมื่อคำย่อนั้นเป็นศัพท์ domain ที่ผู้ใช้ควรเรียนรู้ (เช่น MQL/SQL เป็นคำที่ทีมขาย/การตลาดใช้จริง) ไม่ใช่ศัพท์ภายในที่ควรเลี่ยงตั้งแต่แรก
+- Reference implementation: `TableDataColumn.tooltip` (`interfaces/tableData.d.ts`) + header rendering ใน `components/Table/Data.vue` — ใช้ได้กับทุกหน้าที่ใช้ `TableData` component นี้ ไม่ต้องเขียนซ้ำ
+
 ---
 
 ## 16. พฤติกรรมที่ควรหลีกเลี่ยง

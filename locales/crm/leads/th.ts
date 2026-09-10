@@ -13,6 +13,7 @@ export default {
       source: 'แหล่งที่มา',
       status: 'สถานะ',
       classification: 'คะแนน',
+      classificationTooltip: 'MQL = คะแนนถึงเกณฑ์ · SQL = เซลส์ทำเครื่องหมายพร้อมขายเอง · "-" = ยังไม่เข้าเกณฑ์ใดเลย',
       assignedTo: 'ผู้รับผิดชอบ',
       created: 'สร้างเมื่อ',
       action: 'การดำเนินการ',

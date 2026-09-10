@@ -97,11 +97,15 @@
                 </div>
                 <div
                   v-else
+                  class="flex items-center gap-1"
                   :class="[{'cursor-pointer': col.isSort}]"
                   @click="onSort(col.isSort, col.field)"
                 >
                   <b>{{ col.label }}</b>
                   <UIcon v-if="col.isSort" :name="sortIcon(col.field)" class="inline size-4" />
+                  <UTooltip v-if="col.tooltip" :text="col.tooltip">
+                    <UIcon name="material-symbols:info-outline" class="inline size-4 text-(--color-gray)" />
+                  </UTooltip>
                 </div>
               </th>
             </tr>
