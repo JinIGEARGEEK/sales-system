@@ -54,7 +54,7 @@
             <template #header>
               <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
             </template>
-            <div v-if="linkedDeals.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.contacts.detail.noLinkedDeals') }}</div>
+            <div v-if="linkedDeals.length === 0" class="text-sm text-(--color-gray)">{{ t('crm.contacts.detail.noLinkedDeals') }}</div>
             <div v-else class="flex flex-col gap-2">
               <TableCardLink
                 v-for="deal in linkedDeals"
@@ -76,21 +76,21 @@
                 />
               </div>
             </template>
-            <div v-if="contactCompanyProjects.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.contacts.detail.noLinkedProjects') }}</div>
+            <div v-if="contactCompanyProjects.length === 0" class="text-sm text-(--color-gray)">{{ t('crm.contacts.detail.noLinkedProjects') }}</div>
             <div v-else class="flex flex-col gap-2">
               <button
                 v-for="project in contactCompanyProjects"
                 :key="project.id"
                 type="button"
-                class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+                class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
                 @click="openEditProject(project)"
               >
                 <div>
                   <p class="text-sm font-medium">{{ project.name }}</p>
-                  <p v-if="project.deal_id" class="text-xs text-[var(--color-gray)]">
+                  <p v-if="project.deal_id" class="text-xs text-(--color-gray)">
                     {{ t('crm.contacts.detail.projectLinkedDeal', { title: dealTitleById(project.deal_id) }) }}
                   </p>
-                  <p class="text-xs text-[var(--color-gray)]">
+                  <p class="text-xs text-(--color-gray)">
                     {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                   </p>
                 </div>
@@ -135,7 +135,7 @@
       </div>
     </div>
 
-    <div v-else class="py-12 text-center text-[var(--color-gray)]">
+    <div v-else class="py-12 text-center text-(--color-gray)">
       {{ t('crm.contacts.detail.contactNotFound') }}
     </div>
 

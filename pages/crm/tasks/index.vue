@@ -4,7 +4,7 @@
     <div class="mb-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-black">{{ t('crm.tasks.index.heading') }}</h2>
-        <p class="text-sm text-[var(--color-gray)]">{{ t('crm.tasks.index.subheading') }}</p>
+        <p class="text-sm text-(--color-gray)">{{ t('crm.tasks.index.subheading') }}</p>
       </div>
       <div class="flex items-center gap-2">
         <ButtonPrimary
@@ -52,7 +52,7 @@
     </UCard>
 
     <ContainerTemplate>
-      <div v-if="filteredTasks.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+      <div v-if="filteredTasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.tasks.index.noTasksMatch') }}
       </div>
       <CrmTaskList

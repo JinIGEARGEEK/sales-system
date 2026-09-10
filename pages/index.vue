@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-6">
       <h2 class="text-xl font-black">{{ t('crm.dashboard.heading') }}</h2>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.dashboard.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
     <!-- Only rendered for a role that can see both tabs (Admin/Sales Manager/
@@ -39,6 +39,8 @@
       meaning outside the sales pipeline — hidden from Marketing/Production
       (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
       Contacts nav items and GlobalSearch results. -->
+      <DashboardRiskAlerts v-if="canViewRiskAlerts" :counts="riskAlertCounts" />
+
       <template v-if="canViewSalesPipelineWidgets">
         <DashboardLeadSummary :summary="leadSummary" />
 
@@ -120,7 +122,7 @@ import {
   isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
-import { SALES_PIPELINE_ROLES, PROSPECT_ROLES } from '~/constants/roles'
+import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 const { hasRole } = useRole()
@@ -137,6 +139,16 @@ const canViewProspectSummary = computed(() => hasRole(...PROSPECT_ROLES))
 // (irrelevant, Deal-oriented) filter bar and an empty team-tasks widget —
 // this is the one thing their role actually needs to see here.
 const canViewProductionWidgets = computed(() => hasRole('Production'))
+// Risk Alerts reuses the 4 Reports-page "needs attention" endpoints directly
+// (see useAttentionCounts) — those are Admin/Sales-Manager-only server-side,
+// so a Sales Rep calling them here would just 403; gate on MANAGER_ROLES
+// (narrower than canViewSalesPipelineWidgets) rather than exposing that.
+const canViewRiskAlerts = computed(() => hasRole(...MANAGER_ROLES))
+const { counts: riskAlertCounts, fetchCounts: fetchRiskAlertCounts } = useAttentionCounts()
+// Role resolution can land after mount (hydrate-auth.client.ts) — same
+// `watch` + `immediate` reasoning as the dashboard-tab default above, rather
+// than a plain onMounted that could fire before hasRole is trustworthy.
+watch(canViewRiskAlerts, (canView) => { if (canView) fetchRiskAlertCounts() }, { immediate: true })
 // Only Admin/Sales Manager/Sales Rep are in both role lists — everyone else
 // has just one tab's worth of content, so no switcher is shown at all for
 // them.
@@ -437,9 +449,9 @@ const stageBreakdown = computed(() => {
     const stat = stats.get(stage.value)!
     const row = pipelineStagesStore.byName(String(stage.value))
     const barClass = row?.is_won_stage
-      ? 'bg-[var(--color-success-toast)]'
+      ? 'bg-(--color-success-toast)'
       : row?.is_lost_stage
-        ? 'bg-[var(--color-chart-lost)]'
+        ? 'bg-(--color-chart-lost)'
         : (CHART_CATEGORICAL_COLORS[openIndex++] ?? CHART_FALLBACK_COLOR).bar
     return {
       stage: stage.label,

@@ -1,15 +1,15 @@
 <template>
   <div>
-    <div v-if="attachments.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+    <div v-if="attachments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
       {{ t('crm.components.attachmentList.noAttachments') }}
     </div>
     <div v-else class="flex flex-col gap-2">
       <div
         v-for="attachment in attachments"
         :key="attachment.id"
-        class="flex items-center gap-3 rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3"
+        class="flex items-center gap-3 rounded-lg border border-(--color-light-gray-2) px-4 py-3"
       >
-        <UIcon :name="iconFor(attachment)" class="size-5 shrink-0 text-[var(--color-gray)]" />
+        <UIcon :name="iconFor(attachment)" class="size-5 shrink-0 text-(--color-gray)" />
 
         <div class="min-w-0 flex-1">
           <a
@@ -22,7 +22,7 @@
             {{ attachment.file_name }}
           </a>
           <p v-else class="truncate text-sm font-medium">{{ attachment.file_name }}</p>
-          <p class="truncate text-xs text-[var(--color-gray)]">{{ dateFormat(attachment.created_at) }}</p>
+          <p class="truncate text-xs text-(--color-gray)">{{ dateFormat(attachment.created_at) }}</p>
         </div>
 
         <UBadge color="neutral" variant="subtle" class="shrink-0">{{ t(`crm.components.attachmentList.categories.${categoryKey(attachment.category)}`) }}</UBadge>

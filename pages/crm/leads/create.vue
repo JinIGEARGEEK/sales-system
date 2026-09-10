@@ -12,7 +12,7 @@
         />
         <h2 class="text-xl font-black">{{ t('crm.leads.create.heading') }}</h2>
       </div>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.leads.create.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.leads.create.subheading') }}</p>
     </div>
 
     <UAlert
@@ -28,7 +28,7 @@
         <ul class="mt-2 list-disc pl-5">
           <li v-for="dup in duplicateLeads" :key="dup.id">
             <NuxtLink :to="`/crm/leads/${dup.id}`" class="font-medium hover:underline">{{ dup.name }}</NuxtLink>
-            <span class="text-[var(--color-gray)]"> — {{ dup.email }}</span>
+            <span class="text-(--color-gray)"> — {{ dup.email }}</span>
           </li>
         </ul>
       </template>

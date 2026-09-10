@@ -2,21 +2,35 @@
   <div v-if="deal" class="grid grid-cols-1 gap-4 lg:grid-cols-5">
     <div class="lg:col-span-3">
       <ContainerTemplate>
+        <UAlert
+          v-if="showContractGateWarning"
+          class="mb-4"
+          color="warning"
+          variant="subtle"
+          icon="material-symbols:warning-outline"
+          :title="t('crm.deals.detail.contractRequiredWarning')"
+        />
         <Form @submit="onSave">
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.title" :label="t('crm.deals.detail.dealTitle')" name="title" rules="required" />
             <InputText v-model.number="form.value" :label="t('crm.deals.detail.dealValue')" type="number" name="value" rules="required" />
             <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.detail.stage')" name="stage" rules="required" />
-            <InputText
-              v-model.number="form.probability"
-              type="number"
-              min="0"
-              max="100"
-              :label="t('crm.deals.detail.probability')"
-              name="probability"
-              rules="required|min_value:0|max_value:100"
-            />
-            <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.detail.forecastCategory')" name="forecast_category" />
+            <div>
+              <InputText
+                v-model.number="form.probability"
+                type="number"
+                min="0"
+                max="100"
+                :label="t('crm.deals.detail.probability')"
+                name="probability"
+                rules="required|min_value:0|max_value:100"
+              />
+              <UProgress class="mt-1" :model-value="form.probability" :color="probabilityColor" size="sm" />
+            </div>
+            <div>
+              <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.detail.forecastCategory')" name="forecast_category" />
+              <UBadge v-if="form.forecast_category" class="mt-1" :color="forecastCategoryColor(form.forecast_category)" variant="subtle">{{ form.forecast_category }}</UBadge>
+            </div>
             <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.detail.expectedCloseDate')" name="expected_close_date" />
             <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
             <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
@@ -59,17 +73,17 @@
         </template>
         <div class="flex flex-col gap-3 text-sm">
           <NuxtLink :to="`/crm/companies/${deal.company_id}`" class="flex justify-between hover:underline">
-            <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.company') }}</span><span>{{ companyName }}</span>
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.company') }}</span><span>{{ companyName }}</span>
           </NuxtLink>
           <NuxtLink :to="`/crm/contacts/${deal.contact_id}`" class="flex justify-between hover:underline">
-            <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.contact') }}</span><span>{{ contactName }}</span>
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.contact') }}</span><span>{{ contactName }}</span>
           </NuxtLink>
           <NuxtLink v-if="linkedProject" :to="`/crm/companies/${deal.company_id}`" class="flex justify-between hover:underline">
-            <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.project') }}</span><span>{{ linkedProject.name }}</span>
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.project') }}</span><span>{{ linkedProject.name }}</span>
           </NuxtLink>
           <div v-else class="flex justify-between">
-            <span class="text-[var(--color-gray)]">{{ t('crm.deals.detail.project') }}</span>
-            <span class="text-[var(--color-gray)]">{{ deal.status === 'won' ? t('crm.deals.detail.projectNotCreatedYet') : '-' }}</span>
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.project') }}</span>
+            <span class="text-(--color-gray)">{{ deal.status === 'won' ? t('crm.deals.detail.projectNotCreatedYet') : '-' }}</span>
           </div>
         </div>
       </UCard>
@@ -78,15 +92,15 @@
         <template #header>
           <h3 class="text-base font-semibold">{{ t('crm.deals.detail.ownerHistory') }}</h3>
         </template>
-        <div v-if="ownerHistory.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+        <div v-if="ownerHistory.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.deals.detail.noOwnerHistory') }}
         </div>
         <div v-else class="flex flex-col gap-4">
           <div v-for="entry in ownerHistory" :key="entry.id" class="flex gap-3">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-bg)]">
-              <UIcon name="material-symbols:swap-horiz" class="size-4 text-[var(--color-primary)]" />
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-primary-bg)">
+              <UIcon name="material-symbols:swap-horiz" class="size-4 text-(--color-primary)" />
             </div>
-            <div class="min-w-0 flex-1 border-b border-[var(--color-light-gray-2)] pb-3 last:border-none">
+            <div class="min-w-0 flex-1 border-b border-(--color-light-gray-2) pb-3 last:border-none">
               <div class="flex items-center justify-between gap-2">
                 <p class="text-sm font-medium">
                   {{ entry.before?.assigned_to
@@ -96,9 +110,9 @@
                     })
                     : t('crm.deals.detail.ownerHistoryAssigned', { to: teamMembersStore.nameById(entry.after?.assigned_to as number ?? null) }) }}
                 </p>
-                <span class="shrink-0 text-xs text-[var(--color-gray)]">{{ dateTimeFormat(entry.created_at.toISOString()) }}</span>
+                <span class="shrink-0 text-xs text-(--color-gray)">{{ dateTimeFormat(entry.created_at.toISOString()) }}</span>
               </div>
-              <p class="mt-1 text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.ownerHistoryBy', { actor: actorName(entry.actor_id) }) }}</p>
+              <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.deals.detail.ownerHistoryBy', { actor: actorName(entry.actor_id) }) }}</p>
             </div>
           </div>
         </div>
@@ -117,6 +131,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
+const { forecastCategoryColor } = useForecastCategoryColor()
 const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -126,6 +141,8 @@ const pipelineStagesStore = usePipelineStagesStore()
 const teamMembersStore = useTeamMembersStore()
 const usersStore = useUsersStore()
 const auditLogStore = useAuditLogStore()
+const contractsStore = useContractsStore()
+const appSettingsStore = useAppSettingsStore()
 
 // Admin/Sales Manager only (FR-CRM-025/M-8) — GET /audit-log hard-restricts
 // everyone else server-side to stage_changed entries only (see
@@ -140,8 +157,29 @@ const canViewOwnerHistory = computed(() => hasRole('Admin', 'Sales Manager'))
 // resolution useDealStageColor.stageBadgeColor uses.
 const isLostStage = (stage: string) => pipelineStagesStore.byName(stage)?.is_lost_stage ?? stage === 'Lost'
 
+// Colors the Probability progress bar by simple magnitude thresholds — not
+// stage-derived like forecastCategoryColor, since a rep can freely override
+// this number away from its stage default.
+const probabilityColor = computed<'error' | 'warning' | 'success'>(() => {
+  if (form.probability < 33) return 'error'
+  if (form.probability < 66) return 'warning'
+  return 'success'
+})
+
 const { dealId, deal } = useCurrentDeal()
 const linkedProject = computed(() => projectsStore.forDeal(dealId))
+
+// FR-CRM-045's Won gate — surfaced here proactively (instead of only as a
+// generic 422 toast after the fact) so a rep sees it before trying to move
+// Stage to Won at all. Already-Won deals never show this — the gate only
+// matters on the way in.
+const dealContracts = computed(() => contractsStore.forDeal(dealId))
+const hasSignedContract = computed(() => dealContracts.value.some(c => c.status === 'signed'))
+const showContractGateWarning = computed(() =>
+  appSettingsStore.settings?.require_signed_contract_before_won === true
+  && deal.value?.status !== 'won'
+  && !hasSignedContract.value,
+)
 
 // Targeted fetchOne for this Deal's own Company/Contact, not a blanket
 // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
@@ -159,6 +197,8 @@ watch(deal, (value) => {
 onMounted(() => {
   if (productsStore.items.length === 0) productsStore.fetchAll().catch(notifyApiError)
   if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
+  if (!appSettingsStore.settings) appSettingsStore.fetchAll().catch(notifyApiError)
+  contractsStore.fetchForDeal(dealId).catch(notifyApiError)
   if (canViewOwnerHistory.value) {
     if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
     // usersStore.fetchAll() hits the Admin-only /users endpoint (see
@@ -293,7 +333,11 @@ const onSave = guard(async () => {
     if (!wasWon && updated.status === 'won') createWonFollowUpTask()
     success(t('crm.deals.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
+      error(t('crm.deals.detail.contractRequiredToast'))
+    } else {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
   }
 })
 </script>

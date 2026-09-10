@@ -2,7 +2,7 @@
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('crm.reports.subheading') }}</p>
     </div>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
@@ -12,8 +12,8 @@
            card beneath it — color carries the grouping, the label just
            names it. -->
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(198,158,82,0.35)] bg-[rgba(198,158,82,0.12)] px-3 py-1 backdrop-blur-sm">
-        <span class="size-2 rounded-full bg-[var(--color-warning-hover)]" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-[var(--color-black)] uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
+        <span class="size-2 rounded-full bg-(--color-warning-hover)" aria-hidden="true" />
+        <span class="text-xs font-semibold tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
       </div>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
@@ -37,7 +37,7 @@
             />
             <div class="flex items-start gap-2.5">
               <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(198,158,82,0.4)] to-[rgba(198,158,82,0.1)] ring-1 ring-[rgba(198,158,82,0.4)] backdrop-blur-sm">
-                <UIcon :name="card.icon" class="size-4 text-[var(--color-warning-hover)]" />
+                <UIcon :name="card.icon" class="size-4 text-(--color-warning-hover)" />
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
@@ -53,17 +53,17 @@
                     {{ counts[card.key] }}
                   </UBadge>
                 </div>
-                <p class="mt-0.5 pr-4 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
+                <p class="mt-0.5 pr-4 text-xs text-(--color-gray)">{{ card.description }}</p>
               </div>
             </div>
-            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-[var(--color-gray)]/50" aria-hidden="true" />
+            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-(--color-gray)/50" aria-hidden="true" />
           </UCard>
         </NuxtLink>
       </div>
 
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(45,114,167,0.35)] bg-[rgba(45,114,167,0.12)] px-3 py-1 backdrop-blur-sm">
-        <span class="size-2 rounded-full bg-[var(--color-info-toast)]" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-[var(--color-black)] uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
+        <span class="size-2 rounded-full bg-(--color-info-toast)" aria-hidden="true" />
+        <span class="text-xs font-semibold tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
       </div>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">
@@ -84,14 +84,14 @@
             />
             <div class="flex items-start gap-2.5">
               <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[rgba(45,114,167,0.4)] to-[rgba(45,114,167,0.1)] ring-1 ring-[rgba(45,114,167,0.4)] backdrop-blur-sm">
-                <UIcon :name="card.icon" class="size-4 text-[var(--color-info-toast)]" />
+                <UIcon :name="card.icon" class="size-4 text-(--color-info-toast)" />
               </div>
               <div class="pr-4">
                 <h3 class="text-sm font-medium">{{ card.title }}</h3>
-                <p class="mt-0.5 text-xs text-[var(--color-gray)]">{{ card.description }}</p>
+                <p class="mt-0.5 text-xs text-(--color-gray)">{{ card.description }}</p>
               </div>
             </div>
-            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-[var(--color-gray)]/50" aria-hidden="true" />
+            <UIcon name="material-symbols:chevron-right-rounded" class="absolute right-3 bottom-3 size-4 text-(--color-gray)/50" aria-hidden="true" />
           </UCard>
         </NuxtLink>
       </div>
@@ -107,7 +107,6 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.reports.pageTitle') })
 
-const { $api } = useNuxtApp()
 const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 // "Needs Attention" reports are all a bounded, already-filtered problem list
@@ -135,33 +134,7 @@ const analyticsCards = computed(() => [
   { path: '/crm/reports/forecast-accuracy', icon: 'material-symbols:target', title: t('crm.reports.forecastAccuracy.cardTitle'), description: t('crm.reports.forecastAccuracy.cardDescription') },
 ])
 
-// key -> report endpoint, for the live count fetch below.
-const ATTENTION_ENDPOINTS: Record<string, string> = {
-  stalledDeals: '/reports/stalled-deals',
-  outstandingBalance: '/reports/outstanding-balance',
-  quotesExpiringSoon: '/reports/quotes-expiring-soon',
-  contractsStuck: '/reports/contracts-stuck',
-  projectsAtRisk: '/reports/projects-at-risk',
-}
+const { counts, fetchCounts } = useAttentionCounts()
 
-// Starts every count at null so the badge renders as a loading skeleton until
-// its request resolves — keeps "not checked yet" visually distinct from a
-// genuine zero.
-const counts = ref<Record<string, number | null>>(
-  Object.fromEntries(Object.keys(ATTENTION_ENDPOINTS).map(key => [key, null])),
-)
-
-const badgeColor = (count: number | null | undefined) => {
-  if (!count) return 'neutral'
-  if (count >= 5) return 'error'
-  return 'warning'
-}
-
-guardMounted(() => {
-  for (const [key, path] of Object.entries(ATTENTION_ENDPOINTS)) {
-    $api.get<ApiResponse<unknown[]>>(path)
-      .then((response) => { counts.value[key] = response.data.data.length })
-      .catch(() => { counts.value[key] = 0 /* treat a failed count as "nothing to flag" rather than stuck loading */ })
-  }
-})
+guardMounted(fetchCounts)
 </script>

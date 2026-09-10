@@ -1,8 +1,8 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-3 flex items-center justify-between border-b border-[var(--color-light-gray-2)] pb-2">
-      <span class="text-sm font-semibold text-[var(--color-black)]">{{ t('crm.dashboard.sectionProspectFunnel') }}</span>
-      <NuxtLink to="/crm/reports/prospect-source" class="text-xs font-medium text-[var(--color-primary)] hover:underline">
+    <h3 class="mb-3 flex items-center justify-between border-b border-(--color-light-gray-2) pb-2">
+      <span class="text-sm font-semibold text-(--color-black)">{{ t('crm.dashboard.sectionProspectFunnel') }}</span>
+      <NuxtLink to="/crm/reports/prospect-source" class="text-xs font-medium text-(--color-primary) hover:underline">
         {{ t('crm.dashboard.viewFullReport') }}
       </NuxtLink>
     </h3>
@@ -11,8 +11,8 @@
       <CrmStatCard
         :label="t('crm.dashboard.totalProspects')"
         icon="material-symbols:contact-mail-outline"
-        icon-class="text-[var(--color-info-toast)]"
-        icon-bg-class="bg-[var(--color-info-toast)]/25"
+        icon-class="text-(--color-info-toast)"
+        icon-bg-class="bg-(--color-info-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
         to="/crm/prospects"
       >
@@ -21,8 +21,8 @@
       <CrmStatCard
         :label="t('crm.dashboard.openProspects')"
         icon="material-symbols:person-search-outline"
-        icon-class="text-[var(--color-warning-hover)]"
-        icon-bg-class="bg-[var(--color-warning-hover)]/25"
+        icon-class="text-(--color-warning-hover)"
+        icon-bg-class="bg-(--color-warning-hover)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
         to="/crm/prospects"
       >
@@ -32,8 +32,8 @@
         :label="t('crm.dashboard.prospectConversionRate')"
         :tooltip="t('crm.dashboard.prospectConversionRateTooltip')"
         icon="material-symbols:trending-up"
-        icon-class="text-[var(--color-success-toast)]"
-        icon-bg-class="bg-[var(--color-success-toast)]/25"
+        icon-class="text-(--color-success-toast)"
+        icon-bg-class="bg-(--color-success-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
         to="/crm/reports/prospect-source"
       >
@@ -46,7 +46,7 @@
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsByStatus') }}</h3>
         </template>
-        <div v-if="!statusRows.length" class="py-6 text-center text-sm text-[var(--color-gray)]">
+        <div v-if="!statusRows.length" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noProspectData') }}
         </div>
         <div v-else class="flex flex-col gap-3">
@@ -58,7 +58,7 @@
             :bar-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).bar"
             :to="`/crm/prospects?status=${encodeURIComponent(row.status)}`"
           >
-            <span class="min-w-10 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.count }}</span>
+            <span class="min-w-10 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ row.count }}</span>
           </CrmMetricBar>
         </div>
       </UCard>
@@ -67,7 +67,7 @@
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsBySource') }}</h3>
         </template>
-        <div v-if="!(summary?.source_breakdown?.length)" class="py-6 text-center text-sm text-[var(--color-gray)]">
+        <div v-if="!(summary?.source_breakdown?.length)" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noProspectData') }}
         </div>
         <div v-else class="flex flex-col gap-3">
@@ -78,8 +78,8 @@
             :percent="Math.round(row.conversion_rate)"
             :to="`/crm/prospects?source=${encodeURIComponent(row.source)}`"
           >
-            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-[var(--color-gray)]">{{ row.converted }} / {{ row.total }}</span>
-            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-[var(--color-gray)]">{{ row.conversion_rate.toFixed(1) }}%</span>
+            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ row.converted }} / {{ row.total }}</span>
+            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.conversion_rate.toFixed(1) }}%</span>
           </CrmMetricBar>
         </div>
       </UCard>

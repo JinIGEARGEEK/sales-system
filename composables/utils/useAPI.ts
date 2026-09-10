@@ -12,6 +12,16 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
+// Checks a ValidationError's `fields[field]` code list for `code` — e.g. the
+// Deal Won gate's `{"stage":["requires_signed_contract"]}` (FR-CRM-045) —
+// so a catch block can show a specific, actionable message instead of just
+// the generic backend string getApiErrorMessage above returns.
+export function apiErrorHasFieldCode(err: unknown, field: string, code: string): boolean {
+  if (!isAxiosError(err)) return false
+  const codes = err.response?.data?.error?.fields?.[field] as string[] | undefined
+  return Array.isArray(codes) && codes.includes(code)
+}
+
 // CREATE / UPDATE / DELETE transactions
 export const useMutateApi = <T, D>(path: string) => {
   const { $api } = useNuxtApp()

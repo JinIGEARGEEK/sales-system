@@ -3,7 +3,7 @@
     <div class="relative flex size-32 shrink-0 items-center justify-center rounded-full" :style="{ background: conicGradient }">
       <div class="absolute inset-[16%] flex flex-col items-center justify-center rounded-full bg-white text-center">
         <span class="text-base font-semibold">{{ totalLabel }}</span>
-        <span v-if="totalSubLabel" class="text-[10px] text-[var(--color-gray)]">{{ totalSubLabel }}</span>
+        <span v-if="totalSubLabel" class="text-[10px] text-(--color-gray)">{{ totalSubLabel }}</span>
       </div>
     </div>
 
@@ -17,9 +17,9 @@
         <div class="flex items-center gap-2 text-sm">
           <UIcon v-if="seg.icon" :name="seg.icon" class="size-3.5 shrink-0" :style="{ color: seg.colorVar }" />
           <span v-else class="size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: seg.colorVar }" />
-          <span class="min-w-20 text-[var(--color-black)]">{{ seg.label }}</span>
-          <span class="font-medium text-[var(--color-black)]">{{ seg.valueLabel }}</span>
-          <span class="text-xs text-[var(--color-gray)]">({{ seg.percent }}%)</span>
+          <span class="min-w-20 text-(--color-black)">{{ seg.label }}</span>
+          <span class="font-medium text-(--color-black)">{{ seg.valueLabel }}</span>
+          <span class="text-xs text-(--color-gray)">({{ seg.percent }}%)</span>
         </div>
       </UTooltip>
     </div>

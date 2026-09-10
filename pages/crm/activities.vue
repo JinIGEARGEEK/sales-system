@@ -4,7 +4,7 @@
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-xl font-black">{{ t('crm.activities.index.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.activities.index.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.activities.index.subheading') }}</p>
         </div>
         <ButtonPrimary
           :label="t('crm.activities.index.addActivity')"

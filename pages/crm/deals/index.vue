@@ -6,12 +6,12 @@
         <!-- View switcher: one joined segmented control, not two standalone
              buttons — kept visually distinct from the Export/Add actions so
              it doesn't read as a third/fourth action in the row. -->
-        <div class="flex items-center gap-0.5 rounded-full bg-[var(--color-light-gray-1)] p-1">
+        <div class="flex items-center gap-0.5 rounded-full bg-(--color-light-gray-1) p-1">
           <UTooltip :text="t('crm.deals.index.viewKanban')">
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'kanban' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :class="viewMode === 'kanban' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.deals.index.viewKanban')"
               @click="viewMode = 'kanban'"
             >
@@ -22,7 +22,7 @@
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'list' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :class="viewMode === 'list' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.deals.index.viewList')"
               @click="viewMode = 'list'"
             >
@@ -31,7 +31,7 @@
           </UTooltip>
         </div>
 
-        <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
+        <div class="flex items-center gap-2 border-l border-(--color-light-gray-2) pl-3">
           <ButtonPrimary
             v-if="canExport"
             outline
@@ -91,7 +91,7 @@
         <button
           v-if="hasMoreDeals(column.value)"
           type="button"
-          class="mt-1 shrink-0 cursor-pointer rounded-md border border-dashed border-[var(--color-light-gray-2)] py-1.5 text-xs text-[var(--color-gray)] transition-colors hover:text-[var(--color-black)] disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-1 shrink-0 cursor-pointer rounded-md border border-dashed border-(--color-light-gray-2) py-1.5 text-xs text-(--color-gray) transition-colors hover:text-(--color-black) disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="loadingMoreStage === column.value"
           @click="loadMoreDeals(column.value)"
         >
@@ -102,14 +102,14 @@
         <template v-if="item._type === 'deal'">
           <div>
             <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
           </div>
-          <p class="mt-2 text-sm font-medium text-[var(--color-primary)]">
+          <p class="mt-2 text-sm font-medium text-(--color-primary)">
             {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
           </p>
-          <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
-            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
-            <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
+          <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
+            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
+            <p class="truncate text-xs text-(--color-gray)">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
           </div>
         </template>
         <template v-else>
@@ -126,11 +126,11 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
           </div>
-          <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
-            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
-            <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
+          <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
+            <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
+            <p class="truncate text-xs text-(--color-gray)">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
           </div>
         </template>
       </template>
@@ -417,7 +417,11 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
     } catch (err) {
       // Nothing was mutated optimistically, so there's nothing to roll back —
       // the card simply stays put in its origin column.
-      error(getApiErrorMessage(err, t('global.genericError')))
+      if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
+        error(t('crm.deals.detail.contractRequiredToast'))
+      } else {
+        error(getApiErrorMessage(err, t('global.genericError')))
+      }
     }
     return
   }

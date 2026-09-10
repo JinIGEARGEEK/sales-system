@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.forecastAccuracy.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.forecastAccuracy.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.forecastAccuracy.subheading') }}</p>
         </div>
       </div>
     </div>
@@ -30,7 +30,7 @@
         <CrmStatCard
           :label="t('crm.reports.forecastAccuracy.accuracyLabel')"
           :icon="isAccurate(latestQuarter) ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
-          :value-class="isAccurate(latestQuarter) ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-warning-hover)]'"
+          :value-class="isAccurate(latestQuarter) ? 'text-(--color-success-toast)' : 'text-(--color-warning-hover)'"
         >
           {{ Math.round(latestQuarter.accuracy_ratio * 100) }}%
           <template #hint>{{ t('crm.reports.forecastAccuracy.accuracyHint') }}</template>

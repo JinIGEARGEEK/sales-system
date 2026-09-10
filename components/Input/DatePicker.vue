@@ -23,7 +23,7 @@
         style="text-align: left"
       >
         <template #trailing>
-          <UIcon name="material-symbols:calendar-today-outline" class="text-[var(--color-dark-gray)]" />
+          <UIcon name="material-symbols:calendar-today-outline" class="text-(--color-dark-gray)" />
         </template>
       </UInput>
       <template #content>

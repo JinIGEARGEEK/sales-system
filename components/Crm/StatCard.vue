@@ -9,9 +9,9 @@
       <div class="relative flex items-center justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-1">
-            <p class="truncate text-xs font-medium text-[var(--color-dark-gray)]" :title="label">{{ label }}</p>
+            <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
             <UTooltip v-if="tooltip" :text="tooltip">
-              <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-[var(--color-gray)]" />
+              <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
             </UTooltip>
           </div>
           <p class="mt-0.5 text-xl font-medium" :class="valueClass">
@@ -62,7 +62,7 @@ const props = defineProps({
   // matching the pattern already used for status-colored backgrounds.
   iconBgClass: {
     type: String,
-    default: 'bg-[var(--color-light-gray-1)]',
+    default: 'bg-(--color-light-gray-1)',
   },
   // A frosted-glass gradient panel covering the card's left ~10% width,
   // e.g. 'bg-gradient-to-r from-[var(--color-accent-green)]/40 to-transparent'.
@@ -77,7 +77,7 @@ const props = defineProps({
   },
   hintClass: {
     type: String,
-    default: 'text-[var(--color-gray)]',
+    default: 'text-(--color-gray)',
   },
   // Explains how the value is calculated (e.g. "Sum of open deal value ×
   // win probability.") — shown via an info icon next to the label rather

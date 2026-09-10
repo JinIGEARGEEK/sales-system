@@ -64,11 +64,11 @@
               <h3 class="text-base font-semibold">{{ t('crm.companies.detail.summary') }}</h3>
             </template>
             <div class="flex flex-col gap-3 text-sm">
-              <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
-              <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
-              <div class="flex justify-between"><span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
               <div class="flex justify-between">
-                <span class="text-[var(--color-gray)]">{{ t('crm.companies.detail.lastContact') }}</span>
+                <span class="text-(--color-gray)">{{ t('crm.companies.detail.lastContact') }}</span>
                 <UBadge :color="lastContact.color" variant="subtle">{{ lastContact.label }}</UBadge>
               </div>
             </div>
@@ -82,7 +82,7 @@
             <h3 class="text-base font-semibold">{{ t('crm.companies.detail.contactsHeading') }}</h3>
             <ButtonPrimary :label="t('crm.companies.detail.addContact')" icon="material-symbols:add" small @click="navigateTo(`/crm/contacts/create?company_id=${company.id}`)" />
           </div>
-          <div v-if="companyContacts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyContacts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noContacts') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -90,16 +90,16 @@
               v-for="contact in companyContacts"
               :key="contact.id"
               :to="`/crm/contacts/${contact.id}`"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
               <div>
                 <p class="flex items-center gap-2 text-sm font-medium">
                   {{ contact.name }}
                   <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.index.primaryBadge') }}</UBadge>
                 </p>
-                <p class="text-xs text-[var(--color-gray)]">{{ contact.role_title }} · {{ contact.email }}</p>
+                <p class="text-xs text-(--color-gray)">{{ contact.role_title }} · {{ contact.email }}</p>
               </div>
-              <UIcon name="material-symbols:chevron-right" class="size-5 text-[var(--color-gray)]" />
+              <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -111,7 +111,7 @@
             <h3 class="text-base font-semibold">{{ t('crm.companies.detail.dealsHeading') }}</h3>
             <ButtonPrimary :label="t('crm.companies.detail.addDeal')" icon="material-symbols:add" small @click="navigateTo(`/crm/deals/create?company_id=${company.id}`)" />
           </div>
-          <div v-if="companyDeals.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyDeals.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noDeals') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -119,13 +119,13 @@
               v-for="deal in companyDeals"
               :key="deal.id"
               :to="`/crm/deals/${deal.id}`"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
               <div>
                 <p class="text-sm font-medium">{{ deal.title }}</p>
-                <p class="text-xs text-[var(--color-gray)]">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
+                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
               </div>
-              <UIcon name="material-symbols:chevron-right" class="size-5 text-[var(--color-gray)]" />
+              <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -134,7 +134,7 @@
       <div v-else-if="activeTab === 'quotesContracts'">
         <ContainerTemplate>
           <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.quotesHeading') }}</h3>
-          <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noQuotes') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -142,11 +142,11 @@
               v-for="quote in companyQuotes"
               :key="quote.id"
               :to="`/crm/deals/${quote.deal_id}/quotes`"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
               <div>
                 <p class="text-sm font-medium">{{ quote.number || `#${quote.id}` }}</p>
-                <p class="text-xs text-[var(--color-gray)]">
+                <p class="text-xs text-(--color-gray)">
                   {{ t('crm.companies.detail.fromDeal', { title: dealTitleById(quote.deal_id) }) }}
                   <template v-if="quote.validity_date"> · {{ t('crm.companies.detail.validUntil', { date: dateFormat(quote.validity_date.toISOString()) }) }}</template>
                 </p>
@@ -158,7 +158,7 @@
 
         <ContainerTemplate class="mt-4">
           <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.contractsHeading') }}</h3>
-          <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noContracts') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -166,11 +166,11 @@
               v-for="contract in companyContracts"
               :key="contract.id"
               :to="`/crm/deals/${contract.deal_id}/contracts`"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
               <div>
                 <p class="text-sm font-medium">{{ t('crm.companies.detail.fromDeal', { title: dealTitleById(contract.deal_id) }) }}</p>
-                <p v-if="contract.signed_date" class="text-xs text-[var(--color-gray)]">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
+                <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
               </div>
               <UBadge color="neutral" variant="subtle">{{ contract.status }}</UBadge>
             </NuxtLink>
@@ -184,7 +184,7 @@
             <h3 class="text-base font-semibold">{{ t('crm.companies.detail.productsHeading') }}</h3>
             <ButtonPrimary :label="t('crm.companies.detail.addProduct')" icon="material-symbols:add" small @click="openAddCustomerProduct" />
           </div>
-          <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noProducts') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -192,12 +192,12 @@
               v-for="record in companyProducts"
               :key="record.id"
               type="button"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
               @click="openEditCustomerProduct(record)"
             >
               <div>
                 <p class="text-sm font-medium">{{ record.product.name }}</p>
-                <p class="text-xs text-[var(--color-gray)]">{{ record.product.category || '-' }}</p>
+                <p class="text-xs text-(--color-gray)">{{ record.product.category || '-' }}</p>
               </div>
               <UBadge color="neutral" variant="subtle">{{ record.status }}</UBadge>
             </button>
@@ -220,7 +220,7 @@
             <h3 class="text-base font-semibold">{{ t('crm.companies.detail.projectsHeading') }}</h3>
             <ButtonPrimary v-if="canManageProjects" :label="t('crm.companies.detail.addProject')" icon="material-symbols:add" small @click="openAddProject" />
           </div>
-          <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+          <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noProjects') }}
           </div>
           <div v-else class="flex flex-col gap-2">
@@ -228,15 +228,15 @@
               v-for="project in companyProjects"
               :key="project.id"
               type="button"
-              class="flex items-center justify-between rounded-lg border border-[var(--color-light-gray-2)] px-4 py-3 text-left hover:bg-[var(--color-light-gray-1)]"
+              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
               @click="openEditProject(project)"
             >
               <div>
                 <p class="text-sm font-medium">{{ project.name }}</p>
-                <p v-if="project.deal_id" class="text-xs text-[var(--color-gray)]">
+                <p v-if="project.deal_id" class="text-xs text-(--color-gray)">
                   {{ t('crm.companies.detail.projectLinkedDeal', { title: dealTitleById(project.deal_id) }) }}
                 </p>
-                <p class="text-xs text-[var(--color-gray)]">
+                <p class="text-xs text-(--color-gray)">
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
               </div>
@@ -324,7 +324,7 @@
       />
     </div>
 
-    <div v-else class="py-12 text-center text-[var(--color-gray)]">
+    <div v-else class="py-12 text-center text-(--color-gray)">
       {{ t('crm.companies.detail.companyNotFound') }}
     </div>
   </div>

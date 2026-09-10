@@ -6,8 +6,8 @@
       type="button"
       class="h-8 rounded-[var(--ui-radius)] border px-3 text-sm cursor-pointer transition-colors"
       :class="modelValue === option.value
-        ? 'border-[var(--color-primary)] bg-[var(--color-primary-bg)] text-[var(--color-primary)]'
-        : 'border-[var(--color-light-gray-2)] bg-white text-[var(--color-black)] hover:bg-[var(--color-light-gray-1)]'"
+        ? 'border-(--color-primary) bg-(--color-primary-bg) text-(--color-primary)'
+        : 'border-(--color-light-gray-2) bg-white text-(--color-black) hover:bg-(--color-light-gray-1)'"
       @click="emit('update:modelValue', option.value)"
     >
       {{ option.label }}

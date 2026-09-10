@@ -12,16 +12,16 @@
         />
         <h2 class="text-xl font-black">{{ t('crm.quotes.create.heading') }}</h2>
       </div>
-      <p v-if="deal" class="text-sm text-[var(--color-gray)]">{{ t('crm.quotes.create.subheading', { title: deal.title }) }}</p>
+      <p v-if="deal" class="text-sm text-(--color-gray)">{{ t('crm.quotes.create.subheading', { title: deal.title }) }}</p>
       <!-- This form only covers the line items/scope/status/validity date —
       reference number, credit days, price type, VAT/WHT, discounts, and notes
       all live on the full editor this redirects to right after creation. That
       split isn't obvious from "Create Quote" alone, so spell it out rather
       than letting a rep think the quote got cut off partway. -->
-      <p v-if="deal" class="mt-1 text-xs font-medium text-[var(--color-primary)]">{{ t('crm.quotes.create.stepLabel') }}</p>
+      <p v-if="deal" class="mt-1 text-xs font-medium text-(--color-primary)">{{ t('crm.quotes.create.stepLabel') }}</p>
     </div>
 
-    <div v-if="!deal" class="py-12 text-center text-[var(--color-gray)]">
+    <div v-if="!deal" class="py-12 text-center text-(--color-gray)">
       {{ t('crm.quotes.create.missingDeal') }}
     </div>
 
@@ -31,6 +31,25 @@
     right after creation (pages/crm/quotes/[id].vue). Mirrors the old
     AddQuoteModal's create surface, just as a full page instead of a modal. -->
     <ContainerTemplate v-else>
+      <div v-if="templateOptions.length > 0" class="mb-4 flex items-end gap-2">
+        <InputSelect
+          v-model="selectedTemplateId"
+          :options="templateOptions"
+          :label="t('crm.quotes.create.useTemplate')"
+          :placeholder="t('crm.quotes.create.useTemplatePlaceholder')"
+          name="template_id"
+          class="w-full sm:w-72"
+        />
+        <UButton
+          v-if="selectedTemplateId"
+          icon="material-symbols:delete-outline"
+          variant="ghost"
+          color="error"
+          :aria-label="t('crm.quotes.create.deleteTemplate')"
+          @click="onDeleteTemplate"
+        />
+      </div>
+
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
@@ -62,6 +81,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
+import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
 
@@ -72,6 +92,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
+const quoteTemplatesStore = useQuoteTemplatesStore()
 const goBack = useBackNavigation('/crm/deals')
 
 const dealId = computed(() => Number(route.query.deal_id))
@@ -83,7 +104,54 @@ onMounted(() => {
   // (newest-first) can miss an older one entirely — the Deal pre-fill below
   // would otherwise silently not happen for an older Deal.
   if (!dealsStore.items.some(d => d.id === dealId.value)) dealsStore.fetchOne(dealId.value).catch(notifyApiError)
+  quoteTemplatesStore.fetchAll().catch(notifyApiError)
 })
+
+const templateOptions = computed(() => quoteTemplatesStore.items.map(t => ({ label: t.name, value: String(t.id) })))
+const selectedTemplateId = ref('')
+// Pricing/tax fields a Quote Template carries that this step-1 form has no
+// field for (they live on the full editor, step 2) — stashed here and merged
+// into the Quote right after creation, in onSubmit below, so applying a
+// template doesn't require the rep to re-visit step 2 just to re-enter them.
+const appliedTemplateOverrides = ref<Pick<QuoteUpdatePayload, 'price_type' | 'vat_enabled' | 'wht_enabled' | 'wht_rate' | 'discount_total' | 'notes'> | null>(null)
+
+watch(selectedTemplateId, (id) => {
+  if (!id) {
+    appliedTemplateOverrides.value = null
+    return
+  }
+  const template = quoteTemplatesStore.items.find(t => t.id === Number(id))
+  if (!template) return
+  form.scope_of_work = template.scope_of_work
+  items.value = template.items.map(item => ({
+    key: nextItemKey++,
+    description: item.description,
+    qty: item.qty,
+    price: item.price,
+    product_id: item.product_id ? String(item.product_id) : null,
+    kind: item.product_id ? 'product' : 'scope',
+    discount_percent: item.discount_percent ?? 0,
+  }))
+  appliedTemplateOverrides.value = {
+    price_type: template.price_type,
+    vat_enabled: template.vat_enabled,
+    wht_enabled: template.wht_enabled,
+    wht_rate: template.wht_rate,
+    discount_total: template.discount_total,
+    notes: template.notes,
+  }
+})
+
+const onDeleteTemplate = async () => {
+  if (!selectedTemplateId.value) return
+  try {
+    await quoteTemplatesStore.remove(Number(selectedTemplateId.value))
+    selectedTemplateId.value = ''
+    success(t('crm.quotes.create.deleteTemplateSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
 
 const form = reactive({
   validity_date: '',
@@ -142,6 +210,25 @@ const onSubmit = guard(async () => {
       validity_date: form.validity_date ? new Date(form.validity_date) : null,
       status: form.status,
     })
+    // A template was applied above (items/scope_of_work only — this step-1
+    // form has no fields for price_type/VAT/WHT/discount/notes) — apply the
+    // rest of it now via the full-payload PUT, same pattern as
+    // stores/quotes.ts's updateStatus (rebuild from the just-loaded Quote),
+    // so the rep doesn't have to re-enter them on step 2.
+    if (appliedTemplateOverrides.value) {
+      const updatePayload: QuoteUpdatePayload = {
+        items: created.items,
+        scope_of_work: created.scope_of_work,
+        validity_date: created.validity_date,
+        status: created.status,
+        reference_number: created.reference_number ?? null,
+        issue_date: created.issue_date,
+        credit_days: created.credit_days,
+        internal_notes: created.internal_notes ?? null,
+        ...appliedTemplateOverrides.value,
+      }
+      await quotesStore.update(created.id, updatePayload)
+    }
     success(t('crm.quotes.create.createSuccess'))
     markClean()
     discardDraft()

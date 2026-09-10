@@ -2,6 +2,7 @@ export default {
   pageTitle: 'Dashboard ยอดขาย',
   heading: 'Sales Pipeline Dashboard',
   subheading: 'มูลค่า Deal ตามขั้นตอน, อัตราการปิด Deal และรายได้ที่คาดการณ์',
+  sectionRiskAlerts: 'สิ่งที่ต้องให้ความสนใจ',
   sectionPipelineOverview: 'ภาพรวม Pipeline',
   sectionForecastBreakdown: 'รายละเอียดการคาดการณ์',
   sectionTrends: 'แนวโน้ม',

@@ -1,7 +1,7 @@
 <template>
   <div
     tabindex="-1"
-    class="rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3 outline-none"
+    class="rounded-lg border border-(--color-light-gray-2) bg-white p-3 outline-none"
     @keydown="onTableKeydown"
   >
     <!-- Mobile View -->
@@ -20,7 +20,7 @@
         <div
           v-for="(row, rowIndex) in paginatedRows"
           :key="`row-${rowIndex}`"
-          class="border-b last:border-none border-[var(--color-gray)] first:pt-0 pt-2 pb-2 last:pb-0"
+          class="border-b last:border-none border-(--color-gray) first:pt-0 pt-2 pb-2 last:pb-0"
         >
           <table class="w-full">
             <tbody>
@@ -35,7 +35,7 @@
                   />
                 </td>
                 <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION" :class="`py-1 ${prop.mobileColumnWidth}`">
-                  <span class="block truncate text-sm text-[var(--color-black)] pr-5"><b>{{ column.label }}</b></span>
+                  <span class="block truncate text-sm text-(--color-black) pr-5"><b>{{ column.label }}</b></span>
                 </td>
                 <td v-if="column.type === TABLE_CARD_TYPE.SELECTED" />
                 <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION">
@@ -65,7 +65,7 @@
             </tbody>
           </table>
         </div>
-        <div v-if="paginatedRows.length === 0" class="text-[var(--color-black)] text-center pt-10">
+        <div v-if="paginatedRows.length === 0" class="text-(--color-black) text-center pt-10">
           {{ t('global.noData') }}
         </div>
       </div>
@@ -79,12 +79,12 @@
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="h-9 bg-[var(--color-light-gray-1)]">
+            <tr class="h-9 bg-(--color-light-gray-1)">
               <th
                 v-for="col in prop.columns"
                 :key="col.field"
                 :class="[
-                  'text-[var(--color-black)] px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg',
+                  'text-(--color-black) px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg',
                   col.type === TABLE_CARD_TYPE.ACTION ? 'text-center' : 'text-left',
                 ]"
                 :style="columnStyle(col)"
@@ -111,13 +111,13 @@
               <tr
                 v-for="(row, rowIndex) in paginatedRows"
                 :key="`row-${rowIndex}`"
-                class="hover:bg-[var(--color-primary-bg)] border-t border-[var(--color-light-gray-2)]"
+                class="hover:bg-(--color-primary-bg) border-t border-(--color-light-gray-2)"
               >
                 <td
                   v-for="col in prop.columns"
                   :key="col.field"
                   :class="[
-                    'px-2 py-2 text-sm text-[var(--color-black)] align-top',
+                    'px-2 py-2 text-sm text-(--color-black) align-top',
                     { 'text-center': col.type === TABLE_CARD_TYPE.ACTION },
                   ]"
                   :style="columnStyle(col)"

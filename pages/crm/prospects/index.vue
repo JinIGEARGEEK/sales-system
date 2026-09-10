@@ -5,12 +5,12 @@
       <h2 class="text-xl font-black">{{ t('crm.prospects.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <!-- View switcher — mirrors pages/crm/deals/index.vue's Kanban/List toggle. -->
-        <div class="flex items-center gap-0.5 rounded-full bg-[var(--color-light-gray-1)] p-1">
+        <div class="flex items-center gap-0.5 rounded-full bg-(--color-light-gray-1) p-1">
           <UTooltip :text="t('crm.prospects.index.viewKanban')">
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'kanban' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :class="viewMode === 'kanban' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.prospects.index.viewKanban')"
               @click="viewMode = 'kanban'"
             >
@@ -21,7 +21,7 @@
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'list' ? 'bg-[var(--color-primary)] shadow-sm' : 'text-[var(--color-gray)] hover:text-[var(--color-black)]'"
+              :class="viewMode === 'list' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.prospects.index.viewList')"
               @click="viewMode = 'list'"
             >
@@ -30,7 +30,7 @@
           </UTooltip>
         </div>
 
-        <div class="flex items-center gap-2 border-l border-[var(--color-light-gray-2)] pl-3">
+        <div class="flex items-center gap-2 border-l border-(--color-light-gray-2) pl-3">
           <ButtonPrimary
             v-if="canBulkManage && viewMode === 'list'"
             outline
@@ -83,7 +83,7 @@
       variant="subtle"
       icon="material-symbols:info-outline"
       :description="t('crm.prospects.index.convertInfoBody')"
-      :ui="{ root: 'p-2', icon: 'size-4', description: 'text-xs text-[var(--color-black)]' }"
+      :ui="{ root: 'p-2', icon: 'size-4', description: 'text-xs text-(--color-black)' }"
     />
 
     <!-- Small, low-emphasis Admin-only shortcut to this board's stage
@@ -104,11 +104,11 @@
       <template #card="{ item }">
         <div>
           <p class="line-clamp-2 text-sm font-medium">{{ item.name }}</p>
-          <p class="mt-1 truncate text-xs text-[var(--color-gray)]">{{ companiesStore.nameById(item.company_id) }}</p>
+          <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
         </div>
-        <div class="mt-2 flex items-center gap-1.5 border-t border-[var(--color-light-gray-2)] pt-2">
-          <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-[var(--color-gray)]" />
-          <p class="truncate text-xs text-[var(--color-gray)]">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
+        <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
+          <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
+          <p class="truncate text-xs text-(--color-gray)">{{ teamMembersStore.nameById(item.assigned_to) }}</p>
         </div>
       </template>
     </CrmPipelineBoard>

@@ -1,6 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-3 border-b border-[var(--color-light-gray-2)] pb-2 text-sm font-semibold text-[var(--color-black)]">
+    <h3 class="mb-3 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
       {{ t('crm.dashboard.sectionPipelineOverview') }}
     </h3>
 
@@ -13,8 +13,8 @@
         :label="t('crm.dashboard.openPipelineValue')"
         :tooltip="t('crm.dashboard.openPipelineValueTooltip')"
         icon="material-symbols:account-balance-wallet-outline"
-        icon-class="text-[var(--color-accent-green)]"
-        icon-bg-class="bg-[var(--color-accent-green)]/25"
+        icon-class="text-(--color-accent-green)"
+        icon-bg-class="bg-(--color-accent-green)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-accent-green)]/20 to-transparent"
       >
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
@@ -24,8 +24,8 @@
         :label="t('crm.dashboard.forecastedRevenue')"
         :tooltip="t('crm.dashboard.forecastedRevenueHint')"
         icon="material-symbols:query-stats"
-        icon-class="text-[var(--color-info-toast)]"
-        icon-bg-class="bg-[var(--color-info-toast)]/25"
+        icon-class="text-(--color-info-toast)"
+        icon-bg-class="bg-(--color-info-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
@@ -35,8 +35,8 @@
         :label="t('crm.dashboard.winRate')"
         :tooltip="t('crm.dashboard.winRateTooltip')"
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
-        :icon-bg-class="winRate >= 50 ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-gray)]/25'"
-        :value-class="winRate >= 50 ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-black)]'"
+        :icon-bg-class="winRate >= 50 ? 'bg-(--color-success-toast)/25' : 'bg-(--color-gray)/25'"
+        :value-class="winRate >= 50 ? 'text-(--color-success-toast)' : 'text-(--color-black)'"
         :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-gray)]/20 to-transparent'"
       >
         {{ winRate }}%
@@ -46,19 +46,19 @@
         :label="t('crm.dashboard.openDeals')"
         :tooltip="t('crm.dashboard.openDealsTooltip')"
         icon="material-symbols:work-outline"
-        icon-class="text-[var(--color-warning-hover)]"
-        icon-bg-class="bg-[var(--color-warning-hover)]/25"
+        icon-class="text-(--color-warning-hover)"
+        icon-bg-class="bg-(--color-warning-hover)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
       >
-        {{ openDealsCount }} <span class="text-sm font-normal text-[var(--color-gray)]">{{ t('crm.dashboard.dealsUnit') }}</span>
+        {{ openDealsCount }} <span class="text-sm font-normal text-(--color-gray)">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
         :label="t('crm.dashboard.wonThisPeriod')"
         :tooltip="t('crm.dashboard.wonThisPeriodTooltip')"
         icon="material-symbols:workspace-premium-outline"
-        icon-class="text-[var(--color-success-toast)]"
-        icon-bg-class="bg-[var(--color-success-toast)]/25"
+        icon-class="text-(--color-success-toast)"
+        icon-bg-class="bg-(--color-success-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
       >
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
@@ -68,8 +68,8 @@
         :label="t('crm.dashboard.avgDealSize')"
         :tooltip="t('crm.dashboard.avgDealSizeTooltip')"
         icon="material-symbols:payments-outline"
-        icon-class="text-[var(--color-chart-violet)]"
-        icon-bg-class="bg-[var(--color-chart-violet)]/25"
+        icon-class="text-(--color-chart-violet)"
+        icon-bg-class="bg-(--color-chart-violet)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-chart-violet)]/20 to-transparent"
       >
         {{ t('global.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
@@ -79,8 +79,8 @@
         :label="t('crm.dashboard.avgSalesCycle')"
         :tooltip="t('crm.dashboard.avgSalesCycleTooltip')"
         icon="material-symbols:schedule-outline"
-        icon-class="text-[var(--color-info-toast)]"
-        icon-bg-class="bg-[var(--color-info-toast)]/25"
+        icon-class="text-(--color-info-toast)"
+        icon-bg-class="bg-(--color-info-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
         {{ t('crm.dashboard.avgSalesCycleDays', { days: avgSalesCycleDays }) }}
@@ -90,9 +90,9 @@
         :label="t('crm.dashboard.pipelineCoverage')"
         :tooltip="t('crm.dashboard.pipelineCoverageTooltip')"
         :icon="isPipelineHealthy ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
-        :icon-bg-class="isPipelineHealthy ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
-        :value-class="isPipelineHealthy ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
-        :hint-class="isPipelineHealthy ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
+        :icon-bg-class="isPipelineHealthy ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
+        :value-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
+        :hint-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
         :accent-glass-class="isPipelineHealthy ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
@@ -105,9 +105,9 @@
         :label="t('crm.dashboard.annualRevenueGoal')"
         :tooltip="t('crm.dashboard.annualRevenueGoalTooltip')"
         :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
-        :icon-bg-class="isAnnualGoalOnTrack ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
-        :value-class="isAnnualGoalOnTrack ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
-        :hint-class="isAnnualGoalOnTrack ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
+        :icon-bg-class="isAnnualGoalOnTrack ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
+        :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
+        :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
         :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
       >
         {{ annualGoalProgressPercent }}%

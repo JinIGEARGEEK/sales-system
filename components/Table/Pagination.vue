@@ -1,12 +1,12 @@
 <template>
   <div class="flex justify-between items-center mt-4">
-    <div class="text-xs text-[var(--color-dark-gray)]">
+    <div class="text-xs text-(--color-dark-gray)">
       <span v-if="props.isShowTotal">
         {{ $t('global.table.pagination.allItem') }} : {{ props.total }}
       </span>
     </div>
     <div class="flex items-center">
-      <div class="text-xs text-[var(--color-black)]">
+      <div class="text-xs text-(--color-black)">
         {{ $t('global.table.pagination.rowPerPage') }}
       </div>
       <div class="px-5">
@@ -17,7 +17,7 @@
           @update:model-value="emit('changePerPage', $event)"
         />
       </div>
-      <div class="pr-2 text-xs text-[var(--color-black)]">
+      <div class="pr-2 text-xs text-(--color-black)">
         {{ getPaginationText }}
       </div>
       <div
@@ -27,15 +27,15 @@
         <div
           :class="[
             'flex items-center justify-center rounded-full w-7 h-7',
-            { 'hover:bg-[var(--color-light-gray-2)] cursor-pointer': !disabledChevronLeft }
+            { 'hover:bg-(--color-light-gray-2) cursor-pointer': !disabledChevronLeft }
           ]"
           @click="onPrevPage"
         >
           <UIcon
             name="material-symbols:chevron-left"
             :class="[
-              'text-[var(--color-gray)]',
-              { 'text-[var(--color-light-gray-2)]': disabledChevronLeft }
+              'text-(--color-gray)',
+              { 'text-(--color-light-gray-2)': disabledChevronLeft }
             ]"
           />
         </div>
@@ -53,15 +53,15 @@
         <div
           :class="[
             'flex items-center justify-center rounded-full w-7 h-7',
-            { 'hover:bg-[var(--color-light-gray-2)] cursor-pointer': !disabledChevronRight }
+            { 'hover:bg-(--color-light-gray-2) cursor-pointer': !disabledChevronRight }
           ]"
           @click="onNextPage"
         >
           <UIcon
             name="material-symbols:chevron-right"
             :class="[
-              'text-[var(--color-gray)]',
-              { 'text-[var(--color-light-gray-2)]': disabledChevronRight }
+              'text-(--color-gray)',
+              { 'text-(--color-light-gray-2)': disabledChevronRight }
             ]"
           />
         </div>

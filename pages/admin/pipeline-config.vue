@@ -3,14 +3,14 @@
     <AccessGate :can-access="canAccess">
     <div class="mb-4">
       <h2 class="text-xl font-black">{{ t('admin.pipelineConfig.heading') }}</h2>
-      <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.subheading') }}</p>
+      <p class="text-sm text-(--color-gray)">{{ t('admin.pipelineConfig.subheading') }}</p>
     </div>
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.relatedConfig.heading') }}</h3>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
         </div>
         <!-- open-in-new (not sell-outline) — this card sits above the tab bar
         and could otherwise read as one more tab, when it actually navigates

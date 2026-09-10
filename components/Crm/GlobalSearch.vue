@@ -26,12 +26,12 @@
       v-if="open && query.trim().length >= MIN_QUERY_LENGTH"
       class="absolute z-30 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border border-white/60 bg-white/95 shadow-xl backdrop-blur-2xl"
     >
-      <div v-if="totalResults === 0" class="px-4 py-6 text-center text-sm text-[var(--color-gray)]">
+      <div v-if="totalResults === 0" class="px-4 py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.components.globalSearch.noResults') }}
       </div>
       <template v-else>
         <div v-for="group in resultGroups" v-show="group.items.length > 0" :key="group.key" class="border-b border-white/50 last:border-none">
-          <p class="px-4 pt-3 pb-1 text-xs font-medium text-[var(--color-gray)]">{{ group.label }}</p>
+          <p class="px-4 pt-3 pb-1 text-xs font-medium text-(--color-gray)">{{ group.label }}</p>
           <NuxtLink
             v-for="item in group.items"
             :key="item.path"
@@ -40,7 +40,7 @@
             @click="onSelect"
           >
             <span class="truncate">{{ item.label }}</span>
-            <span class="shrink-0 text-xs text-[var(--color-gray)]">{{ item.sublabel }}</span>
+            <span class="shrink-0 text-xs text-(--color-gray)">{{ item.sublabel }}</span>
           </NuxtLink>
         </div>
       </template>

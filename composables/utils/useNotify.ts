@@ -14,16 +14,16 @@ type NotifyColor = 'success' | 'error' | 'warning' | 'info'
 // (`-toast-bg` is a solid hex, not a translucent tint) so contrast doesn't depend on whatever
 // the toast happens to render over (page content, a dark sticky header, etc.) — same
 // contrast-independence goal as before, just via an on-brand solid instead of Nuxt UI's stock one.
-// The `bg-[var(--color-*-toast-bg)]` classes per color must stay literal below — Tailwind's
+// The `bg-(--color-*-toast-bg)` classes per color must stay literal below — Tailwind's
 // scanner needs the full class text present in the file, not built from a template.
 const TOAST_BASE_UI = 'p-2.5 gap-2 shadow-xl border-l-4'
-const TOAST_TITLE_UI = { title: 'text-[var(--color-black)]', close: 'text-[var(--color-gray)] hover:bg-[var(--color-light-gray-1)]' }
+const TOAST_TITLE_UI = { title: 'text-(--color-black)', close: 'text-(--color-gray) hover:bg-(--color-light-gray-1)' }
 
 const TOAST_UI: Record<NotifyColor, { root: string, title: string, icon: string, close: string }> = {
-  success: { root: `${TOAST_BASE_UI} bg-[var(--color-success-toast-bg)] border-l-[var(--color-success-toast)]`, icon: 'text-[var(--color-success-toast)]', ...TOAST_TITLE_UI },
-  error: { root: `${TOAST_BASE_UI} bg-[var(--color-danger-toast-bg)] border-l-[var(--color-danger-toast)]`, icon: 'text-[var(--color-danger-toast)]', ...TOAST_TITLE_UI },
-  warning: { root: `${TOAST_BASE_UI} bg-[var(--color-warning-toast-bg)] border-l-[var(--color-warning-toast)]`, icon: 'text-[var(--color-warning-toast)]', ...TOAST_TITLE_UI },
-  info: { root: `${TOAST_BASE_UI} bg-[var(--color-info-toast-bg)] border-l-[var(--color-info-toast)]`, icon: 'text-[var(--color-info-toast)]', ...TOAST_TITLE_UI },
+  success: { root: `${TOAST_BASE_UI} bg-(--color-success-toast-bg) border-l-(--color-success-toast)`, icon: 'text-(--color-success-toast)', ...TOAST_TITLE_UI },
+  error: { root: `${TOAST_BASE_UI} bg-(--color-danger-toast-bg) border-l-(--color-danger-toast)`, icon: 'text-(--color-danger-toast)', ...TOAST_TITLE_UI },
+  warning: { root: `${TOAST_BASE_UI} bg-(--color-warning-toast-bg) border-l-(--color-warning-toast)`, icon: 'text-(--color-warning-toast)', ...TOAST_TITLE_UI },
+  info: { root: `${TOAST_BASE_UI} bg-(--color-info-toast-bg) border-l-(--color-info-toast)`, icon: 'text-(--color-info-toast)', ...TOAST_TITLE_UI },
 }
 
 type NotifyAction = { label: string, onClick: () => void }

@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div class="static-body-sm text-[var(--color-black)]">
+    <div class="static-body-sm text-(--color-black)">
       {{ dateTimeFormat(props.items.updatedAt || '') }}
     </div>
     <div>
-      <span class="static-body-xs text-[var(--color-dark-gray)]">
+      <span class="static-body-xs text-(--color-dark-gray)">
         {{ $t('global.updated.updatedBy') }}
       </span>
       <NuxtLink :to="props.items.updatedById === 0 ? '' : props.items.path">

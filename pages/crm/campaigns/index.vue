@@ -4,7 +4,7 @@
       <div class="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 class="text-xl font-black">{{ t('crm.campaigns.index.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.campaigns.index.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.campaigns.index.subheading') }}</p>
         </div>
         <ButtonPrimary
           icon="material-symbols:campaign-outline"
@@ -14,7 +14,7 @@
         />
       </div>
 
-      <div v-if="campaignsStore.items.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+      <div v-if="campaignsStore.items.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.campaigns.index.noCampaigns') }}
       </div>
 
@@ -25,7 +25,7 @@
               <NuxtLink :to="`/crm/tasks?campaign_id=${campaign.id}`" class="text-base font-semibold hover:underline" :data-cy="`campaign-link-${campaign.id}`">
                 {{ campaign.name }}
               </NuxtLink>
-              <p class="text-xs text-[var(--color-gray)]">
+              <p class="text-xs text-(--color-gray)">
                 {{ t(`crm.campaigns.index.type.${campaign.type}`) }} · {{ dateFormat(campaign.created_at) }}
               </p>
             </div>
@@ -37,7 +37,7 @@
                 <UBadge color="warning" variant="subtle">{{ t('crm.campaigns.index.progress.pending', { count: progressFor(campaign.id)!.pending }) }}</UBadge>
                 <UBadge color="info" variant="subtle">{{ t('crm.campaigns.index.progress.converted', { count: progressFor(campaign.id)!.converted }) }}</UBadge>
               </div>
-              <p class="text-xs text-[var(--color-gray)]">{{ t('crm.campaigns.index.convertedHint') }}</p>
+              <p class="text-xs text-(--color-gray)">{{ t('crm.campaigns.index.convertedHint') }}</p>
             </div>
             <USkeleton v-else class="h-6 w-48" />
           </div>

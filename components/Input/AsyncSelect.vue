@@ -34,7 +34,7 @@
         empty" — without this, USelectMenu's default empty copy can flash
         briefly before results land, reading as a false "no matches". -->
         <template #empty>
-          <span class="text-sm text-[var(--color-dark-gray)]">
+          <span class="text-sm text-(--color-dark-gray)">
             {{ searching ? t('global.input.searching') : t('global.input.noResults') }}
           </span>
         </template>

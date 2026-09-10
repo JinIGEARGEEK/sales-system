@@ -3,13 +3,13 @@
     :is="linkTag"
     :to="linkTo"
     class="flex items-center gap-3 rounded-md"
-    :class="to ? '-mx-2 px-2 py-0.5 transition-colors hover:bg-[var(--color-light-gray-1)]' : ''"
+    :class="to ? '-mx-2 px-2 py-0.5 transition-colors hover:bg-(--color-light-gray-1)' : ''"
   >
     <UTooltip :text="tooltipText">
       <span class="w-32 shrink-0 truncate text-sm">{{ label }}</span>
     </UTooltip>
     <UTooltip :text="tooltipText">
-      <div class="h-3 flex-1 overflow-hidden rounded-full bg-[var(--color-light-gray-2)]">
+      <div class="h-3 flex-1 overflow-hidden rounded-full bg-(--color-light-gray-2)">
         <div
           class="h-full rounded-full transition-[filter] duration-150 hover:brightness-110"
           :class="barClass"

@@ -13,7 +13,7 @@
       </div>
     </template>
 
-    <p class="mb-3 text-xs text-[var(--color-gray)]">{{ t('admin.pipelineConfig.notificationRules.help') }}</p>
+    <p class="mb-3 text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.notificationRules.help') }}</p>
 
     <TableData
       :columns="ruleColumns"

@@ -17,7 +17,7 @@
             rules="required"
           />
           <div v-else>
-            <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addCustomerProductModal.product') }}</p>
+            <p class="mb-1 text-xs text-(--color-gray)">{{ t('crm.components.addCustomerProductModal.product') }}</p>
             <p class="text-sm font-medium">{{ record.product.name }}</p>
           </div>
           <InputSelect
@@ -36,8 +36,8 @@
             name="source_deal_id"
           />
           <div v-else-if="record?.source_deal_id">
-            <p class="mb-1 text-xs text-[var(--color-gray)]">{{ t('crm.components.addCustomerProductModal.deal') }}</p>
-            <NuxtLink :to="`/crm/deals/${record.source_deal_id}`" class="text-sm font-medium text-[var(--color-primary)] hover:underline">
+            <p class="mb-1 text-xs text-(--color-gray)">{{ t('crm.components.addCustomerProductModal.deal') }}</p>
+            <NuxtLink :to="`/crm/deals/${record.source_deal_id}`" class="text-sm font-medium text-(--color-primary) hover:underline">
               {{ linkedDealTitle }}
             </NuxtLink>
           </div>

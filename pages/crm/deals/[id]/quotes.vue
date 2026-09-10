@@ -27,11 +27,11 @@
         </div>
       </div>
 
-      <div v-if="dealQuotes.length === 0" class="py-6 text-center text-sm text-[var(--color-gray)]">
+      <div v-if="dealQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.deals.detail.noQuotes') }}
       </div>
       <div v-else class="flex flex-col gap-3">
-        <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
+        <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <div class="mb-2 flex items-center justify-between">
             <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
             <!-- Uploaded (PDF) quotes have no structured-items editor page of
@@ -47,7 +47,7 @@
               @update:model-value="(value: string) => onUpdateQuoteStatus(quote.id, value as QuoteStatus)"
             />
             <div class="flex items-center gap-3">
-              <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
+              <span class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
               <template v-if="!quote.file_name">
                 <UButton
                   icon="material-symbols:edit-outline"
@@ -69,12 +69,12 @@
             </div>
           </div>
 
-          <div v-if="quote.file_name" class="flex items-center justify-between gap-3 rounded-lg bg-[var(--color-light-gray-1)] p-3">
+          <div v-if="quote.file_name" class="flex items-center justify-between gap-3 rounded-lg bg-(--color-light-gray-1) p-3">
             <div class="flex min-w-0 items-center gap-3">
-              <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-[var(--color-danger-toast)]" />
+              <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-(--color-danger-toast)" />
               <div class="min-w-0">
                 <p class="truncate text-sm font-medium">{{ quote.file_name }}</p>
-                <p class="text-xs text-[var(--color-gray)]">
+                <p class="text-xs text-(--color-gray)">
                   {{ formatFileSize(quote.file_size) }} · {{ t('crm.deals.detail.uploadedOn', { date: quote.uploaded_at ? dateTimeFormat(quote.uploaded_at.toISOString()) : '-' }) }}
                 </p>
               </div>
@@ -101,11 +101,11 @@
           </div>
 
           <template v-else>
-            <p v-if="quote.scope_of_work" class="mb-2 whitespace-pre-wrap text-sm text-[var(--color-gray)]">{{ quote.scope_of_work }}</p>
+            <p v-if="quote.scope_of_work" class="mb-2 whitespace-pre-wrap text-sm text-(--color-gray)">{{ quote.scope_of_work }}</p>
             <div class="overflow-x-auto">
               <table class="w-full min-w-80 text-sm">
                 <tbody>
-                  <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-[var(--color-light-gray-2)]">
+                  <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-(--color-light-gray-2)">
                     <td class="max-w-60 truncate py-1">{{ item.description }}</td>
                     <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
                     <td class="py-1 text-right whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>

@@ -11,7 +11,7 @@
       />
     </div>
 
-    <p v-if="items.length === 0" class="text-sm text-[var(--color-gray)]">{{ t('crm.quotes.editor.noItems') }}</p>
+    <p v-if="items.length === 0" class="text-sm text-(--color-gray)">{{ t('crm.quotes.editor.noItems') }}</p>
 
     <div v-for="(item, index) in items" :key="item.key" class="mb-2 flex items-start gap-2">
       <div class="grid flex-1 grid-cols-1 gap-2">
@@ -79,7 +79,7 @@
         <!-- Sanity-check total for this one row — without it a rep has to
         scroll to the quote-wide summary below to notice a qty/price/discount
         typo on a single line. -->
-        <p class="text-right text-xs text-[var(--color-gray)]">
+        <p class="text-right text-xs text-(--color-gray)">
           {{ t('crm.quotes.editor.itemLineTotal') }}: {{ t('global.currencySymbol') }}{{ priceFormat(lineTotal(item)) }}
         </p>
       </div>

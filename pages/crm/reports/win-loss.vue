@@ -12,7 +12,7 @@
         />
         <div>
           <h2 class="text-xl font-black">{{ t('crm.reports.winLoss.heading') }}</h2>
-          <p class="text-sm text-[var(--color-gray)]">{{ t('crm.reports.winLoss.subheading') }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.winLoss.subheading') }}</p>
         </div>
       </div>
       <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
@@ -76,8 +76,8 @@
           :key="row.reason"
           :label="reasonLabel(row.reason)"
           :icon="row.reason === 'won' ? 'material-symbols:check-circle-outline' : 'material-symbols:cancel-outline'"
-          :icon-class="row.reason === 'won' ? 'text-[var(--color-success-toast)]' : 'text-[var(--color-danger-toast)]'"
-          :icon-bg-class="row.reason === 'won' ? 'bg-[var(--color-success-toast)]/25' : 'bg-[var(--color-danger-toast)]/25'"
+          :icon-class="row.reason === 'won' ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
+          :icon-bg-class="row.reason === 'won' ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         >
           {{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}
           <template #hint>{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</template>

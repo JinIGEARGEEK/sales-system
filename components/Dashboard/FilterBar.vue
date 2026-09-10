@@ -98,7 +98,7 @@
               @click="emit('clear-filters')"
             />
           </div>
-          <span class="ml-auto text-xs text-[var(--color-gray)]">{{ t('crm.dashboard.showingDeals', { count: filteredCount, total: totalCount }) }}</span>
+          <span class="ml-auto text-xs text-(--color-gray)">{{ t('crm.dashboard.showingDeals', { count: filteredCount, total: totalCount }) }}</span>
         </div>
       </UCard>
     </div>
@@ -108,13 +108,13 @@
       class="mb-6"
       :title="t('crm.dashboard.noDealsMatch')"
       :ui="{
-        root: 'items-center gap-2 border-l-4 border-l-[var(--color-warning-hover)] bg-[var(--color-warning-toast)]/20 p-2 shadow-sm ring-0',
-        title: 'text-sm font-semibold text-[var(--color-black)]',
+        root: 'items-center gap-2 border-l-4 border-l-[var(--color-warning-hover)] bg-(--color-warning-toast)/20 p-2 shadow-sm ring-0',
+        title: 'text-sm font-semibold text-(--color-black)',
       }"
     >
       <template #leading>
-        <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-hover)]/25">
-          <UIcon name="material-symbols:search-off-outline" class="size-3.5 text-[var(--color-warning-hover)]" />
+        <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/25">
+          <UIcon name="material-symbols:search-off-outline" class="size-3.5 text-(--color-warning-hover)" />
         </div>
       </template>
     </UAlert>

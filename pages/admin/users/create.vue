@@ -13,7 +13,7 @@
           />
           <h2 class="text-xl font-black">{{ t('admin.users.create.heading') }}</h2>
         </div>
-        <p class="text-sm text-[var(--color-gray)]">{{ t('admin.users.create.subheading') }}</p>
+        <p class="text-sm text-(--color-gray)">{{ t('admin.users.create.subheading') }}</p>
       </div>
 
       <ContainerTemplate>

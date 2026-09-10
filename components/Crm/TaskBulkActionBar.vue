@@ -1,6 +1,6 @@
 <template>
-  <div class="sticky bottom-4 z-10 mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-light-gray-2)] bg-white p-3 shadow-xl">
-    <span class="text-sm font-medium text-[var(--color-black)]">
+  <div class="sticky bottom-4 z-10 mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-(--color-light-gray-2) bg-white p-3 shadow-xl">
+    <span class="text-sm font-medium text-(--color-black)">
       {{ t('crm.tasks.index.selectedCount', { count: selectedIds.length }) }}
     </span>
 

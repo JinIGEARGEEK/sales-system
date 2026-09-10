@@ -533,6 +533,24 @@ interface Quote {
   extraction_warnings?: string[] | null
 }
 
+// A named, deal-independent starting point for a new Quote — see the
+// backend's models.QuoteTemplate doc for why it deliberately excludes every
+// deal-specific Quote field (validity_date/reference_number/status/etc.) and
+// has no Update endpoint (delete-and-resave instead).
+interface QuoteTemplate {
+  id: number
+  name: string
+  items: QuoteItem[]
+  scope_of_work: string
+  price_type: QuotePriceType
+  vat_enabled: boolean
+  wht_enabled: boolean
+  wht_rate: number
+  discount_total: number
+  notes: string
+  created_at: Date
+}
+
 // A Contract attached to a Deal — optionally linked to the Quote it prices from
 // (quote_id), tracked through draft/sent/signed/expired, with a signed-document
 // upload replacing e-signature (api-system-spec.md §8.1).

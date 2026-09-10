@@ -80,6 +80,8 @@ export default {
     forecastCategory: 'Forecast Category',
     lostReason: 'Lost Reason',
     lostReasonPlaceholder: 'Select a reason',
+    contractRequiredWarning: 'A signed contract is required before this deal can be marked Won.',
+    contractRequiredToast: 'Add a signed contract before marking this deal Won.',
     expectedCloseDate: 'Expected Close Date',
     businessUnit: 'Business Unit',
     businessUnitPlaceholder: 'Select business unit (optional)',

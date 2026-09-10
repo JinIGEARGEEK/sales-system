@@ -2,6 +2,7 @@ export default {
   pageTitle: 'Sales Dashboard',
   heading: 'Sales Pipeline Dashboard',
   subheading: 'Deal value per stage, win rate, and forecasted revenue.',
+  sectionRiskAlerts: 'Needs Attention',
   sectionPipelineOverview: 'Pipeline Overview',
   sectionForecastBreakdown: 'Forecast Breakdown',
   sectionTrends: 'Trends',
