@@ -33,7 +33,7 @@
             <Form @submit="onSave">
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <InputText v-model="form.name" :label="t('crm.companies.detail.companyName')" name="name" rules="required" />
-                <InputSelect v-model="form.industry" :options="industryOptions" :label="t('crm.companies.detail.industry')" name="industry" rules="required" />
+                <InputCombobox v-model="form.industry" :options="industryOptions" :label="t('crm.companies.detail.industry')" :placeholder="t('crm.companies.detail.industryPlaceholder')" name="industry" rules="required" />
                 <InputSelect v-model="form.size" :options="companySizeOptions" :label="t('crm.companies.detail.companySize')" name="size" />
                 <InputSelect v-model="form.revenue_size" :options="revenueSizeOptions" :label="t('crm.companies.detail.revenueSize')" name="revenue_size" />
                 <InputText v-model="form.website" :label="t('crm.companies.detail.website')" name="website" />
@@ -399,17 +399,17 @@ onMounted(() => {
   attachmentsStore.fetchForRelated('company', companyId).catch(notifyApiError)
 })
 
-// A Company row may hold an industry/size value that's since been
+// Industry is a free-typed combobox (InputCombobox), same as Project's own
+// name field — it accepts any string regardless of whether it's in this
+// suggestion list, so unlike Size/Revenue Size below there's no need to
+// merge in a stale/deactivated current value just to keep it selectable.
+const industryOptions = computed(() => industryOptionsStore.activeOptions.map(o => String(o.value)))
+
+// A Company row may hold a size/revenue_size value that's since been
 // deactivated (or inherited from data written before this feature
 // existed) — keep it selectable so opening an existing Company for edit
 // never silently blanks the field, even though it won't appear for new
 // Companies going forward.
-const industryOptions = computed<Select[]>(() => {
-  const current = company.value?.industry
-  const active = industryOptionsStore.activeOptions
-  if (!current || active.some(o => o.value === current)) return active
-  return [...active, { label: current, value: current }]
-})
 const companySizeOptions = computed<Select[]>(() => {
   const current = company.value?.size
   const active = companySizeOptionsStore.activeOptions

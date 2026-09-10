@@ -25,9 +25,9 @@
             name="name"
             rules="required"
           />
-          <InputSelect
+          <InputCombobox
             v-model="form.industry"
-            :options="industryOptionsStore.activeOptions"
+            :options="industryOptionsStore.activeOptions.map(o => String(o.value))"
             :label="t('crm.companies.create.industry')"
             :placeholder="t('crm.companies.create.industryPlaceholder')"
             name="industry"
