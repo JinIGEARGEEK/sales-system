@@ -118,10 +118,12 @@ const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 // the Campaigns/Tasks nav entries, not MANAGER_ROLES.
 const canCreateCampaign = computed(() => hasRole(...TASK_ROLES))
 
-const search = ref('')
-const statusFilter = ref('all')
-const sourceFilter = ref('all')
-const assigneeFilter = ref('all')
+// Query-synced (not a plain ref) so a search/filter set by hand survives a
+// back-button return to this list — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const statusFilter = useQuerySyncedRef('status')
+const sourceFilter = useQuerySyncedRef('source')
+const assigneeFilter = useQuerySyncedRef('assigned_to')
 
 // Maps a TableData column field to the `sort` query param the backend
 // understands (see GET /leads: created_at/name plain columns, company_name

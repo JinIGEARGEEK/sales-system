@@ -105,9 +105,11 @@ guardMounted(() => {
   if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
 })
 
-const search = ref('')
-const typeFilter = ref('all')
-const relatedTypeFilter = ref('all')
+// Query-synced (not a plain ref) so a search/filter set by hand survives a
+// back-button return to this list — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const typeFilter = useQuerySyncedRef('type')
+const relatedTypeFilter = useQuerySyncedRef('related_type')
 
 const typeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.allTypes'), value: 'all' },

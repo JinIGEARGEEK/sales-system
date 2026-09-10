@@ -6,6 +6,7 @@ export default {
     noContracts: 'No contracts created for this deal yet.',
     uploadSignedDocument: 'Upload Signed Document',
     uploadSuccess: 'Signed document uploaded successfully',
+    updateStatusSuccess: 'Contract status updated successfully',
     invalidFileType: 'Please upload a PDF file.',
     fileTooLarge: 'File is too large (max 10 MB).',
     uploadedOn: 'Uploaded {date}',

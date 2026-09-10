@@ -146,10 +146,12 @@ onMounted(() => {
   runCompanySearch('')
 })
 
-const search = ref('')
-const companyFilter = ref('all')
-const statusFilter = ref('all')
-const tagFilter = ref('all')
+// Query-synced (not a plain ref) so a search/filter set by hand survives a
+// back-button return to this list — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const companyFilter = useQuerySyncedRef('company_id')
+const statusFilter = useQuerySyncedRef('status')
+const tagFilter = useQuerySyncedRef('tag')
 const showImport = ref(false)
 
 const onExport = () => downloadCsvBlob('/contacts/export', 'contacts.csv')

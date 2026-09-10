@@ -14,7 +14,16 @@
           <h2 class="text-xl font-black">{{ quote.number || `#${quote.id}` }}</h2>
           <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
         </div>
-        <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
+        <div class="flex gap-2">
+          <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
+          <ButtonPrimary
+            v-if="canSend"
+            :label="t('crm.quotes.detail.sendToCustomer')"
+            icon="material-symbols:send-outline"
+            :loading="loading"
+            @click="onSendClick"
+          />
+        </div>
       </div>
 
       <!-- Only right after landing here from Create Quote's own "Step 1 of 2"
@@ -175,6 +184,15 @@
       </div>
 
       <CrmAddAttachmentModal v-model:open="addAttachmentOpen" @submit="onAddAttachment" />
+
+      <CrmConfirmDeleteModal
+        v-model:open="sendConfirmOpen"
+        :title="t('crm.quotes.detail.sendConfirmTitle')"
+        :body="t('crm.quotes.detail.sendConfirmBody')"
+        confirm-color="primary"
+        :confirm-label="t('crm.quotes.detail.sendToCustomer')"
+        @confirm="onConfirmSend"
+      />
     </div>
 
     <div v-else class="py-12 text-center text-[var(--color-gray)]">
@@ -186,6 +204,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
+import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
 
@@ -318,27 +337,29 @@ watch(quote, (value) => {
 
 const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
 
+const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload => ({
+  items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
+    description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
+  })),
+  scope_of_work: form.scope_of_work,
+  validity_date: form.validity_date ? new Date(form.validity_date) : null,
+  status: statusOverride ?? form.status,
+  reference_number: form.reference_number || null,
+  issue_date: form.issue_date ? new Date(form.issue_date) : null,
+  credit_days: form.credit_days,
+  price_type: form.price_type,
+  vat_enabled: form.vat_enabled,
+  wht_enabled: form.wht_enabled,
+  wht_rate: form.wht_rate,
+  discount_total: form.discount_total,
+  notes: form.notes || null,
+  internal_notes: form.internal_notes || null,
+})
+
 const onSave = guard(async () => {
   if (!quote.value) return
   try {
-    await quotesStore.update(quote.value.id, {
-      items: items.value.map(({ description, qty, price, product_id, discount_percent }) => ({
-        description, qty, price, product_id: product_id ? Number(product_id) : null, discount_percent,
-      })),
-      scope_of_work: form.scope_of_work,
-      validity_date: form.validity_date ? new Date(form.validity_date) : null,
-      status: form.status,
-      reference_number: form.reference_number || null,
-      issue_date: form.issue_date ? new Date(form.issue_date) : null,
-      credit_days: form.credit_days,
-      price_type: form.price_type,
-      vat_enabled: form.vat_enabled,
-      wht_enabled: form.wht_enabled,
-      wht_rate: form.wht_rate,
-      discount_total: form.discount_total,
-      notes: form.notes || null,
-      internal_notes: form.internal_notes || null,
-    })
+    await quotesStore.update(quote.value.id, buildUpdatePayload())
     success(t('crm.quotes.detail.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -346,6 +367,31 @@ const onSave = guard(async () => {
 })
 
 const onSaveClick = () => validateThenSubmit(onSave)
+
+// "Send to Customer" is kept separate from the generic Save button —
+// transitioning a Quote to `sent` is a one-way, customer-facing action (once
+// sent, this Quote is presumably in the customer's inbox) and deserves its
+// own confirmation rather than being one more field a rep can silently flip
+// via the Status dropdown + Save.
+const canSend = computed(() => quote.value?.status === 'draft')
+// Same useConfirmGate composable as Prospect/Lead detail's own Convert
+// confirmation — a single already-known record on a detail page, not a
+// list-row target to track (that's useDeleteConfirm's case instead).
+const { open: sendConfirmOpen, request: requestSend, close: closeSendConfirm } = useConfirmGate()
+const onSendClick = () => validateThenSubmit(requestSend)
+
+const onConfirmSend = guard(async () => {
+  if (!quote.value) return
+  try {
+    await quotesStore.update(quote.value.id, buildUpdatePayload('sent'))
+    form.status = 'sent'
+    success(t('crm.quotes.detail.sendSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+  } finally {
+    closeSendConfirm()
+  }
+})
 
 const addAttachmentOpen = ref(false)
 const quoteAttachments = computed(() => attachmentsStore.forRelated('quote', quoteId))

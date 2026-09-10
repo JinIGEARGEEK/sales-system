@@ -1,6 +1,7 @@
 export default {
   title: 'Trash',
   subtitle: 'Deleted or archived records — restore them here before they\'re gone for good.',
+  searchPlaceholder: 'Search by name across all tabs...',
   tabs: {
     deals: 'Deals',
     leads: 'Leads',

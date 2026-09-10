@@ -138,10 +138,11 @@ Modal ทุกหน้าแบ่งออกเป็น **3 ส่วนช
 - ยกเลิกคำสั่ง → "ยืนยันการยกเลิก"
 - ปิดใช้งาน → "ปิดใช้งาน"
 - แปลง (Convert to Lead / Convert to Deal) → "แปลง" (`confirm-color="primary"`, ไม่ใช้สีแดงเช่นกัน เพราะไม่ใช่ action ทำลายข้อมูล)
+- ส่งใบเสนอราคา (Send Quote to Customer) → "ส่งให้ลูกค้า" (`confirm-color="primary"`, เหตุผลเดียวกับ Convert — เปลี่ยนสถานะ ไม่ใช่ลบข้อมูล — added 2026-09-10)
 - ใช้ `confirmLabel` prop เพื่อกำหนดชื่อปุ่มตาม context
 
 **Confirm ก่อน action บนหน้า Detail ของ record เดียว (ไม่ใช่ list row)**
-Prospect Detail (`crm.prospects.detail.convertToLead`) และ Lead Detail (`crm.leads.detail.convertToDeal`) ใช้ `CrmConfirmDeleteModal` ตัวเดียวกันนี้ยืนยันก่อนเรียก Convert เพราะเป็น action ที่ย้อนกลับไม่ได้ (เปลี่ยนสถานะ record ปัจจุบันและสร้างเรคคอร์ดใหม่) เช่นเดียวกับการลบ — component และ copy pattern เหมือนกันทุกอย่าง ต่างกันแค่ trigger: หน้า list ใช้ `useDeleteConfirm` composable (เก็บ target ของแถวที่เลือก) ส่วนหน้า Detail ที่ record อยู่ใน scope แล้วใช้ `useConfirmGate` composable (`composables/utils/useConfirmGate.ts`) ซึ่งเป็นแค่ boolean gate ไม่ต้องเก็บ target แยก
+Prospect Detail (`crm.prospects.detail.convertToLead`), Lead Detail (`crm.leads.detail.convertToDeal`), และ Quote Detail (`crm.quotes.detail.sendToCustomer`, added 2026-09-10) ใช้ `CrmConfirmDeleteModal` ตัวเดียวกันนี้ยืนยันก่อนเรียก action ที่ย้อนกลับไม่ได้ (เปลี่ยนสถานะ record ปัจจุบัน หรือสร้างเรคคอร์ดใหม่) เช่นเดียวกับการลบ — component และ copy pattern เหมือนกันทุกอย่าง ต่างกันแค่ trigger: หน้า list ใช้ `useDeleteConfirm` composable (เก็บ target ของแถวที่เลือก) ส่วนหน้า Detail ที่ record อยู่ใน scope แล้วใช้ `useConfirmGate` composable (`composables/utils/useConfirmGate.ts`) ซึ่งเป็นแค่ boolean gate ไม่ต้องเก็บ target แยก
 
 ------------------------------------------------
 

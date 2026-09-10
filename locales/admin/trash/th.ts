@@ -1,6 +1,7 @@
 export default {
   title: 'ถังขยะ',
   subtitle: 'รายการที่ถูกลบหรือย้ายไปถังขยะ — กู้คืนได้ที่นี่ก่อนที่จะหายไปถาวร',
+  searchPlaceholder: 'ค้นหาด้วยชื่อ (ทุกแท็บ)...',
   tabs: {
     deals: 'Deal',
     leads: 'Lead',

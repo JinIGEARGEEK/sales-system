@@ -423,7 +423,13 @@ const revenueSizeOptions = computed<Select[]>(() => {
   return [...active, { label: current, value: current }]
 })
 
-const activeTab = ref('overview')
+// URL-driven (unlike a plain ref) so a refresh, back-button, or shared link
+// lands back on the same tab instead of always resetting to Overview — see
+// pages/crm/deals/[id].vue's own tab bar for the equivalent behavior there
+// (route-driven via child routes rather than a query param, since Deal's
+// tabs are separate page files; Company's tabs all live in this one file, so
+// a query param is the lighter-weight way to get the same result).
+const activeTab = useQuerySyncedRef('tab', 'overview')
 const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },

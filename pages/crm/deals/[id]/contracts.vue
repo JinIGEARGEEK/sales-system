@@ -26,7 +26,14 @@
       <div v-else class="flex flex-col gap-3">
         <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
           <div class="mb-2 flex items-center justify-between">
-            <UBadge color="neutral" variant="subtle">{{ contract.status }}</UBadge>
+            <InputSelect
+              :model-value="contract.status"
+              :options="CONTRACT_STATUS_OPTIONS"
+              small
+              class="w-32"
+              :name="`contract-status-${contract.id}`"
+              @update:model-value="(value: string) => onUpdateContractStatus(contract, value as ContractStatus)"
+            />
             <div class="flex items-center gap-3">
               <span class="text-xs text-[var(--color-gray)]">
                 {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
@@ -91,6 +98,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
+import { CONTRACT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -172,4 +180,14 @@ const onContractFileSelected = async (event: Event) => {
 }
 
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
+
+const onUpdateContractStatus = async (contract: Contract, status: ContractStatus) => {
+  try {
+    const updated = await contractsStore.update(contract.id, { status })
+    success(t('crm.contracts.detail.updateStatusSuccess'))
+    promptProjectIfSigned(updated)
+  } catch (err) {
+    notifyApiError(err)
+  }
+}
 </script>

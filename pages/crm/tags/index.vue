@@ -43,6 +43,7 @@
       :loading="loading"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
+      @sort="onSort"
       @view-detail="onViewDetail"
       @edit="onEdit"
       @delete="requestDelete"
@@ -71,14 +72,29 @@ const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const tagsStore = useTagsStore()
 
-const search = ref('')
-const categoryFilter = ref('all')
-const statusFilter = ref('all')
+// Query-synced (not a plain ref) so a search/filter set by hand survives a
+// back-button return to this list — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const categoryFilter = useQuerySyncedRef('category')
+const statusFilter = useQuerySyncedRef('status')
+
+// Matches the backend's ApplySort allowlist for GET /tags (name/created_at only).
+const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
+
+const sortField = ref('')
+const sortDir = ref<'asc' | 'desc'>('asc')
+
+const onSort = (field: string, direction: 'asc' | 'desc') => {
+  sortField.value = field
+  sortDir.value = direction
+  refetchFromStart()
+}
 
 const buildParams = () => ({
   search: search.value || undefined,
   category: categoryFilter.value !== 'all' ? categoryFilter.value : undefined,
   status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
 
 const {
@@ -110,11 +126,11 @@ const displayTags = computed(() => rows.value.map(tag => ({
 })))
 
 const columns: TableDataColumn[] = [
-  { label: t('crm.tags.index.columns.name'), align: 'left', field: 'name' },
+  { label: t('crm.tags.index.columns.name'), align: 'left', field: 'name', isSort: true },
   { label: t('crm.tags.index.columns.category'), align: 'left', field: 'categoryBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.tags.index.columns.description'), align: 'left', field: 'description' },
   { label: t('crm.tags.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.tags.index.columns.created'), align: 'left', field: 'createdDate' },
+  { label: t('crm.tags.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
   {
     label: t('crm.tags.index.columns.action'),
     align: 'left',

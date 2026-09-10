@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-stretch gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+  <!-- Desktop/tablet: drag-and-drop columns side by side. Native HTML5 drag
+       has no touch equivalent, so this view is hidden below md and replaced
+       with a stacked, tap-driven layout instead of being offered unusably. -->
+  <div class="hidden items-stretch gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
     <div
       v-for="column in columns"
       :key="column.value"
@@ -42,6 +45,70 @@
 
         <!-- Optional per-column "Load more" affordance (e.g. paginated Deals) —
              composed by the caller since only it knows loaded-vs-total counts. -->
+        <slot name="column-footer" :column="column" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: each stage is a collapsible section instead of a side-scrolling
+       column, and moving a card between stages is a tap-and-pick (the per-card
+       stage select below) instead of drag-and-drop. -->
+  <div class="flex flex-col gap-3 md:hidden">
+    <div
+      v-for="column in columns"
+      :key="column.value"
+      class="overflow-hidden rounded-lg border"
+      :style="{ borderColor: getColumnBorderTint(String(column.value)) }"
+    >
+      <button
+        type="button"
+        class="flex w-full items-start justify-between gap-2 px-3 py-2 backdrop-blur-2xl"
+        :style="{ backgroundColor: getColumnHeaderTint(String(column.value)) }"
+        @click="toggleExpanded(String(column.value))"
+      >
+        <div class="flex flex-col items-start">
+          <span class="text-sm font-medium text-white">{{ column.label }}</span>
+          <span class="text-[11px] text-white/70">{{ getStageDescription(String(column.value)) }}</span>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <span class="rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
+            {{ columnCounts?.[column.value] ?? (grouped[column.value]?.length || 0) }}
+          </span>
+          <UIcon
+            :name="isExpanded(String(column.value)) ? 'material-symbols:expand-less' : 'material-symbols:expand-more'"
+            class="size-4 text-white"
+          />
+        </div>
+      </button>
+
+      <div
+        v-show="isExpanded(String(column.value))"
+        class="flex flex-col gap-2 p-3 backdrop-blur-xl"
+        :style="{ backgroundColor: getColumnTint(String(column.value)) }"
+      >
+        <div
+          v-for="item in grouped[column.value] || []"
+          :key="`${item._type}-${item.id}`"
+          class="flex flex-col gap-2 rounded-lg border border-[var(--color-card-border)] bg-white p-3"
+        >
+          <div @click="emit('select', item)">
+            <slot name="card" :item="item" />
+          </div>
+          <USelectMenu
+            :model-value="column.value"
+            :items="columns"
+            value-key="value"
+            label-key="label"
+            size="xs"
+            class="self-end"
+            @update:model-value="(value) => onMobileMove(item, value)"
+          />
+        </div>
+
+        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-[var(--color-gray)]">
+          {{ t('crm.components.pipelineBoard.noItems') }}
+        </div>
+
         <slot name="column-footer" :column="column" />
       </div>
     </div>
@@ -185,5 +252,22 @@ const onDrop = (columnValue: string) => {
     emit('move', draggingItem.value, columnValue)
     draggingItem.value = null
   }
+}
+
+// Mobile sections default open (mirrors the desktop board showing every
+// column at once) but can be collapsed to cut down scrolling on a long
+// pipeline.
+const collapsedColumns = ref(new Set<string>())
+const isExpanded = (value: string) => !collapsedColumns.value.has(value)
+const toggleExpanded = (value: string) => {
+  if (collapsedColumns.value.has(value)) {
+    collapsedColumns.value.delete(value)
+  } else {
+    collapsedColumns.value.add(value)
+  }
+}
+
+const onMobileMove = (item: PipelineCard, value: string | number) => {
+  if (String(value) !== item._lane) emit('move', item, String(value))
 }
 </script>

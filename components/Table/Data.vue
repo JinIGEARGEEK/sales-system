@@ -101,7 +101,7 @@
                   @click="onSort(col.isSort, col.field)"
                 >
                   <b>{{ col.label }}</b>
-                  <UIcon v-if="col.isSort" name="material-symbols:unfold-more" class="inline size-4" />
+                  <UIcon v-if="col.isSort" :name="sortIcon(col.field)" class="inline size-4" />
                 </div>
               </th>
             </tr>
@@ -359,10 +359,15 @@ const innerSortBy = ref('desc')
 
 const onSort = (isSort: boolean | undefined, field: string) => {
   if (isSort) {
+    innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'
     innerField.value = field
-    innerSortBy.value = innerSortBy.value === 'asc' ? 'desc' : 'asc'
     emit('sort', field, innerSortBy.value)
   }
+}
+
+const sortIcon = (field: string): string => {
+  if (innerField.value !== field) return 'material-symbols:unfold-more'
+  return innerSortBy.value === 'asc' ? 'material-symbols:arrow-upward' : 'material-symbols:arrow-downward'
 }
 
 const onChangePage = (value: number) => {

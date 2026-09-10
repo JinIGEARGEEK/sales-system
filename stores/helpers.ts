@@ -17,10 +17,10 @@ export const createTrashActions = <T extends { id: number }>(
     this.trashItems = this.trashItems.filter(item => item.id !== id)
     return restored
   },
-  async fetchTrash (this: { trashItems: T[], trashTotal: number, trashPage: number }, page = 1, perPage = 10): Promise<T[]> {
+  async fetchTrash (this: { trashItems: T[], trashTotal: number, trashPage: number }, page = 1, perPage = 10, search?: string): Promise<T[]> {
     const { $api } = useNuxtApp()
     const response = await $api.get<ApiResponse<T[]>>(`${resourcePath}/trash`, {
-      params: { page, per_page: perPage },
+      params: { page, per_page: perPage, search: search || undefined },
     })
     this.trashItems = response.data.data.map(parseDates)
     this.trashTotal = response.data.total

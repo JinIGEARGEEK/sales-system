@@ -6,6 +6,7 @@ export default {
     noContracts: 'ยังไม่มีสัญญาที่สร้างสำหรับ Deal นี้',
     uploadSignedDocument: 'อัปโหลดเอกสารที่ลงนามแล้ว',
     uploadSuccess: 'อัปโหลดเอกสารที่ลงนามแล้วสำเร็จ',
+    updateStatusSuccess: 'อัปเดตสถานะสัญญาสำเร็จ',
     invalidFileType: 'กรุณาอัปโหลดไฟล์ PDF',
     fileTooLarge: 'ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 10 MB)',
     uploadedOn: 'อัปโหลดเมื่อ {date}',

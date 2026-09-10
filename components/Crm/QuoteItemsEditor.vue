@@ -76,6 +76,12 @@
             rules="min_value:0|max_value:100"
           />
         </div>
+        <!-- Sanity-check total for this one row — without it a rep has to
+        scroll to the quote-wide summary below to notice a qty/price/discount
+        typo on a single line. -->
+        <p class="text-right text-xs text-[var(--color-gray)]">
+          {{ t('crm.quotes.editor.itemLineTotal') }}: {{ t('global.currencySymbol') }}{{ priceFormat(lineTotal(item)) }}
+        </p>
       </div>
       <UButton
         icon="material-symbols:close"
@@ -93,8 +99,18 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { priceFormat } = useFormatter()
 
 const items = defineModel<QuoteItemRow[]>({ required: true })
+
+// Mirrors useQuoteTotals' own per-line formula exactly (qty * price * (1 -
+// discount_percent/100)) so this row-level number and the quote-wide
+// subtotal below it never disagree.
+const lineTotal = (item: QuoteItemRow) => {
+  let total = item.qty * item.price
+  if (item.discount_percent) total *= 1 - item.discount_percent / 100
+  return total
+}
 
 // Optional Product picker per line item — additive on top of the existing
 // free-text flow, not a replacement for it. Selecting a product just
