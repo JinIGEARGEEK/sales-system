@@ -17,7 +17,18 @@
           <p class="mt-0.5 text-xl font-medium" :class="valueClass">
             <slot />
           </p>
-          <p v-if="$slots.hint" class="mt-0.5 text-[11px] leading-tight" :class="hintClass">
+          <!-- `reserveHintSpace` (opt-in, not global): reserves this line's
+          height even when THIS card has no hint, so it doesn't sit shorter
+          than a hint-bearing sibling in the same grid row. Only worth
+          turning on for a grid that actually mixes hint and non-hint cards
+          (e.g. PipelineOverview's) — every other caller has zero hint cards
+          at all, so unconditionally reserving the space there would just add
+          dead space to every card for no layout benefit. -->
+          <p
+            v-if="$slots.hint || reserveHintSpace"
+            class="mt-0.5 text-[11px] leading-tight"
+            :class="[hintClass, { 'min-h-3.5': reserveHintSpace }]"
+          >
             <slot name="hint" />
           </p>
         </div>
@@ -84,6 +95,15 @@ const props = defineProps({
   to: {
     type: String,
     default: '',
+  },
+  // Set on every card in a grid where at least one sibling uses the `hint`
+  // slot and at least one doesn't — reserves the hint line's height on
+  // every card so hint-less ones don't sit shorter than their hint-bearing
+  // siblings. Leave false (default) for a grid where no card ever has a
+  // hint, so those stay compact instead of gaining unused blank space.
+  reserveHintSpace: {
+    type: Boolean,
+    default: false,
   },
 })
 
