@@ -198,23 +198,23 @@ watch([page, () => buildParams()], () => { selected.value = [] })
 const displayRows = computed(() => rows.value.map(lead => ({
   ...lead,
   statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
-  classificationBadge: classificationBadge(lead.classification),
+  classificationBadge: classificationBadge(lead),
   createdDate: dateFormat(lead.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(lead.assigned_to),
   companyName: companiesStore.nameById(lead.company_id),
 })))
 
-// Lead Scoring (FR-CRM-006/007) — renders as "-" for 'none', matching
-// TableData's Card/Status.vue isNoData convention for other empty cells.
-// Badges built once here rather than per-row inside classificationBadge()
-// below, since there are only ever two distinct translated strings on this
-// whole page regardless of how many Lead rows are displayed.
-const mqlBadge = computed(() => toBadge(t('crm.leads.index.mqlBadge'), 'info'))
-const sqlBadge = computed(() => toBadge(t('crm.leads.index.sqlBadge'), 'success'))
-const classificationBadge = (classification: LeadClassification) => {
-  if (classification === 'mql') return mqlBadge.value
-  if (classification === 'sql') return sqlBadge.value
-  return { title: '', color: 'neutral', isNoData: true }
+// Lead Scoring (FR-CRM-006/007) — this column's header ("Score") previously
+// showed only the MQL/SQL classification badge, never the numeric score
+// itself (already computed/fetched on every Lead row, just never rendered
+// anywhere in the UI) — badge title now leads with the number so the column
+// lives up to its name; a 'none' Lead shows the bare score (neutral badge)
+// instead of "-", since there's always a real number to show, just one that
+// hasn't crossed the MQL threshold yet.
+const classificationBadge = (lead: Lead) => {
+  if (lead.classification === 'mql') return toBadge(`${lead.score} · ${t('crm.leads.index.mqlBadge')}`, 'info')
+  if (lead.classification === 'sql') return toBadge(`${lead.score} · ${t('crm.leads.index.sqlBadge')}`, 'success')
+  return toBadge(String(lead.score), 'neutral')
 }
 
 const leadStatusColor = (status: LeadStatus) => {

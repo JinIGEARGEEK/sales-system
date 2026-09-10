@@ -13,8 +13,9 @@
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
           <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
-          <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ t('crm.leads.index.mqlBadge') }}</UBadge>
-          <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ t('crm.leads.index.sqlBadge') }}</UBadge>
+          <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
+          <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
+          <UBadge v-else size="xs" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
         </div>
         <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
