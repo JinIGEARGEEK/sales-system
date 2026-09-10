@@ -17,7 +17,11 @@
           <p class="mt-0.5 text-xl font-medium" :class="valueClass">
             <slot />
           </p>
-          <p v-if="$slots.hint" class="mt-0.5 text-[11px] leading-tight" :class="hintClass">
+          <!-- Always reserve this line's height, even when a card has no
+          hint — otherwise cards with a hint (e.g. Pipeline Coverage) sit
+          taller than plain ones (e.g. Avg Sales Cycle) in the same grid row,
+          since neither the card nor its grid stretches to compensate. -->
+          <p class="mt-0.5 min-h-3.5 text-[11px] leading-tight" :class="hintClass">
             <slot name="hint" />
           </p>
         </div>
