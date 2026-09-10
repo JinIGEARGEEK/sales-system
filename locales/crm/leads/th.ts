@@ -13,7 +13,7 @@ export default {
       source: 'แหล่งที่มา',
       status: 'สถานะ',
       classification: 'คะแนน',
-      classificationTooltip: 'MQL = คะแนนถึงเกณฑ์ · SQL = เซลส์ทำเครื่องหมายพร้อมขายเอง · "-" = ยังไม่เข้าเกณฑ์ใดเลย',
+      classificationTooltip: 'Marketing Qualified Lead (MQL) – คือ lead ที่มาจากแชนแนลการตลาดเช่นเว็บไซต์ หรือผ่านการทำ content marketing · Sales Qualified Lead (SQL) - คือ Lead ที่เกิดจากการกรอง MQL แล้วพบว่ามีความต้องการซื้อสินค้า เป็น lead ที่มาพร้อมกับโอกาสในการขาย',
       assignedTo: 'ผู้รับผิดชอบ',
       created: 'สร้างเมื่อ',
       action: 'การดำเนินการ',
