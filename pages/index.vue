@@ -84,8 +84,13 @@
     hidden from anyone outside PROSPECT_ROLES the same way the tab itself is
     (canViewProspectSummary gate is still needed here even without the tab
     switcher, since activeDashboardTab could still equal 'marketing' for a
-    role that only qualifies for one tab). -->
-    <DashboardMarketingSummary v-if="activeDashboardTab === 'marketing' && canViewProspectSummary" :summary="prospectSummary" />
+    role that only qualifies for one tab). Lead stats alongside it, read-only
+    (:linkable="false") since Marketing has no access of its own to
+    /crm/leads or /crm/reports/lead-source — see canViewLeadSummary. -->
+    <template v-if="activeDashboardTab === 'marketing' && canViewProspectSummary">
+      <DashboardLeadSummary v-if="!canViewSalesPipelineWidgets" :summary="leadSummary" :linkable="false" />
+      <DashboardMarketingSummary :summary="prospectSummary" />
+    </template>
 
     <!-- Production's own section — Projects still awaiting a status update.
     Neither SALES_PIPELINE_ROLES nor PROSPECT_ROLES, so without this the
@@ -292,13 +297,19 @@ watch(canViewProspectSummary, (canView) => {
   if (canView && !prospectSummary.value) fetchProspectSummary()
 }, { immediate: true })
 
-// Sales tab's own Lead stats — deliberately its own fetch/params rather than
-// folded into fetchSummary above, same reasoning as fetchProspectSummary:
-// refetches once on mount rather than reacting to the Deal-specific filter
-// bar above it.
+// Lead stats — shown on the Sales tab (full, clickable) and, read-only, on
+// Marketing's own tab (Marketing has no access of its own to Leads/Deals,
+// but still cares about the funnel it feeds into — see DashboardLeadSummary's
+// `linkable` prop). GET /dashboard/lead-summary itself isn't role-gated
+// (same "frontend decides which tab" convention as prospect-summary/summary
+// above), so either role can fetch it; deliberately its own fetch/params
+// rather than folded into fetchSummary above, same reasoning as
+// fetchProspectSummary: refetches once on mount rather than reacting to the
+// Deal-specific filter bar above it.
+const canViewLeadSummary = computed(() => canViewSalesPipelineWidgets.value || canViewProspectSummary.value)
 const leadSummary = ref<LeadDashboardSummary | null>(null)
 const fetchLeadSummary = async () => {
-  if (!canViewSalesPipelineWidgets.value) return
+  if (!canViewLeadSummary.value) return
   try {
     const response = await $api.get<ApiResponse<LeadDashboardSummary>>('/dashboard/lead-summary')
     leadSummary.value = response.data.data
@@ -306,7 +317,7 @@ const fetchLeadSummary = async () => {
     notifyFetchError(err)
   }
 }
-watch(canViewSalesPipelineWidgets, (canView) => {
+watch(canViewLeadSummary, (canView) => {
   if (canView && !leadSummary.value) fetchLeadSummary()
 }, { immediate: true })
 
