@@ -2,6 +2,7 @@
   <UTooltip v-if="hasRole('Admin')" :text="tooltip">
     <UButton
       icon="material-symbols:settings-outline"
+      :label="$t('global.goToStageSetting')"
       variant="ghost"
       color="neutral"
       size="sm"

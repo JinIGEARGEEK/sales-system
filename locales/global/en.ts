@@ -8,6 +8,7 @@ const lang = {
   backToHome: 'Back To Home',
   back: 'Back',
   retry: 'Retry',
+  goToStageSetting: 'Go to stage setting',
   // Shared default for <AccessGate> — pages/crm/reports/*.vue pass their own
   // more specific accessDeniedTitle/Message instead of these; admin-only
   // pages (Trash, Activity Log, Pipeline Config, Users) use these defaults.
