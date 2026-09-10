@@ -28,8 +28,19 @@ export const useContactsStore = defineStore('contacts', {
     // companyId matches nothing (no Contact has a null company_id) rather
     // than throwing.
     byCompany: state => (companyId: number | string | null | undefined) => state.items.filter(c => String(c.company_id) === String(companyId)),
+    // The one Contact flagged is_primary for a Company, if any (FR-CRM-012).
+    primaryByCompany: state => (companyId: number | string | null | undefined) =>
+      state.items.find(c => String(c.company_id) === String(companyId) && c.is_primary),
   },
   actions: {
+    // Server enforces at-most-one-Primary-per-Company by clearing every other
+    // Contact's is_primary when this one is saved true — mirror that locally
+    // so the list/company-detail views don't show two Primary badges until a
+    // refetch happens to occur.
+    clearOtherPrimaries (companyId: number, exceptId: number) {
+      this.items = this.items.map(c =>
+        c.company_id === companyId && c.id !== exceptId && c.is_primary ? { ...c, is_primary: false } : c)
+    },
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Contact[]>>('/contacts', {
@@ -69,6 +80,7 @@ export const useContactsStore = defineStore('contacts', {
       const response = await $api.post<ApiResponse<Contact>>('/contacts', contact)
       const created = parseDates(response.data.data)
       this.items.push(created)
+      if (created.is_primary) this.clearOtherPrimaries(created.company_id, created.id)
       return created
     },
     async update (id: number, changes: Partial<Omit<Contact, 'id'>>): Promise<Contact> {
@@ -77,6 +89,7 @@ export const useContactsStore = defineStore('contacts', {
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(c => c.id === id)
       if (index !== -1) this.items[index] = updated
+      if (updated.is_primary) this.clearOtherPrimaries(updated.company_id, updated.id)
       return updated
     },
     async remove (id: number) {

@@ -42,6 +42,7 @@
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
           <InputText v-model.number="form.value" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" type="number" rules="required" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
+          <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.create.forecastCategory')" name="forecast_category" />
           <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.create.expectedCloseDate')" name="expected_close_date" />
           <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
           <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
@@ -73,7 +74,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, findDuplicateDeals, dealStatusForStage, stageDefaultProbability } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, findDuplicateDeals, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -123,6 +124,7 @@ const form = reactive({
   contact_id: '',
   value: 0,
   stage: 'Lead',
+  forecast_category: stageDefaultForecastCategory('Lead') as ForecastCategory | '',
   expected_close_date: '',
   assigned_to: '',
   business_unit: '' as BusinessUnit | '',
@@ -211,6 +213,13 @@ watch(() => form.company_id, () => {
   form.contact_id = ''
 })
 
+// Re-derives forecast_category's default whenever Stage changes — same
+// reset-on-stage-change convention as the Deal detail page's own probability/
+// forecast_category watcher, still freely editable afterwards.
+watch(() => form.stage, (newStage) => {
+  form.forecast_category = stageDefaultForecastCategory(newStage)
+})
+
 // Keyed by the originating Lead (or 'new' for a plain create): a Deal
 // created from a Lead is pre-filled with that Lead's own company/business
 // unit/owner, so a stale draft left over from a *different* Lead (or a
@@ -239,6 +248,7 @@ const onSubmit = guard(async () => {
       business_unit_item: form.business_unit_item || null,
       probability: stageDefaultProbability(form.stage),
       lost_reason: null,
+      forecast_category: form.forecast_category || stageDefaultForecastCategory(form.stage),
     }
 
     if (originatingLead.value) {

@@ -276,6 +276,7 @@ const onConfirm = async () => {
             role_title: '',
             tags: [],
             status: 'active',
+            is_primary: false,
             created_at: new Date(),
           })
           contactsCreated += 1

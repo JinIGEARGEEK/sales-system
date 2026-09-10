@@ -12,6 +12,7 @@
             @click="goBack()"
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ contact.name }}</h2>
+          <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.detail.primaryBadge') }}</UBadge>
           <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         </div>
         <ButtonPrimary
@@ -33,6 +34,7 @@
                 <InputText v-model="form.email" :label="t('crm.contacts.detail.email')" name="email" />
                 <InputText v-model="form.phone" :label="t('crm.contacts.detail.phone')" name="phone" />
                 <InputText v-model="form.tags" :label="t('crm.contacts.detail.tags')" :placeholder="t('crm.contacts.detail.tagsPlaceholder')" name="tags" />
+                <UCheckbox v-model="form.is_primary" :label="t('crm.contacts.detail.isPrimary')" />
               </div>
               <div class="mt-4 flex gap-3">
                 <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" />
@@ -284,6 +286,7 @@ const form = reactive({
   email: contact.value?.email || '',
   phone: contact.value?.phone || '',
   tags: contact.value?.tags?.join(', ') || '',
+  is_primary: contact.value?.is_primary ?? false,
 })
 
 // Contact loads asynchronously now (fetched on mount), so the form is (re)populated
@@ -296,6 +299,7 @@ watch(contact, (value) => {
   form.email = value.email
   form.phone = value.phone
   form.tags = value.tags?.join(', ') || ''
+  form.is_primary = value.is_primary
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -310,6 +314,7 @@ const onSave = guard(async () => {
       email: form.email,
       phone: form.phone,
       tags: parseTags(form.tags),
+      is_primary: form.is_primary,
     })
     success(t('crm.contacts.detail.updateSuccess'))
   } catch (err) {

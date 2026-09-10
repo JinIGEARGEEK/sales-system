@@ -16,6 +16,7 @@
               name="probability"
               rules="required|min_value:0|max_value:100"
             />
+            <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.detail.forecastCategory')" name="forecast_category" />
             <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.detail.expectedCloseDate')" name="expected_close_date" />
             <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
             <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
@@ -108,7 +109,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDefaultProbability } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -211,6 +212,7 @@ const form = reactive({
   stage: deal.value?.stage || 'Lead',
   probability: deal.value?.probability ?? stageDefaultProbability(deal.value?.stage || 'Lead'),
   lost_reason: deal.value?.lost_reason || '',
+  forecast_category: deal.value?.forecast_category || stageDefaultForecastCategory(deal.value?.stage || 'Lead'),
   expected_close_date: deal.value?.expected_close_date ? deal.value.expected_close_date.toISOString().slice(0, 10) : '',
   assigned_to: deal.value?.assigned_to ? String(deal.value.assigned_to) : '',
   business_unit: (deal.value?.business_unit || '') as BusinessUnit | '',
@@ -231,6 +233,7 @@ watch(deal, (value) => {
   form.stage = value.stage
   form.probability = value.probability ?? stageDefaultProbability(value.stage)
   form.lost_reason = value.lost_reason || ''
+  form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
   form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
   form.business_unit = value.business_unit || ''
@@ -247,10 +250,13 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 
 // Re-derives probability's default whenever stage changes manually (not during
 // hydration) — still freely editable afterwards. lost_reason only makes sense
-// while Lost, so it's cleared once the stage moves elsewhere.
+// while Lost, so it's cleared once the stage moves elsewhere. forecast_category
+// gets the same reset-to-new-stage-default treatment, still freely editable
+// afterwards too.
 watch(() => form.stage, (newStage) => {
   if (hydrating) return
   form.probability = stageDefaultProbability(newStage)
+  form.forecast_category = stageDefaultForecastCategory(newStage)
   if (!isLostStage(newStage)) form.lost_reason = ''
 })
 
@@ -278,6 +284,7 @@ const onSave = guard(async () => {
       status: dealStatusForStage(form.stage as DealStage),
       probability: form.probability,
       lost_reason: isLostStage(form.stage) ? (form.lost_reason as LostReason || null) : null,
+      forecast_category: form.forecast_category as ForecastCategory || null,
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,

@@ -75,7 +75,7 @@ Each story references the Feature Requirement ID(s) it satisfies from `feature-s
 | # | User Story | Refs | Status |
 |---|---|---|---|
 | S-6 | As a Sales rep, I want to create, edit, and archive Company and Contact records, so that my customer database stays accurate and current. | FR-CRM-010, FR-CRM-011 | ✅ |
-| S-7 | As a Sales rep, I want to mark one Contact as "Primary" per Company, so that I always know who to reach first. | FR-CRM-012 | 🚧 unconfirmed |
+| S-7 | As a Sales rep, I want to mark one Contact as "Primary" per Company, so that I always know who to reach first. | FR-CRM-012 | ✅ done (2026-09-10) |
 | S-8 | As a Sales rep, I want to tag/segment Companies by industry or tier, so that I can target follow-ups and campaigns. | FR-CRM-013 | ✅ |
 | S-9 | As a Sales rep, I want to bulk-import Contacts/Companies from a CSV, so that I don't have to re-enter our existing customer list by hand. | FR-CRM-014 | 🚧 built for a FlowAccount export (CSV/XLS/XLSX) via an Import button on Companies/Contacts, tagging each record Vendor/Customer; Company dedup now matches by normalized Website domain first, falling back to case-insensitive/trimmed name (Company has no email field); Contact import still dedupes by email only |
 | S-10 | As a Sales rep, I want a single Company profile page showing contacts, deals, communications, quotes, contracts, tasks, **and every real Product/Project this customer has with us**, so that I have the full relationship history in one place. | FR-CRM-015 | 🚧 contacts/deals/activity shown; quotes/contracts/tasks/Products/Projects not yet |

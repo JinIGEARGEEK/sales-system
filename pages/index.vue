@@ -59,6 +59,12 @@
           :annual-revenue-goal="annualRevenueGoal"
         />
 
+        <DashboardForecastBreakdown
+          :commit="forecastByCategory.commit"
+          :best-case="forecastByCategory.best_case"
+          :pipeline="forecastByCategory.pipeline"
+        />
+
         <DashboardTrends
           :revenue-trend="revenueTrend"
           :forecast-trend="forecastTrend"
@@ -332,6 +338,7 @@ const wonValue = computed(() => summary.value?.won_value ?? 0)
 const winRate = computed(() => Math.round(summary.value?.win_rate ?? 0))
 const openDealsCount = computed(() => summary.value?.open_deals_count ?? 0)
 const forecastedRevenue = computed(() => summary.value?.forecasted_revenue ?? 0)
+const forecastByCategory = computed(() => summary.value?.forecast_by_category ?? { commit: 0, best_case: 0, pipeline: 0 })
 const avgDealSize = computed(() => summary.value?.avg_deal_size ?? 0)
 const avgSalesCycleDays = computed(() => summary.value?.avg_sales_cycle_days ?? 0)
 const pipelineCoverageRatio = computed(() => summary.value?.pipeline_coverage_ratio ?? 0)
