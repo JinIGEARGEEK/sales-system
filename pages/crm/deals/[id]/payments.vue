@@ -51,7 +51,7 @@
                   color="error"
                   size="xs"
                   :aria-label="t('crm.deals.detail.removePayment')"
-                  @click="onRemovePayment(payment.id)"
+                  @click="requestDelete(payment)"
                 />
               </td>
             </tr>
@@ -63,6 +63,12 @@
     <CrmAddPaymentModal
       v-model:open="addPaymentOpen"
       @submit="onAddPayment"
+    />
+
+    <CrmConfirmDeleteModal
+      v-model:open="open"
+      :body="target ? t('crm.deals.detail.removePaymentConfirmBody', { amount: `${t('global.currencySymbol')}${priceFormat(target.amount)}`, date: dateFormat(target.paid_at) }) : ''"
+      @confirm="confirmRemovePayment"
     />
   </div>
 </template>
@@ -97,12 +103,17 @@ const onAddPayment = async (payment: { amount: number, paid_at: Date, method: Pa
   }
 }
 
-const onRemovePayment = async (id: number) => {
+const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Payment>()
+
+const confirmRemovePayment = async () => {
+  if (!target.value) return
   try {
-    await paymentsStore.remove(id)
+    await paymentsStore.remove(target.value.id)
     success(t('crm.deals.detail.removePaymentSuccess'))
   } catch (err) {
     notifyApiError(err)
+  } finally {
+    closeDelete()
   }
 }
 </script>

@@ -33,7 +33,19 @@
       <div v-else class="flex flex-col gap-3">
         <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-[var(--color-light-gray-2)] p-4">
           <div class="mb-2 flex items-center justify-between">
-            <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+            <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+            <!-- Uploaded (PDF) quotes have no structured-items editor page of
+            their own (pages/crm/quotes/[id].vue is items-only), so this is
+            the only place their status can move past Draft. -->
+            <InputSelect
+              v-else
+              :model-value="quote.status"
+              :options="QUOTE_STATUS_OPTIONS"
+              small
+              class="w-36"
+              :name="`quote-status-${quote.id}`"
+              @update:model-value="(value: string) => onUpdateQuoteStatus(quote.id, value as QuoteStatus)"
+            />
             <div class="flex items-center gap-3">
               <span class="text-xs text-[var(--color-gray)]">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
               <template v-if="!quote.file_name">
@@ -83,7 +95,7 @@
                 color="error"
                 size="xs"
                 :aria-label="t('crm.deals.detail.removeQuotation')"
-                @click="onRemoveQuote(quote)"
+                @click="requestDelete(quote)"
               />
             </div>
           </div>
@@ -105,12 +117,19 @@
         </div>
       </div>
     </ContainerTemplate>
+
+    <CrmConfirmDeleteModal
+      v-model:open="open"
+      :body="target ? t('crm.deals.detail.removeQuotationConfirmBody', { name: target.file_name || target.number || `#${target.id}` }) : ''"
+      @confirm="confirmRemoveQuote"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
+import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -160,9 +179,24 @@ const onFileSelected = async (event: Event) => {
   }
 }
 
-const onRemoveQuote = async (quote: Quote) => {
+const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Quote>()
+
+const confirmRemoveQuote = async () => {
+  if (!target.value) return
   try {
-    await quotesStore.remove(quote.id)
+    await quotesStore.remove(target.value.id)
+    success(t('crm.deals.detail.removeQuotationSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  } finally {
+    closeDelete()
+  }
+}
+
+const onUpdateQuoteStatus = async (id: number, status: QuoteStatus) => {
+  try {
+    await quotesStore.updateStatus(id, status)
+    success(t('crm.deals.detail.updateQuoteStatusSuccess'))
   } catch (err) {
     notifyApiError(err)
   }

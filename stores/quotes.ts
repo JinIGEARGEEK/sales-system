@@ -78,6 +78,31 @@ export const useQuotesStore = defineStore('quotes', {
       this.items = [...this.items.filter(q => q.id !== id), updated]
       return updated
     },
+    // Status-only transition for an uploaded (file-based) Quote — it has no
+    // items/scope_of_work editor of its own (pages/crm/quotes/[id].vue is
+    // structured-items only), but PUT /quotes/:id still requires the full
+    // payload, so this rebuilds it from the already-loaded Quote rather than
+    // asking the caller to know every other field.
+    async updateStatus (id: number, status: QuoteStatus): Promise<Quote> {
+      const quote = this.items.find(q => q.id === id)
+      if (!quote) throw new Error(`Quote ${id} not loaded`)
+      return this.update(id, {
+        items: quote.items,
+        scope_of_work: quote.scope_of_work,
+        validity_date: quote.validity_date,
+        status,
+        reference_number: quote.reference_number ?? null,
+        issue_date: quote.issue_date,
+        credit_days: quote.credit_days,
+        price_type: quote.price_type,
+        vat_enabled: quote.vat_enabled,
+        wht_enabled: quote.wht_enabled,
+        wht_rate: quote.wht_rate,
+        discount_total: quote.discount_total,
+        notes: quote.notes ?? null,
+        internal_notes: quote.internal_notes ?? null,
+      })
+    },
     // Loads a single Quote by id directly (not scoped to a known Deal) —
     // used by pages/crm/quotes/[id].vue, reached by URL/link rather than
     // via a Deal's already-fetched quote list.

@@ -10,6 +10,10 @@
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
+      <div class="mb-4 max-w-sm">
+        <InputText v-model="search" :placeholder="t('admin.trash.searchPlaceholder')" name="search" />
+      </div>
+
       <div v-if="activeTab === 'deals'">
         <TableData
           v-model:page="dealsPage"
@@ -95,6 +99,10 @@ const contactsStore = useContactsStore()
 const { canAccess, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
 const activeTab = ref('deals')
+// One search box shared across all four tabs (rather than per-tab, since a
+// rep hunting for a specific deleted record usually doesn't know which
+// entity type it was) — each fetchXTrash below reads this by closure.
+const search = ref('')
 const tabItems = computed(() => [
   { label: t('admin.trash.tabs.deals'), value: 'deals' },
   { label: t('admin.trash.tabs.leads'), value: 'leads' },
@@ -148,7 +156,7 @@ const {
   onChangePage: onChangeDealsPage,
   onChangePerPage: onChangeDealsPerPage,
 } = useTrashTab<Deal>(
-  (page, perPage) => dealsStore.fetchTrash(page, perPage),
+  (page, perPage) => dealsStore.fetchTrash(page, perPage, search.value),
   () => dealsStore.trashTotal,
 )
 
@@ -207,7 +215,7 @@ const {
   onChangePage: onChangeLeadsPage,
   onChangePerPage: onChangeLeadsPerPage,
 } = useTrashTab<Lead>(
-  (page, perPage) => leadsStore.fetchTrash(page, perPage),
+  (page, perPage) => leadsStore.fetchTrash(page, perPage, search.value),
   () => leadsStore.trashTotal,
 )
 
@@ -262,7 +270,7 @@ const {
   onChangePage: onChangeCompaniesPage,
   onChangePerPage: onChangeCompaniesPerPage,
 } = useTrashTab<Company>(
-  (page, perPage) => companiesStore.fetchTrash(page, perPage),
+  (page, perPage) => companiesStore.fetchTrash(page, perPage, search.value),
   () => companiesStore.trashTotal,
 )
 
@@ -304,7 +312,7 @@ const {
   onChangePage: onChangeContactsPage,
   onChangePerPage: onChangeContactsPerPage,
 } = useTrashTab<Contact>(
-  (page, perPage) => contactsStore.fetchTrash(page, perPage),
+  (page, perPage) => contactsStore.fetchTrash(page, perPage, search.value),
   () => contactsStore.trashTotal,
 )
 
@@ -355,5 +363,23 @@ guardMounted(() => {
   fetchLeadsTrash()
   fetchCompaniesTrash()
   fetchContactsTrash()
+})
+
+// Refetches all four tabs together (not just the active one) — each is a
+// small, cheap trash list, and doing all four keeps the other tabs from
+// showing stale results if the rep switches tabs right after searching.
+let searchDebounce: ReturnType<typeof setTimeout> | undefined
+watch(search, () => {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => {
+    dealsPage.value = 1
+    leadsPage.value = 1
+    companiesPage.value = 1
+    contactsPage.value = 1
+    fetchDealsTrash()
+    fetchLeadsTrash()
+    fetchCompaniesTrash()
+    fetchContactsTrash()
+  }, 400)
 })
 </script>

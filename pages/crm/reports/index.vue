@@ -42,7 +42,9 @@
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
                   <h3 class="min-w-0 truncate text-sm font-medium">{{ card.title }}</h3>
+                  <USkeleton v-if="counts[card.key] === null" class="h-5 w-6 rounded-full" />
                   <UBadge
+                    v-else
                     class="shrink-0 font-semibold"
                     :color="badgeColor(counts[card.key])"
                     :variant="counts[card.key] ? 'solid' : 'subtle'"
@@ -141,13 +143,14 @@ const ATTENTION_ENDPOINTS: Record<string, string> = {
   projectsAtRisk: '/reports/projects-at-risk',
 }
 
-// Starts every count at 0 so the badges render immediately instead of a
-// loading skeleton, then each climbs as its request resolves.
-const counts = ref<Record<string, number>>(
-  Object.fromEntries(Object.keys(ATTENTION_ENDPOINTS).map(key => [key, 0])),
+// Starts every count at null so the badge renders as a loading skeleton until
+// its request resolves — keeps "not checked yet" visually distinct from a
+// genuine zero.
+const counts = ref<Record<string, number | null>>(
+  Object.fromEntries(Object.keys(ATTENTION_ENDPOINTS).map(key => [key, null])),
 )
 
-const badgeColor = (count: number) => {
+const badgeColor = (count: number | null | undefined) => {
   if (!count) return 'neutral'
   if (count >= 5) return 'error'
   return 'warning'
@@ -157,7 +160,7 @@ guardMounted(() => {
   for (const [key, path] of Object.entries(ATTENTION_ENDPOINTS)) {
     $api.get<ApiResponse<unknown[]>>(path)
       .then((response) => { counts.value[key] = response.data.data.length })
-      .catch(() => { /* leave at 0 — a failed count isn't worth a toast on a landing page */ })
+      .catch(() => { counts.value[key] = 0 /* treat a failed count as "nothing to flag" rather than stuck loading */ })
   }
 })
 </script>

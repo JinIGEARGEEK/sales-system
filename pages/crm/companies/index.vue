@@ -149,10 +149,12 @@ const industryOptionsStore = useIndustryOptionsStore()
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
 
-const search = ref('')
-const industryFilter = ref('all')
-const statusFilter = ref('all')
-const tagFilter = ref('all')
+// Query-synced (not a plain ref) so a search/filter set by hand survives a
+// back-button return to this list — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const industryFilter = useQuerySyncedRef('industry')
+const statusFilter = useQuerySyncedRef('status')
+const tagFilter = useQuerySyncedRef('tag')
 // Reuses the same 60/90/120 tiers as useLastContact's CONTACT_STALE_TIER_DAYS
 // (dormant-company/upsell targeting, FR-CRM-108) rather than inventing a
 // separate set of thresholds for this filter.
@@ -162,12 +164,12 @@ const STALE_DAYS_OPTIONS: Select[] = [
   { label: t('crm.companies.index.staleDays90'), value: String(CONTACT_STALE_TIER_DAYS.tier2) },
   { label: t('crm.companies.index.staleDays120'), value: String(CONTACT_STALE_TIER_DAYS.tier3) },
 ]
-const staleDaysFilter = ref('all')
+const staleDaysFilter = useQuerySyncedRef('stale_days')
 const HAS_WON_DEAL_OPTIONS: Select[] = [
   { label: t('crm.companies.index.hasWonDealAny'), value: 'all' },
   { label: t('crm.companies.index.hasWonDealYes'), value: 'true' },
 ]
-const hasWonDealFilter = ref('all')
+const hasWonDealFilter = useQuerySyncedRef('has_won_deal')
 const showImport = ref(false)
 
 const onExport = () => downloadCsvBlob('/companies/export', 'companies.csv')

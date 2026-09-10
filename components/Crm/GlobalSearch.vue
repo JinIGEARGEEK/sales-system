@@ -3,6 +3,7 @@
     <div class="global-search-glow relative overflow-hidden rounded-full">
       <div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white/20 via-white/5 to-transparent" />
       <UInput
+        ref="inputRef"
         v-model="query"
         size="md"
         icon="material-symbols:search"
@@ -14,7 +15,11 @@
         }"
         @focus="open = true"
         @keydown.escape="open = false"
-      />
+      >
+        <template v-if="!query" #trailing>
+          <kbd class="hidden rounded border border-white/25 bg-white/10 px-1.5 py-0.5 text-[10px] text-white/60 sm:inline-block">{{ shortcutHint }}</kbd>
+        </template>
+      </UInput>
     </div>
 
     <div
@@ -74,6 +79,24 @@ const MIN_QUERY_LENGTH = 2
 const query = ref('')
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
+const inputRef = useTemplateRef<{ inputRef: Ref<HTMLInputElement | null> }>('inputRef')
+
+// Mouse-only otherwise (the survey that flagged this found zero keyboard
+// entry point at all) — Cmd+K on Mac, Ctrl+K elsewhere, mirroring the
+// near-universal "focus search" convention rather than inventing our own key.
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent)
+const shortcutHint = isMac ? '⌘K' : 'Ctrl+K'
+
+const onGlobalKeydown = (event: KeyboardEvent) => {
+  // Excludes Shift/Alt so this doesn't also swallow unrelated combinations
+  // that happen to include Ctrl/Cmd+K, e.g. Ctrl+Shift+K (DevTools console
+  // in Firefox/Chrome).
+  if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    open.value = true
+    inputRef.value?.inputRef.value?.focus()
+  }
+}
 
 // All five groups search the server live as the rep types (useDebouncedSearch)
 // instead of filtering a preloaded-but-capped store cache — fetchAll() is
@@ -180,8 +203,14 @@ const onClickOutside = (event: MouseEvent) => {
   if (rootRef.value && !rootRef.value.contains(event.target as Node)) open.value = false
 }
 
-onMounted(() => document.addEventListener('mousedown', onClickOutside))
-onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
+onMounted(() => {
+  document.addEventListener('mousedown', onClickOutside)
+  document.addEventListener('keydown', onGlobalKeydown)
+})
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onClickOutside)
+  document.removeEventListener('keydown', onGlobalKeydown)
+})
 </script>
 
 <style scoped>

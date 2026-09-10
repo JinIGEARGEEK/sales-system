@@ -41,6 +41,7 @@
         :loading="projectsLoading"
         @change-page="onChangeProjectPage"
         @change-per-page="onChangeProjectPerPage"
+        @sort="onSortProjects"
         @view-detail="onViewCompany"
         @edit="openEditProject"
       />
@@ -217,26 +218,56 @@ watch(filteredProjects, (visibleProjects) => {
   }
 }, { immediate: true })
 
-const projectRows = computed(() => filteredProjects.value.map(project => ({
-  ...project,
-  statusBadge: toBadge(project.status),
-  targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
-  expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
-  expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',
-  // deal_id is settable at creation (AddProjectModal's optional Deal picker)
-  // but was previously never surfaced anywhere afterward — resolve it here
-  // so the list is the one place a rep can see which Deal a Project came from.
-  dealName: project.deal_id ? (dealsStore.items.find(d => d.id === project.deal_id)?.title ?? `#${project.deal_id}`) : '-',
-})))
+// Sorted client-side (this tab loads the full set via fetchAll, unlike the
+// server-paginated list pages) — field -> a comparable value, since the
+// column itself often shows a formatted string (dates) or badge, not
+// something directly comparable.
+const PROJECT_SORT_VALUE: Record<string, (p: Project) => string | number> = {
+  name: p => p.name.toLowerCase(),
+  company_name: p => (p.company_name || '').toLowerCase(),
+  targetEndDateDisplay: p => p.target_end_date ? p.target_end_date.getTime() : 0,
+}
+
+const projectSortField = ref('')
+const projectSortDir = ref<'asc' | 'desc'>('asc')
+
+const onSortProjects = (field: string, direction: 'asc' | 'desc') => {
+  projectSortField.value = field
+  projectSortDir.value = direction
+}
+
+const projectRows = computed(() => {
+  const rows = filteredProjects.value.map(project => ({
+    ...project,
+    statusBadge: toBadge(project.status),
+    targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
+    expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
+    expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',
+    // deal_id is settable at creation (AddProjectModal's optional Deal picker)
+    // but was previously never surfaced anywhere afterward — resolve it here
+    // so the list is the one place a rep can see which Deal a Project came from.
+    dealName: project.deal_id ? (dealsStore.items.find(d => d.id === project.deal_id)?.title ?? `#${project.deal_id}`) : '-',
+  }))
+
+  const getValue = PROJECT_SORT_VALUE[projectSortField.value]
+  if (!getValue) return rows
+  return [...rows].sort((a, b) => {
+    const av = getValue(a)
+    const bv = getValue(b)
+    if (av === bv) return 0
+    const cmp = av < bv ? -1 : 1
+    return projectSortDir.value === 'asc' ? cmp : -cmp
+  })
+})
 
 const projectColumns: TableDataColumn[] = [
-  { label: t('crm.projects.index.columns.name'), align: 'left', field: 'name' },
-  { label: t('crm.projects.index.columns.company'), align: 'left', field: 'company_name' },
+  { label: t('crm.projects.index.columns.name'), align: 'left', field: 'name', isSort: true },
+  { label: t('crm.projects.index.columns.company'), align: 'left', field: 'company_name', isSort: true },
   { label: t('crm.projects.index.columns.deal'), align: 'left', field: 'dealName' },
   { label: t('crm.projects.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.projects.index.columns.expectedProposalDate'), align: 'left', field: 'expectedProposalDateDisplay' },
   { label: t('crm.projects.index.columns.expectedStartDate'), align: 'left', field: 'expectedStartDateDisplay' },
-  { label: t('crm.projects.index.columns.targetEndDate'), align: 'left', field: 'targetEndDateDisplay' },
+  { label: t('crm.projects.index.columns.targetEndDate'), align: 'left', field: 'targetEndDateDisplay', isSort: true },
   {
     label: t('crm.projects.index.columns.action'),
     align: 'left',
