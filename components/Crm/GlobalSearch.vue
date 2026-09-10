@@ -35,6 +35,7 @@
     <Teleport to="body">
       <div
         v-if="open && query.trim().length >= MIN_QUERY_LENGTH"
+        ref="panelRef"
         class="fixed z-30 max-h-96 overflow-y-auto rounded-lg border border-white/60 bg-white/95 shadow-xl backdrop-blur-2xl"
         :style="dropdownStyle"
       >
@@ -92,6 +93,12 @@ const MIN_QUERY_LENGTH = 2
 const query = ref('')
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
+// The results panel below is Teleported to <body> (see template comment), so
+// it's no longer a DOM descendant of rootRef — onClickOutside's containment
+// check needs this second ref too, or a mousedown on a result reads as
+// "outside," closes the panel, and the NuxtLink's click (which fires after
+// mousedown) never lands since the panel's already gone from the DOM.
+const panelRef = ref<HTMLElement | null>(null)
 const inputRef = useTemplateRef<{ inputRef: Ref<HTMLInputElement | null> }>('inputRef')
 
 // Tracks rootRef's viewport position so the teleported (see template)
@@ -231,7 +238,10 @@ const onSelect = () => {
 }
 
 const onClickOutside = (event: MouseEvent) => {
-  if (rootRef.value && !rootRef.value.contains(event.target as Node)) open.value = false
+  const target = event.target as Node
+  const insideRoot = rootRef.value?.contains(target)
+  const insidePanel = panelRef.value?.contains(target)
+  if (!insideRoot && !insidePanel) open.value = false
 }
 
 onMounted(() => {
