@@ -13,7 +13,7 @@ export default {
       source: 'Source',
       status: 'Status',
       classification: 'Score',
-      classificationTooltip: 'MQL = scored above threshold · SQL = manually marked sales-ready · "-" = neither yet',
+      classificationTooltip: 'Marketing Qualified Lead (MQL) – a lead sourced from marketing channels, such as the website or content marketing · Sales Qualified Lead (SQL) – a lead filtered from MQLs found to have genuine purchase intent, arriving with a real sales opportunity',
       assignedTo: 'Assigned To',
       created: 'Created',
       action: 'Action',
