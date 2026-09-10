@@ -19,10 +19,12 @@ export const useActivityTypeMeta = () => {
         return t('crm.components.addActivityModal.typeEmail')
       case 'meeting':
         return t('crm.components.addActivityModal.typeMeeting')
+      case 'note':
+        return t('crm.components.addActivityModal.typeNote')
     }
   }
 
-  const activityTypeBadgeColor = (type: ActivityType): 'info' | 'warning' | 'success' => {
+  const activityTypeBadgeColor = (type: ActivityType): 'info' | 'warning' | 'success' | 'neutral' => {
     switch (type) {
       case 'call':
         return 'info'
@@ -30,6 +32,8 @@ export const useActivityTypeMeta = () => {
         return 'warning'
       case 'meeting':
         return 'success'
+      case 'note':
+        return 'neutral'
     }
   }
 
@@ -37,6 +41,7 @@ export const useActivityTypeMeta = () => {
     { label: activityTypeLabel('call'), value: 'call' },
     { label: activityTypeLabel('email'), value: 'email' },
     { label: activityTypeLabel('meeting'), value: 'meeting' },
+    { label: activityTypeLabel('note'), value: 'note' },
   ])
 
   return { activityTypeLabel, activityTypeBadgeColor, activityTypeOptions }

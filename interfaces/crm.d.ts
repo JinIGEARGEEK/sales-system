@@ -22,7 +22,10 @@ type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
 type DealStage = 'Lead' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost'
 type DealStatus = 'open' | 'won' | 'lost'
-type ActivityType = 'call' | 'email' | 'meeting'
+// 'note' covers both a manually-logged freeform note and a system-generated
+// entry (e.g. a Prospect/Lead/Deal stage change bumping the linked Company's
+// last-contacted date).
+type ActivityType = 'call' | 'email' | 'meeting' | 'note'
 // 'prospect' added 2026-09-01 for Marketing's pre-Lead funnel (§3.1a) — Task
 // shares this same union (TaskRelatedType below), so Prospects get a Tasks
 // tab for free via the existing polymorphic infra.
