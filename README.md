@@ -19,7 +19,7 @@ This app covers the sales lifecycle from an inbound Lead through a Won/Lost Deal
 - **Activities** (`/crm/activities`) — every logged call/email/meeting across all Companies/Contacts/Deals/Prospects/Leads in one searchable, filterable list (by type and related record type), each row linking back to its related record — for customer-support/upsell follow-up, alongside the existing per-record activity timelines. A "Log Activity" form is reachable from this list (with its own Company/Contact/Deal/Prospect picker) and from the Company/Contact/Deal detail pages' own Activity section.
 - **Sales Pipeline Dashboard** (`/`) — pipeline value/win rate/revenue trend/forecast trend/pipeline coverage, filterable by date range, Business Unit, and Channel; a per-rep leaderboard; an "Upcoming Follow-ups" task widget; and stale-account upsell prompts.
 - **Global search** (top nav) — find a Deal, Company, Contact, or Lead by name from anywhere in the app.
-- **Admin** (`/admin/users`, `/admin/activity-log`, `/admin/pipeline-config`) — staff account CRUD; a real audit-log viewer backed by `GET /audit-log` (filterable by entity type/date range, with a before/after diff view); and Admin-configurable pipeline stages/Lead sources/quarterly sales quota, superseding the old hardcoded `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS`/quota constants.
+- **Admin** (`/admin/users`, `/admin/activity-log`, `/admin/pipeline-config`, `/admin/api-keys`) — staff account CRUD; a real audit-log viewer backed by `GET /audit-log` (filterable by entity type/date range, with a before/after diff view); Admin-configurable pipeline stages/Lead sources/quarterly sales quota, superseding the old hardcoded `DEAL_STAGE_OPTIONS`/`CHANNEL_OPTIONS`/`LEAD_SOURCE_OPTIONS`/quota constants; and, under **Settings → API Keys**, issuing/revoking the `X-API-Key` credentials external integrations use to create/read/update Company/Contact records without a staff login (see below).
 
 **Current build status:** this app is API-backed by a real Go/Postgres backend — see the sibling [`sales-system-api`](../sales-system-api) repo. Role-based access control (Admin / Sales Rep / Sales Manager / Production) is enforced **server-side**; the frontend mirrors it (via `useRole`) only to hide actions the backend would reject, never as the actual security boundary. `biz_spec/api-system-spec.md` is the API contract both repos are kept in sync against — check it (and `biz_spec/feature-spec.md`'s §9 gap summary) before assuming a given endpoint/requirement is or isn't implemented; a handful of narrower items (Tag/custom-field Admin configurability, Task push notifications) are still unbuilt or partial. The Deals Kanban view now paginates per pipeline stage rather than fetching every open Deal at once.
 
@@ -36,6 +36,18 @@ The business requirements, acceptance criteria, API contract, and UI conventions
 | `biz_spec/ux-ui-guidelines/` | Per-pattern UI guidelines (filters, tables, modals, detail layouts, BOF layout) |
 
 Read `feature-spec.md` and `design-system.md` before adding a new page or entity — they describe what already exists so new work stays consistent instead of re-deriving conventions from scratch.
+
+### Creating and using an API key (external integrations)
+
+External systems (a marketing tool, another CRM, a sync job) can create/read/update Company and Contact records via a separate `X-API-Key`-authenticated surface (`/open/companies`, `/open/contacts`) instead of the staff login flow — see `sales-system-api`'s [`docs/OPEN_API_GUIDE.md`](../sales-system-api/docs/OPEN_API_GUIDE.md) for the full integrator-facing reference (request/response shapes, error codes, curl examples). To issue one from this app:
+
+1. Log in as an **Admin**.
+2. Sidebar → **Settings** → **API Keys** (`/admin/api-keys`).
+3. **Add key** → give it a **Name** and pick an **Acts as** owner (an active staff user — every call made with this key is attributed to them, `created_by`/`updated_by`).
+4. The **raw key is shown exactly once**, in a reveal dialog with a copy button — copy it into a secrets manager before clicking Done; it can't be retrieved again afterward, only revoked and replaced with a new one.
+5. Hand the copied key to whoever's building the integration. They authenticate every call with an `X-API-Key: <key>` header — no login, no JWT.
+
+The API Keys table lists every key's name, owner, status, and last-used time, with a **Revoke** action per row (immediate; instantly kills that key rather than deleting its row, so the audit trail survives).
 
 ---
 
