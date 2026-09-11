@@ -11,7 +11,7 @@
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'kanban' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
+              :class="viewMode === 'kanban' ? 'bg-(--color-primary) text-white shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.deals.index.viewKanban')"
               @click="viewMode = 'kanban'"
             >
@@ -22,7 +22,7 @@
             <button
               type="button"
               class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'list' ? 'bg-(--color-primary) shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
+              :class="viewMode === 'list' ? 'bg-(--color-primary) text-white shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
               :aria-label="t('crm.deals.index.viewList')"
               @click="viewMode = 'list'"
             >
