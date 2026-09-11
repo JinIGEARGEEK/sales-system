@@ -10,7 +10,36 @@
       <template #body>
         <nav class="flex flex-col gap-1 p-2">
           <template v-for="(menuItem, index) in menuList" :key="index">
+            <template v-if="isMenuGroup(menuItem)">
+              <button
+                type="button"
+                class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
+                @click="toggleGroup(menuItem.key)"
+              >
+                <UIcon :name="menuItem.icon" class="size-5" />
+                <span class="min-w-0 flex-1 text-left">{{ menuItem.label }}</span>
+                <UIcon
+                  name="material-symbols:chevron-right"
+                  class="size-4 shrink-0 transition-transform"
+                  :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
+                />
+              </button>
+              <div v-if="isGroupExpanded(menuItem)" class="flex flex-col gap-1 py-0.5 pl-4">
+                <NuxtLink
+                  v-for="child in menuItem.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
+                  :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(child.path) }"
+                  @click="drawer = false"
+                >
+                  <UIcon :name="child.icon" class="size-4" />
+                  <span>{{ child.label }}</span>
+                </NuxtLink>
+              </div>
+            </template>
             <NuxtLink
+              v-else
               :to="menuItem.path"
               class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
               :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(menuItem.path) }"
@@ -54,7 +83,35 @@
       <div class="relative z-10 flex-1 overflow-y-auto p-1.5">
         <nav class="flex flex-col gap-0.5">
           <template v-for="(menuItem, index) in menuList" :key="index">
+            <template v-if="isMenuGroup(menuItem)">
+              <button
+                type="button"
+                class="sidebar-nav-link flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
+                @click="toggleGroup(menuItem.key)"
+              >
+                <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
+                <span class="min-w-0 flex-1 truncate text-left">{{ menuItem.label }}</span>
+                <UIcon
+                  name="material-symbols:chevron-right"
+                  class="size-4 shrink-0 transition-transform"
+                  :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
+                />
+              </button>
+              <div v-if="isGroupExpanded(menuItem)" class="flex flex-col gap-0.5 py-0.5 pl-4">
+                <NuxtLink
+                  v-for="child in menuItem.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
+                  :class="{ 'is-active font-medium': isActive(child.path) }"
+                >
+                  <UIcon :name="child.icon" class="size-4 shrink-0" />
+                  <span class="truncate">{{ child.label }}</span>
+                </NuxtLink>
+              </div>
+            </template>
             <NuxtLink
+              v-else
               :to="menuItem.path"
               class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
               :class="{ 'is-active font-medium': isActive(menuItem.path) }"
@@ -188,8 +245,26 @@ interface MenuItem {
   roles?: Role[]
 }
 
-const menuList = computed(() => {
-  const items: MenuItem[] = [
+// A collapsible group of related nav items (currently just "Settings" —
+// Pipeline Config/Staff/API Keys) — same `roles`/`separator` shape as a
+// plain MenuItem, plus its own children and a stable `key` the collapsed/
+// expanded state is persisted under. `path` is intentionally absent: a
+// group header toggles, it doesn't navigate anywhere itself.
+interface MenuGroup {
+  key: string
+  icon: string
+  label: string
+  separator: boolean
+  roles?: Role[]
+  children: MenuItem[]
+}
+
+type MenuEntry = MenuItem | MenuGroup
+
+const isMenuGroup = (entry: MenuEntry): entry is MenuGroup => 'children' in entry
+
+const menuList = computed<MenuEntry[]>(() => {
+  const items: MenuEntry[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
     // Prospects (§3.1a) — the pre-Lead marketing funnel, kept its own
@@ -206,15 +281,54 @@ const menuList = computed(() => {
     { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true, roles: SALES_PIPELINE_ROLES },
-    { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false, roles: ['Admin'] },
-    { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
-    { icon: 'material-symbols:key-outline', label: t('layout.nav.apiKeys'), path: '/admin/api-keys', separator: false, roles: ['Admin'] },
+    {
+      key: 'settings',
+      icon: 'material-symbols:settings-outline',
+      label: t('layout.nav.settingsGroup'),
+      separator: false,
+      roles: ['Admin'],
+      children: [
+        { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false },
+        { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false },
+        { icon: 'material-symbols:key-outline', label: t('layout.nav.apiKeys'), path: '/admin/api-keys', separator: false },
+      ],
+    },
     { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:delete-outline', label: t('layout.nav.trash'), path: '/admin/trash', separator: true, roles: ['Admin', 'Sales Manager'] },
     { icon: 'material-symbols:menu-book-outline', label: t('layout.nav.guideline'), path: '/admin/guideline', separator: false },
   ]
-  return items.filter(item => !item.roles || hasRole(...item.roles))
+  return items
+    .filter(item => !item.roles || hasRole(...item.roles))
+    .map(item => (isMenuGroup(item) ? { ...item, children: item.children.filter(child => !child.roles || hasRole(...child.roles)) } : item))
 })
+
+// Collapsed-group state is a per-viewer UI preference, not shared data —
+// localStorage (same client-only-guard convention as useAuth.ts), not a
+// store/backend field. Keyed by MenuGroup.key so a future second group
+// doesn't fight this one over a single flag. Missing/unparsed storage just
+// means "nothing collapsed yet" (every group starts expanded).
+const COLLAPSED_GROUPS_STORAGE_KEY = 'sidebar-collapsed-groups'
+const collapsedGroups = ref<Set<string>>(new Set())
+if (import.meta.client) {
+  const stored = localStorage.getItem(COLLAPSED_GROUPS_STORAGE_KEY)
+  if (stored) collapsedGroups.value = new Set(JSON.parse(stored) as string[])
+}
+const toggleGroup = (key: string) => {
+  if (collapsedGroups.value.has(key)) collapsedGroups.value.delete(key)
+  else collapsedGroups.value.add(key)
+  // Reassign (not just mutate) so the Set change is visible to Vue's
+  // reactivity — mutating a reactive Set's contents in place still triggers
+  // dependents here since Vue 3 wraps Set/Map mutators, but reassigning is
+  // the clearer signal or a future refactor away from a raw ref<Set> won't
+  // silently stop reacting.
+  collapsedGroups.value = new Set(collapsedGroups.value)
+  if (import.meta.client) localStorage.setItem(COLLAPSED_GROUPS_STORAGE_KEY, JSON.stringify([...collapsedGroups.value]))
+}
+// A group whose currently-active route lives inside it always renders
+// expanded, regardless of the persisted collapse flag — otherwise landing
+// directly on e.g. /admin/api-keys (a fresh load, a bookmark) would show no
+// nav item highlighted at all, with no visible indication of where you are.
+const isGroupExpanded = (group: MenuGroup) => !collapsedGroups.value.has(group.key) || group.children.some(child => isActive(child.path))
 
 const footerActions = computed(() => [
   { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
