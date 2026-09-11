@@ -65,6 +65,11 @@ export default {
   },
   detail: {
     pageTitle: 'รายละเอียด Lead',
+    scoreBreakdownTitle: 'คะแนนนี้คำนวณอย่างไร?',
+    scoreBreakdownNoMatches: 'ไม่มีเกณฑ์การให้คะแนนใดตรงกับ Lead นี้',
+    scoreBreakdownTotal: 'รวม',
+    scoreBreakdownThreshold: 'เกณฑ์ MQL: {threshold}',
+    scoreBreakdownManualSql: 'Lead นี้ถูกทำเครื่องหมายพร้อมขายด้วยตนเอง — คะแนนไม่มีผลต่อการจัดประเภทนี้',
     convertToDeal: 'แปลงเป็น Deal',
     confirmConvertToDealTitle: 'แปลงเป็น Deal?',
     confirmConvertToDealBody: 'ต้องการแปลง "{name}" เป็น Deal ใช่หรือไม่? ระบบจะพาไปยังฟอร์มสร้าง Deal ใหม่',

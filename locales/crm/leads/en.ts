@@ -65,6 +65,11 @@ export default {
   },
   detail: {
     pageTitle: 'Lead Detail',
+    scoreBreakdownTitle: 'How is this calculated?',
+    scoreBreakdownNoMatches: 'No scoring criteria matched this Lead.',
+    scoreBreakdownTotal: 'Total',
+    scoreBreakdownThreshold: 'MQL threshold: {threshold}',
+    scoreBreakdownManualSql: 'This Lead was manually marked Sales Ready — the score doesn\'t affect that.',
     convertToDeal: 'Convert to Deal',
     confirmConvertToDealTitle: 'Convert to Deal?',
     confirmConvertToDealBody: 'Convert "{name}" to a Deal? You\'ll continue on the new Deal\'s create form.',

@@ -16,6 +16,42 @@
           <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
           <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
           <UBadge v-else size="xs" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
+
+          <UPopover v-model:open="scoreBreakdownOpen" @update:open="onScoreBreakdownToggle">
+            <UButton
+              icon="material-symbols:info-outline"
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              class="cursor-pointer p-0.5"
+              :aria-label="t('crm.leads.detail.scoreBreakdownTitle')"
+            />
+            <template #content>
+              <div class="w-72 p-3">
+                <p class="mb-2 text-sm font-medium">{{ t('crm.leads.detail.scoreBreakdownTitle') }}</p>
+                <div v-if="scoreBreakdownLoading" class="py-2 text-center text-sm text-(--color-gray)">{{ t('global.loading') }}</div>
+                <template v-else-if="scoreBreakdown">
+                  <div v-if="scoreBreakdown.matched.length === 0" class="text-sm text-(--color-gray)">
+                    {{ t('crm.leads.detail.scoreBreakdownNoMatches') }}
+                  </div>
+                  <ul v-else class="flex flex-col gap-1.5">
+                    <li v-for="criterion in scoreBreakdown.matched" :key="criterion.id" class="flex items-center justify-between gap-3 text-sm">
+                      <span class="truncate">{{ criterion.name }}</span>
+                      <span class="shrink-0 font-medium text-(--color-success-toast)">+{{ criterion.weight }}</span>
+                    </li>
+                  </ul>
+                  <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
+                    <span>{{ t('crm.leads.detail.scoreBreakdownTotal') }}</span>
+                    <span>{{ scoreBreakdown.score }}</span>
+                  </div>
+                  <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.leads.detail.scoreBreakdownThreshold', { threshold: scoreBreakdown.threshold }) }}</p>
+                  <p v-if="scoreBreakdown.classification === 'sql'" class="mt-2 text-xs text-(--color-gray)">
+                    {{ t('crm.leads.detail.scoreBreakdownManualSql') }}
+                  </p>
+                </template>
+              </div>
+            </template>
+          </UPopover>
         </div>
         <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
@@ -171,6 +207,22 @@ const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
+
+// FR-CRM-007's "how is this calculated" breakdown — fetched lazily on first
+// open (not on page mount) since it's an extra request most visits never
+// need, and cached for the rest of this page visit rather than re-fetched
+// every time the popover re-opens.
+const scoreBreakdownOpen = ref(false)
+const scoreBreakdown = ref<LeadScoreBreakdown | null>(null)
+const scoreBreakdownLoading = ref(false)
+const onScoreBreakdownToggle = (isOpen: boolean) => {
+  if (!isOpen || scoreBreakdown.value || scoreBreakdownLoading.value) return
+  scoreBreakdownLoading.value = true
+  leadsStore.fetchScoreBreakdown(leadId)
+    .then((result) => { scoreBreakdown.value = result })
+    .catch(notifyApiError)
+    .finally(() => { scoreBreakdownLoading.value = false })
+}
 
 onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Lead, and

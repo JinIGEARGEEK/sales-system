@@ -87,6 +87,14 @@ export const useLeadsStore = defineStore('leads', {
       const response = await $api.post<ApiResponse<{ deal: Deal, company: Company, contact: Contact }>>(`/leads/${id}/convert`, payload)
       return response.data.data
     },
+    // Not cached in `items` — a lightweight, on-demand read for the Lead
+    // detail page's "How is this calculated?" breakdown popover, recomputed
+    // live server-side each call.
+    async fetchScoreBreakdown (id: number): Promise<LeadScoreBreakdown> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<LeadScoreBreakdown>>(`/leads/${id}/score-breakdown`)
+      return response.data.data
+    },
     // Folds in a Lead returned by POST /prospects/:id/convert (raw, unparsed
     // dates) — mirrors dealsStore.receiveConverted's role for Lead→Deal.
     receiveConverted (lead: Lead): Lead {

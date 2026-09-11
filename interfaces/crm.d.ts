@@ -363,6 +363,19 @@ interface LeadScoringCriterion {
   created_at: Date
 }
 
+// GET /leads/:id/score-breakdown (FR-CRM-007) — same total as Lead.score,
+// plus which active LeadScoringCriterion rows matched and contributed, so a
+// rep can see why a Lead scored what it did without needing Admin access to
+// /admin/lead-scoring-criteria (Admin-only). Recomputed live server-side,
+// always consistent with Lead.score even if criteria changed since the Lead
+// was last saved.
+interface LeadScoreBreakdown {
+  score: number
+  threshold: number
+  classification: LeadClassification
+  matched: { id: number, name: string, field: LeadScoringCriterionField, weight: number }[]
+}
+
 // An Admin-configurable workflow notification rule — GET/POST/PATCH/DELETE
 // /admin/notification-rules (FR-CRM-100/101/102). Each active rule watches one
 // entity_type for a stale/at-risk condition (an open Deal sitting in its stage,
