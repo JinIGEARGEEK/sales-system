@@ -1113,6 +1113,39 @@ Backend: `internal/models/notification_rule.go`, `internal/models/notification_l
 
 **Deep-linkable via `?tab=` (added 2026-09-09).** `activeTab` now seeds once from `route.query.tab` on mount (falling back to `stages` for a missing/unrecognized value, matched against a single `TAB_VALUES` source of truth `tabItems` also derives from), rather than always resetting to "Pipeline Stages" — a one-time seed only, same as this app's other query-param deep links elsewhere (e.g. Prospect's status filter); switching tabs afterward doesn't rewrite the URL. This backs a new Admin-only gear-icon shortcut, `components/Admin/PipelineConfigShortcut.vue` (`tab`/`tooltip` props, gated by `hasRole('Admin')`, matching this page's own `usePageAccess('Admin')` gate since both read the same `effectiveRole` getter), shown in the header of `pages/crm/deals/index.vue` (`?tab=stages`) and `pages/crm/prospects/index.vue` (`?tab=prospects`) — a shortcut to the stage-config screen from the page whose Kanban lanes it configures, instead of a separate trip through the Admin nav menu.
 
+### 8.7e External API keys & `/open/*` integration routes (added 2026-09-10/11)
+
+A second, parallel auth mechanism to the staff Bearer-JWT login flow (§2), for server-to-server/external integrations that have no user to log in as. Backend-only work landed first (2026-09-10); the Admin-facing management UI (below) was the last piece, closing the gap.
+
+```ts
+interface APIKey {
+  id: number
+  name: string
+  key_prefix: string     // e.g. "sk_live_ab12" — enough to tell keys apart; the raw secret is never stored/returned again after Create
+  owner_user_id: number  // the key acts AS this User — created_by/updated_by on every write it makes are this user's id, and it can do anything their role can do
+  is_active: boolean
+  last_used_at: string | null
+  created_by?: number | null
+  revoked_at?: string | null
+  revoked_by?: number | null
+  created_at: string
+}
+```
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin/api-keys` | Admin | Paginated list, newest first. Never includes the raw secret — only `key_prefix`. |
+| `POST` | `/admin/api-keys` | Admin | Body: `{name, owner_user_id}` — `owner_user_id` must reference an existing, active User (validated same as any FK, 422 if not). Response: `{data: {api_key: APIKey, key: string}}` — `key` is the **only time** the raw secret is ever returned; the frontend must show it to the Admin immediately (a one-time reveal modal, copy-to-clipboard, no dismiss without acknowledging) since it can't be fetched again afterward. Hashed (`utils.HashAPIKey`, SHA-256) before storage — same "never store the recoverable secret" principle as `User.PasswordHash`. |
+| `POST` | `/admin/api-keys/:id/revoke` | Admin | Soft-revoke (`is_active: false`, stamps `revoked_at`/`revoked_by`) rather than deleting the row, so the audit trail (who created it, who revoked it, when) survives — same convention as every other soft-delete/deactivate resource in this app. Immediately invalidates `middleware.RequireAPIKey`'s cache for that key's hash, so a revoked key stops working within the request, not just after its ~30s cache TTL expires. |
+
+**`/open/*` — what a key can actually call.** Rate-limited per key (300 req/min, keyed on the `X-API-Key` header) so one runaway/misconfigured integration can't exhaust capacity shared with the staff-facing API or other keys. Currently exposes:
+- `GET`/`POST /open/companies`, `GET`/`PUT /open/companies/:id`
+- `GET`/`POST /open/contacts`, `GET`/`PUT /open/contacts/:id`
+
+Every call authenticates via `X-API-Key: <raw key>` (checked against the stored hash) instead of `Authorization: Bearer <jwt>`; `middleware.RequireAPIKey` then populates the same `c.Locals` slots `RequireAuth` does from the key's `OwnerUserID`/role, so every handler behaves identically to a normal request from that owning user — no handler-level special-casing needed for "was this an API key or a login session."
+
+**Frontend (2026-09-11)**: `pages/admin/api-keys.vue` (new "API Keys" Admin nav item, gated `roles: ['Admin']` same as Users/Pipeline Config) — a list (Name/Key prefix/Acts As/Status/Last Used/Created/Revoke), `components/Admin/CreateApiKeyModal.vue` (Name + an Acts-As picker restricted to active Users, mirroring the backend's own `owner.IsActive` check), and `components/Admin/RevealApiKeyModal.vue` (the one-time reveal — `close`/`dismissible` both `false`, forcing an explicit "Done" click after copying). `stores/apiKeys.ts` / `interfaces/admin.d.ts`'s `APIKey`.
+
 ### 8.8 CSV export (`FR-CRM-083`)
 
 | Method | Path | Auth | Description |
