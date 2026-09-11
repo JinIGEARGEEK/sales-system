@@ -15,13 +15,16 @@
 
       <UCard :ui="GLASS_PANEL_UI">
         <TableData
+          v-model:page="page"
+          server-paginated
           :columns="columns"
           :rows="displayKeys"
-          :total="displayKeys.length"
-          :total-page="1"
-          :per-page="displayKeys.length || 1"
-          :page="1"
+          :total="total"
+          :total-page="totalPage"
+          :per-page="perPage"
           :loading="loading"
+          @change-page="onChangePage"
+          @change-per-page="onChangePerPage"
           @revoke="requestRevoke"
         />
       </UCard>
@@ -64,25 +67,26 @@ useHead({ title: t('admin.apiKeys.index.pageTitle') })
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const { dateFormat, toBadge } = useFormatter()
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const apiKeysStore = useApiKeysStore()
 const usersStore = useUsersStore()
 
-const loading = ref(false)
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<APIKey>(params => apiKeysStore.fetchList(params), () => ({}))
 
-guardMounted(async () => {
-  loading.value = true
-  try {
-    await Promise.all([
-      apiKeysStore.fetchAll(),
-      usersStore.items.length === 0 ? usersStore.fetchAll() : Promise.resolve(),
-    ])
-  } catch (err) {
-    notifyApiError(err)
-  } finally {
-    loading.value = false
-  }
+guardMounted(() => {
+  fetch()
+  if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
 // A key can act as any active staff User (not just Sales roles) — mirrors
@@ -92,20 +96,20 @@ const ownerOptions = computed<Select[]>(() => usersStore.items
   .filter(u => u.is_active)
   .map(u => ({ label: `${u.first_name} ${u.last_name}`, value: String(u.id) })))
 
-const ownerName = (ownerId: number) => {
-  const owner = usersStore.items.find(u => u.id === ownerId)
-  return owner ? `${owner.first_name} ${owner.last_name}` : '-'
-}
+// A Map, not a per-row `.find()` — this page's own row count is small, but
+// there's no reason to rescan the full Users array once per row on every
+// recompute when a single id -> name lookup built once does the same job.
+const ownerNameById = computed(() => new Map(usersStore.items.map(u => [u.id, `${u.first_name} ${u.last_name}`])))
 
-const displayKeys = computed(() => apiKeysStore.items.map(key => ({
+const displayKeys = computed(() => rows.value.map(key => ({
   ...key,
-  ownerName: ownerName(key.owner_user_id),
+  ownerName: ownerNameById.value.get(key.owner_user_id) ?? '-',
   keyPrefixDisplay: `${key.key_prefix}···`,
   statusBadge: key.is_active
     ? toBadge(t('admin.apiKeys.index.statusActive'), 'success')
     : toBadge(t('admin.apiKeys.index.statusRevoked')),
-  lastUsedDisplay: key.last_used_at ? dateFormat(key.last_used_at.toISOString()) : t('admin.apiKeys.index.neverUsed'),
-  createdDate: dateFormat(key.created_at.toISOString()),
+  lastUsedDisplay: key.last_used_at ? dateFormat(key.last_used_at) : t('admin.apiKeys.index.neverUsed'),
+  createdDate: dateFormat(key.created_at),
 })))
 
 const columns: TableDataColumn[] = [
@@ -137,8 +141,9 @@ const onCreate = async (payload: { name: string, owner_user_id: number }) => {
     revealedKey.value = key
     revealModalOpen.value = true
     success(t('admin.apiKeys.index.createSuccess'))
+    await fetch()
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    notifyApiError(err)
   }
 }
 
@@ -149,8 +154,9 @@ const confirmRevoke = async () => {
     try {
       await apiKeysStore.revoke(revokeTarget.value.id)
       success(t('admin.apiKeys.index.revokeSuccess'))
+      await fetch()
     } catch (err) {
-      error(getApiErrorMessage(err, t('global.genericError')))
+      notifyApiError(err)
     }
   }
   closeRevoke()
