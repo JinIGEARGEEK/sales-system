@@ -197,9 +197,9 @@ const onViewDeal = (row: QuoteExpiringSoonRow) => navigateTo(`/crm/deals/${row.d
 
 const columns: TableDataColumn[] = [
   { label: t('crm.reports.quotesExpiringSoon.columns.dealTitle'), align: 'left', field: 'deal_title' },
-  { label: t('crm.reports.quotesExpiringSoon.columns.companyName'), align: 'left', field: 'company_name' },
-  { label: t('crm.reports.quotesExpiringSoon.columns.validityDate'), align: 'left', field: 'validityDateBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.reports.quotesExpiringSoon.columns.totalValue'), align: 'left', field: 'totalValueDisplay' },
+  { label: t('crm.reports.quotesExpiringSoon.columns.companyName'), align: 'left', field: 'company_name', width: 180 },
+  { label: t('crm.reports.quotesExpiringSoon.columns.validityDate'), align: 'left', field: 'validityDateBadge', type: TABLE_CARD_TYPE.STATUS, width: 160 },
+  { label: t('crm.reports.quotesExpiringSoon.columns.totalValue'), align: 'left', field: 'totalValueDisplay', width: 150 },
   {
     label: t('crm.reports.quotesExpiringSoon.columns.action'),
     align: 'left',

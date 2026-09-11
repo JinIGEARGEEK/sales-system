@@ -158,10 +158,10 @@ const onViewDeal = (row: OutstandingBalanceRow) => navigateTo(`/crm/deals/${row.
 
 const columns: TableDataColumn[] = [
   { label: t('crm.reports.outstandingBalance.columns.dealTitle'), align: 'left', field: 'deal_title' },
-  { label: t('crm.reports.outstandingBalance.columns.companyName'), align: 'left', field: 'company_name' },
-  { label: t('crm.reports.outstandingBalance.columns.dealValue'), align: 'left', field: 'dealValueDisplay' },
-  { label: t('crm.reports.outstandingBalance.columns.paidAmount'), align: 'left', field: 'paidAmountDisplay' },
-  { label: t('crm.reports.outstandingBalance.columns.outstandingAmount'), align: 'left', field: 'outstandingAmountDisplay' },
+  { label: t('crm.reports.outstandingBalance.columns.companyName'), align: 'left', field: 'company_name', width: 180 },
+  { label: t('crm.reports.outstandingBalance.columns.dealValue'), align: 'left', field: 'dealValueDisplay', width: 150 },
+  { label: t('crm.reports.outstandingBalance.columns.paidAmount'), align: 'left', field: 'paidAmountDisplay', width: 150 },
+  { label: t('crm.reports.outstandingBalance.columns.outstandingAmount'), align: 'left', field: 'outstandingAmountDisplay', width: 170 },
   {
     label: t('crm.reports.outstandingBalance.columns.action'),
     align: 'left',
