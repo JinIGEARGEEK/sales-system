@@ -6,6 +6,7 @@ import adminProducts from './admin/products/th'
 import adminTrash from './admin/trash/th'
 import adminGuideline from './admin/guideline/th'
 import adminPipelineConfig from './admin/pipeline-config/th'
+import adminApiKeys from './admin/api-keys/th'
 import crmDashboard from './crm/dashboard/th'
 import crmLeads from './crm/leads/th'
 import crmProspects from './crm/prospects/th'
@@ -37,6 +38,7 @@ export default {
     trash: adminTrash,
     guideline: adminGuideline,
     pipelineConfig: adminPipelineConfig,
+    apiKeys: adminApiKeys,
   },
   crm: {
     dashboard: crmDashboard,

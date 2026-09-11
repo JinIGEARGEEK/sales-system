@@ -2,6 +2,7 @@ export default {
   nav: {
     adminActivities: 'กิจกรรมระบบ',
     customers: 'พนักงาน',
+    apiKeys: 'API Keys',
     pipelineConfig: 'ตั้งค่าระบบ CRM',
     salesDashboard: 'Dashboard',
     activities: 'กิจกรรม',
