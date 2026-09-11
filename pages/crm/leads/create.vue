@@ -44,7 +44,7 @@
             :placeholder="t('crm.leads.create.companyNamePlaceholder')"
             name="company_id"
           />
-          <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" rules="required" />
+          <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" />
           <InputText v-model="form.phone" :label="t('crm.leads.create.phone')" :placeholder="t('crm.leads.create.phonePlaceholder')" name="phone" />
           <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
           <InputSelect
