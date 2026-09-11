@@ -70,6 +70,8 @@ export default {
     scoreBreakdownTotal: 'รวม',
     scoreBreakdownThreshold: 'เกณฑ์ MQL: {threshold}',
     scoreBreakdownManualSql: 'Lead นี้ถูกทำเครื่องหมายพร้อมขายด้วยตนเอง — คะแนนไม่มีผลต่อการจัดประเภทนี้',
+    scoreBreakdownError: 'ไม่สามารถโหลดรายละเอียดการคำนวณคะแนนได้',
+    scoreBreakdownRetry: 'ลองอีกครั้ง',
     convertToDeal: 'แปลงเป็น Deal',
     confirmConvertToDealTitle: 'แปลงเป็น Deal?',
     confirmConvertToDealBody: 'ต้องการแปลง "{name}" เป็น Deal ใช่หรือไม่? ระบบจะพาไปยังฟอร์มสร้าง Deal ใหม่',
