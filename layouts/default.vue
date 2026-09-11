@@ -10,7 +10,39 @@
       <template #body>
         <nav class="flex flex-col gap-1 p-2">
           <template v-for="(menuItem, index) in menuList" :key="index">
+            <template v-if="isMenuGroup(menuItem)">
+              <button
+                type="button"
+                class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
+                :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isGroupChildActive(menuItem) }"
+                :aria-expanded="isGroupExpanded(menuItem)"
+                :aria-controls="`nav-group-${menuItem.key}`"
+                @click="toggleGroup(menuItem.key)"
+              >
+                <UIcon :name="menuItem.icon" class="size-5" />
+                <span class="min-w-0 flex-1 text-left">{{ menuItem.label }}</span>
+                <UIcon
+                  name="material-symbols:chevron-right"
+                  class="size-4 shrink-0 transition-transform"
+                  :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
+                />
+              </button>
+              <div v-if="isGroupExpanded(menuItem)" :id="`nav-group-${menuItem.key}`" class="flex flex-col gap-1 py-0.5 pl-4">
+                <NuxtLink
+                  v-for="child in menuItem.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
+                  :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(child.path) }"
+                  @click="drawer = false"
+                >
+                  <UIcon :name="child.icon" class="size-5 shrink-0" />
+                  <span>{{ child.label }}</span>
+                </NuxtLink>
+              </div>
+            </template>
             <NuxtLink
+              v-else
               :to="menuItem.path"
               class="flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
               :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(menuItem.path) }"
@@ -54,7 +86,38 @@
       <div class="relative z-10 flex-1 overflow-y-auto p-1.5">
         <nav class="flex flex-col gap-0.5">
           <template v-for="(menuItem, index) in menuList" :key="index">
+            <template v-if="isMenuGroup(menuItem)">
+              <button
+                type="button"
+                class="sidebar-nav-link flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
+                :class="{ 'is-active font-medium': isGroupChildActive(menuItem) }"
+                :aria-expanded="isGroupExpanded(menuItem)"
+                :aria-controls="`nav-group-desktop-${menuItem.key}`"
+                @click="toggleGroup(menuItem.key)"
+              >
+                <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
+                <span class="min-w-0 flex-1 truncate text-left">{{ menuItem.label }}</span>
+                <UIcon
+                  name="material-symbols:chevron-right"
+                  class="size-4 shrink-0 transition-transform"
+                  :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
+                />
+              </button>
+              <div v-if="isGroupExpanded(menuItem)" :id="`nav-group-desktop-${menuItem.key}`" class="flex flex-col gap-0.5 py-0.5 pl-4">
+                <NuxtLink
+                  v-for="child in menuItem.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
+                  :class="{ 'is-active font-medium': isActive(child.path) }"
+                >
+                  <UIcon :name="child.icon" class="size-5 shrink-0" />
+                  <span class="truncate">{{ child.label }}</span>
+                </NuxtLink>
+              </div>
+            </template>
             <NuxtLink
+              v-else
               :to="menuItem.path"
               class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
               :class="{ 'is-active font-medium': isActive(menuItem.path) }"
@@ -188,8 +251,24 @@ interface MenuItem {
   roles?: Role[]
 }
 
-const menuList = computed(() => {
-  const items: MenuItem[] = [
+// A collapsible group of related nav items (currently just "Settings" —
+// Pipeline Config/Staff/API Keys) — everything a plain MenuItem has except
+// `path` (a group header toggles, it doesn't navigate anywhere itself),
+// plus its own children and a stable `key` the collapsed/expanded state is
+// persisted under (useCollapsedNavGroups). Derived via Omit rather than
+// hand-repeating icon/label/separator/roles, so a future field added to
+// MenuItem doesn't need a matching manual edit here to reach MenuGroup too.
+type MenuGroup = Omit<MenuItem, 'path'> & {
+  key: string
+  children: MenuItem[]
+}
+
+type MenuEntry = MenuItem | MenuGroup
+
+const isMenuGroup = (entry: MenuEntry): entry is MenuGroup => 'children' in entry
+
+const menuList = computed<MenuEntry[]>(() => {
+  const items: MenuEntry[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
     // Prospects (§3.1a) — the pre-Lead marketing funnel, kept its own
@@ -206,15 +285,34 @@ const menuList = computed(() => {
     { icon: 'material-symbols:apartment-outline', label: t('layout.nav.companies'), path: '/crm/companies', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:contacts-outline', label: t('layout.nav.contacts'), path: '/crm/contacts', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:sell-outline', label: t('layout.nav.tags'), path: '/crm/tags', separator: true, roles: SALES_PIPELINE_ROLES },
-    { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false, roles: ['Admin'] },
-    { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false, roles: ['Admin'] },
-    { icon: 'material-symbols:key-outline', label: t('layout.nav.apiKeys'), path: '/admin/api-keys', separator: false, roles: ['Admin'] },
+    {
+      key: 'settings',
+      icon: 'material-symbols:settings-outline',
+      label: t('layout.nav.settingsGroup'),
+      separator: false,
+      roles: ['Admin'],
+      children: [
+        { icon: 'material-symbols:tune', label: t('layout.nav.pipelineConfig'), path: '/admin/pipeline-config', separator: false },
+        { icon: 'material-symbols:group-outline', label: t('layout.nav.customers'), path: '/admin/users', separator: false },
+        { icon: 'material-symbols:key-outline', label: t('layout.nav.apiKeys'), path: '/admin/api-keys', separator: false },
+      ],
+    },
     { icon: 'material-symbols:history', label: t('layout.nav.adminActivities'), path: '/admin/activity-log', separator: false, roles: ['Admin'] },
     { icon: 'material-symbols:delete-outline', label: t('layout.nav.trash'), path: '/admin/trash', separator: true, roles: ['Admin', 'Sales Manager'] },
     { icon: 'material-symbols:menu-book-outline', label: t('layout.nav.guideline'), path: '/admin/guideline', separator: false },
   ]
-  return items.filter(item => !item.roles || hasRole(...item.roles))
+  return items
+    .filter(item => !item.roles || hasRole(...item.roles))
+    .map(item => (isMenuGroup(item) ? { ...item, children: item.children.filter(child => !child.roles || hasRole(...child.roles)) } : item))
 })
+
+const { isCollapsed: isGroupCollapsed, toggle: toggleGroup } = useCollapsedNavGroups()
+// A group whose currently-active route lives inside it always renders
+// expanded, regardless of the persisted collapse flag — otherwise landing
+// directly on e.g. /admin/api-keys (a fresh load, a bookmark) would show no
+// nav item highlighted at all, with no visible indication of where you are.
+const isGroupChildActive = (group: MenuGroup) => group.children.some(child => isActive(child.path))
+const isGroupExpanded = (group: MenuGroup) => !isGroupCollapsed(group.key) || isGroupChildActive(group)
 
 const footerActions = computed(() => [
   { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
