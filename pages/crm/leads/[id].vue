@@ -12,55 +12,63 @@
             @click="goBack()"
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
-          <UBadge color="neutral" variant="subtle">{{ lead.status }}</UBadge>
-          <UBadge v-if="lead.classification === 'mql'" size="xs" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
-          <UBadge v-else-if="lead.classification === 'sql'" size="xs" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
-          <UBadge v-else size="xs" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
+          <UBadge size="sm" color="neutral" variant="subtle">{{ lead.status }}</UBadge>
 
-          <UPopover v-model:open="scoreBreakdownOpen" @update:open="onScoreBreakdownToggle">
-            <UButton
-              icon="material-symbols:info-outline"
-              variant="ghost"
-              color="neutral"
-              size="xs"
-              class="cursor-pointer p-0.5"
-              :aria-label="t('crm.leads.detail.scoreBreakdownTitle')"
-            />
-            <template #content>
-              <div class="w-72 p-3">
-                <p class="mb-2 text-sm font-medium">{{ t('crm.leads.detail.scoreBreakdownTitle') }}</p>
-                <div v-if="scoreBreakdownLoading" class="py-2 text-center text-sm text-(--color-gray)">{{ t('global.loading') }}</div>
-                <div v-else-if="scoreBreakdownError" class="flex flex-col items-start gap-2 py-1 text-sm text-(--color-gray)">
-                  <span>{{ t('crm.leads.detail.scoreBreakdownError') }}</span>
-                  <UButton size="xs" variant="outline" color="neutral" :label="t('crm.leads.detail.scoreBreakdownRetry')" @click="fetchScoreBreakdown" />
+          <!-- Score badge + its "how is this calculated" trigger grouped
+          tightly (own small gap, nested inside the row's wider gap-3) so
+          the info icon reads as an affordance on the score, not a fourth
+          unrelated header item — same size as the status badge above so
+          neither reads as more/less important than the other. -->
+          <div class="flex items-center gap-1">
+            <UBadge v-if="lead.classification === 'mql'" size="sm" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
+            <UBadge v-else-if="lead.classification === 'sql'" size="sm" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
+            <UBadge v-else size="sm" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
+
+            <UPopover v-model:open="scoreBreakdownOpen" @update:open="onScoreBreakdownToggle">
+              <UButton
+                icon="material-symbols:info-outline"
+                variant="soft"
+                color="neutral"
+                size="xs"
+                class="cursor-pointer rounded-full"
+                :aria-label="t('crm.leads.detail.scoreBreakdownTitle')"
+              />
+              <template #content>
+                <div class="w-72 p-3">
+                  <p class="mb-2 text-sm font-medium">{{ t('crm.leads.detail.scoreBreakdownTitle') }}</p>
+                  <div v-if="scoreBreakdownLoading" class="py-2 text-center text-sm text-(--color-gray)">{{ t('global.loading') }}</div>
+                  <div v-else-if="scoreBreakdownError" class="flex flex-col items-start gap-2 py-1 text-sm text-(--color-gray)">
+                    <span>{{ t('crm.leads.detail.scoreBreakdownError') }}</span>
+                    <UButton size="xs" variant="outline" color="neutral" :label="t('crm.leads.detail.scoreBreakdownRetry')" @click="fetchScoreBreakdown" />
+                  </div>
+                  <template v-else-if="scoreBreakdown">
+                    <div v-if="scoreBreakdown.matched.length === 0" class="text-sm text-(--color-gray)">
+                      {{ t('crm.leads.detail.scoreBreakdownNoMatches') }}
+                    </div>
+                    <ul v-else class="flex flex-col gap-1.5">
+                      <li v-for="criterion in scoreBreakdown.matched" :key="criterion.id" class="flex items-center justify-between gap-3 text-sm">
+                        <span class="truncate">{{ criterion.name }}</span>
+                        <!-- Weight is validated >= 1 only client-side (the Admin
+                        config form) — the backend accepts any int, so a signed
+                        format (rather than always assuming/prefixing "+")
+                        still reads correctly for a 0 or negative weight, should
+                        one ever exist. -->
+                        <span class="shrink-0 font-medium text-(--color-success-toast)">{{ formatSignedWeight(criterion.weight) }}</span>
+                      </li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
+                      <span>{{ t('crm.leads.detail.scoreBreakdownTotal') }}</span>
+                      <span>{{ scoreBreakdown.score }}</span>
+                    </div>
+                    <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.leads.detail.scoreBreakdownThreshold', { threshold: scoreBreakdown.threshold }) }}</p>
+                    <p v-if="scoreBreakdown.classification === 'sql'" class="mt-2 text-xs text-(--color-gray)">
+                      {{ t('crm.leads.detail.scoreBreakdownManualSql') }}
+                    </p>
+                  </template>
                 </div>
-                <template v-else-if="scoreBreakdown">
-                  <div v-if="scoreBreakdown.matched.length === 0" class="text-sm text-(--color-gray)">
-                    {{ t('crm.leads.detail.scoreBreakdownNoMatches') }}
-                  </div>
-                  <ul v-else class="flex flex-col gap-1.5">
-                    <li v-for="criterion in scoreBreakdown.matched" :key="criterion.id" class="flex items-center justify-between gap-3 text-sm">
-                      <span class="truncate">{{ criterion.name }}</span>
-                      <!-- Weight is validated >= 1 only client-side (the Admin
-                      config form) — the backend accepts any int, so a signed
-                      format (rather than always assuming/prefixing "+")
-                      still reads correctly for a 0 or negative weight, should
-                      one ever exist. -->
-                      <span class="shrink-0 font-medium text-(--color-success-toast)">{{ formatSignedWeight(criterion.weight) }}</span>
-                    </li>
-                  </ul>
-                  <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
-                    <span>{{ t('crm.leads.detail.scoreBreakdownTotal') }}</span>
-                    <span>{{ scoreBreakdown.score }}</span>
-                  </div>
-                  <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.leads.detail.scoreBreakdownThreshold', { threshold: scoreBreakdown.threshold }) }}</p>
-                  <p v-if="scoreBreakdown.classification === 'sql'" class="mt-2 text-xs text-(--color-gray)">
-                    {{ t('crm.leads.detail.scoreBreakdownManualSql') }}
-                  </p>
-                </template>
-              </div>
-            </template>
-          </UPopover>
+              </template>
+            </UPopover>
+          </div>
         </div>
         <div class="flex flex-wrap gap-2">
           <!-- FR-CRM-007's manual "sales-ready" override — the only classification
