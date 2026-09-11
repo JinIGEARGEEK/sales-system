@@ -3,7 +3,7 @@ export default {
     adminActivities: 'กิจกรรมระบบ',
     customers: 'พนักงาน',
     apiKeys: 'API Keys',
-    settingsGroup: 'แอดมิน',
+    settingsGroup: 'ตั้งค่า',
     pipelineConfig: 'ตั้งค่าระบบ CRM',
     salesDashboard: 'Dashboard',
     activities: 'กิจกรรม',

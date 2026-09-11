@@ -3,7 +3,7 @@ export default {
     adminActivities: 'Activity Log',
     customers: 'Staff',
     apiKeys: 'API Keys',
-    settingsGroup: 'Admin',
+    settingsGroup: 'Settings',
     pipelineConfig: 'CRM Settings',
     salesDashboard: 'Dashboard',
     activities: 'Activities',

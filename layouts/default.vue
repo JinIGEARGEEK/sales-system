@@ -14,6 +14,9 @@
               <button
                 type="button"
                 class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors hover:bg-(--color-light-gray-1)"
+                :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isGroupChildActive(menuItem) }"
+                :aria-expanded="isGroupExpanded(menuItem)"
+                :aria-controls="`nav-group-${menuItem.key}`"
                 @click="toggleGroup(menuItem.key)"
               >
                 <UIcon :name="menuItem.icon" class="size-5" />
@@ -24,7 +27,7 @@
                   :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
                 />
               </button>
-              <div v-if="isGroupExpanded(menuItem)" class="flex flex-col gap-1 py-0.5 pl-4">
+              <div v-if="isGroupExpanded(menuItem)" :id="`nav-group-${menuItem.key}`" class="flex flex-col gap-1 py-0.5 pl-4">
                 <NuxtLink
                   v-for="child in menuItem.children"
                   :key="child.path"
@@ -33,7 +36,7 @@
                   :class="{ 'bg-(--color-primary-bg) text-(--color-primary)': isActive(child.path) }"
                   @click="drawer = false"
                 >
-                  <UIcon :name="child.icon" class="size-4" />
+                  <UIcon :name="child.icon" class="size-5 shrink-0" />
                   <span>{{ child.label }}</span>
                 </NuxtLink>
               </div>
@@ -87,6 +90,9 @@
               <button
                 type="button"
                 class="sidebar-nav-link flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
+                :class="{ 'is-active font-medium': isGroupChildActive(menuItem) }"
+                :aria-expanded="isGroupExpanded(menuItem)"
+                :aria-controls="`nav-group-desktop-${menuItem.key}`"
                 @click="toggleGroup(menuItem.key)"
               >
                 <UIcon :name="menuItem.icon" class="size-5 shrink-0" />
@@ -97,7 +103,7 @@
                   :class="{ 'rotate-90': isGroupExpanded(menuItem) }"
                 />
               </button>
-              <div v-if="isGroupExpanded(menuItem)" class="flex flex-col gap-0.5 py-0.5 pl-4">
+              <div v-if="isGroupExpanded(menuItem)" :id="`nav-group-desktop-${menuItem.key}`" class="flex flex-col gap-0.5 py-0.5 pl-4">
                 <NuxtLink
                   v-for="child in menuItem.children"
                   :key="child.path"
@@ -105,7 +111,7 @@
                   class="sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-1.5 text-xs text-white"
                   :class="{ 'is-active font-medium': isActive(child.path) }"
                 >
-                  <UIcon :name="child.icon" class="size-4 shrink-0" />
+                  <UIcon :name="child.icon" class="size-5 shrink-0" />
                   <span class="truncate">{{ child.label }}</span>
                 </NuxtLink>
               </div>
@@ -246,16 +252,14 @@ interface MenuItem {
 }
 
 // A collapsible group of related nav items (currently just "Settings" —
-// Pipeline Config/Staff/API Keys) — same `roles`/`separator` shape as a
-// plain MenuItem, plus its own children and a stable `key` the collapsed/
-// expanded state is persisted under. `path` is intentionally absent: a
-// group header toggles, it doesn't navigate anywhere itself.
-interface MenuGroup {
+// Pipeline Config/Staff/API Keys) — everything a plain MenuItem has except
+// `path` (a group header toggles, it doesn't navigate anywhere itself),
+// plus its own children and a stable `key` the collapsed/expanded state is
+// persisted under (useCollapsedNavGroups). Derived via Omit rather than
+// hand-repeating icon/label/separator/roles, so a future field added to
+// MenuItem doesn't need a matching manual edit here to reach MenuGroup too.
+type MenuGroup = Omit<MenuItem, 'path'> & {
   key: string
-  icon: string
-  label: string
-  separator: boolean
-  roles?: Role[]
   children: MenuItem[]
 }
 
@@ -302,33 +306,13 @@ const menuList = computed<MenuEntry[]>(() => {
     .map(item => (isMenuGroup(item) ? { ...item, children: item.children.filter(child => !child.roles || hasRole(...child.roles)) } : item))
 })
 
-// Collapsed-group state is a per-viewer UI preference, not shared data —
-// localStorage (same client-only-guard convention as useAuth.ts), not a
-// store/backend field. Keyed by MenuGroup.key so a future second group
-// doesn't fight this one over a single flag. Missing/unparsed storage just
-// means "nothing collapsed yet" (every group starts expanded).
-const COLLAPSED_GROUPS_STORAGE_KEY = 'sidebar-collapsed-groups'
-const collapsedGroups = ref<Set<string>>(new Set())
-if (import.meta.client) {
-  const stored = localStorage.getItem(COLLAPSED_GROUPS_STORAGE_KEY)
-  if (stored) collapsedGroups.value = new Set(JSON.parse(stored) as string[])
-}
-const toggleGroup = (key: string) => {
-  if (collapsedGroups.value.has(key)) collapsedGroups.value.delete(key)
-  else collapsedGroups.value.add(key)
-  // Reassign (not just mutate) so the Set change is visible to Vue's
-  // reactivity — mutating a reactive Set's contents in place still triggers
-  // dependents here since Vue 3 wraps Set/Map mutators, but reassigning is
-  // the clearer signal or a future refactor away from a raw ref<Set> won't
-  // silently stop reacting.
-  collapsedGroups.value = new Set(collapsedGroups.value)
-  if (import.meta.client) localStorage.setItem(COLLAPSED_GROUPS_STORAGE_KEY, JSON.stringify([...collapsedGroups.value]))
-}
+const { isCollapsed: isGroupCollapsed, toggle: toggleGroup } = useCollapsedNavGroups()
 // A group whose currently-active route lives inside it always renders
 // expanded, regardless of the persisted collapse flag — otherwise landing
 // directly on e.g. /admin/api-keys (a fresh load, a bookmark) would show no
 // nav item highlighted at all, with no visible indication of where you are.
-const isGroupExpanded = (group: MenuGroup) => !collapsedGroups.value.has(group.key) || group.children.some(child => isActive(child.path))
+const isGroupChildActive = (group: MenuGroup) => group.children.some(child => isActive(child.path))
+const isGroupExpanded = (group: MenuGroup) => !isGroupCollapsed(group.key) || isGroupChildActive(group)
 
 const footerActions = computed(() => [
   { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
