@@ -103,7 +103,7 @@
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.name" :label="t('crm.leads.detail.fullName')" name="name" rules="required" />
             <InputCompanySelect v-model="form.company_id" :label="t('crm.leads.detail.companyName')" name="company_id" />
-            <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" rules="required" />
+            <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
             <InputSelect v-model="form.source" :options="sourceOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
             <InputSelect
