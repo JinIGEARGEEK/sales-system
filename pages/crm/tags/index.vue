@@ -127,10 +127,10 @@ const displayTags = computed(() => rows.value.map(tag => ({
 
 const columns: TableDataColumn[] = [
   { label: t('crm.tags.index.columns.name'), align: 'left', field: 'name', isSort: true },
-  { label: t('crm.tags.index.columns.category'), align: 'left', field: 'categoryBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.tags.index.columns.category'), align: 'left', field: 'categoryBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
   { label: t('crm.tags.index.columns.description'), align: 'left', field: 'description' },
-  { label: t('crm.tags.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.tags.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
+  { label: t('crm.tags.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
+  { label: t('crm.tags.index.columns.created'), align: 'left', field: 'createdDate', isSort: true, width: 130 },
   {
     label: t('crm.tags.index.columns.action'),
     align: 'left',

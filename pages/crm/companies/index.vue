@@ -257,12 +257,12 @@ const openCampaignModal = (companies: Company[]) => openCampaignModalFor(compani
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.companies.index.columns.name'), align: 'left', field: 'name', isSort: true },
-  { label: t('crm.companies.index.columns.industry'), align: 'left', field: 'industry', isSort: true },
-  { label: t('crm.companies.index.columns.size'), align: 'left', field: 'size' },
-  { label: t('crm.companies.index.columns.tags'), align: 'left', field: 'tagsDisplay' },
-  { label: t('crm.companies.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.companies.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
-  { label: t('crm.companies.index.columns.lastContact'), align: 'left', field: 'lastContactBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.companies.index.columns.industry'), align: 'left', field: 'industry', isSort: true, width: 160 },
+  { label: t('crm.companies.index.columns.size'), align: 'left', field: 'size', width: 140 },
+  { label: t('crm.companies.index.columns.tags'), align: 'left', field: 'tagsDisplay', width: 160 },
+  { label: t('crm.companies.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
+  { label: t('crm.companies.index.columns.created'), align: 'left', field: 'createdDate', isSort: true, width: 130 },
+  { label: t('crm.companies.index.columns.lastContact'), align: 'left', field: 'lastContactBadge', type: TABLE_CARD_TYPE.STATUS, width: 160 },
   {
     label: t('crm.companies.index.columns.action'),
     align: 'left',

@@ -321,11 +321,11 @@ const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelecti
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('crm.prospects.index.columns.name'), align: 'left', field: 'name', isSort: true },
-  { label: t('crm.prospects.index.columns.company'), align: 'left', field: 'companyName', isSort: true },
-  { label: t('crm.prospects.index.columns.source'), align: 'left', field: 'source' },
-  { label: t('crm.prospects.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.prospects.index.columns.assignedTo'), align: 'left', field: 'assignedToName' },
-  { label: t('crm.prospects.index.columns.created'), align: 'left', field: 'createdDate', isSort: true },
+  { label: t('crm.prospects.index.columns.company'), align: 'left', field: 'companyName', isSort: true, width: 180 },
+  { label: t('crm.prospects.index.columns.source'), align: 'left', field: 'source', width: 140 },
+  { label: t('crm.prospects.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
+  { label: t('crm.prospects.index.columns.assignedTo'), align: 'left', field: 'assignedToName', width: 160 },
+  { label: t('crm.prospects.index.columns.created'), align: 'left', field: 'createdDate', isSort: true, width: 130 },
   {
     label: t('crm.prospects.index.columns.action'),
     align: 'left',

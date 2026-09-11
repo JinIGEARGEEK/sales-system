@@ -172,9 +172,9 @@ const rows = computed(() => {
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)
 
 const columns: TableDataColumn[] = [
-  { label: t('crm.reports.customerProductStatus.columns.companyName'), align: 'left', field: 'company_name' },
-  { label: t('crm.reports.customerProductStatus.columns.product'), align: 'left', field: 'productName' },
-  { label: t('crm.reports.customerProductStatus.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.reports.customerProductStatus.columns.startDate'), align: 'left', field: 'startDateDisplay' },
+  { label: t('crm.reports.customerProductStatus.columns.companyName'), align: 'left', field: 'company_name', width: 200 },
+  { label: t('crm.reports.customerProductStatus.columns.product'), align: 'left', field: 'productName', width: 200 },
+  { label: t('crm.reports.customerProductStatus.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
+  { label: t('crm.reports.customerProductStatus.columns.startDate'), align: 'left', field: 'startDateDisplay', width: 150 },
 ]
 </script>

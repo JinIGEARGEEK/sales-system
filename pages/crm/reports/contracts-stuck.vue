@@ -178,10 +178,10 @@ const onViewDeal = (row: ContractStuckRow) => navigateTo(`/crm/deals/${row.deal_
 
 const columns: TableDataColumn[] = [
   { label: t('crm.reports.contractsStuck.columns.dealTitle'), align: 'left', field: 'deal_title' },
-  { label: t('crm.reports.contractsStuck.columns.companyName'), align: 'left', field: 'company_name' },
-  { label: t('crm.reports.contractsStuck.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
-  { label: t('crm.reports.contractsStuck.columns.assignedTo'), align: 'left', field: 'assignedToName' },
-  { label: t('crm.reports.contractsStuck.columns.daysInStatus'), align: 'left', field: 'daysInStatusBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.reports.contractsStuck.columns.companyName'), align: 'left', field: 'company_name', width: 180 },
+  { label: t('crm.reports.contractsStuck.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 150 },
+  { label: t('crm.reports.contractsStuck.columns.assignedTo'), align: 'left', field: 'assignedToName', width: 160 },
+  { label: t('crm.reports.contractsStuck.columns.daysInStatus'), align: 'left', field: 'daysInStatusBadge', type: TABLE_CARD_TYPE.STATUS, width: 150 },
   {
     label: t('crm.reports.contractsStuck.columns.action'),
     align: 'left',

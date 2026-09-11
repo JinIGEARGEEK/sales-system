@@ -187,12 +187,12 @@ const onViewDeal = (row: StalledDealRow) => navigateTo(`/crm/deals/${row.deal_id
 
 const columns: TableDataColumn[] = [
   { label: t('crm.reports.stalledDeals.columns.title'), align: 'left', field: 'title' },
-  { label: t('crm.reports.stalledDeals.columns.companyName'), align: 'left', field: 'company_name' },
-  { label: t('crm.reports.stalledDeals.columns.stage'), align: 'left', field: 'stage' },
-  { label: t('crm.reports.stalledDeals.columns.value'), align: 'left', field: 'valueDisplay' },
-  { label: t('crm.reports.stalledDeals.columns.assignedTo'), align: 'left', field: 'assignedToName' },
-  { label: t('crm.reports.stalledDeals.columns.lastActivity'), align: 'left', field: 'lastActivityDisplay' },
-  { label: t('crm.reports.stalledDeals.columns.daysStalled'), align: 'left', field: 'daysStalledBadge', type: TABLE_CARD_TYPE.STATUS },
+  { label: t('crm.reports.stalledDeals.columns.companyName'), align: 'left', field: 'company_name', width: 170 },
+  { label: t('crm.reports.stalledDeals.columns.stage'), align: 'left', field: 'stage', width: 140 },
+  { label: t('crm.reports.stalledDeals.columns.value'), align: 'left', field: 'valueDisplay', width: 130 },
+  { label: t('crm.reports.stalledDeals.columns.assignedTo'), align: 'left', field: 'assignedToName', width: 150 },
+  { label: t('crm.reports.stalledDeals.columns.lastActivity'), align: 'left', field: 'lastActivityDisplay', width: 150 },
+  { label: t('crm.reports.stalledDeals.columns.daysStalled'), align: 'left', field: 'daysStalledBadge', type: TABLE_CARD_TYPE.STATUS, width: 150 },
   {
     label: t('crm.reports.stalledDeals.columns.action'),
     align: 'left',
