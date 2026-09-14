@@ -22,7 +22,7 @@
         />
       </div>
 
-      <div class="mb-4 overflow-x-auto">
+      <div class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
       </div>
 

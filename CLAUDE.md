@@ -7,7 +7,7 @@ This is the **I GEAR GEEK Sales System** — a Nuxt 4 SPA (a CRM covering leads,
 ## Important: Read These First
 
 - **Business/UX specs** — before implementing a feature or changing behavior, check `biz_spec/`: `feature-spec.md`, `user-story.md`, `api-system-spec.md`, `design-system.md`, and `ux-ui-guidelines/` (layout, filter, modal, table conventions). These are the source of truth for business rules and UX patterns, and won't be evident from the code alone.
-- **Spec files** — before modifying any component or composable, check for a corresponding test in `tests/`, pattern `tests/<ComponentPath>/<ComponentName>.nuxt.spec.ts`. Coverage is currently sparse (most of the codebase has no spec yet), so absence of a test isn't a signal — but if one exists, read it first.
+- **Spec files** — before modifying any component or composable, check for a corresponding test in `tests/`, pattern `tests/<ComponentPath>/<ComponentName>.nuxt.spec.ts`. Coverage is currently sparse (most of the codebase has no spec yet), so absence of a test isn't a signal — but if one exists, read it first. When a store/composable calls `useNuxtApp().$api` directly (most do) and also goes through `useApiErrorNotifier`/`useNotify` (which resolves `useToast()` off the real `useNuxtApp()` internally), don't `mockNuxtImport('useNuxtApp', ...)` to stub `$api` — that replaces the whole auto-import and breaks `useToast()` too. Instead `vi.spyOn(useNuxtApp().$api, 'get'/'post'/...)` on the real, already-provided instance (see `tests/utils/useContractGate.nuxt.spec.ts`); plain `mockNuxtImport` is fine only for a store/composable with no toast/notify usage (see `tests/stores/deals.nuxt.spec.ts`). Mounting a component that renders a `vee-validate`-`<Field>`-wrapped input (`InputText`/`InputTextarea`/`InputSelect`/etc.) via `mountSuspended` can crash on Field's first (undefined-scope) slot render — a known, accepted limitation; see the documented `it.skip` in `tests/Input/Text.nuxt.spec.ts` and `tests/Crm/QuoteItemsEditor.nuxt.spec.ts` before spending time "fixing" it yourself. Reusable test-data builders (`makeDeal`, `makeContract`, the paginated-envelope `apiResponse` helper) live in `tests/factories.ts` — import from there instead of re-declaring a local copy once a shape is used by a second spec file; a builder used by only one spec stays local to it.
 
 ## Tech Stack
 
@@ -62,7 +62,10 @@ assets/styles/               # global.css (design tokens), typography.css
 app.vue                      # Root component (UApp wrapper)
 app.config.ts                 # Nuxt UI theme config
 nuxt.config.ts                 # Nuxt configuration
-tests/                       # Test files (*.nuxt.spec.ts) — currently sparse coverage
+tests/                       # Test files (*.nuxt.spec.ts), mirroring source paths
+                             # (tests/stores/, tests/utils/, tests/Crm/, tests/Input/),
+                             # plus factories.ts (shared test-data builders) — currently
+                             # sparse coverage
 ```
 
 ## Key Conventions
@@ -82,7 +85,7 @@ tests/                       # Test files (*.nuxt.spec.ts) — currently sparse 
 - Design tokens are CSS custom properties in `assets/styles/global.css`
 - Use CSS variables: `var(--color-primary)`, `var(--color-gray)`, etc.
 - Typography classes: `.title-01` through `.title-06`, `.body`, `.body-small`
-- Tailwind CSS v4 (CSS-based config, no `tailwind.config.js`)
+- Tailwind CSS v4 (CSS-based config, no `tailwind.config.js`); custom utilities go in `assets/styles/global.css` via `@utility`, e.g. `scrollbar-hide` (hides a scrollable element's native scrollbar cross-browser while keeping it scrollable — use on chrome-like scroll containers like a nav panel or a horizontally-scrolling tab strip, not on scrollable data like tables/lists where the scrollbar itself signals more content)
 
 ### State Management
 - Pinia stores in `stores/` are auto-imported

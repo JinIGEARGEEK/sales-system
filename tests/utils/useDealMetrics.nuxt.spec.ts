@@ -1,26 +1,5 @@
 import { describe, it, expect } from 'vitest'
-
-// useDealMetrics only reads status/value/expected_close_date/created_at — the
-// other Deal fields are irrelevant here, so this stubs just those.
-const makeDeal = (overrides: Partial<Deal> = {}): Deal => ({
-  id: 1,
-  company_id: 1,
-  contact_id: 1,
-  title: 'Deal',
-  value: 0,
-  stage: 'New',
-  status: 'open',
-  expected_close_date: null,
-  assigned_to: null,
-  channel: 'Referral',
-  business_unit: null,
-  business_unit_item: null,
-  lead_id: null,
-  probability: null,
-  lost_reason: null,
-  created_at: new Date('2026-01-01T00:00:00.000Z'),
-  ...overrides,
-} as Deal)
+import { makeDeal } from '../factories'
 
 describe('useDealMetrics', () => {
   it('buckets deals by status and sums open/won values', () => {

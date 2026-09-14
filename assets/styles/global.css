@@ -1,6 +1,26 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/*
+ * `scrollbar-hide` — hides the native scrollbar on a scrollable element
+ * across Firefox, IE/legacy Edge, and WebKit/Chromium, while leaving it
+ * scrollable (wheel/touch/keyboard scroll all keep working; only the
+ * browser-drawn scrollbar chrome is suppressed). For chrome-like scroll
+ * containers — a nav panel, a horizontally-scrolling tab strip — where a
+ * default scrollbar reads as visual clutter rather than useful affordance.
+ * Not meant for scrollable data (tables, long lists) where the scrollbar is
+ * itself a signal that more content exists — see usages of this utility for
+ * the split.
+ */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 * {
   font-family: "Prompt", sans-serif;
   font-weight: 300;

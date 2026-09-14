@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4 overflow-x-auto">
+  <div class="mb-4 overflow-x-auto scrollbar-hide">
     <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
   </div>
 </template>
