@@ -83,7 +83,7 @@
         <span class="text-lg font-medium">CRM System</span>
       </NuxtLink>
 
-      <div class="relative z-10 flex-1 overflow-y-auto p-1.5">
+      <div class="relative z-10 flex-1 overflow-y-auto p-1.5 scrollbar-hide">
         <nav class="flex flex-col gap-0.5">
           <template v-for="(menuItem, index) in menuList" :key="index">
             <template v-if="isMenuGroup(menuItem)">

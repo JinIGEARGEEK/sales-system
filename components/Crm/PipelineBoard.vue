@@ -2,7 +2,7 @@
   <!-- Desktop/tablet: drag-and-drop columns side by side. Native HTML5 drag
        has no touch equivalent, so this view is hidden below md and replaced
        with a stacked, tap-driven layout instead of being offered unusably. -->
-  <div class="hidden items-stretch gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
+  <div class="hidden items-stretch gap-4 overflow-x-auto pb-2 scrollbar-hide md:flex">
     <div
       v-for="column in columns"
       :key="column.value"
@@ -32,9 +32,12 @@
           v-for="item in grouped[column.value] || []"
           :key="`${item._type}-${item.id}`"
           draggable="true"
-          class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing"
+          role="button"
+          tabindex="0"
+          class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
           @dragstart="onDragStart(item)"
           @click="emit('select', item)"
+          @keydown.enter.space.prevent="emit('select', item)"
         >
           <slot name="card" :item="item" />
         </div>
@@ -91,7 +94,13 @@
           :key="`${item._type}-${item.id}`"
           class="flex flex-col gap-2 rounded-lg border border-(--color-card-border) bg-white p-3"
         >
-          <div @click="emit('select', item)">
+          <div
+            role="button"
+            tabindex="0"
+            class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+            @click="emit('select', item)"
+            @keydown.enter.space.prevent="emit('select', item)"
+          >
             <slot name="card" :item="item" />
           </div>
           <USelectMenu

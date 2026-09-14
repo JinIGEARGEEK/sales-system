@@ -3,33 +3,7 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xl font-black">{{ t('crm.deals.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
-        <!-- View switcher: one joined segmented control, not two standalone
-             buttons — kept visually distinct from the Export/Add actions so
-             it doesn't read as a third/fourth action in the row. -->
-        <div class="flex items-center gap-0.5 rounded-full bg-(--color-light-gray-1) p-1">
-          <UTooltip :text="t('crm.deals.index.viewKanban')">
-            <button
-              type="button"
-              class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'kanban' ? 'bg-(--color-primary) text-white shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
-              :aria-label="t('crm.deals.index.viewKanban')"
-              @click="viewMode = 'kanban'"
-            >
-              <UIcon name="material-symbols:view-kanban-outline" class="size-4" />
-            </button>
-          </UTooltip>
-          <UTooltip :text="t('crm.deals.index.viewList')">
-            <button
-              type="button"
-              class="flex size-7 cursor-pointer items-center justify-center rounded-full transition-colors"
-              :class="viewMode === 'list' ? 'bg-(--color-primary) text-white shadow-sm' : 'text-(--color-gray) hover:text-(--color-black)'"
-              :aria-label="t('crm.deals.index.viewList')"
-              @click="viewMode = 'list'"
-            >
-              <UIcon name="material-symbols:view-list" class="size-4" />
-            </button>
-          </UTooltip>
-        </div>
+        <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.deals.index.viewKanban')" :list-label="t('crm.deals.index.viewList')" />
 
         <div class="flex items-center gap-2 border-l border-(--color-light-gray-2) pl-3">
           <ButtonPrimary
