@@ -15,23 +15,6 @@ export const useRelatedRecordPicker = (form: { related_type: string, related_id:
   const contactsStore = useContactsStore()
   const prospectsStore = useProspectsStore()
 
-  function useAsyncRecordPicker<T extends { id: number }> (
-    fetchList: (params: { search?: string, per_page: number, sort: string }) => Promise<{ items: T[] }>,
-    fetchOne: (id: number) => Promise<T>,
-    labelOf: (item: T) => string,
-    sortField: string,
-  ) {
-    const search = async (term: string): Promise<Select[]> => {
-      const { items } = await fetchList({ search: term || undefined, per_page: 20, sort: sortField })
-      return items.map(item => ({ label: labelOf(item), value: item.id }))
-    }
-    const resolve = async (id: number): Promise<Select | null> => {
-      const item = await fetchOne(id)
-      return { label: labelOf(item), value: item.id }
-    }
-    return { search, resolve }
-  }
-
   const { search: searchDeals, resolve: resolveDeal } = useAsyncRecordPicker(dealsStore.fetchList, dealsStore.fetchOne, d => d.title, 'title')
   const { search: searchContacts, resolve: resolveContact } = useAsyncRecordPicker(contactsStore.fetchList, contactsStore.fetchOne, c => c.name, 'name')
   const { search: searchProspects, resolve: resolveProspect } = useAsyncRecordPicker(prospectsStore.fetchList, prospectsStore.fetchOne, p => p.name, 'name')

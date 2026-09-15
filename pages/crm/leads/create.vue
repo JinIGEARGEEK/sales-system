@@ -47,6 +47,11 @@
           <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" />
           <InputText v-model="form.phone" :label="t('crm.leads.create.phone')" :placeholder="t('crm.leads.create.phonePlaceholder')" name="phone" />
           <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
+          <CrmReferredByField
+            v-model:type="form.referred_by_type"
+            v-model:id="form.referred_by_id"
+            :source="form.source"
+          />
           <InputSelect
             v-model="form.status"
             :options="LEAD_STATUS_FORM_OPTIONS"
@@ -123,6 +128,8 @@ const form = reactive({
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',
   notes: '',
+  referred_by_type: '',
+  referred_by_id: '',
 })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -150,6 +157,7 @@ const onSubmit = guard(async () => {
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
+      ...toReferredByPayload(form),
       converted_deal_id: null,
       created_at: new Date(),
     })

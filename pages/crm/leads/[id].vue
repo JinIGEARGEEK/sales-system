@@ -114,6 +114,12 @@
             <InputText v-model="form.email" :label="t('crm.leads.detail.email')" name="email" />
             <InputText v-model="form.phone" :label="t('crm.leads.detail.phone')" name="phone" />
             <InputSelect v-model="form.source" :options="sourceOptions" :label="t('crm.leads.detail.source')" name="source" rules="required" />
+            <CrmReferredByField
+              v-model:type="form.referred_by_type"
+              v-model:id="form.referred_by_id"
+              :source="form.source"
+              :pause-clearing="hydrating"
+            />
             <InputSelect
               v-model="form.status"
               :options="LEAD_STATUS_FORM_OPTIONS"
@@ -346,17 +352,21 @@ const form = reactive({
   business_unit: (lead.value?.business_unit || '') as BusinessUnit | '',
   business_unit_item: lead.value?.business_unit_item || '',
   notes: lead.value?.notes || '',
+  referred_by_type: lead.value?.referred_by_type || '',
+  referred_by_id: lead.value?.referred_by_id ? String(lead.value.referred_by_id) : '',
 })
 
 // Lead loads asynchronously now (fetched on mount), so the form is (re)populated
-// once the record arrives instead of only at setup time. `hydrating` suppresses
-// the business_unit watcher below during this — otherwise setting
-// business_unit here would immediately wipe business_unit_item set a couple
-// lines later, same pattern as pages/crm/deals/[id]/index.vue.
-let hydrating = false
+// once the record arrives instead of only at setup time. `hydrating` (a ref,
+// so it can also be passed reactively as CrmReferredByField's pause-clearing
+// prop) suppresses the business_unit watcher below during this — otherwise
+// setting business_unit/referred_by_type here would immediately wipe
+// business_unit_item/referred_by_id set alongside them, same pattern as
+// pages/crm/deals/[id]/index.vue.
+const hydrating = ref(false)
 watch(lead, (value) => {
   if (!value) return
-  hydrating = true
+  hydrating.value = true
   form.name = value.name
   form.company_id = value.company_id ?? null
   form.email = value.email
@@ -367,14 +377,16 @@ watch(lead, (value) => {
   form.business_unit = value.business_unit || ''
   form.business_unit_item = value.business_unit_item || ''
   form.notes = value.notes
-  nextTick(() => { hydrating = false })
+  form.referred_by_type = value.referred_by_type || ''
+  form.referred_by_id = value.referred_by_id ? String(value.referred_by_id) : ''
+  nextTick(() => { hydrating.value = false })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   toRef(form, 'company_id'),
   toRef(form, 'business_unit_item'),
-  () => hydrating,
+  () => hydrating.value,
 )
 
 const { loading, guard } = useSubmitGuard()
@@ -393,6 +405,7 @@ const onSave = guard(async () => {
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
       notes: form.notes,
+      ...toReferredByPayload(form),
     })
     success(t('crm.leads.detail.updateSuccess'))
   } catch (err) {
@@ -418,6 +431,7 @@ const onMarkSql = async () => {
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
       notes: form.notes,
+      ...toReferredByPayload(form),
       classification: 'sql',
     })
     success(t('crm.leads.detail.markSqlSuccess'))
