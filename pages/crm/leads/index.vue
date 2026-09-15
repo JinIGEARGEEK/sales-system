@@ -18,9 +18,15 @@
       </div>
     </div>
 
+    <!-- Active/Converted is a view switch (which set of records you're
+    looking at), not another same-weight filter dimension alongside status —
+    given its own UTabs row, same convention as the Projects/Products
+    switcher (pages/crm/projects/index.vue), so it reads as visually
+    distinct from the status pill filter inside the card below. -->
+    <UTabs v-model="scopeFilter" :items="LEAD_SCOPE_TABS" class="mb-4" />
+
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3">
-        <CrmStatusPill v-model="scopeFilter" :options="LEAD_SCOPE_OPTIONS" />
         <!-- Lead status (New/Contacted/Qualified/Disqualified) only filters
         the Active scope — a converted Lead's status is frozen at conversion
         (see leadStatusColor's own note) so it's not a useful filter once
@@ -119,9 +125,12 @@ const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
 const { stageBadgeColor } = useDealStageColor()
 
-const LEAD_SCOPE_OPTIONS: Select[] = [
-  { label: t('crm.leads.index.scopeActive'), value: 'active' },
-  { label: t('crm.leads.index.scopeConverted'), value: 'converted' },
+// Icons give the two tabs a distinct at-a-glance identity (a person still
+// being worked vs. one that already became a Deal) beyond just label text —
+// TabsItem (not Select) since UTabs supports icon/slot fields Select doesn't.
+const LEAD_SCOPE_TABS = [
+  { label: t('crm.leads.index.scopeActive'), value: 'active', icon: 'material-symbols:person-search-outline' },
+  { label: t('crm.leads.index.scopeConverted'), value: 'converted', icon: 'material-symbols:handshake-outline' },
 ]
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.

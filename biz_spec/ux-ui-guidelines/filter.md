@@ -68,11 +68,12 @@ Filter ที่ไม่ใช่สถานะ (เช่น ประเภ�
 
 **เหตุผล:** เมื่อมี filter เพียงตัวเดียว การใช้ Popover เพิ่ม step โดยไม่จำเป็น
 
-### Scope Pill (แถวบนสุด แยกจาก "สถานะ") — added 2026-09-15
+### Scope Switch (แถวบนสุด แยกจาก "สถานะ") — added 2026-09-15, revised 2026-09-15
 
-ใช้เมื่อ record ในตารางมีสอง "โหมดการดู" ที่ไม่ใช่แค่ narrow ผลลัพธ์ แต่เปลี่ยนความหมายของ filter อื่นทั้งหมดข้างล่าง — เช่น หน้า Leads (`pages/crm/leads/index.vue`) แยก **"Active Leads"** กับ **"Converted"** ไว้เป็น pill แถวบนสุด (component เดิม `CrmStatusPill`) เหนือ pill "สถานะ" (New/Contacted/Qualified/Disqualified)
+ใช้เมื่อ record ในตารางมีสอง "โหมดการดู" ที่ไม่ใช่แค่ narrow ผลลัพธ์ แต่เปลี่ยนความหมายของ filter อื่นทั้งหมดข้างล่าง — เช่น หน้า Leads (`pages/crm/leads/index.vue`) แยก **"Active Leads"** กับ **"Converted"** ไว้เป็นแถวสวิตช์แยกต่างหาก เหนือ card ตัวกรองที่มี pill "สถานะ" (New/Contacted/Qualified/Disqualified) อยู่ข้างใน
 
-- วางเป็น pill แถวแรก เหนือ pill "สถานะ" เสมอ — ไม่ผสมกับ pill สถานะแถวเดียวกัน เพราะคนละมิติ (scope ของข้อมูล vs. สถานะภายใน scope นั้น)
+- **ใช้ `UTabs` แบบ page-level (นอก `UCard` ตัวกรอง) ไม่ใช่ `CrmStatusPill`** — เดิมทั้งสองแถวใช้ component เดียวกัน (`CrmStatusPill` ซ้อนกัน 2 แถว) ทำให้ดูเหมือน filter ประเภทเดียวกันซ้ำกัน แก้โดยแยกให้ scope ใช้ `UTabs` (convention เดียวกับตัวสลับ Projects/Products บน `pages/crm/projects/index.vue`) ส่วน pill "สถานะ" ยังอยู่ใน `CrmStatusPill` เหมือนเดิม — คนละ visual language ชัดเจนว่าคนละมิติ
+- ใส่ `icon` ให้แต่ละ tab (เช่น person-search / handshake) ช่วยให้สแกนด้วยตาได้เร็วขึ้นโดยไม่ต้องอ่าน label
 - เมื่อ scope เปลี่ยนไปเป็นโหมดที่ pill "สถานะ" เดิมใช้ไม่ได้อีกต่อไป (เช่น Lead ที่ convert แล้ว status จะ freeze ตายตัว ไม่ใช่ filter ที่มีประโยชน์อีก) ให้ **ซ่อน pill สถานะไปเลย** แทนที่จะปล่อยให้กดได้แต่ไม่มีผล
 - ไม่ต้อง reset ค่า filter ที่ซ่อนไว้ — เก็บค่าเดิมไว้เผื่อผู้ใช้กลับมาที่ scope เดิม
 
