@@ -51,7 +51,7 @@
         icon="material-symbols:campaign-outline"
         :icon-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconClass"
         :icon-bg-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconBgClass"
-        :to="`${linkBase}?source=${encodeURIComponent(row.source)}`"
+        :to="sourceLink(row.source)"
       >
         {{ row.conversion_rate.toFixed(1) }}%
         <template #hint>{{ convertedLabel }}: {{ row.converted }} / {{ row.total }}</template>
@@ -68,7 +68,7 @@
           :key="row.source"
           :label="row.source"
           :percent="Math.round(row.conversion_rate)"
-          :to="`${linkBase}?source=${encodeURIComponent(row.source)}`"
+          :to="sourceLink(row.source)"
         >
           <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ row.converted }} / {{ row.total }}</span>
           <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.conversion_rate.toFixed(1) }}%</span>
@@ -121,4 +121,6 @@ const sortedRows = computed(() => [...props.rows].sort((a, b) => b.total - a.tot
 const totalCount = computed(() => props.rows.reduce((sum, row) => sum + row.total, 0))
 const convertedCount = computed(() => props.rows.reduce((sum, row) => sum + row.converted, 0))
 const overallRate = computed(() => (totalCount.value > 0 ? (convertedCount.value / totalCount.value) * 100 : 0))
+
+const sourceLink = (source: string) => `${props.linkBase}?source=${encodeURIComponent(source)}`
 </script>
