@@ -47,31 +47,11 @@
           <InputText v-model="form.email" :label="t('crm.leads.create.email')" :placeholder="t('crm.leads.create.emailPlaceholder')" name="email" />
           <InputText v-model="form.phone" :label="t('crm.leads.create.phone')" :placeholder="t('crm.leads.create.phonePlaceholder')" name="phone" />
           <InputSelect v-model="form.source" :options="leadSourcesStore.activeOptions" :label="t('crm.leads.create.source')" :placeholder="t('crm.leads.create.sourcePlaceholder')" name="source" rules="required" />
-          <template v-if="form.source === 'Referral'">
-            <InputSelect
-              v-model="form.referred_by_type"
-              :options="REFERRAL_TYPE_OPTIONS"
-              :label="t('crm.leads.create.referredByTypeLabel')"
-              :placeholder="t('crm.leads.create.referredByTypePlaceholder')"
-              name="referred_by_type"
-            />
-            <InputCompanySelect
-              v-if="form.referred_by_type === 'company'"
-              v-model="referredById"
-              :label="t('crm.leads.create.referredByLabel')"
-              :placeholder="t('crm.leads.create.referredByPlaceholder')"
-              name="referred_by_id"
-            />
-            <InputAsyncSelect
-              v-else-if="form.referred_by_type === 'contact'"
-              v-model="referredById"
-              :search="searchContacts"
-              :resolve-selected="resolveContact"
-              :label="t('crm.leads.create.referredByLabel')"
-              :placeholder="t('crm.leads.create.referredByPlaceholder')"
-              name="referred_by_id"
-            />
-          </template>
+          <CrmReferredByField
+            v-model:type="form.referred_by_type"
+            v-model:id="form.referred_by_id"
+            :source="form.source"
+          />
           <InputSelect
             v-model="form.status"
             :options="LEAD_STATUS_FORM_OPTIONS"
@@ -152,24 +132,6 @@ const form = reactive({
   referred_by_id: '',
 })
 
-const REFERRAL_TYPE_OPTIONS: Select[] = [
-  { label: t('crm.leads.create.referredByTypeCompany'), value: 'company' },
-  { label: t('crm.leads.create.referredByTypeContact'), value: 'contact' },
-]
-
-const { searchContacts, resolveContact, referredById } = useReferralPicker(form)
-
-// The "Referred By" fields are only shown while source === 'Referral' (see
-// template) — clear them if the rep picks a referrer, then changes their
-// mind about the source, so a stale referrer can't silently persist against
-// a non-referral Lead.
-watch(() => form.source, (source) => {
-  if (source !== 'Referral') {
-    form.referred_by_type = ''
-    form.referred_by_id = ''
-  }
-})
-
 const businessUnitItemOptions = useBusinessUnitItemOptions(
   toRef(form, 'business_unit'),
   toRef(form, 'company_id'),
@@ -195,8 +157,7 @@ const onSubmit = guard(async () => {
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-      referred_by_type: (form.referred_by_type || null) as 'company' | 'contact' | null,
-      referred_by_id: form.referred_by_id ? Number(form.referred_by_id) : null,
+      ...toReferredByPayload(form),
       converted_deal_id: null,
       created_at: new Date(),
     })

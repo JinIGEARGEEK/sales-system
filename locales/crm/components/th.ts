@@ -40,6 +40,14 @@ export default {
     addProjectHint: 'สร้าง Project ใหม่',
     addProjectSuccess: 'สร้าง Project สำเร็จ',
   },
+  referredByField: {
+    typeLabel: 'ผู้แนะนำ',
+    typePlaceholder: 'บริษัทหรือผู้ติดต่อ',
+    typeCompany: 'บริษัท',
+    typeContact: 'ผู้ติดต่อ',
+    label: 'บริษัท/ผู้ติดต่อที่แนะนำ',
+    placeholder: 'ค้นหาที่มีอยู่แล้ว...',
+  },
   lastContact: {
     never: 'ยังไม่เคยติดต่อ',
     today: 'ติดต่อวันนี้',

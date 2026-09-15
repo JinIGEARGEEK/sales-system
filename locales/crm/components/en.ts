@@ -40,6 +40,14 @@ export default {
     addProjectHint: 'Create a new Project',
     addProjectSuccess: 'Project created successfully',
   },
+  referredByField: {
+    typeLabel: 'Referred By',
+    typePlaceholder: 'Company or Contact',
+    typeCompany: 'Company',
+    typeContact: 'Contact',
+    label: 'Referring Company/Contact',
+    placeholder: 'Search existing...',
+  },
   lastContact: {
     never: 'Never contacted',
     today: 'Contacted today',
