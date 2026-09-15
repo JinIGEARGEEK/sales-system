@@ -7,6 +7,9 @@ export default {
     allSources: 'All Sources',
     sourcePlaceholder: 'Source',
     assigneePlaceholder: 'Assigned To',
+    scopeActive: 'Active Leads',
+    scopeConverted: 'Converted',
+    dealOutcomeCaption: 'Deal {stage}',
     columns: {
       name: 'Name',
       company: 'Company',

@@ -20,7 +20,12 @@
 
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3">
-        <CrmStatusPill v-model="statusFilter" :options="LEAD_STATUS_OPTIONS" />
+        <CrmStatusPill v-model="scopeFilter" :options="LEAD_SCOPE_OPTIONS" />
+        <!-- Lead status (New/Contacted/Qualified/Disqualified) only filters
+        the Active scope — a converted Lead's status is frozen at conversion
+        (see leadStatusColor's own note) so it's not a useful filter once
+        you're looking at the Converted tab. -->
+        <CrmStatusPill v-if="scopeFilter === 'active'" v-model="statusFilter" :options="LEAD_STATUS_OPTIONS" />
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.leads.index.searchPlaceholder')" name="search" />
@@ -111,6 +116,13 @@ const leadsStore = useLeadsStore()
 const teamMembersStore = useTeamMembersStore()
 const leadSourcesStore = useLeadSourcesStore()
 const companiesStore = useCompaniesStore()
+const dealsStore = useDealsStore()
+const { stageBadgeColor } = useDealStageColor()
+
+const LEAD_SCOPE_OPTIONS: Select[] = [
+  { label: t('crm.leads.index.scopeActive'), value: 'active' },
+  { label: t('crm.leads.index.scopeConverted'), value: 'converted' },
+]
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
@@ -121,6 +133,7 @@ const canCreateCampaign = computed(() => hasRole(...TASK_ROLES))
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
 const search = useQuerySyncedRef('search', '', 400)
+const scopeFilter = useQuerySyncedRef('scope', 'active')
 const statusFilter = useQuerySyncedRef('status')
 const sourceFilter = useQuerySyncedRef('source')
 const assigneeFilter = useQuerySyncedRef('assigned_to')
@@ -143,9 +156,14 @@ const onSort = (field: string, direction: 'asc' | 'desc') => {
 
 const buildParams = () => ({
   search: search.value || undefined,
-  status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+  // The status pill is only shown (and only meaningful) on the Active
+  // scope — see the template — so ignore it once scoped to Converted rather
+  // than mutating statusFilter itself to keep the two in sync.
+  status: scopeFilter.value === 'active' && statusFilter.value !== 'all' ? statusFilter.value : undefined,
   source: sourceFilter.value !== 'all' ? sourceFilter.value : undefined,
   assigned_to: assigneeFilter.value !== 'all' ? assigneeFilter.value : undefined,
+  exclude_converted: scopeFilter.value === 'active' ? true : undefined,
+  only_converted: scopeFilter.value === 'converted' ? true : undefined,
   sort: sortField.value ? `${sortDir.value === 'desc' ? '-' : ''}${SORT_FIELD_MAP[sortField.value] || sortField.value}` : undefined,
 })
 
@@ -181,28 +199,41 @@ onMounted(() => {
 // correctly set — same class of bug already fixed for Contacts' own Company
 // column (pages/crm/contacts/index.vue). company_id is nullable here (unlike
 // Contact's), so skip rows with no Company at all rather than fetchOne(null).
+//
+// The linked Deal (for the Converted tab's outcome caption below) needs the
+// exact same fallback-fetch shape, so it's resolved in this same pass rather
+// than a second watcher re-walking the same rows — one id-set build per
+// store instead of an O(rows × store size) `.some()` scan per row.
 watch(rows, (visibleLeads) => {
+  const knownCompanyIds = new Set(companiesStore.items.map(c => c.id))
+  const knownDealIds = new Set(dealsStore.items.map(d => d.id))
   for (const lead of visibleLeads) {
-    if (lead.company_id && !companiesStore.items.some(c => c.id === lead.company_id)) {
+    if (lead.company_id && !knownCompanyIds.has(lead.company_id)) {
       companiesStore.fetchOne(lead.company_id).catch(notifyApiError)
+    }
+    if (lead.converted_deal_id && !knownDealIds.has(lead.converted_deal_id)) {
+      dealsStore.fetchOne(lead.converted_deal_id).catch(notifyApiError)
     }
   }
 })
 
 watch(search, () => refetchDebounced())
-watch([statusFilter, sourceFilter, assigneeFilter], () => refetchFromStart())
+watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFromStart())
 // Selection is scoped to the currently visible page — a page/filter/sort
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
-const displayRows = computed(() => rows.value.map(lead => ({
-  ...lead,
-  statusBadge: toBadge(lead.status, leadStatusColor(lead.status)),
-  classificationBadge: classificationBadge(lead),
-  createdDate: dateFormat(lead.created_at.toISOString()),
-  assignedToName: teamMembersStore.nameById(lead.assigned_to),
-  companyName: companiesStore.nameById(lead.company_id),
-})))
+const displayRows = computed(() => {
+  const dealsById = new Map(dealsStore.items.map(deal => [deal.id, deal]))
+  return rows.value.map(lead => ({
+    ...lead,
+    statusBadge: dealOutcomeBadge(lead, dealsById),
+    classificationBadge: classificationBadge(lead),
+    createdDate: dateFormat(lead.created_at.toISOString()),
+    assignedToName: teamMembersStore.nameById(lead.assigned_to),
+    companyName: companiesStore.nameById(lead.company_id),
+  }))
+})
 
 // Lead Scoring (FR-CRM-006/007) — this column's header ("Score") previously
 // showed only the MQL/SQL classification badge, never the numeric score
@@ -222,6 +253,23 @@ const leadStatusColor = (status: LeadStatus) => {
   if (status === 'Disqualified') return 'error'
   if (status === 'Contacted') return 'info'
   return 'neutral'
+}
+
+// The Lead's own status badge always stays as-is (frozen at conversion per
+// FR-CRM-004/020 — a converted Lead's status is never rewritten). A second,
+// visually subordinate caption line surfaces the linked Deal's own live
+// stage instead of conflating the two, reusing the exact same
+// stageBadgeColor already used by the Deal detail header/DealsTable/Kanban.
+const dealOutcomeBadge = (lead: Lead, dealsById: Map<number, Deal>) => {
+  const badge = toBadge(lead.status, leadStatusColor(lead.status))
+  if (!lead.converted_deal_id) return badge
+  const deal = dealsById.get(lead.converted_deal_id)
+  if (!deal) return badge
+  return {
+    ...badge,
+    caption: t('crm.leads.index.dealOutcomeCaption', { stage: deal.stage }),
+    captionColor: stageBadgeColor(deal.stage),
+  }
 }
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Lead>()

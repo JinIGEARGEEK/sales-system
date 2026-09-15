@@ -20,9 +20,21 @@
       />
       <span v-if="props.items.title" class="sr-only">{{ props.items.title }}</span>
     </span>
-    <UBadge v-else :color="props.items.color || 'neutral'" variant="subtle" size="sm">
-      {{ props.items.title }}
-    </UBadge>
+    <div v-else class="flex flex-col items-start gap-1">
+      <UBadge :color="props.items.color || 'neutral'" variant="subtle" size="sm">
+        {{ props.items.title }}
+      </UBadge>
+      <!-- Optional second line for a related record's own live status (e.g. a
+      converted Lead's linked Deal outcome) — kept visually subordinate to the
+      badge above it so it reads as context, not a second status of its own. -->
+      <span
+        v-if="props.items.caption"
+        class="static-body-xs"
+        :class="CAPTION_COLOR_CLASS[props.items.captionColor as keyof typeof CAPTION_COLOR_CLASS] || CAPTION_COLOR_CLASS.neutral"
+      >
+        {{ props.items.caption }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -39,6 +51,11 @@ const ICON_COLOR_CLASS = {
   info: 'text-(--color-info-toast)',
   neutral: 'text-(--color-gray)',
 }
+
+// Same palette as the icon variant above, just a darker neutral — a caption
+// is body text sitting on a light card background, where the icon's lighter
+// gray reads as too faint.
+const CAPTION_COLOR_CLASS = { ...ICON_COLOR_CLASS, neutral: 'text-(--color-dark-gray)' }
 
 const props = defineProps({
   items: {

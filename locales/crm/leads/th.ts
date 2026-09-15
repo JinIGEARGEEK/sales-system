@@ -7,6 +7,9 @@ export default {
     allSources: 'แหล่งที่มาทั้งหมด',
     sourcePlaceholder: 'แหล่งที่มา',
     assigneePlaceholder: 'ผู้รับผิดชอบ',
+    scopeActive: 'Lead ที่ยังดำเนินการ',
+    scopeConverted: 'แปลงเป็น Deal แล้ว',
+    dealOutcomeCaption: 'Deal {stage}',
     columns: {
       name: 'ชื่อ',
       company: 'บริษัท',
