@@ -143,7 +143,16 @@ export default {
       dealValue: 'Deal Value',
       paidAmount: 'Paid',
       outstandingAmount: 'Outstanding',
+      aging: 'Aging',
       action: 'Action',
+    },
+    // Aging is derived from a Deal's PaymentInstallment schedule, if one is
+    // defined — "none" for the (still common) case where it isn't, meaning
+    // this report row behaves exactly as it did before schedules existed.
+    aging: {
+      overdue: 'Overdue',
+      upcoming: 'Upcoming',
+      none: 'No schedule',
     },
   },
   quotesExpiringSoon: {

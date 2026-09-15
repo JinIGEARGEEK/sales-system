@@ -86,7 +86,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { priceFormatCompact, toBadge } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -145,11 +145,21 @@ const onExport = () => downloadCsvBlob('/reports/outstanding-balance/export', 'o
 
 const totalOutstanding = computed(() => results.value.reduce((sum, row) => sum + row.outstanding_amount, 0))
 
+// A Deal with no PaymentInstallment schedule defined gets aging: 'none' —
+// rendered as a plain neutral badge rather than hidden/blank, so the column
+// still reads consistently across every row.
+const agingBadge = (row: OutstandingBalanceRow) => {
+  if (row.aging === 'overdue') return toBadge(t('crm.reports.outstandingBalance.aging.overdue'), 'error')
+  if (row.aging === 'upcoming') return toBadge(t('crm.reports.outstandingBalance.aging.upcoming'), 'warning')
+  return toBadge(t('crm.reports.outstandingBalance.aging.none'), 'neutral')
+}
+
 const rows = computed(() => results.value.map(row => ({
   ...row,
   dealValueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.deal_value)}`,
   paidAmountDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.paid_amount)}`,
   outstandingAmountDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.outstanding_amount)}`,
+  agingBadge: agingBadge(row),
 })))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)
@@ -162,6 +172,7 @@ const columns: TableDataColumn[] = [
   { label: t('crm.reports.outstandingBalance.columns.dealValue'), align: 'left', field: 'dealValueDisplay', width: 150 },
   { label: t('crm.reports.outstandingBalance.columns.paidAmount'), align: 'left', field: 'paidAmountDisplay', width: 150 },
   { label: t('crm.reports.outstandingBalance.columns.outstandingAmount'), align: 'left', field: 'outstandingAmountDisplay', width: 170 },
+  { label: t('crm.reports.outstandingBalance.columns.aging'), align: 'left', field: 'agingBadge', type: TABLE_CARD_TYPE.STATUS, width: 130 },
   {
     label: t('crm.reports.outstandingBalance.columns.action'),
     align: 'left',

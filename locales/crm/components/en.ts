@@ -81,6 +81,14 @@ export default {
     cancel: 'Cancel',
     save: 'Save Payment',
   },
+  addPaymentInstallmentModal: {
+    title: 'Add Payment Installment',
+    amount: 'Amount (THB)',
+    dueDate: 'Due Date',
+    note: 'Note',
+    cancel: 'Cancel',
+    save: 'Save Installment',
+  },
   addProductModal: {
     title: 'Add Product',
     editTitle: 'Edit Product',

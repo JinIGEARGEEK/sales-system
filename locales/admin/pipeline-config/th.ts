@@ -251,6 +251,7 @@ export default {
       contract: 'Contract',
       prospect: 'Prospect',
       company: 'บริษัท',
+      paymentInstallment: 'งวดชำระเงิน',
     },
     recipientRoleOptions: {
       owner: 'เจ้าของ Deal เท่านั้น',

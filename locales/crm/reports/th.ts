@@ -143,7 +143,13 @@ export default {
       dealValue: 'มูลค่า Deal',
       paidAmount: 'ชำระแล้ว',
       outstandingAmount: 'ค้างชำระ',
+      aging: 'สถานะเวลา',
       action: 'การจัดการ',
+    },
+    aging: {
+      overdue: 'เกินกำหนด',
+      upcoming: 'ยังไม่ถึงกำหนด',
+      none: 'ไม่มีกำหนดการ',
     },
   },
   quotesExpiringSoon: {
