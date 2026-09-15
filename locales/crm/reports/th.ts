@@ -19,6 +19,13 @@ export default {
     allSalesReps: 'พนักงานขายทั้งหมด',
     clearFilters: 'ล้างตัวกรอง',
     noData: 'ไม่มี Lead ที่ตรงกับตัวกรองที่เลือก',
+    bySource: 'แยกตามแหล่งที่มา',
+    summary: {
+      totalLeads: 'Lead ทั้งหมด',
+      totalQualified: 'ผ่านคุณสมบัติ',
+      overallConversionRate: 'อัตราการแปลงโดยรวม',
+      overallConversionRateTooltip: 'ผ่านคุณสมบัติ ÷ Lead ทั้งหมด รวมทุกแหล่งที่มา',
+    },
     columns: {
       source: 'แหล่งที่มา',
       total: 'Lead ทั้งหมด',
@@ -37,6 +44,13 @@ export default {
     allAssignees: 'ทีมงานทั้งหมด',
     clearFilters: 'ล้างตัวกรอง',
     noData: 'ไม่มี Prospect ที่ตรงกับตัวกรองที่เลือก',
+    bySource: 'แยกตามแหล่งที่มา',
+    summary: {
+      totalProspects: 'Prospect ทั้งหมด',
+      totalConverted: 'แปลงเป็น Lead แล้ว',
+      overallConversionRate: 'อัตราการแปลงโดยรวม',
+      overallConversionRateTooltip: 'แปลงเป็น Lead แล้ว ÷ Prospect ทั้งหมด รวมทุกแหล่งที่มา',
+    },
     columns: {
       source: 'แหล่งที่มา',
       total: 'Prospect ทั้งหมด',

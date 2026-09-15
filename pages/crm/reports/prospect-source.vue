@@ -52,48 +52,18 @@
         </div>
       </UCard>
 
-      <UAlert
-        v-if="!loading && rows.length === 0"
-        class="mb-4"
-        color="warning"
-        variant="subtle"
-        icon="material-symbols:search-off-outline"
-        :title="t('crm.reports.prospectSource.noData')"
-        :ui="{ root: 'p-2', icon: 'size-4' }"
+      <CrmSourceBreakdownReport
+        :rows="rows"
+        :loading="loading"
+        :no-data-message="t('crm.reports.prospectSource.noData')"
+        link-base="/crm/prospects"
+        :total-label="t('crm.reports.prospectSource.summary.totalProspects')"
+        :converted-total-label="t('crm.reports.prospectSource.summary.totalConverted')"
+        :rate-label="t('crm.reports.prospectSource.summary.overallConversionRate')"
+        :rate-tooltip="t('crm.reports.prospectSource.summary.overallConversionRateTooltip')"
+        :converted-label="t('crm.reports.prospectSource.columns.converted')"
+        :breakdown-heading="t('crm.reports.prospectSource.bySource')"
       />
-
-      <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <CrmStatCard
-          v-for="(row, index) in rows"
-          :key="row.source"
-          :label="row.source"
-          icon="material-symbols:campaign-outline"
-          :icon-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconClass"
-          :icon-bg-class="(CHART_CATEGORICAL_COLORS[index] ?? CHART_FALLBACK_COLOR).iconBgClass"
-        >
-          {{ row.conversion_rate.toFixed(1) }}%
-          <template #hint>
-            {{ t('crm.reports.prospectSource.columns.converted') }}: {{ row.converted }} / {{ row.total }}
-          </template>
-        </CrmStatCard>
-      </div>
-
-      <UCard v-if="rows.length > 0" class="mt-4 ring-[var(--color-card-border)]">
-        <template #header>
-          <h3 class="text-lg font-medium">{{ t('crm.reports.prospectSource.heading') }}</h3>
-        </template>
-        <div class="flex flex-col gap-3">
-          <CrmMetricBar
-            v-for="row in rows"
-            :key="row.source"
-            :label="row.source"
-            :percent="Math.round(row.conversion_rate)"
-          >
-            <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ row.converted }} / {{ row.total }}</span>
-            <span class="min-w-14 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.conversion_rate.toFixed(1) }}%</span>
-          </CrmMetricBar>
-        </div>
-      </UCard>
     </AccessGate>
   </div>
 </template>
@@ -101,7 +71,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { PROSPECT_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI, CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
