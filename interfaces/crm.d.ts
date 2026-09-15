@@ -180,6 +180,11 @@ interface Lead {
   // it), same as channel/source already are.
   business_unit: BusinessUnit | null
   business_unit_item: string | null
+  // Which existing Company or Contact referred this Lead in — optional,
+  // both-or-neither (api-system-spec.md §3). Typically set alongside
+  // source: 'Referral', but not enforced to only that source server-side.
+  referred_by_type?: 'company' | 'contact' | null
+  referred_by_id?: number | null
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -195,7 +200,7 @@ interface Lead {
 // `classification` is the one deliberate exception: the backend explicitly
 // treats an omitted classification as "leave the current value alone", so
 // it's optional here to match.
-type LeadUpdatePayload = Required<Pick<Lead, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'notes'>> & { classification?: LeadClassification }
+type LeadUpdatePayload = Required<Pick<Lead, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'notes' | 'referred_by_type' | 'referred_by_id'>> & { classification?: LeadClassification }
 
 // The pre-Lead marketing funnel entity (§3.1a) — Marketing works a Prospect,
 // with an optional linked Company (same nullable-FK shape as Lead.company_id),

@@ -424,6 +424,8 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
         business_unit: lead.business_unit,
         business_unit_item: lead.business_unit_item,
         notes: lead.notes,
+        referred_by_type: lead.referred_by_type ?? null,
+        referred_by_id: lead.referred_by_id ?? null,
       })
       success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
     } catch (err) {
