@@ -15,7 +15,7 @@
           <p class="text-sm text-(--color-gray)">{{ t('crm.reports.prospectSource.subheading') }}</p>
         </div>
       </div>
-      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline :disabled="rows.length === 0" @click="onExport" />
     </div>
 
     <AccessGate :can-access="canViewReport" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
