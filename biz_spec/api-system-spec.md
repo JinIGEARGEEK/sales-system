@@ -693,6 +693,37 @@ interface Payment {
 | `POST` | `/deals/:dealId/payments` | 🟢 | Create — backs `components/Crm/AddPaymentModal.vue`. |
 | `DELETE` | `/payments/:id` | 🟢 | Delete. |
 
+### 7.5a Payment Installments (added 2026-09-15)
+
+A planned payment schedule, defined before money actually arrives — distinct from Payment above. No status field: every read derives paid/partial/overdue/upcoming via a **cumulative waterfall** allocation against the Deal's actual Payment total (`utils.ComputeInstallmentStatuses` — sorted by `due_date`, money applied to the earliest-due installment first; no explicit link between a specific Payment and a specific installment).
+
+```ts
+interface PaymentInstallment {
+  id: number
+  deal_id: number
+  amount: number
+  due_date: string
+  note: string
+}
+
+type PaymentInstallmentStatusValue = 'paid' | 'partial' | 'overdue' | 'upcoming'
+
+interface PaymentInstallmentStatus {
+  installment: PaymentInstallment
+  covered: number // how much of `installment.amount` has been paid, cumulatively
+  status: PaymentInstallmentStatusValue
+}
+```
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/deals/:dealId/payment-installments` | 🟢 | List a Deal's installments, each wrapped in its derived `PaymentInstallmentStatus`. Backs the "Payment Schedule" section on `pages/crm/deals/[id]/payments.vue`. |
+| `POST` | `/deals/:dealId/payment-installments` | 🟢 | Create. `amount` must be > 0, `due_date` is required. No validation against the Deal's value or existing installments — permissive, matching `Payment`'s own lack of a "can't exceed deal value" check. Returns a plain `PaymentInstallment` (not wrapped in a status — the frontend refetches the list after add/remove rather than optimistically patching, since one installment's status can shift every sibling installment's derived status too). |
+| `PUT` | `/payment-installments/:id` | 🟢 | Edit. Same validation as Create. No edit UI on the frontend yet (only Add/Delete, mirroring Payment's own UI) — exists for API completeness and reachable directly. |
+| `DELETE` | `/payment-installments/:id` | 🟢 | Delete. |
+
+Feeds two other surfaces: the Outstanding Balance report's `aging` field (§8.4 below) and a `payment_installment` `NotificationRule` entity type (§8.7c) that reminds the Deal's assigned rep when an installment is due soon or overdue — `NotificationRule.entity_type`'s column was widened from `varchar(16)` to `varchar(32)` since `"payment_installment"` (20 chars) didn't fit the old width.
+
 ### 7.6 Tasks
 
 ```ts
@@ -884,7 +915,7 @@ All eight report endpoints are Admin/Sales-Manager only (`RequireRoles`) and hav
 | `GET` | `/reports/customers-by-product-status?product_id=&status=&company_tag=` | "Which customers use Product X" / "have a Project in status Y" (`FR-CRM-056`) — do not confuse with the `business_unit`/`channel` filters in §9, which are lightweight Deal tags, not this real relationship query. `company_tag` (`FR-CRM-055`) filters to Companies whose `tags` array contains the given value. |
 | `GET` | `/reports/win-loss-reasons?date_from=&date_to=&assigned_to=` | `FR-CRM-093`. Every closed Deal (won or lost), grouped by `"won"` or its `lost_reason` code. |
 | `GET` | `/reports/stalled-deals?min_days=&assigned_to=` | `FR-CRM-094`. Open Deals with no logged Activity for at least `min_days` (default 14) — `last_activity_at` is `COALESCE(MAX(activities.created_at), deals.created_at)`. |
-| `GET` | `/reports/outstanding-balance?company_tag=&assigned_to=` | `FR-CRM-095`. Won Deals whose recorded Payments sum to less than the Deal's value. Not date-bucketed 30/60/90-day aging — `Payment` has no `due_date` field, only `paid_at` (when actually received) — this is a flat "who still owes what" list until that field exists. |
+| `GET` | `/reports/outstanding-balance?company_tag=&assigned_to=` | `FR-CRM-095`. Won Deals whose recorded Payments sum to less than the Deal's value. **Updated 2026-09-15**: each row now also carries `aging: 'overdue' \| 'upcoming' \| 'none'`, derived from the Deal's `PaymentInstallment` schedule (§7.5a) if one exists — `'none'` (this report's original flat behavior) if it doesn't. Computed by fetching every relevant Deal's installments in one query and running `utils.ComputeInstallmentStatuses` per Deal in Go, not per-row N+1 queries. Also included in the CSV export (`/reports/outstanding-balance/export`). |
 | `GET` | `/reports/quotes-expiring-soon?within_days=` | `FR-CRM-096`. Sent quotes whose `validity_date` falls within the next `within_days` (default 7) — the forward-looking mirror of `Quote.EffectiveStatus`'s already-expired check, same dual-format (RFC3339 / bare date) parsing. |
 | `GET` | `/reports/contracts-stuck?min_days=` | `FR-CRM-097`. Draft/Sent contracts unsigned for at least `min_days` (default 14) — `Contract` has no start/end date, only `signed_date`, so this tracks staleness before signature, not true expiration. |
 | `GET` | `/reports/projects-at-risk` | `FR-CRM-098`. Projects past `target_end_date` that aren't `Completed` or `Cancelled`. |
@@ -1072,7 +1103,7 @@ Backend: `internal/models/sales_target.go` (`SalesTarget`, unique index on `(yea
 Admin-configurable rules a new background ticker (`internal/notifier/workflow_rules.go`, same 15-minute cadence as the Task due-date reminder ticker, §7.6, but its own separate goroutine) evaluates and emails on. One fixed condition per `entity_type` — not a free-form condition-expression engine — so adding a rule of an existing entity type is pure config, but a genuinely new condition shape would still need a backend code change (`FR-CRM-102`'s "generic within three supported shapes," not a full rule DSL).
 
 ```ts
-type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect'
+type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company' | 'payment_installment'
 type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 
 interface NotificationRule {
@@ -1094,6 +1125,7 @@ Per-`entity_type` condition (fixed, not configurable beyond `threshold_days`):
 | `quote` | A `sent` Quote's `validity_date` falls within `threshold_days` from now — `FR-CRM-101`. | `GET /reports/quotes-expiring-soon` (`FR-CRM-096`). |
 | `contract` | A `draft`/`sent` Contract has been unsigned for at least `threshold_days` since `created_at` — `FR-CRM-101`. | `GET /reports/contracts-stuck` (`FR-CRM-097`). |
 | `prospect` | **Added 2026-09-03.** A Prospect not yet `Converted`/`Disqualified` (still actively worked) has gone at least `threshold_days` since `updated_at` with no change — `FR-CRM-107`. Uses `updated_at` rather than an audit-log stage-history lookup like `deal` — Prospect status changes aren't separately audited the way Deal stage is, so `updated_at` is the closest available "last touched" signal. **Updated 2026-09-09**: now that Prospect stages are Admin-configurable (§8.7), the "disqualified" exclusion resolves the `ProspectStage` row flagged `is_disqualified_stage` instead of the hardcoded name `"Disqualified"`, so renaming that stage doesn't leave genuinely-disqualified Prospects eligible for this rule. | New — Marketing's own funnel had no staleness signal at all before this. |
+| `payment_installment` | **Added 2026-09-15.** A `PaymentInstallment` (§7.5a) not yet fully paid per `utils.ComputeInstallmentStatuses`'s waterfall allocation, whose `due_date` falls within `threshold_days` from now — covers both "coming due soon" and "already overdue" in one condition, same single-direction shape every rule above uses. Recipient resolves via the installment's own Deal, same as `quote`/`contract`. Fires once ever per installment (empty `context`, same as `quote`/`contract`). | New — no report tracked this before the payment schedule feature existed. |
 
 `recipient_role` resolves to the owner's email (`owner`), or the owner plus every currently-active Sales Manager (`owner_and_managers`) — there's no per-rep manager hierarchy in this schema to notify one specific manager (this also applies to `prospect` rules: "managers" still means Sales Manager, who already has oversight visibility into Prospects per `PROSPECT_ROLES`, not Marketing itself). Idempotency is per `(rule_id, entity_id, context)` via a `NotificationLog` row (`context` is the Deal's stage at fire time for `deal` rules, or the Prospect's status for `prospect` rules — so re-idling in a new stage/status can re-fire; empty string for `quote`/`contract` rules, which only ever need to fire once per entity). Degrades safely (no-op) with no `SMTP_*` env vars configured, same as the Task reminder ticker.
 

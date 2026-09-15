@@ -251,6 +251,7 @@ export default {
       contract: 'Contract',
       prospect: 'Prospect',
       company: 'Company',
+      paymentInstallment: 'Payment Installment',
     },
     recipientRoleOptions: {
       owner: 'Owner Only',

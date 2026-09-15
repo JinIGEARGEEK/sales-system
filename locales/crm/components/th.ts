@@ -81,6 +81,14 @@ export default {
     cancel: 'ยกเลิก',
     save: 'บันทึกการชำระเงิน',
   },
+  addPaymentInstallmentModal: {
+    title: 'เพิ่มงวดชำระเงิน',
+    amount: 'จำนวนเงิน (บาท)',
+    dueDate: 'วันครบกำหนด',
+    note: 'หมายเหตุ',
+    cancel: 'ยกเลิก',
+    save: 'บันทึกงวดชำระ',
+  },
   addProductModal: {
     title: 'เพิ่มสินค้า',
     editTitle: 'แก้ไขสินค้า',

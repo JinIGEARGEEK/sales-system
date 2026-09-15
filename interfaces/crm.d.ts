@@ -16,7 +16,7 @@ type LeadScoringCriterionField = 'source' | 'has_company_name' | 'has_phone'
 // Company with no Activity logged directly against it in at least
 // threshold_days (FR-CRM-108, mirrors the backend's NotificationRule.EntityType
 // validation).
-type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company'
+type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company' | 'payment_installment'
 type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 // Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
@@ -660,6 +660,30 @@ interface Payment {
   paid_at: Date
   method: PaymentMethod
   note: string
+}
+
+// A planned installment on a Deal's payment schedule, defined before money
+// actually arrives — distinct from Payment above, which only records money
+// already received. No status is stored on the row itself; GET
+// /deals/:dealId/payment-installments always returns it wrapped in
+// PaymentInstallmentStatus (api-system-spec.md §7.5a).
+interface PaymentInstallment {
+  id: number
+  deal_id: number
+  amount: number
+  due_date: Date
+  note: string
+}
+
+type PaymentInstallmentStatusValue = 'paid' | 'partial' | 'overdue' | 'upcoming'
+
+// Server-derived status for one installment — a cumulative "waterfall"
+// allocation against the Deal's actual Payments (no explicit link between a
+// specific Payment and a specific installment).
+interface PaymentInstallmentStatus {
+  installment: PaymentInstallment
+  covered: number
+  status: PaymentInstallmentStatusValue
 }
 
 // A follow-up/reminder attached to a Deal, Contact, or Company — e.g. "call back

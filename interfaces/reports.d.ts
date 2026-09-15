@@ -86,6 +86,9 @@ interface OutstandingBalanceRow {
   deal_value: number
   paid_amount: number
   outstanding_amount: number
+  // "overdue"/"upcoming" when the Deal has a PaymentInstallment schedule
+  // defined, "none" otherwise (today's pre-schedule behavior, unchanged).
+  aging: 'overdue' | 'upcoming' | 'none'
 }
 
 // GET /reports/quotes-expiring-soon — Sent quotes whose validity_date falls

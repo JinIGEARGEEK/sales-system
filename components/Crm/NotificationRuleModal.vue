@@ -47,6 +47,7 @@ const entityTypeOptions: Select[] = [
   { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.contract'), value: 'contract' },
   { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.prospect'), value: 'prospect' },
   { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.company'), value: 'company' },
+  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.paymentInstallment'), value: 'payment_installment' },
 ]
 
 // Small closed set (mirrors the backend's NotificationRule.RecipientRole
