@@ -240,7 +240,7 @@ const onMove = async (item: Prospect & { _type: 'prospect' }, newStatus: string)
       assigned_to: item.assigned_to,
       business_unit: item.business_unit,
       business_unit_item: item.business_unit_item,
-      tags: item.tags,
+      tags: item.tags ?? null,
       notes: item.notes,
     })
     success(t('crm.prospects.index.prospectStatusUpdated', { status: newStatus }))
