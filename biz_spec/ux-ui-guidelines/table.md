@@ -712,6 +712,13 @@ status ต้องสแกนได้เร็วที่สุดภาย�
 - อย่าแสดง badge ใหญ่เกินไปจนแย่งความสนใจจากข้อมูลหลัก
 - อย่าพึ่งแค่สี ต้องมีข้อความชัดเจนด้วย
 
+### 9.5 Caption บรรทัดที่สองใต้ Badge (added 2026-09-15)
+เมื่อ record หนึ่งแปลง/เชื่อมโยงไปเป็นอีก record หนึ่งที่มีสถานะเป็นของตัวเอง (เช่น Lead ที่ถูก convert เป็น Deal แล้ว) **ห้ามเขียนทับ status เดิมของ record ต้นทาง** — status ของ Lead ต้อง freeze ไว้ตามค่าตอน convert เสมอ (ดู FR-CRM-004/020) เพื่อไม่ให้ประวัติเพี้ยน
+
+แทนที่จะเขียนทับ ให้แสดง status ของ record ปลายทาง (เช่น Deal stage: Won/Lost/อื่น ๆ) เป็น **caption บรรทัดเล็กสีเทา (muted) อยู่ใต้ badge เดิม** — ใช้สีเดียวกับ convention ของ record ปลายทางนั้น (เช่น Won = success, Lost = error, ตาม `useDealStageColor` ที่ Deal Kanban/detail ใช้อยู่แล้ว) เพื่อให้อ่านแล้วรู้ทันทีว่าเป็น "ข้อมูลอ้างอิง" ไม่ใช่ status หลักของแถวนั้น
+
+ตัวอย่างที่ใช้จริง: หน้า Leads list (`pages/crm/leads/index.vue`) แท็บ "Converted" — badge บนคือ Lead status เดิม (เช่น "Qualified", ค้างไว้ตลอด), caption ล่างคือ "Deal Won"/"Deal Lost"/ชื่อ stage ปัจจุบันของ Deal ที่ผูกอยู่ (component: `components/Table/Card/Status.vue`, props `caption`/`captionColor`)
+
 ---
 
 ## 10. Typography
