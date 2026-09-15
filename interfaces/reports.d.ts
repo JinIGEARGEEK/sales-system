@@ -1,3 +1,17 @@
+// GET /reports/top-referrers — one row per referrer (an existing Company or
+// Contact, per Lead.referred_by_type/referred_by_id, FR-CRM-119), how many
+// Leads they referred, how many became Deals, how many of those were Won,
+// and total Won revenue (FR-CRM-121).
+interface TopReferrerRow {
+  referrer_type: 'company' | 'contact'
+  referrer_id: number
+  referrer_name: string
+  leads_referred: number
+  deals_created: number
+  deals_won: number
+  won_revenue: number
+}
+
 // GET /reports/lead-source-conversion — one row per Lead source.
 interface LeadSourceConversionRow {
   source: LeadSource

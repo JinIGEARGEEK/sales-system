@@ -89,6 +89,16 @@ export default {
     cancel: 'Cancel',
     save: 'Save Installment',
   },
+  generatePaymentScheduleModal: {
+    title: 'Generate Payment Schedule',
+    totalAmount: 'Total Amount (THB)',
+    count: 'Number of Installments',
+    firstDueDate: 'First Due Date',
+    intervalMonths: 'Every N Months',
+    previewHeading: 'Preview',
+    cancel: 'Cancel',
+    save: 'Create Schedule',
+  },
   addProductModal: {
     title: 'Add Product',
     editTitle: 'Edit Product',

@@ -38,5 +38,16 @@ export const usePaymentInstallmentsStore = defineStore('paymentInstallments', {
       await $api.delete(`/payment-installments/${id}`)
       await this.fetchForDeal(dealId)
     },
+    // "Generate Schedule" — creates every installment in one request/one
+    // transaction (internal/handlers/payment_installments.go's BulkCreate)
+    // rather than N calls to add(), so one user action doesn't produce N
+    // audit-log entries server-side. Same refetch-after-write reasoning as
+    // add/remove above.
+    async bulkAdd (dealId: number, installments: { amount: number, due_date: Date, note: string }[]): Promise<PaymentInstallment[]> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<PaymentInstallment[]>>(`/deals/${dealId}/payment-installments/bulk`, { installments })
+      await this.fetchForDeal(dealId)
+      return response.data.data
+    },
   },
 })
