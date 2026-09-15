@@ -407,7 +407,24 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
   if (newStatus) {
     if (lead.status === newStatus) return
     try {
-      await leadsStore.update(lead.id, { status: newStatus })
+      // PUT /leads/:id overwrites the record's full state from the request
+      // body every time (it isn't a partial-merge PATCH — see leadForm on
+      // the backend and pages/crm/leads/[id].vue's own onSave/onMarkSql,
+      // which resend this same full field set). Sending only `{ status }`
+      // here used to blank out every other field (name, email, company,
+      // assignee, ...) on the dragged card.
+      await leadsStore.update(lead.id, {
+        name: lead.name,
+        company_id: lead.company_id,
+        email: lead.email,
+        phone: lead.phone,
+        source: lead.source,
+        status: newStatus,
+        assigned_to: lead.assigned_to,
+        business_unit: lead.business_unit,
+        business_unit_item: lead.business_unit_item,
+        notes: lead.notes,
+      })
       success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
