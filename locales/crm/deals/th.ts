@@ -144,6 +144,8 @@ export default {
     removeInstallmentConfirmBody: 'ลบงวดชำระ {amount} ที่ครบกำหนด {date} ใช่หรือไม่? ไม่สามารถย้อนกลับได้',
     addInstallmentSuccess: 'เพิ่มงวดชำระสำเร็จ',
     removeInstallmentSuccess: 'ลบงวดชำระสำเร็จ',
+    generateSchedule: 'สร้างกำหนดการชำระ',
+    generateScheduleSuccess: 'สร้างงวดชำระ {count} งวดสำเร็จ',
     tasksTitle: 'งานติดตาม',
     addTask: 'เพิ่มงานติดตาม',
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',

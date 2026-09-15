@@ -89,6 +89,16 @@ export default {
     cancel: 'ยกเลิก',
     save: 'บันทึกงวดชำระ',
   },
+  generatePaymentScheduleModal: {
+    title: 'สร้างกำหนดการชำระเงิน',
+    totalAmount: 'ยอดรวม (บาท)',
+    count: 'จำนวนงวด',
+    firstDueDate: 'วันครบกำหนดงวดแรก',
+    intervalMonths: 'ทุกกี่เดือน',
+    previewHeading: 'ตัวอย่าง',
+    cancel: 'ยกเลิก',
+    save: 'สร้างกำหนดการ',
+  },
   addProductModal: {
     title: 'เพิ่มสินค้า',
     editTitle: 'แก้ไขสินค้า',

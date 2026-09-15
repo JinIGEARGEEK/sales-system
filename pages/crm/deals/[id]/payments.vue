@@ -63,12 +63,21 @@
     <ContainerTemplate class="mt-4">
       <div class="mb-4 flex items-center justify-between">
         <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentScheduleTitle') }}</h3>
-        <ButtonPrimary
-          :label="t('crm.deals.detail.addInstallment')"
-          icon="material-symbols:add"
-          small
-          @click="addInstallmentOpen = true"
-        />
+        <div class="flex gap-2">
+          <ButtonPrimary
+            :label="t('crm.deals.detail.generateSchedule')"
+            icon="material-symbols:auto-awesome-outline"
+            outline
+            small
+            @click="generateScheduleOpen = true"
+          />
+          <ButtonPrimary
+            :label="t('crm.deals.detail.addInstallment')"
+            icon="material-symbols:add"
+            small
+            @click="addInstallmentOpen = true"
+          />
+        </div>
       </div>
 
       <div v-if="dealInstallments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -117,6 +126,12 @@
     <CrmAddPaymentInstallmentModal
       v-model:open="addInstallmentOpen"
       @submit="onAddInstallment"
+    />
+
+    <CrmGeneratePaymentScheduleModal
+      v-model:open="generateScheduleOpen"
+      :default-total-amount="remainingBalance"
+      @submit="onGenerateSchedule"
     />
 
     <CrmConfirmDeleteModal
@@ -196,6 +211,17 @@ const onAddInstallment = async (installment: { amount: number, due_date: Date, n
   try {
     await paymentInstallmentsStore.add(dealId, installment)
     success(t('crm.deals.detail.addInstallmentSuccess'))
+  } catch (err) {
+    notifyApiError(err)
+  }
+}
+
+const generateScheduleOpen = ref(false)
+
+const onGenerateSchedule = async (installments: { amount: number, due_date: Date, note: string }[]) => {
+  try {
+    await paymentInstallmentsStore.bulkAdd(dealId, installments)
+    success(t('crm.deals.detail.generateScheduleSuccess', { count: installments.length }))
   } catch (err) {
     notifyApiError(err)
   }

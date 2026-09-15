@@ -144,6 +144,8 @@ export default {
     removeInstallmentConfirmBody: 'Delete the {amount} installment due {date}? This cannot be undone.',
     addInstallmentSuccess: 'Installment added successfully',
     removeInstallmentSuccess: 'Installment removed successfully',
+    generateSchedule: 'Generate Schedule',
+    generateScheduleSuccess: '{count} installments generated successfully',
     tasksTitle: 'Tasks',
     addTask: 'Add Task',
     addTaskSuccess: 'Task added successfully',

@@ -127,6 +127,7 @@ const attentionCards = computed(() => ATTENTION_ITEMS.map(item => ({
 
 const analyticsCards = computed(() => [
   { path: '/crm/reports/lead-source', icon: 'material-symbols:person-search-outline', title: t('crm.reports.leadSource.cardTitle'), description: t('crm.reports.leadSource.cardDescription') },
+  { path: '/crm/reports/top-referrers', icon: 'material-symbols:diversity-3-outline', title: t('crm.reports.topReferrers.cardTitle'), description: t('crm.reports.topReferrers.cardDescription') },
   // Marketing's own report — shown here too since Admin/Sales Manager (who
   // can reach this page) are also in PROSPECT_ROLES; Marketing itself never
   // reaches this page at all (this page is MANAGER_ROLES-only), so discovers

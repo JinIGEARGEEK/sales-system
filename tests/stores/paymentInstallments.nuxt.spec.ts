@@ -77,4 +77,25 @@ describe('stores/paymentInstallments', () => {
     expect(mockApi.get).toHaveBeenCalledWith('/deals/1/payment-installments')
     expect(store.items).toEqual([])
   })
+
+  it('bulkAdd POSTs the whole schedule in one call then refetches the deal\'s full list', async () => {
+    const store = usePaymentInstallmentsStore()
+    const created = [
+      { id: 2, deal_id: 1, amount: 10000, due_date: new Date('2026-11-01T00:00:00.000Z'), note: '' },
+      { id: 3, deal_id: 1, amount: 10000, due_date: new Date('2026-12-01T00:00:00.000Z'), note: '' },
+    ]
+    mockApi.post.mockResolvedValueOnce(apiResponse(created))
+    mockApi.get.mockResolvedValueOnce(apiResponse([
+      makeStatus({ id: 2, deal_id: 1, amount: 10000 }),
+      makeStatus({ id: 3, deal_id: 1, amount: 10000 }),
+    ]))
+
+    const payload = created.map(({ amount, due_date, note }) => ({ amount, due_date, note }))
+    const result = await store.bulkAdd(1, payload)
+
+    expect(mockApi.post).toHaveBeenCalledWith('/deals/1/payment-installments/bulk', { installments: payload })
+    expect(mockApi.get).toHaveBeenCalledWith('/deals/1/payment-installments')
+    expect(result).toHaveLength(2)
+    expect(store.items.map(s => s.installment.id)).toEqual([2, 3])
+  })
 })
