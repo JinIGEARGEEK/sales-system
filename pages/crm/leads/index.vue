@@ -128,10 +128,15 @@ const { stageBadgeColor } = useDealStageColor()
 // Icons give the two tabs a distinct at-a-glance identity (a person still
 // being worked vs. one that already became a Deal) beyond just label text —
 // TabsItem (not Select) since UTabs supports icon/slot fields Select doesn't.
-const LEAD_SCOPE_TABS = [
+// computed (not a plain const), matching `columns` below and the other
+// t()-derived UTabs items in the app (pages/crm/projects/index.vue's
+// tabItems, pages/index.vue's dashboardTabItems) — a plain const would
+// freeze these labels in whichever locale was active at setup instead of
+// updating live when SwitchLang changes it.
+const LEAD_SCOPE_TABS = computed(() => [
   { label: t('crm.leads.index.scopeActive'), value: 'active', icon: 'material-symbols:person-search-outline' },
   { label: t('crm.leads.index.scopeConverted'), value: 'converted', icon: 'material-symbols:handshake-outline' },
-]
+])
 
 // Bulk reassign/tag/archive endpoints are Admin/Sales Manager only on the backend.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
