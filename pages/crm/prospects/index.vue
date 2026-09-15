@@ -223,7 +223,26 @@ watch(pipelineItems, (items) => {
 const onMove = async (item: Prospect & { _type: 'prospect' }, newStatus: string) => {
   if (item.status === newStatus) return
   try {
-    await prospectsStore.update(item.id, { status: newStatus })
+    // PUT /prospects/:id overwrites the record's full state from the request
+    // body every time (it's not a partial-merge PATCH) — see prospects.go's
+    // Update handler and pages/crm/prospects/[id].vue's own onSave, which
+    // sends this same full field set. Sending only `{ status }` here used to
+    // blank out every other field (name, email, company, assignee, ...) on
+    // the dragged card, since the backend has no way to tell "field omitted"
+    // from "field cleared".
+    await prospectsStore.update(item.id, {
+      name: item.name,
+      company_id: item.company_id,
+      email: item.email,
+      phone: item.phone,
+      source: item.source,
+      status: newStatus,
+      assigned_to: item.assigned_to,
+      business_unit: item.business_unit,
+      business_unit_item: item.business_unit_item,
+      tags: item.tags ?? null,
+      notes: item.notes,
+    })
     success(t('crm.prospects.index.prospectStatusUpdated', { status: newStatus }))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

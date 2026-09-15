@@ -185,6 +185,18 @@ interface Lead {
   created_at: Date
 }
 
+// stores/leads.ts's update() parameter type. PUT /leads/:id overwrites every
+// one of these fields unconditionally from the request body (it isn't a
+// partial-merge PATCH — see leads.go's Update handler) — a field left out of
+// the payload doesn't stay unchanged server-side, it gets zeroed out. Every
+// field below is therefore required (not Partial<Lead>) so a call site that
+// forgets one is a compile error, not a card silently losing data at runtime
+// — see the 2026-09-15 Kanban-drag bug in biz_spec/design-system.md §8.
+// `classification` is the one deliberate exception: the backend explicitly
+// treats an omitted classification as "leave the current value alone", so
+// it's optional here to match.
+type LeadUpdatePayload = Required<Pick<Lead, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'notes'>> & { classification?: LeadClassification }
+
 // The pre-Lead marketing funnel entity (§3.1a) — Marketing works a Prospect,
 // with an optional linked Company (same nullable-FK shape as Lead.company_id),
 // before it's ready to hand off to Sales via Convert. Endpoint/field shape
@@ -220,6 +232,15 @@ interface Prospect {
   deleted_at?: Date | null
   created_at: Date
 }
+
+// stores/prospects.ts's update() parameter type — same reasoning as
+// LeadUpdatePayload above: PUT /prospects/:id overwrites every field
+// unconditionally, so every field here is required rather than Partial<Prospect>.
+// Unlike Lead, Prospect's `tags` IS settable directly through this endpoint
+// (see prospectForm on the backend), so it's included and required too — a
+// call site that means "leave tags alone" must pass the record's current
+// `tags` back, not omit the key.
+type ProspectUpdatePayload = Required<Pick<Prospect, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'tags' | 'notes'>>
 
 interface Deal {
   id: number

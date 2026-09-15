@@ -68,7 +68,7 @@ export const useLeadsStore = defineStore('leads', {
     },
     // classification may be set to 'sql' here as a manual override (FR-CRM-007);
     // score stays server-computed only, excluded same as in add() above.
-    async update (id: number, changes: Partial<Omit<Lead, 'id' | 'score'>>): Promise<Lead> {
+    async update (id: number, changes: LeadUpdatePayload): Promise<Lead> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Lead>>(`/leads/${id}`, changes)
       const updated = parseDates(response.data.data)
