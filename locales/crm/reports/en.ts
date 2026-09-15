@@ -19,6 +19,13 @@ export default {
     allSalesReps: 'All Sales Reps',
     clearFilters: 'Clear all',
     noData: 'No leads match the selected filters.',
+    bySource: 'Breakdown by Source',
+    summary: {
+      totalLeads: 'Total Leads',
+      totalQualified: 'Qualified',
+      overallConversionRate: 'Overall Conversion Rate',
+      overallConversionRateTooltip: 'Qualified ÷ Total Leads, across all sources.',
+    },
     columns: {
       source: 'Source',
       total: 'Total Leads',
@@ -37,6 +44,13 @@ export default {
     allAssignees: 'All Team Members',
     clearFilters: 'Clear all',
     noData: 'No prospects match the selected filters.',
+    bySource: 'Breakdown by Source',
+    summary: {
+      totalProspects: 'Total Prospects',
+      totalConverted: 'Converted to Lead',
+      overallConversionRate: 'Overall Conversion Rate',
+      overallConversionRateTooltip: 'Converted to Lead ÷ Total Prospects, across all sources.',
+    },
     columns: {
       source: 'Source',
       total: 'Total Prospects',
