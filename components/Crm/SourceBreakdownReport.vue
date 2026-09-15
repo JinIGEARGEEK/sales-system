@@ -1,6 +1,25 @@
 <template>
+  <!-- First load — no rows to show yet, so a skeleton stands in for the
+  real layout rather than flashing empty-totals cards and an empty list. -->
+  <div v-if="isInitialLoading">
+    <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <USkeleton v-for="i in 3" :key="i" class="h-16 w-full rounded-lg" />
+    </div>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <USkeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
+    </div>
+    <UCard class="mt-4 ring-(--color-card-border)">
+      <template #header>
+        <h3 class="text-lg font-medium">{{ breakdownHeading }}</h3>
+      </template>
+      <div class="flex flex-col gap-4">
+        <USkeleton v-for="i in 5" :key="i" class="h-3 w-full rounded-full" />
+      </div>
+    </UCard>
+  </div>
+
   <UAlert
-    v-if="!loading && rows.length === 0"
+    v-else-if="rows.length === 0"
     class="mb-4"
     color="warning"
     variant="subtle"
@@ -9,7 +28,9 @@
     :ui="{ root: 'p-2', icon: 'size-4' }"
   />
 
-  <template v-else>
+  <!-- Refetching (filters changed) with rows already on screen — dim rather
+  than replace with a skeleton, so the view doesn't jump around. -->
+  <div v-else class="transition-opacity" :class="{ 'pointer-events-none opacity-50': loading }">
     <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
       <CrmStatCard :label="totalLabel" icon="material-symbols:group-outline">
         {{ totalCount }}
@@ -54,7 +75,7 @@
         </CrmMetricBar>
       </div>
     </UCard>
-  </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -88,9 +109,14 @@ const props = defineProps<{
   breakdownHeading: string
 }>()
 
-// Ranked best-to-worst so the grid and bar list both surface the
-// best-converting sources first.
-const sortedRows = computed(() => [...props.rows].sort((a, b) => b.conversion_rate - a.conversion_rate))
+const isInitialLoading = computed(() => props.loading && props.rows.length === 0)
+
+// Ranked by volume first (total descending), not raw conversion_rate — a
+// source with 1/1 (100%) would otherwise outrank one with 400/500 (80%)
+// despite the latter being the far more meaningful number for a business
+// reading "which source performs best." conversion_rate only breaks ties
+// between sources of equal size.
+const sortedRows = computed(() => [...props.rows].sort((a, b) => b.total - a.total || b.conversion_rate - a.conversion_rate))
 
 const totalCount = computed(() => props.rows.reduce((sum, row) => sum + row.total, 0))
 const convertedCount = computed(() => props.rows.reduce((sum, row) => sum + row.converted, 0))
