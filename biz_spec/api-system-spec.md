@@ -1230,11 +1230,13 @@ Response shape (one object covering every widget on `pages/index.vue`):
     "forecast_trend": [ { "label": "Mar", "value": 410000 }, "...6 months forward" ],
     "stage_breakdown": [ { "stage": "Qualified", "value": 900000, "count": 4 }, "...per DealStage" ],
     "industry_breakdown": [ { "industry": "Retail", "win_rate": 55, "won_count": 6 }, "..." ],
-    "team_performance": [ { "user_id": 3, "name": "...", "won_count": 5, "won_value": 620000, "win_rate": 60 }, "..." ],
+    "team_performance": [ { "user_id": 3, "name": "...", "won_count": 5, "won_value": 620000, "win_rate": 60, "activity_count": 14 }, "..." ],
     "upsell_opportunities": [ { "id": 12, "name": "Acme Corp", "industry": "Retail", "last_activity_at": null }, "...most-stale first, capped at 30, filtered by ?upsell_min_stale_days (default 60) — flat list as of 2026-09-09, was 3 fixed tier groups before" ]
   }
 }
 ```
+
+> **`team_performance[].activity_count` added 2026-09-16** (`FR-CRM-053`, closing the "activity-logged count not included" gap). `DashboardHandler.teamPerformance` runs a second aggregate query, grouping `Activity` rows by `created_by_id` for the same set of reps, filtered by the same `date_from`/`date_to`/`period` window as the rest of this response — both `baseFilter` (Deals) and this query now resolve that window through one shared `applyDateWindow` helper rather than each re-deriving it.
 
 > **`avg_sales_cycle_days` is fixed as of 2026-08-21.** It was previously a hardcoded `0` stub (this doc briefly, incorrectly, documented it as working) — `Summary()` now calls `(&ReportHandler{DB: h.DB}).fetchSalesCycle(...)` (the same computation §8.4's `GET /reports/sales-cycle` uses, §8.4's `FR-CRM-099`), passing through only `assigned_to`/`date_from`/`date_to` from this endpoint's own query params (not `business_unit`/`channel`/`company_tag`, which `fetchSalesCycle` doesn't support), rounded to the nearest whole day. A query error leaves it at `0` rather than failing the whole dashboard summary.
 
