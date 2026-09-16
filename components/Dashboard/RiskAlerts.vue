@@ -2,23 +2,28 @@
   <div class="mb-8">
     <DashboardSectionHeader :title="t('crm.dashboard.sectionRiskAlerts')" />
 
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-3">
       <NuxtLink
         v-for="item in items"
         :key="item.key"
         :to="item.path"
-        class="flex items-center gap-2 rounded-full border border-(--color-light-gray-2) bg-white py-1.5 pr-2 pl-1.5 transition-colors hover:bg-(--color-light-gray-1)"
+        class="flex items-center gap-2.5 rounded-full border border-(--color-light-gray-2) bg-white py-2 pr-3 pl-2 transition-colors hover:bg-(--color-light-gray-1)"
       >
-        <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
-          <UIcon :name="item.icon" class="size-3.5 text-(--color-warning-hover)" />
+        <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
+          <UIcon :name="item.icon" class="size-4 text-(--color-warning-hover)" />
         </div>
         <span class="text-sm font-medium">{{ item.title }}</span>
         <USkeleton v-if="counts[item.key] === null" class="h-5 w-6 shrink-0 rounded-full" />
+        <!-- A zero count is deliberately not a boxed UBadge — a bordered/subtle
+        badge at this size read as an empty input field rather than a value.
+        Plain muted text de-emphasizes "nothing here" while a real count still
+        gets the full solid/colored badge treatment below. -->
+        <span v-else-if="!counts[item.key]" class="text-sm text-(--color-gray)">0</span>
         <UBadge
           v-else
-          class="min-w-5 shrink-0 justify-center font-semibold"
+          class="min-w-5 shrink-0 justify-center rounded-full font-semibold"
           :color="badgeColor(counts[item.key])"
-          :variant="counts[item.key] ? 'solid' : 'subtle'"
+          variant="solid"
           size="sm"
         >
           {{ counts[item.key] }}
