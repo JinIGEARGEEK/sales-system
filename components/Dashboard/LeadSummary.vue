@@ -1,11 +1,11 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-2 flex items-center justify-between border-b border-(--color-light-gray-2) pb-2">
-      <span class="text-sm font-semibold text-(--color-black)">{{ t('crm.dashboard.sectionLeadFunnel') }}</span>
-      <NuxtLink v-if="linkable" to="/crm/reports/lead-source" class="text-xs font-medium text-(--color-primary) hover:underline">
-        {{ t('crm.dashboard.viewFullReport') }}
-      </NuxtLink>
-    </h3>
+    <DashboardSectionHeader
+      :title="t('crm.dashboard.sectionLeadFunnel')"
+      link-to="/crm/reports/lead-source"
+      :link-text="t('crm.dashboard.viewFullReport')"
+      :linkable="linkable"
+    />
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-4">
       <CrmStatCard

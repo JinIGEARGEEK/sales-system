@@ -1,22 +1,14 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <div>
-          <h2 class="text-xl font-black">{{ t('crm.reports.winLoss.heading') }}</h2>
-          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.winLoss.subheading') }}</p>
-        </div>
-      </div>
-      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
-    </div>
+    <PageHeader
+      :title="t('crm.reports.winLoss.heading')"
+      :subtitle="t('crm.reports.winLoss.subheading')"
+      @back="goBack()"
+    >
+      <template #actions>
+        <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+      </template>
+    </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">

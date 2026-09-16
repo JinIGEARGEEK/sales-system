@@ -1,11 +1,10 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-2 flex items-center justify-between border-b border-(--color-light-gray-2) pb-2">
-      <span class="text-sm font-semibold text-(--color-black)">{{ t('crm.dashboard.sectionMyProjects') }}</span>
-      <NuxtLink to="/crm/projects" class="text-xs font-medium text-(--color-primary) hover:underline">
-        {{ t('crm.dashboard.viewAllProjects') }}
-      </NuxtLink>
-    </h3>
+    <DashboardSectionHeader
+      :title="t('crm.dashboard.sectionMyProjects')"
+      link-to="/crm/projects"
+      :link-text="t('crm.dashboard.viewAllProjects')"
+    />
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
       <CrmStatCard

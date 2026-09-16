@@ -24,9 +24,7 @@
         </Form>
       </ContainerTemplate>
 
-      <div v-else class="py-12 text-center text-(--color-gray)">
-        {{ t('admin.users.detail.staffNotFound') }}
-      </div>
+      <NotFoundState v-else :message="t('admin.users.detail.staffNotFound')" back-to="/admin/users" />
     </AccessGate>
   </div>
 </template>

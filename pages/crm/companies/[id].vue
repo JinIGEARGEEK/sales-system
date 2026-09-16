@@ -1,27 +1,18 @@
 <template>
   <div class="p-5">
     <div v-if="company">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="navigateTo('/crm/companies')"
-          />
-          <h2 class="max-w-full truncate text-xl font-black">{{ company.name }}</h2>
-          <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
-            {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
-          </UBadge>
-          <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
-          <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
-        </div>
-      </div>
+      <PageHeader :title="company.name" @back="navigateTo('/crm/companies')">
+        <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
+          {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
+        </UBadge>
+        <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
+        <template #actions>
+          <div class="flex flex-wrap gap-2">
+            <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
+            <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+          </div>
+        </template>
+      </PageHeader>
 
       <div class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
@@ -324,9 +315,7 @@
       />
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.companies.detail.companyNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.companies.detail.companyNotFound')" back-to="/crm/companies" />
   </div>
 </template>
 

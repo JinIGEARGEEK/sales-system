@@ -1,17 +1,7 @@
 <template>
   <div class="p-5">
     <div v-if="tag">
-      <div class="mb-4 flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <h2 class="text-xl font-black">{{ t('crm.tags.detail.heading') }}</h2>
-      </div>
+      <PageHeader :title="t('crm.tags.detail.heading')" @back="goBack()" />
 
       <ContainerTemplate>
         <Form @submit="onSave">
@@ -44,9 +34,7 @@
       </ContainerTemplate>
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.tags.detail.tagNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.tags.detail.tagNotFound')" back-to="/crm/tags" />
   </div>
 </template>
 

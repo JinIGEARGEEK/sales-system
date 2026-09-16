@@ -1,8 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
-      {{ t('crm.dashboard.sectionPipelineOpportunities') }}
-    </h3>
+    <DashboardSectionHeader :title="t('crm.dashboard.sectionPipelineOpportunities')" />
 
     <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">

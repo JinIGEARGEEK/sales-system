@@ -1,26 +1,17 @@
 <template>
   <div class="p-5">
     <div v-if="deal">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="goBack()"
+      <PageHeader :title="deal.title" @back="goBack()">
+        <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
+        <template #actions>
+          <ButtonPrimary
+            v-if="deal.status === 'open'"
+            :label="t('crm.deals.detail.markWon')"
+            icon="material-symbols:check-circle-outline"
+            @click="onMarkWon"
           />
-          <h2 class="max-w-full truncate text-xl font-black">{{ deal.title }}</h2>
-          <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
-        </div>
-        <ButtonPrimary
-          v-if="deal.status === 'open'"
-          :label="t('crm.deals.detail.markWon')"
-          icon="material-symbols:check-circle-outline"
-          @click="onMarkWon"
-        />
-      </div>
+        </template>
+      </PageHeader>
 
       <div class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
@@ -29,9 +20,7 @@
       <NuxtPage />
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.deals.detail.dealNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.deals.detail.dealNotFound')" back-to="/crm/deals" />
 
     <CrmAddProjectModal
       v-model:open="projectModal"

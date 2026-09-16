@@ -1,36 +1,27 @@
 <template>
   <div class="p-5">
     <div v-if="quote && deal">
-      <div class="mb-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="navigateTo(`/crm/deals/${deal.id}/quotes`)"
-          />
-          <h2 class="text-xl font-black">{{ quote.number || `#${quote.id}` }}</h2>
-          <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
-        </div>
-        <div class="flex gap-2">
-          <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
-          <ButtonPrimary
-            :label="t('crm.quotes.detail.saveAsTemplate')"
-            outline
-            icon="material-symbols:bookmark-add-outline"
-            @click="saveTemplateOpen = true"
-          />
-          <ButtonPrimary
-            v-if="canSend"
-            :label="t('crm.quotes.detail.sendToCustomer')"
-            icon="material-symbols:send-outline"
-            :loading="loading"
-            @click="onSendClick"
-          />
-        </div>
-      </div>
+      <PageHeader :title="quote.number || `#${quote.id}`" @back="navigateTo(`/crm/deals/${deal.id}/quotes`)">
+        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+        <template #actions>
+          <div class="flex gap-2">
+            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
+            <ButtonPrimary
+              :label="t('crm.quotes.detail.saveAsTemplate')"
+              outline
+              icon="material-symbols:bookmark-add-outline"
+              @click="saveTemplateOpen = true"
+            />
+            <ButtonPrimary
+              v-if="canSend"
+              :label="t('crm.quotes.detail.sendToCustomer')"
+              icon="material-symbols:send-outline"
+              :loading="loading"
+              @click="onSendClick"
+            />
+          </div>
+        </template>
+      </PageHeader>
 
       <!-- Only right after landing here from Create Quote's own "Step 1 of 2"
       (pages/crm/quotes/create.vue navigates here with ?continue=1) — closes
@@ -203,9 +194,7 @@
       />
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.quotes.detail.quoteNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.quotes.detail.quoteNotFound')" back-to="/crm/deals" />
   </div>
 </template>
 
