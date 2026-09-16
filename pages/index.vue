@@ -585,6 +585,7 @@ const teamPerformance = computed(() => {
       wonCount: row.won_count,
       wonValue: row.won_value,
       winRate: Math.round(row.win_rate),
+      activityCount: row.activity_count,
     }))
     .sort((a, b) => b.wonValue - a.wonValue)
 })

@@ -779,7 +779,7 @@ interface DashboardSummary {
   forecast_trend: { label: string, value: number }[]
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
-  team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number }[]
+  team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number, activity_count: number }[]
   // Dormant-company/upsell targeting (added 2026-09-04). **Updated
   // 2026-09-09**: was always all 3 fixed 60/90/120-day tier objects
   // (possibly empty); now a flat, most-stale-first list filtered by the
