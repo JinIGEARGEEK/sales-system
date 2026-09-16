@@ -125,7 +125,7 @@ const displayTags = computed(() => rows.value.map(tag => ({
   createdDate: dateFormat(tag.created_at.toISOString()),
 })))
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.tags.index.columns.name'), align: 'left', field: 'name', isSort: true },
   { label: t('crm.tags.index.columns.category'), align: 'left', field: 'categoryBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
   { label: t('crm.tags.index.columns.description'), align: 'left', field: 'description' },
@@ -142,7 +142,7 @@ const columns: TableDataColumn[] = [
       { label: t('crm.tags.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Tag>()
 

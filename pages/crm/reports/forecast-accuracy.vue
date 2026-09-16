@@ -104,12 +104,12 @@ const displayQuarters = computed(() => [...quarters.value].reverse().map(q => ({
     : toBadge(`${Math.round(q.accuracy_ratio * 100)}%`, 'warning'),
 })))
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.forecastAccuracy.columns.period'), align: 'left', field: 'periodLabel' },
   { label: t('crm.reports.forecastAccuracy.columns.forecast'), align: 'left', field: 'weightedForecastLabel' },
   { label: t('crm.reports.forecastAccuracy.columns.actual'), align: 'left', field: 'actualLabel' },
   { label: t('crm.reports.forecastAccuracy.columns.accuracy'), align: 'left', field: 'accuracyBadge', type: TABLE_CARD_TYPE.STATUS },
-]
+])
 
 const fetchReport = async () => {
   if (!canViewReports.value) return

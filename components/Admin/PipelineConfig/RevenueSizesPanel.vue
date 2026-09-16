@@ -102,7 +102,7 @@ const revenueSizeRows = computed(() => revenueSizeOptionsStore.items.map(size =>
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const revenueSizeColumns: TableDataColumn[] = [
+const revenueSizeColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.revenueSizes.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.revenueSizes.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const revenueSizeColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

@@ -102,7 +102,7 @@ const industryRows = computed(() => industryOptionsStore.items.map(industry => (
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const industryColumns: TableDataColumn[] = [
+const industryColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.industries.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.industries.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const industryColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

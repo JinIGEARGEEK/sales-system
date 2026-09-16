@@ -185,7 +185,7 @@ const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagi
 
 const onViewDeal = (row: StalledDealRow) => navigateTo(`/crm/deals/${row.deal_id}`)
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.stalledDeals.columns.title'), align: 'left', field: 'title' },
   { label: t('crm.reports.stalledDeals.columns.companyName'), align: 'left', field: 'company_name', width: 170 },
   { label: t('crm.reports.stalledDeals.columns.stage'), align: 'left', field: 'stage', width: 140 },
@@ -202,5 +202,5 @@ const columns: TableDataColumn[] = [
       { label: t('crm.reports.stalledDeals.viewDeal'), emitName: 'viewDeal', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

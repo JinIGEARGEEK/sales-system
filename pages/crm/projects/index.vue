@@ -261,7 +261,7 @@ const projectRows = computed(() => {
   })
 })
 
-const projectColumns: TableDataColumn[] = [
+const projectColumns = computed<TableDataColumn[]>(() => [
   { label: t('crm.projects.index.columns.name'), align: 'left', field: 'name', isSort: true },
   { label: t('crm.projects.index.columns.company'), align: 'left', field: 'company_name', isSort: true },
   { label: t('crm.projects.index.columns.deal'), align: 'left', field: 'dealName' },
@@ -279,7 +279,7 @@ const projectColumns: TableDataColumn[] = [
       { label: t('crm.projects.index.edit'), emitName: 'edit', isBorderBottom: false },
     ],
   },
-]
+])
 
 const onViewCompany = (row: Project) => {
   navigateTo(`/crm/companies/${row.company_id}`)
@@ -332,7 +332,7 @@ const productRows = computed(() => filteredProducts.value.map(product => ({
   ),
 })))
 
-const productColumns: TableDataColumn[] = [
+const productColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.products.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.products.columns.category'), align: 'left', field: 'category', width: 160 },
   { label: t('admin.products.columns.description'), align: 'left', field: 'description' },
@@ -347,7 +347,7 @@ const productColumns: TableDataColumn[] = [
       { label: t('admin.products.deactivate'), emitName: 'deactivate', isBorderBottom: false },
     ],
   },
-]
+])
 
 const {
   page: productPage,

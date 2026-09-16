@@ -102,7 +102,7 @@ const sourceRows = computed(() => leadSourcesStore.items.map(source => ({
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const sourceColumns: TableDataColumn[] = [
+const sourceColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.sources.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.sources.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const sourceColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

@@ -178,11 +178,11 @@ const byRepRows = computed(() => (report.value?.by_rep ?? []).map(row => ({
   key: teamMembersStore.nameById(Number(row.key)),
 })))
 
-const bucketColumns: TableDataColumn[] = [
+const bucketColumns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.salesCycle.columns.key'), align: 'left', field: 'key' },
   { label: t('crm.reports.salesCycle.columns.avgDays'), align: 'left', field: 'avg_days' },
   { label: t('crm.reports.salesCycle.columns.count'), align: 'left', field: 'count' },
-]
+])
 
 const reportParams = () => ({
   date_from: dateRange.value?.start,

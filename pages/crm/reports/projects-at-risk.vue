@@ -132,7 +132,7 @@ const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagi
 // owning Company's Projects tab, same as every other Project link in the app.
 const onViewCompany = (row: ProjectAtRiskRow) => navigateTo(`/crm/companies/${row.company_id}`)
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.projectsAtRisk.columns.name'), align: 'left', field: 'name' },
   { label: t('crm.reports.projectsAtRisk.columns.companyName'), align: 'left', field: 'company_name', width: 180 },
   { label: t('crm.reports.projectsAtRisk.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
@@ -147,5 +147,5 @@ const columns: TableDataColumn[] = [
       { label: t('crm.reports.projectsAtRisk.viewCompany'), emitName: 'viewCompany', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

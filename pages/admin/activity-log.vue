@@ -170,7 +170,7 @@ const rows = computed(() => auditLogStore.items.map(entry => ({
   datetimeDisplay: dateTimeFormat(entry.created_at.toISOString()),
 })))
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('admin.activityLog.columns.entity'), align: 'left', field: 'entityCell', type: TABLE_CARD_TYPE.MULTI_LINE },
   { label: t('admin.activityLog.columns.action'), align: 'left', field: 'actionBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('admin.activityLog.columns.actor'), align: 'left', field: 'actorDisplay' },
@@ -184,7 +184,7 @@ const columns: TableDataColumn[] = [
       { label: t('admin.activityLog.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
     ],
   },
-]
+])
 
 const detailOpen = ref(false)
 const selectedEntry = ref<AuditLogEntry | null>(null)

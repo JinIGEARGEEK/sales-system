@@ -180,7 +180,7 @@ const dealsRows = computed(() => dealsStore.trashItems.map(deal => ({
   deletedAtDisplay: deal.deleted_at ? dateFormat(deal.deleted_at) : '-',
 })))
 
-const dealsColumns: TableDataColumn[] = [
+const dealsColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.trash.columns.deals.title'), align: 'left', field: 'title' },
   { label: t('admin.trash.columns.deals.company'), align: 'left', field: 'companyName' },
   { label: t('admin.trash.columns.deals.value'), align: 'left', field: 'valueDisplay' },
@@ -194,7 +194,7 @@ const dealsColumns: TableDataColumn[] = [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
     ],
   },
-]
+])
 
 // companiesStore.fetchAll() (guardMounted below) is a capped, point-in-time
 // snapshot (see its own doc in stores/companies.ts) — trashed Deals are
@@ -240,7 +240,7 @@ watch(() => leadsStore.trashItems, (items) => {
   }
 })
 
-const leadsColumns: TableDataColumn[] = [
+const leadsColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.trash.columns.leads.name'), align: 'left', field: 'name' },
   { label: t('admin.trash.columns.leads.company'), align: 'left', field: 'companyName' },
   { label: t('admin.trash.columns.leads.source'), align: 'left', field: 'source' },
@@ -254,7 +254,7 @@ const leadsColumns: TableDataColumn[] = [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
     ],
   },
-]
+])
 
 const {
   loading: companiesLoading,
@@ -274,7 +274,7 @@ const companiesRows = computed(() => companiesStore.trashItems.map(company => ({
   deletedAtDisplay: company.deleted_at ? dateFormat(company.deleted_at) : '-',
 })))
 
-const companiesColumns: TableDataColumn[] = [
+const companiesColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.trash.columns.companies.name'), align: 'left', field: 'name' },
   { label: t('admin.trash.columns.companies.industry'), align: 'left', field: 'industry' },
   { label: t('admin.trash.columns.companies.deletedAt'), align: 'left', field: 'deletedAtDisplay' },
@@ -287,7 +287,7 @@ const companiesColumns: TableDataColumn[] = [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
     ],
   },
-]
+])
 
 const {
   loading: contactsLoading,
@@ -308,7 +308,7 @@ const contactsRows = computed(() => contactsStore.trashItems.map(contact => ({
   deletedAtDisplay: contact.deleted_at ? dateFormat(contact.deleted_at) : '-',
 })))
 
-const contactsColumns: TableDataColumn[] = [
+const contactsColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.trash.columns.contacts.name'), align: 'left', field: 'name' },
   { label: t('admin.trash.columns.contacts.company'), align: 'left', field: 'companyName' },
   { label: t('admin.trash.columns.contacts.email'), align: 'left', field: 'email' },
@@ -322,7 +322,7 @@ const contactsColumns: TableDataColumn[] = [
       { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
     ],
   },
-]
+])
 
 // Same fetchOne fallback as dealsStore.trashItems above, for the same
 // "trashed rows skew older than the cached 200-newest companies" reason.
