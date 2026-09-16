@@ -44,7 +44,7 @@
 | Tags | แสดงเมื่อมีข้อมูล วางหลัง Badge, มีไอคอน tag นำหน้า |
 | ปุ่ม Action | ชิดขวาสุดของ header, ปุ่มหลักคือ "แก้ไข" (outline style + ไอคอนดินสอ) |
 
-> **หมายเหตุ:** Header ของ detail page สร้างแบบ inline เอง ไม่ใช้ PageHeader component (PageHeader ใช้กับหน้า list เท่านั้น)
+> **หมายเหตุ:** ข้อความนี้อ้างอิง component ชื่อ `PageHeader` ของแอปต้นทาง (LMS คนละตัวกับ repo นี้) — **ไม่เกี่ยวกับ `components/PageHeader.vue` ของ repo นี้** ซึ่งเพิ่งถูกสร้างขึ้น (2026-09-17) และใช้กับ**ทั้ง** detail page และ report page (ดู `design-system.md` §5.6) ตรงข้ามกับสิ่งที่บรรทัดนี้บอก อย่าสับสนชื่อ component ที่ซ้ำกันระหว่างสองแอป — ยึด `design-system.md` เป็นหลักเสมอ ไม่ใช่ไฟล์นี้
 
 ---
 

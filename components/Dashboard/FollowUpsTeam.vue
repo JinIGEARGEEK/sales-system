@@ -1,8 +1,6 @@
 <template>
   <div>
-    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
-      {{ t('crm.dashboard.sectionFollowUpsTeam') }}
-    </h3>
+    <DashboardSectionHeader :title="t('crm.dashboard.sectionFollowUpsTeam')" />
 
     <div class="mb-6">
       <UCard class="ring-[var(--color-card-border)]">

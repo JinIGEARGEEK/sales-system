@@ -71,17 +71,39 @@
         <template #header>
           <h3 class="text-base font-semibold">{{ t('crm.deals.detail.linkedRecords') }}</h3>
         </template>
-        <div class="flex flex-col gap-3 text-sm">
-          <NuxtLink :to="`/crm/companies/${deal.company_id}`" class="flex justify-between hover:underline">
-            <span class="text-(--color-gray)">{{ t('crm.deals.detail.company') }}</span><span>{{ companyName }}</span>
+        <div class="flex flex-col gap-1 text-sm">
+          <NuxtLink
+            :to="`/crm/companies/${deal.company_id}`"
+            class="-mx-2 flex items-center justify-between gap-2 rounded-md px-2 py-1 transition-colors hover:bg-(--color-light-gray-1)"
+          >
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.company') }}</span>
+            <span class="flex items-center gap-1 font-medium text-(--color-primary)">
+              {{ companyName }}
+              <UIcon name="material-symbols:chevron-right" class="size-4" />
+            </span>
           </NuxtLink>
-          <NuxtLink :to="`/crm/contacts/${deal.contact_id}`" class="flex justify-between hover:underline">
-            <span class="text-(--color-gray)">{{ t('crm.deals.detail.contact') }}</span><span>{{ contactName }}</span>
+          <NuxtLink
+            :to="`/crm/contacts/${deal.contact_id}`"
+            class="-mx-2 flex items-center justify-between gap-2 rounded-md px-2 py-1 transition-colors hover:bg-(--color-light-gray-1)"
+          >
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.contact') }}</span>
+            <span class="flex items-center gap-1 font-medium text-(--color-primary)">
+              {{ contactName }}
+              <UIcon name="material-symbols:chevron-right" class="size-4" />
+            </span>
           </NuxtLink>
-          <NuxtLink v-if="linkedProject" :to="`/crm/companies/${deal.company_id}`" class="flex justify-between hover:underline">
-            <span class="text-(--color-gray)">{{ t('crm.deals.detail.project') }}</span><span>{{ linkedProject.name }}</span>
+          <NuxtLink
+            v-if="linkedProject"
+            :to="`/crm/companies/${deal.company_id}`"
+            class="-mx-2 flex items-center justify-between gap-2 rounded-md px-2 py-1 transition-colors hover:bg-(--color-light-gray-1)"
+          >
+            <span class="text-(--color-gray)">{{ t('crm.deals.detail.project') }}</span>
+            <span class="flex items-center gap-1 font-medium text-(--color-primary)">
+              {{ linkedProject.name }}
+              <UIcon name="material-symbols:chevron-right" class="size-4" />
+            </span>
           </NuxtLink>
-          <div v-else class="flex justify-between">
+          <div v-else class="flex items-center justify-between gap-2 px-2 py-1">
             <span class="text-(--color-gray)">{{ t('crm.deals.detail.project') }}</span>
             <span class="text-(--color-gray)">{{ deal.status === 'won' ? t('crm.deals.detail.projectNotCreatedYet') : '-' }}</span>
           </div>

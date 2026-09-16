@@ -1,27 +1,18 @@
 <template>
   <div class="p-5">
     <div v-if="contact">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="goBack()"
+      <PageHeader :title="contact.name" @back="goBack()">
+        <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.detail.primaryBadge') }}</UBadge>
+        <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
+        <template #actions>
+          <ButtonPrimary
+            :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+            icon="material-symbols:campaign-outline"
+            outline
+            @click="openCampaignModal"
           />
-          <h2 class="max-w-full truncate text-xl font-black">{{ contact.name }}</h2>
-          <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.detail.primaryBadge') }}</UBadge>
-          <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
-        </div>
-        <ButtonPrimary
-          :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
-          icon="material-symbols:campaign-outline"
-          outline
-          @click="openCampaignModal"
-        />
-      </div>
+        </template>
+      </PageHeader>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div class="lg:col-span-3">
@@ -135,9 +126,7 @@
       </div>
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.contacts.detail.contactNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.contacts.detail.contactNotFound')" back-to="/crm/contacts" />
 
     <CrmAddActivityModal
       v-model:open="addActivityOpen"

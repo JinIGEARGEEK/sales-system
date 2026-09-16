@@ -1,8 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
-      {{ t('crm.dashboard.sectionTrends') }}
-    </h3>
+    <DashboardSectionHeader :title="t('crm.dashboard.sectionTrends')" />
 
     <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <UCard class="ring-[var(--color-card-border)]">

@@ -1,8 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
-      {{ t('crm.dashboard.sectionForecastBreakdown') }}
-    </h3>
+    <DashboardSectionHeader :title="t('crm.dashboard.sectionForecastBreakdown')" />
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <CrmStatCard

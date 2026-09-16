@@ -3,7 +3,7 @@
     <UCard class="relative overflow-hidden ring-[var(--color-card-border)]" :ui="{ body: 'p-3' }">
       <div
         v-if="accentGlassClass"
-        class="absolute inset-y-0 left-0 w-[10%] backdrop-blur-md"
+        class="absolute inset-y-0 left-0 w-1/2 backdrop-blur-md"
         :class="accentGlassClass"
       />
       <div class="relative flex items-center justify-between gap-3">
@@ -64,7 +64,7 @@ const props = defineProps({
     type: String,
     default: 'bg-(--color-light-gray-1)',
   },
-  // A frosted-glass gradient panel covering the card's left ~10% width,
+  // A frosted-glass gradient panel covering the card's left ~50% width,
   // e.g. 'bg-gradient-to-r from-[var(--color-accent-green)]/40 to-transparent'.
   // UCard's own `overflow-hidden` clips it to the card's rounded corners.
   accentGlassClass: {

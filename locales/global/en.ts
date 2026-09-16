@@ -6,6 +6,7 @@ const lang = {
   previous: 'Previous',
   next: 'Next',
   backToHome: 'Back To Home',
+  backToList: 'Back to list',
   back: 'Back',
   retry: 'Retry',
   goToStageSetting: 'Go to stage setting',

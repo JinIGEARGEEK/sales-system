@@ -6,6 +6,7 @@ export default {
   previous: 'ก่อนหน้า',
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
+  backToList: 'กลับไปยังรายการ',
   back: 'ย้อนกลับ',
   retry: 'ลองอีกครั้ง',
   goToStageSetting: 'ไปที่การตั้งค่าขั้นตอน',

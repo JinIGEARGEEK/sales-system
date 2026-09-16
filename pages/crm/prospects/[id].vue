@@ -132,9 +132,7 @@
       </div>
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.prospects.detail.prospectNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.prospects.detail.prospectNotFound')" back-to="/crm/prospects" />
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"

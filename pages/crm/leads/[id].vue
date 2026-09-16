@@ -1,20 +1,10 @@
 <template>
   <div class="p-5">
     <div v-if="lead">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="goBack()"
-          />
-          <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
-          <UBadge size="sm" :color="leadStatusColor(lead.status)" variant="subtle">{{ lead.status }}</UBadge>
+      <PageHeader :title="lead.name" @back="goBack()">
+        <UBadge size="sm" :color="leadStatusColor(lead.status)" variant="subtle">{{ lead.status }}</UBadge>
 
-          <!-- Score badge + its "how is this calculated" trigger grouped
+        <!-- Score badge + its "how is this calculated" trigger grouped
           tightly (own small gap, nested inside the row's wider gap-3) so
           the info icon reads as an affordance on the score, not a fourth
           unrelated header item — same size as the status badge above so
@@ -69,42 +59,44 @@
               </template>
             </UPopover>
           </div>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <!-- FR-CRM-007's manual "sales-ready" override — the only classification
-          a rep can set directly; mql/none stay entirely score-driven. Both this
-          and Convert to Deal are Sales-pipeline actions (backend-enforced too,
-          PUT/convert on /leads/:id — see internal/routes/routes.go): a Marketing
-          viewer can still reach this page read-only (the Prospect detail page's
-          "View Lead" link, once converted) without these buttons implying
-          actions that aren't theirs to take. -->
-          <ButtonPrimary
-            v-if="canManageLead && lead.classification !== 'sql'"
-            :label="t('crm.leads.detail.markSql')"
-            icon="material-symbols:star-outline"
-            outline
-            @click="onMarkSql"
-          />
-          <ButtonPrimary
-            v-if="lead.converted_deal_id"
-            :label="t('crm.leads.index.actions.viewDeal')"
-            icon="material-symbols:open-in-new"
-            @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
-          />
-          <ButtonPrimary
-            v-else-if="canManageLead && lead.status !== 'Disqualified'"
-            :label="t('crm.leads.detail.convertToDeal')"
-            icon="material-symbols:swap-horiz"
-            @click="requestConvert"
-          />
-          <ButtonPrimary
-            :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
-            icon="material-symbols:campaign-outline"
-            outline
-            @click="openCampaignModal"
-          />
-        </div>
-      </div>
+
+        <template #actions>
+          <div class="flex flex-wrap gap-2">
+            <!-- FR-CRM-007's manual "sales-ready" override — the only classification
+            a rep can set directly; mql/none stay entirely score-driven. Both this
+            and Convert to Deal are Sales-pipeline actions (backend-enforced too,
+            PUT/convert on /leads/:id — see internal/routes/routes.go): a Marketing
+            viewer can still reach this page read-only (the Prospect detail page's
+            "View Lead" link, once converted) without these buttons implying
+            actions that aren't theirs to take. -->
+            <ButtonPrimary
+              v-if="canManageLead && lead.classification !== 'sql'"
+              :label="t('crm.leads.detail.markSql')"
+              icon="material-symbols:star-outline"
+              outline
+              @click="onMarkSql"
+            />
+            <ButtonPrimary
+              v-if="lead.converted_deal_id"
+              :label="t('crm.leads.index.actions.viewDeal')"
+              icon="material-symbols:open-in-new"
+              @click="navigateTo(`/crm/deals/${lead.converted_deal_id}`)"
+            />
+            <ButtonPrimary
+              v-else-if="canManageLead && lead.status !== 'Disqualified'"
+              :label="t('crm.leads.detail.convertToDeal')"
+              icon="material-symbols:swap-horiz"
+              @click="requestConvert"
+            />
+            <ButtonPrimary
+              :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+              icon="material-symbols:campaign-outline"
+              outline
+              @click="openCampaignModal"
+            />
+          </div>
+        </template>
+      </PageHeader>
 
       <ContainerTemplate>
         <Form @submit="onSave">
@@ -195,9 +187,7 @@
       />
     </div>
 
-    <div v-else class="py-12 text-center text-(--color-gray)">
-      {{ t('crm.leads.detail.leadNotFound') }}
-    </div>
+    <NotFoundState v-else :message="t('crm.leads.detail.leadNotFound')" back-to="/crm/leads" />
   </div>
 </template>
 
