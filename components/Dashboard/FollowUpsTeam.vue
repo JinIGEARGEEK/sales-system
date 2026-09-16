@@ -123,7 +123,7 @@
                 <UAvatar :text="member.initials" size="sm" />
                 <div>
                   <p class="text-sm font-medium">{{ member.name }}</p>
-                  <p class="text-xs text-(--color-gray)">{{ t('crm.dashboard.dealsWon', { count: member.wonCount }) }} · {{ member.winRate }}%</p>
+                  <p class="text-xs text-(--color-gray)">{{ t('crm.dashboard.dealsWon', { count: member.wonCount }) }} · {{ member.winRate }}% · {{ t('crm.dashboard.activitiesLogged', { count: member.activityCount }) }}</p>
                 </div>
               </div>
               <span class="text-sm font-medium">{{ t('global.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
@@ -168,7 +168,7 @@ defineProps<{
     company_name?: string
   }[]
   industryBreakdown: { industry: string, wonCount: number, winRate: number, barClass: string }[]
-  teamPerformance: { id: number, name: string, initials: string, wonCount: number, wonValue: number, winRate: number }[]
+  teamPerformance: { id: number, name: string, initials: string, wonCount: number, wonValue: number, winRate: number, activityCount: number }[]
 }>()
 
 const alertTitle = (alert: { deal_id?: number, deal_title?: string, company_name?: string }) =>
