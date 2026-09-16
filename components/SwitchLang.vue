@@ -26,10 +26,16 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { setLocale } from '@vee-validate/i18n'
+import { setLocale as setVeeValidateLocale } from '@vee-validate/i18n'
 
-const { locale } = useI18n()
+// Deliberately relies on Nuxt's auto-imported `useI18n` (no explicit
+// `import { useI18n } from 'vue-i18n'`) — only the module-augmented
+// composable exposes a real `setLocale`, which persists the choice (cookie)
+// and is what keeps the locale from reverting on the next navigation. A
+// plain `locale.value = lang` assignment only changes the in-memory ref;
+// it's overwritten by `@nuxtjs/i18n`'s own route middleware on the very
+// next page change.
+const { locale, setLocale } = useI18n()
 
 // `glass` renders a blue glass-light chip instead of the default
 // currentColor-tinted pill — used on dark/glass surfaces like the sidebar.
@@ -50,10 +56,13 @@ const glassStyle = (lang: string) => {
   }
 }
 
-const switchLang = (lang: string) => {
-  locale.value = lang
-  localStorage.setItem('lang', lang)
+const switchLang = (lang: 'th' | 'en') => {
   setLocale(lang)
+  // Read by `plugins/vee-validate.ts` on next boot to set vee-validate's
+  // initial message locale; update it live here too so validation messages
+  // switch immediately, without needing a reload.
+  localStorage.setItem('lang', lang)
+  setVeeValidateLocale(lang)
 }
 </script>
 

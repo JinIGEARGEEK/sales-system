@@ -82,6 +82,15 @@ export default defineNuxtConfig({
     restructureDir: '.',
     baseUrl: process.env.NUXT_PUBLIC_SITE_URL,
     defaultLocale: 'th',
+    // No route in this app is locale-prefixed (no `/en/...` links/menus
+    // anywhere) — without an explicit strategy, `@nuxtjs/i18n` defaults to
+    // `prefix_except_default`, whose global route middleware re-derives the
+    // active locale from the (always-unprefixed) URL on every navigation,
+    // silently resetting a manually-switched locale back to `defaultLocale`
+    // on the very next page change. `no_prefix` skips that route-based
+    // detection entirely, so the locale set via `setLocale()` (see
+    // components/SwitchLang.vue) actually persists across navigation.
+    strategy: 'no_prefix',
     locales: [
       {
         code: 'en',
