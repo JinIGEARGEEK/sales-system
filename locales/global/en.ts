@@ -40,6 +40,7 @@ const lang = {
   },
   table: {
     selectAll: 'Select All',
+    actions: 'Actions',
     pagination: {
       allItem: 'Total',
       rowPerPage: 'Rows per page',

@@ -10,9 +10,11 @@
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
-      <div class="mb-4 max-w-sm">
-        <InputText v-model="search" :placeholder="t('admin.trash.searchPlaceholder')" name="search" />
-      </div>
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
+        <div class="max-w-sm">
+          <InputText v-model="search" :placeholder="t('admin.trash.searchPlaceholder')" name="search" />
+        </div>
+      </UCard>
 
       <div v-if="activeTab === 'deals'">
         <TableData
@@ -26,7 +28,7 @@
           server-paginated
           @change-page="onChangeDealsPage"
           @change-per-page="onChangeDealsPerPage"
-          @restore="onRestoreDeal"
+          @restore="(row: Deal) => requestRestore({ entity: 'deal', row, name: row.title })"
         />
       </div>
       <div v-else-if="activeTab === 'leads'">
@@ -41,7 +43,7 @@
           server-paginated
           @change-page="onChangeLeadsPage"
           @change-per-page="onChangeLeadsPerPage"
-          @restore="onRestoreLead"
+          @restore="(row: Lead) => requestRestore({ entity: 'lead', row, name: row.name })"
         />
       </div>
       <div v-else-if="activeTab === 'companies'">
@@ -56,7 +58,7 @@
           server-paginated
           @change-page="onChangeCompaniesPage"
           @change-per-page="onChangeCompaniesPerPage"
-          @restore="onRestoreCompany"
+          @restore="(row: Company) => requestRestore({ entity: 'company', row, name: row.name })"
         />
       </div>
       <div v-else-if="activeTab === 'contacts'">
@@ -71,9 +73,19 @@
           server-paginated
           @change-page="onChangeContactsPage"
           @change-per-page="onChangeContactsPerPage"
-          @restore="onRestoreContact"
+          @restore="(row: Contact) => requestRestore({ entity: 'contact', row, name: row.name })"
         />
       </div>
+
+      <CrmConfirmDeleteModal
+        :open="restoreOpen"
+        :title="t('admin.trash.confirmRestoreTitle')"
+        :body="restoreTarget ? t('admin.trash.confirmRestoreBody', { name: restoreTarget.name }) : ''"
+        :confirm-label="t('admin.trash.actions.restore')"
+        confirm-color="success"
+        @update:open="(value: boolean) => { if (!value) closeRestore() }"
+        @confirm="onConfirmRestore"
+      />
     </AccessGate>
   </div>
 </template>
@@ -82,6 +94,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { MANAGER_ROLES } from '~/constants/roles'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
@@ -197,15 +210,6 @@ watch(() => dealsStore.trashItems, (items) => {
   }
 })
 
-const onRestoreDeal = async (row: Deal) => {
-  try {
-    await dealsStore.restore(row.id)
-    success(t('admin.trash.restoreSuccess', { entity: t('admin.trash.tabs.deals') }))
-  } catch (err) {
-    error(getApiErrorMessage(err, t('admin.trash.restoreError')))
-  }
-}
-
 const {
   loading: leadsLoading,
   page: leadsPage,
@@ -252,15 +256,6 @@ const leadsColumns: TableDataColumn[] = [
   },
 ]
 
-const onRestoreLead = async (row: Lead) => {
-  try {
-    await leadsStore.restore(row.id)
-    success(t('admin.trash.restoreSuccess', { entity: t('admin.trash.tabs.leads') }))
-  } catch (err) {
-    error(getApiErrorMessage(err, t('admin.trash.restoreError')))
-  }
-}
-
 const {
   loading: companiesLoading,
   page: companiesPage,
@@ -293,15 +288,6 @@ const companiesColumns: TableDataColumn[] = [
     ],
   },
 ]
-
-const onRestoreCompany = async (row: Company) => {
-  try {
-    await companiesStore.restore(row.id)
-    success(t('admin.trash.restoreSuccess', { entity: t('admin.trash.tabs.companies') }))
-  } catch (err) {
-    error(getApiErrorMessage(err, t('admin.trash.restoreError')))
-  }
-}
 
 const {
   loading: contactsLoading,
@@ -348,12 +334,33 @@ watch(() => contactsStore.trashItems, (items) => {
   }
 })
 
-const onRestoreContact = async (row: Contact) => {
+type TrashEntity = 'deal' | 'lead' | 'company' | 'contact'
+type TrashRow = Deal | Lead | Company | Contact
+type RestoreTarget = { entity: TrashEntity, row: TrashRow, name: string }
+
+const { open: restoreOpen, target: restoreTarget, requestDelete: requestRestore, closeDelete: closeRestore } = useDeleteConfirm<RestoreTarget>()
+
+const RESTORE_HANDLERS: Record<TrashEntity, (id: number) => Promise<unknown>> = {
+  deal: id => dealsStore.restore(id),
+  lead: id => leadsStore.restore(id),
+  company: id => companiesStore.restore(id),
+  contact: id => contactsStore.restore(id),
+}
+
+// Every entity's trash tab is named by its plain plural except "company" —
+// the only one of the four whose plural isn't just "+s".
+const tabKeyForEntity = (entity: TrashEntity) => (entity === 'company' ? 'companies' : `${entity}s`)
+
+const onConfirmRestore = async () => {
+  if (!restoreTarget.value) return
+  const { entity, row } = restoreTarget.value
   try {
-    await contactsStore.restore(row.id)
-    success(t('admin.trash.restoreSuccess', { entity: t('admin.trash.tabs.contacts') }))
+    await RESTORE_HANDLERS[entity](row.id)
+    success(t('admin.trash.restoreSuccess', { entity: t(`admin.trash.tabs.${tabKeyForEntity(entity)}`) }))
   } catch (err) {
     error(getApiErrorMessage(err, t('admin.trash.restoreError')))
+  } finally {
+    closeRestore()
   }
 }
 

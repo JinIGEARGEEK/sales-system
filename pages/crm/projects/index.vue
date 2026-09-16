@@ -185,7 +185,7 @@ const tabItems = computed(() => [
 
 // ── Projects tab ──────────────────────────────────────────────
 
-const search = ref('')
+const search = useQuerySyncedRef('search', '', 400)
 // Seeded from ?status= (the Dashboard's own Production widget deep-links a
 // stat card here, e.g. ?status=Not+Started) — same useQueryFilter convention
 // as Deals'/Prospects' own dashboard deep-link seeding. Was a plain ref('all')
@@ -303,7 +303,7 @@ const {
 
 // ── Products tab ──────────────────────────────────────────────
 
-const productSearch = ref('')
+const productSearch = useQuerySyncedRef('productSearch', '', 400)
 const productStatusFilter = ref('all')
 
 const productStatusFilterOptions = computed(() => [

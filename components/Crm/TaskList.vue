@@ -1,7 +1,10 @@
 <template>
   <div>
-    <div v-if="tasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-      {{ t('crm.components.taskList.noTasks') }}
+    <div v-if="loading" class="flex flex-col gap-2">
+      <USkeleton v-for="i in 5" :key="`task-skeleton-${i}`" class="h-14 w-full rounded-lg" />
+    </div>
+    <div v-else-if="tasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
+      {{ emptyMessage || t('crm.components.taskList.noTasks') }}
     </div>
     <div v-else class="flex flex-col gap-2">
       <div v-if="selectable" class="flex items-center gap-3 px-4 py-1">
@@ -113,6 +116,15 @@ const props = defineProps<{
   // Tasks tabs (Deal/Contact/Company detail pages) never pass these.
   selectable?: boolean
   selectedIds?: number[]
+  // Only the all-tasks page passes this — the per-record Tasks tabs load
+  // their (already-fetched) parent record first, so their own task list is
+  // effectively always available by the time this component mounts.
+  loading?: boolean
+  // Overrides the default "no follow-ups yet" copy — the all-tasks page has
+  // its own filters (status/assignee/campaign/...) active by default, so an
+  // empty result there usually means "nothing matches your filters", not
+  // "this record truly has none", which is what the default copy implies.
+  emptyMessage?: string
 }>()
 
 const emit = defineEmits<{

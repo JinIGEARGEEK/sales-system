@@ -14,6 +14,14 @@ export default defineAppConfig({
         // without that artifact — see design-system.md §2.5 if you touch
         // this again.
         list: 'bg-white/65 backdrop-blur-2xl border border-white/90 divide-x divide-white/70 shadow-sm',
+        // Nuxt UI's default only transitions the indicator's translate/width
+        // (not its color) and gives the trigger's text-color a separate,
+        // untimed `transition-colors` — the slide and the color/text change
+        // finish at visibly different times. Widen the indicator's
+        // transition to include background-color and match both durations
+        // so the pill's movement and color settle together.
+        indicator: 'transition-[translate,width,background-color] duration-300 ease-out',
+        trigger: 'transition-colors duration-300 ease-out',
       },
     },
     card: {

@@ -127,6 +127,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { DEAL_STAGE_COLORS, PROSPECT_CONVERTED_STATUS } from '~/constants/mockData'
+import { CHART_CATEGORICAL_COLOR_VARS } from '~/constants/ui'
 
 const { t } = useI18n()
 const pipelineStagesStore = usePipelineStagesStore()
@@ -201,6 +202,23 @@ const DEFAULT_PROSPECT_STAGE_COLORS: Record<string, string> = {
   Converted: '#00C875',
 }
 
+// Admin-added custom stages have no color field of their own (neither
+// PipelineStage nor ProspectStage stores one — see stores/pipelineStages.ts/
+// prospectStages.ts), so without this every non-won/lost/disqualified custom
+// stage rendered as one flat FALLBACK_COLOR, indistinguishable from any other
+// custom stage on the same board. Hashing the stage's own `id` into the same
+// validated categorical palette used for chart bars/stat-icon chips
+// (`CHART_CATEGORICAL_COLOR_VARS`, `constants/ui.ts`) gives each one a
+// distinct, stable color (stable across reorders/renames, since `id` never
+// changes) without needing a backend schema change, an admin-facing color
+// picker, or a second hand-picked palette to keep in sync with the chart one.
+// Unlike that palette's own "never cycle past 4, 5th+ collapses to fallback"
+// rule (meant for a simultaneously-visible legend/chart), cycling here is
+// harmless — two custom stages sharing a color is a soft, rare degradation
+// (most pipelines have only a couple of custom stages), not a legend
+// ambiguity, so this indexes with modulo instead of falling back past 4.
+const colorForStageId = (id: number) => CHART_CATEGORICAL_COLOR_VARS[id % CHART_CATEGORICAL_COLOR_VARS.length]
+
 // Prefers the hardcoded DEAL_STAGE_COLORS/DEFAULT_PROSPECT_STAGE_COLORS maps
 // (kept for each board's default columns' exact existing look), then checks
 // prospectStagesStore *before* pipelineStagesStore — a Prospect lane's value
@@ -210,17 +228,19 @@ const DEFAULT_PROSPECT_STAGE_COLORS: Record<string, string> = {
 // prospectStagesStore first stops that collision from leaking a Deal's Won/
 // Lost color onto an unrelated Prospect column. Falls back to
 // pipelineStagesStore's is_won_stage/is_lost_stage flags so a custom
-// Admin-added Deal stage still renders sensibly (green/red/primary) without
-// needing a per-stage hardcoded color.
+// Admin-added Deal stage still renders won/lost sensibly, and any other
+// custom (in-between) stage gets its own distinct palette color instead of
+// the flat FALLBACK_COLOR.
 const getColumnColor = (value: string) => {
   if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
   if (DEFAULT_PROSPECT_STAGE_COLORS[value]) return DEFAULT_PROSPECT_STAGE_COLORS[value]
   if (value === PROSPECT_CONVERTED_STATUS) return WON_COLOR
   const prospectStage = prospectStagesStore.byName(value)
-  if (prospectStage) return prospectStage.is_disqualified_stage ? LOST_COLOR : FALLBACK_COLOR
+  if (prospectStage) return prospectStage.is_disqualified_stage ? LOST_COLOR : colorForStageId(prospectStage.id)
   const dealStage = pipelineStagesStore.byName(value)
   if (dealStage?.is_won_stage) return WON_COLOR
   if (dealStage?.is_lost_stage) return LOST_COLOR
+  if (dealStage) return colorForStageId(dealStage.id)
   return FALLBACK_COLOR
 }
 

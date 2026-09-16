@@ -37,6 +37,7 @@ export default {
   },
   table: {
     selectAll: 'เลือกทั้งหมด',
+    actions: 'การจัดการ',
     pagination: {
       allItem: 'ทั้งหมด',
       rowPerPage: 'แถวต่อหน้า',

@@ -13,7 +13,7 @@
         />
       </div>
 
-      <UCard class="mb-4">
+      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.activities.index.searchPlaceholder')" name="search" />
@@ -62,6 +62,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
