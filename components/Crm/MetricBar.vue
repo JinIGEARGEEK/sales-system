@@ -9,7 +9,7 @@
       <span class="min-w-0 flex-1 truncate text-sm">{{ label }}</span>
     </UTooltip>
     <UTooltip :text="tooltipText">
-      <div class="h-3 w-24 shrink-0 overflow-hidden rounded-full bg-(--color-light-gray-2)">
+      <div class="h-3 flex-[0_0_45%] overflow-hidden rounded-full bg-(--color-light-gray-2)">
         <div
           class="h-full rounded-full transition-[filter] duration-150 hover:brightness-110"
           :class="barClass"
