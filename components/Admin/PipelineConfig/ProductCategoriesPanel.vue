@@ -102,7 +102,7 @@ const productCategoryRows = computed(() => productCategoryOptionsStore.items.map
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const productCategoryColumns: TableDataColumn[] = [
+const productCategoryColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.productCategories.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.productCategories.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const productCategoryColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

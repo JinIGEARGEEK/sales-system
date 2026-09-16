@@ -102,7 +102,7 @@ const companySizeRows = computed(() => companySizeOptionsStore.items.map(size =>
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const companySizeColumns: TableDataColumn[] = [
+const companySizeColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.companySizes.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.companySizes.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const companySizeColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

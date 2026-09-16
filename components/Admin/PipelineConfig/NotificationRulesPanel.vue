@@ -115,7 +115,7 @@ const ruleRows = computed(() => notificationRulesStore.items.map(rule => ({
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const ruleColumns: TableDataColumn[] = [
+const ruleColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.notificationRules.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.notificationRules.columns.entityType'), align: 'left', field: 'entityTypeLabel' },
   { label: t('admin.pipelineConfig.notificationRules.columns.thresholdDays'), align: 'left', field: 'threshold_days' },
@@ -131,5 +131,5 @@ const ruleColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

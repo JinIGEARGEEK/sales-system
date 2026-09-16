@@ -108,7 +108,7 @@ const stageRows = computed(() => [...pipelineStagesStore.items]
       : toBadge(t('admin.pipelineConfig.statusInactive')),
   })))
 
-const stageColumns: TableDataColumn[] = [
+const stageColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.stages.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.stages.columns.sortOrder'), align: 'left', field: 'sort_order' },
   { label: t('admin.pipelineConfig.stages.columns.flags'), align: 'left', field: 'flagsBadge' },
@@ -123,5 +123,5 @@ const stageColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

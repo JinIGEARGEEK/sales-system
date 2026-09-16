@@ -121,7 +121,7 @@ const targetRows = computed(() => salesTargetsStore.sorted.map(target => ({
       : toBadge(t('admin.pipelineConfig.salesTargets.pastBadge')),
 })))
 
-const targetColumns: TableDataColumn[] = [
+const targetColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.salesTargets.columns.period'), align: 'left', field: 'quarterLabel' },
   { label: t('admin.pipelineConfig.salesTargets.columns.targetValue'), align: 'left', field: 'targetValueDisplay' },
   { label: t('admin.pipelineConfig.salesTargets.columns.status'), align: 'left', field: 'periodBadge', type: TABLE_CARD_TYPE.STATUS },
@@ -135,5 +135,5 @@ const targetColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.salesTargets.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

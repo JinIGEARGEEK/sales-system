@@ -111,7 +111,7 @@ const criterionRows = computed(() => leadScoringCriteriaStore.items.map(criterio
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const criterionColumns: TableDataColumn[] = [
+const criterionColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.leadScoring.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.leadScoring.columns.field'), align: 'left', field: 'fieldLabel' },
   { label: t('admin.pipelineConfig.leadScoring.columns.matchValue'), align: 'left', field: 'match_value' },
@@ -127,5 +127,5 @@ const criterionColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

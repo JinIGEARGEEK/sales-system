@@ -195,7 +195,7 @@ const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagi
 
 const onViewDeal = (row: QuoteExpiringSoonRow) => navigateTo(`/crm/deals/${row.deal_id}`)
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.quotesExpiringSoon.columns.dealTitle'), align: 'left', field: 'deal_title' },
   { label: t('crm.reports.quotesExpiringSoon.columns.companyName'), align: 'left', field: 'company_name', width: 180 },
   { label: t('crm.reports.quotesExpiringSoon.columns.validityDate'), align: 'left', field: 'validityDateBadge', type: TABLE_CARD_TYPE.STATUS, width: 160 },
@@ -209,5 +209,5 @@ const columns: TableDataColumn[] = [
       { label: t('crm.reports.quotesExpiringSoon.viewDeal'), emitName: 'viewDeal', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

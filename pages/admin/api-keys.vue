@@ -112,7 +112,7 @@ const displayKeys = computed(() => rows.value.map(key => ({
   createdDate: dateFormat(key.created_at),
 })))
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('admin.apiKeys.index.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.apiKeys.index.columns.keyPrefix'), align: 'left', field: 'keyPrefixDisplay' },
   { label: t('admin.apiKeys.index.columns.owner'), align: 'left', field: 'ownerName' },
@@ -129,7 +129,7 @@ const columns: TableDataColumn[] = [
       { label: t('admin.apiKeys.index.revoke'), emitName: 'revoke', isBorderBottom: false, hideIf: row => !row.is_active },
     ],
   },
-]
+])
 
 const createModalOpen = ref(false)
 const revealModalOpen = ref(false)

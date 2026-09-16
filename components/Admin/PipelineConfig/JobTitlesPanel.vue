@@ -102,7 +102,7 @@ const jobTitleRows = computed(() => jobTitleOptionsStore.items.map(jobTitle => (
     : toBadge(t('admin.pipelineConfig.statusInactive')),
 })))
 
-const jobTitleColumns: TableDataColumn[] = [
+const jobTitleColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.jobTitles.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.jobTitles.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
@@ -115,5 +115,5 @@ const jobTitleColumns: TableDataColumn[] = [
       { label: t('admin.pipelineConfig.deactivate'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 </script>

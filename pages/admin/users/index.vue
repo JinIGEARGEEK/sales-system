@@ -133,7 +133,7 @@ const displayUsers = computed(() => rows.value.map((user) => {
   }
 }))
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('admin.users.index.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.users.index.columns.email'), align: 'left', field: 'email' },
   { label: t('admin.users.index.columns.role'), align: 'left', field: 'roleBadge', type: TABLE_CARD_TYPE.STATUS },
@@ -151,7 +151,7 @@ const columns: TableDataColumn[] = [
       { label: t('admin.users.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
-]
+])
 
 const onViewDetail = (row: AdminUser) => {
   navigateTo(`/admin/users/${row.id}`)

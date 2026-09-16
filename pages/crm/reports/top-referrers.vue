@@ -141,12 +141,12 @@ const displayRows = computed(() => rows.value.map(row => ({
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => displayRows.value.length)
 
-const columns: TableDataColumn[] = [
+const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.reports.topReferrers.columns.referrer'), align: 'left', field: 'referrer_name' },
   { label: t('crm.reports.topReferrers.columns.type'), align: 'left', field: 'referrerTypeLabel', width: 120 },
   { label: t('crm.reports.topReferrers.columns.leadsReferred'), align: 'left', field: 'leads_referred', width: 140 },
   { label: t('crm.reports.topReferrers.columns.dealsCreated'), align: 'left', field: 'deals_created', width: 140 },
   { label: t('crm.reports.topReferrers.columns.dealsWon'), align: 'left', field: 'deals_won', width: 120 },
   { label: t('crm.reports.topReferrers.columns.wonRevenue'), align: 'left', field: 'wonRevenueDisplay', width: 150 },
-]
+])
 </script>
