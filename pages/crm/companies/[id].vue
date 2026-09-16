@@ -67,9 +67,9 @@
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-2">
                 <span class="text-(--color-gray)">{{ t('crm.companies.detail.lastContact') }}</span>
-                <UBadge :color="lastContact.color" variant="subtle">{{ lastContact.label }}</UBadge>
+                <UBadge :color="lastContact.color" variant="subtle" class="shrink-0 whitespace-nowrap">{{ lastContact.label }}</UBadge>
               </div>
             </div>
           </UCard>
