@@ -1,6 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-3 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
+    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
       {{ t('crm.dashboard.sectionPipelineOpportunities') }}
     </h3>
 
@@ -106,18 +106,18 @@
           card sits next to the tabbed card above, whose height now varies by
           tab (a long stage list vs. a fixed-size chart), so this list must
           not force the row taller than whichever tab happens to be active. -->
-          <div v-else class="flex max-h-96 flex-col gap-2 overflow-y-auto">
+          <div v-else class="flex max-h-96 flex-col gap-2 overflow-y-auto scrollbar-hide">
             <NuxtLink
               v-for="candidate in upsellCandidates"
               :key="candidate.company.id"
               :to="`/crm/companies/${candidate.company.id}`"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
+              class="flex items-center justify-between gap-2 rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
             >
-              <div>
-                <p class="text-sm font-medium">{{ candidate.company.name }}</p>
-                <p class="text-xs text-(--color-gray)">{{ candidate.company.industry }}</p>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium">{{ candidate.company.name }}</p>
+                <p class="truncate text-xs text-(--color-gray)">{{ candidate.company.industry }}</p>
               </div>
-              <UBadge :color="candidate.contact.color" variant="subtle">{{ candidate.contact.label }}</UBadge>
+              <UBadge :color="candidate.contact.color" variant="subtle" class="w-28 shrink-0 justify-center truncate whitespace-nowrap">{{ candidate.contact.label }}</UBadge>
             </NuxtLink>
           </div>
         </UCard>
