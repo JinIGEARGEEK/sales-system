@@ -12,7 +12,7 @@
             @click="goBack()"
           />
           <h2 class="max-w-full truncate text-xl font-black">{{ lead.name }}</h2>
-          <UBadge size="sm" color="neutral" variant="subtle">{{ lead.status }}</UBadge>
+          <UBadge size="sm" :color="leadStatusColor(lead.status)" variant="subtle">{{ lead.status }}</UBadge>
 
           <!-- Score badge + its "how is this calculated" trigger grouped
           tightly (own small gap, nested inside the row's wider gap-3) so
@@ -207,6 +207,7 @@ import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/moc
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
+const { leadStatusColor } = useLeadStatusColor()
 
 useHead({ title: t('crm.leads.detail.pageTitle') })
 

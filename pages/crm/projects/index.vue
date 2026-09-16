@@ -122,6 +122,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.projects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
+const { projectStatusBadgeColor } = useProjectStatusColor()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -239,7 +240,7 @@ const onSortProjects = (field: string, direction: 'asc' | 'desc') => {
 const projectRows = computed(() => {
   const rows = filteredProjects.value.map(project => ({
     ...project,
-    statusBadge: toBadge(project.status),
+    statusBadge: toBadge(project.status, projectStatusBadgeColor(project.status)),
     targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
     expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
     expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',

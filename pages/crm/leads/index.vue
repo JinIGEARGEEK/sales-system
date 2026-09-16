@@ -262,12 +262,7 @@ const classificationBadge = (lead: Lead) => {
   return toBadge(String(lead.score), 'neutral')
 }
 
-const leadStatusColor = (status: LeadStatus) => {
-  if (status === 'Qualified') return 'success'
-  if (status === 'Disqualified') return 'error'
-  if (status === 'Contacted') return 'info'
-  return 'neutral'
-}
+const { leadStatusColor } = useLeadStatusColor()
 
 // The Lead's own status badge always stays as-is (frozen at conversion per
 // FR-CRM-004/020 — a converted Lead's status is never rewritten). A second,

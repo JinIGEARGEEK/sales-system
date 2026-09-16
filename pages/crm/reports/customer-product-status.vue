@@ -92,6 +92,7 @@ const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateFormat, toBadge } = useFormatter()
+const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
 const productsStore = useProductsStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -164,7 +165,7 @@ const rows = computed(() => {
   return results.value.map(row => ({
     ...row,
     productName: productName(row.product_id),
-    statusBadge: toBadge(row.status),
+    statusBadge: toBadge(row.status, customerProductStatusBadgeColor(row.status)),
     startDateDisplay: dateFormat(row.start_date),
   }))
 })

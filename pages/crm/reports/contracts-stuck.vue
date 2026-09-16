@@ -101,6 +101,7 @@ const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { toBadge, severityColor } = useFormatter()
+const { contractStatusBadgeColor } = useContractStatusColor()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -162,7 +163,7 @@ const onExport = () => downloadCsvBlob('/reports/contracts-stuck/export', 'contr
 
 const rows = computed(() => results.value.map(row => ({
   ...row,
-  statusBadge: toBadge(row.status, row.status === 'sent' ? 'info' : 'neutral'),
+  statusBadge: toBadge(row.status, contractStatusBadgeColor(row.status)),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   daysInStatusBadge: toBadge(
     t('crm.reports.contractsStuck.daysInStatus', { days: row.days_in_status }),

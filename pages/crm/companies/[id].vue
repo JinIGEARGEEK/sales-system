@@ -172,7 +172,7 @@
                 <p class="text-sm font-medium">{{ t('crm.companies.detail.fromDeal', { title: dealTitleById(contract.deal_id) }) }}</p>
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
               </div>
-              <UBadge color="neutral" variant="subtle">{{ contract.status }}</UBadge>
+              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contract.status }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -199,7 +199,7 @@
                 <p class="text-sm font-medium">{{ record.product.name }}</p>
                 <p class="text-xs text-(--color-gray)">{{ record.product.category || '-' }}</p>
               </div>
-              <UBadge color="neutral" variant="subtle">{{ record.status }}</UBadge>
+              <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
             </button>
           </div>
         </ContainerTemplate>
@@ -240,7 +240,7 @@
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
               </div>
-              <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
             </button>
           </div>
         </ContainerTemplate>
@@ -341,6 +341,9 @@ useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
 const { priceFormatCompact, parseTags, dateFormat } = useFormatter()
+const { contractStatusBadgeColor } = useContractStatusColor()
+const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
+const { projectStatusBadgeColor } = useProjectStatusColor()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()

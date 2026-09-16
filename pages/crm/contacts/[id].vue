@@ -94,7 +94,7 @@
                     {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                   </p>
                 </div>
-                <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+                <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
               </button>
             </div>
           </UCard>
@@ -185,6 +185,7 @@ const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags, dateFormat } = useFormatter()
+const { projectStatusBadgeColor } = useProjectStatusColor()
 const { hasRole } = useRole()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
