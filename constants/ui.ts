@@ -18,3 +18,14 @@ export const CHART_CATEGORICAL_COLORS = [
   { bar: 'bg-(--color-chart-violet)', iconClass: 'text-(--color-chart-violet)', iconBgClass: 'bg-(--color-chart-violet)/25' },
 ]
 export const CHART_FALLBACK_COLOR = { bar: 'bg-(--color-gray)/50', iconClass: 'text-(--color-gray)', iconBgClass: 'bg-(--color-gray)/15' }
+
+// Raw CSS-var equivalents of the palette above, for contexts that need a
+// literal color value (e.g. inside `color-mix()`) rather than a Tailwind
+// utility class — same order, so picking "index i" gives the same hue
+// either way. See PipelineBoard.vue's custom-stage coloring.
+export const CHART_CATEGORICAL_COLOR_VARS = [
+  'var(--color-accent-green)',
+  'var(--color-info-toast)',
+  'var(--color-warning-hover)',
+  'var(--color-chart-violet)',
+]

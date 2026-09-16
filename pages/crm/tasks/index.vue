@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <UCard class="mb-4">
+    <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex flex-col gap-3 sm:flex-row">
         <div class="flex-1">
           <InputText v-model="search" :placeholder="t('crm.tasks.index.searchPlaceholder')" name="search" />
@@ -52,12 +52,10 @@
     </UCard>
 
     <ContainerTemplate>
-      <div v-if="filteredTasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.tasks.index.noTasksMatch') }}
-      </div>
       <CrmTaskList
-        v-else
         :tasks="paginatedTasks"
+        :loading="loading"
+        :empty-message="t('crm.tasks.index.noTasksMatch')"
         :selectable="isSelectMode"
         :selected-ids="selectedIds"
         @toggle="onToggleTask"
@@ -66,7 +64,7 @@
         @update:selected-ids="selectedIds = $event"
       />
       <TablePagination
-        v-if="filteredTasks.length > 0"
+        v-if="!loading && filteredTasks.length > 0"
         :page="page"
         :total="filteredTasks.length"
         :total-page="totalPage"
@@ -99,6 +97,7 @@
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS_FILTER_OPTIONS, matchesAssigneeFilter, isTaskOverdue, BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
 import { TASK_ROLES } from '~/constants/roles'
+import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
@@ -119,8 +118,15 @@ const campaignsStore = useCampaignsStore()
 const { resolveRelated } = useRelatedRecord()
 const route = useRoute()
 
+// Only gates the initial load (tasksStore.items may already be populated by
+// a prior visit, in which case there's nothing to flash a skeleton for).
+const loading = ref(false)
+
 guardMounted(() => {
-  if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyApiError)
+  if (tasksStore.items.length === 0) {
+    loading.value = true
+    tasksStore.fetchAll().catch(notifyApiError).finally(() => { loading.value = false })
+  }
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
   // Needed both to resolve each task's relatedLabel/path below and to back
   // the Business Unit filter, which reads the linked Deal/Prospect's own
@@ -130,7 +136,7 @@ guardMounted(() => {
   if (campaignsStore.items.length === 0) campaignsStore.fetchAll().catch(notifyApiError)
 })
 
-const search = ref('')
+const search = useQuerySyncedRef('search', '', 400)
 const statusFilter = ref('pending')
 const assigneeFilter = ref('all')
 const businessUnitFilter = ref('all')

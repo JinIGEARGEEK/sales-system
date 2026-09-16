@@ -40,6 +40,8 @@ export default {
   actions: {
     restore: 'กู้คืน',
   },
+  confirmRestoreTitle: 'กู้คืนรายการนี้?',
+  confirmRestoreBody: 'กู้คืน "{name}" ใช่หรือไม่? รายการจะกลับไปแสดงในหน้ารายการปกติ',
   restoreSuccess: 'กู้คืน{entity}สำเร็จ',
   restoreError: 'ไม่สามารถกู้คืนรายการนี้ได้',
 }

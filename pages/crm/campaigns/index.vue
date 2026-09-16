@@ -14,7 +14,11 @@
         />
       </div>
 
-      <div v-if="campaignsStore.items.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
+      <div v-if="loading" class="flex flex-col gap-3">
+        <USkeleton v-for="i in 3" :key="`campaign-skeleton-${i}`" class="h-20 w-full rounded-lg" />
+      </div>
+
+      <div v-else-if="campaignsStore.items.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.campaigns.index.noCampaigns') }}
       </div>
 
@@ -70,9 +74,11 @@ const { dateFormat } = useFormatter()
 const campaignsStore = useCampaignsStore()
 
 const progressByCampaign = ref<Record<number, CampaignProgress>>({})
+const loading = ref(false)
 
 guardMounted(async () => {
-  await campaignsStore.fetchAll().catch(notifyApiError)
+  loading.value = true
+  await campaignsStore.fetchAll().catch(notifyApiError).finally(() => { loading.value = false })
   for (const campaign of campaignsStore.items) {
     campaignsStore.fetchProgress(campaign.id)
       .then((progress) => { progressByCampaign.value[campaign.id] = progress })

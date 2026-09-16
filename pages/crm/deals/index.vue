@@ -182,7 +182,7 @@ const dealStageBuckets = ref<Record<string, DealStageBucket>>({})
 const loadingMoreStage = ref<string | null>(null)
 
 const fetchStageDeals = async (stageName: string, page = 1) => {
-  const result = await dealsStore.fetchList({ stage: stageName, per_page: DEALS_PAGE_SIZE, page })
+  const result = await dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page })
   const bucket = dealStageBuckets.value[stageName] ?? { items: [], total: 0, page: 0 }
   bucket.items = page === 1 ? result.items : [...bucket.items, ...result.items]
   bucket.total = result.total
@@ -200,17 +200,20 @@ const loadAllStageDeals = async () => {
 // `bucket.items` with only that first page, discarding any "Load more" pages
 // a user had already fetched for that column. Used after a move/conversion,
 // where we need the column's contents to stay correct without losing state
-// the user had already paged into.
+// the user had already paged into. Pages are independent requests, fetched
+// in parallel rather than one at a time — order is preserved by `Promise.all`
+// resolving in input order regardless of completion order.
 const refetchStageDeals = async (stageName: string) => {
   const pagesToRefetch = Math.max(dealStageBuckets.value[stageName]?.page ?? 0, 1)
-  let items: Deal[] = []
-  let total = 0
-  for (let page = 1; page <= pagesToRefetch; page++) {
-    const result = await dealsStore.fetchList({ stage: stageName, per_page: DEALS_PAGE_SIZE, page })
-    items = [...items, ...result.items]
-    total = result.total
+  const pages = Array.from({ length: pagesToRefetch }, (_, i) => i + 1)
+  const results = await Promise.all(
+    pages.map(page => dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page })),
+  )
+  dealStageBuckets.value[stageName] = {
+    items: results.flatMap(result => result.items),
+    total: results.at(-1)?.total ?? 0,
+    page: pagesToRefetch,
   }
-  dealStageBuckets.value[stageName] = { items, total, page: pagesToRefetch }
 }
 
 const hasMoreDeals = (stageName: string) => {
@@ -266,6 +269,28 @@ const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.v
 // view for its own deep links (pages/crm/prospects/index.vue).
 const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
 
+// Kanban's own board fetch (fetchStageDeals) needs a re-fetch whenever
+// `search` changes while Kanban is showing (debounced, same 400ms as List
+// view's own independent useServerListPage.refetchDebounced), and an
+// immediate resync when switching List -> Kanban (List's own debounce only
+// refetches its own table, not Kanban's buckets, so a search typed while on
+// List would otherwise leave Kanban's buckets stale until the next edit).
+// One watcher covers both: always clears any pending timer first so a
+// view-mode switch can't race a still-armed debounce into a duplicate fetch.
+let kanbanRefreshDebounce: ReturnType<typeof setTimeout> | undefined
+watch([search, viewMode], ([, mode], previous) => {
+  clearTimeout(kanbanRefreshDebounce)
+  if (mode !== 'kanban') return
+  const modeJustChanged = mode !== previous?.[1]
+  if (modeJustChanged) {
+    loadAllStageDeals().catch(notifyApiError)
+  } else {
+    kanbanRefreshDebounce = setTimeout(() => {
+      loadAllStageDeals().catch(notifyApiError)
+    }, 400)
+  }
+})
+
 const stageFilterOptions = computed(() => [
   { label: t('crm.dashboard.allStages'), value: 'all' },
   ...pipelineStagesStore.activeOptions,
@@ -277,16 +302,17 @@ const stageFilterOptions = computed(() => [
 // column's full total.
 const loadedDeals = computed(() => Object.values(dealStageBuckets.value).flatMap(bucket => bucket.items))
 
+// `search` is already applied server-side per stage (see fetchStageDeals) —
+// matching it again here client-side would only re-narrow an already-search-
+// filtered bucket, which is harmless but redundant; left out so this mirrors
+// exactly what the server returned.
 const filteredDeals = computed(() => {
   return loadedDeals.value.filter((deal) => {
-    const matchSearch = !search.value
-      || deal.title.toLowerCase().includes(search.value.toLowerCase())
-      || companiesStore.nameById(deal.company_id).toLowerCase().includes(search.value.toLowerCase())
     const matchAssignee = matchesAssigneeFilter(deal.assigned_to, assigneeFilter.value)
     if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
     const matchChannel = channelFilter.value === 'all' || deal.channel === channelFilter.value
     const matchStage = stageFilter.value === 'all' || deal.stage === stageFilter.value
-    return matchSearch && matchAssignee && matchChannel && matchStage
+    return matchAssignee && matchChannel && matchStage
   })
 })
 

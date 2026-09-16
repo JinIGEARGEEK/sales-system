@@ -40,6 +40,8 @@ export default {
   actions: {
     restore: 'Restore',
   },
+  confirmRestoreTitle: 'Restore record?',
+  confirmRestoreBody: 'Restore "{name}"? It will reappear in its normal list.',
   restoreSuccess: '{entity} restored successfully',
   restoreError: 'Could not restore this record.',
 }

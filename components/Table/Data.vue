@@ -58,6 +58,7 @@
                       variant="ghost"
                       color="neutral"
                       size="xs"
+                      :aria-label="t('global.table.actions')"
                     />
                   </UDropdownMenu>
                 </td>
@@ -147,6 +148,7 @@
                         variant="ghost"
                         color="neutral"
                         size="xs"
+                        :aria-label="t('global.table.actions')"
                       />
                     </UDropdownMenu>
                   </div>

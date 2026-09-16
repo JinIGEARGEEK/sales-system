@@ -169,7 +169,7 @@ const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 // via a query param — seeded once at setup, same pattern as Deals' own
 // deep-link seeding in pages/crm/deals/index.vue. See useQueryFilter for the
 // 'all'-fallback convention.
-const search = ref('')
+const search = useQuerySyncedRef('search', '', 400)
 const statusFilter = useQueryFilter(route.query, 'status')
 const sourceFilter = useQueryFilter(route.query, 'source')
 const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
