@@ -1,6 +1,6 @@
 <template>
   <div class="mb-8">
-    <h3 class="mb-3 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
+    <h3 class="mb-2 border-b border-(--color-light-gray-2) pb-2 text-sm font-semibold text-(--color-black)">
       {{ t('crm.dashboard.sectionRiskAlerts') }}
     </h3>
 
@@ -20,7 +20,7 @@
         <USkeleton v-if="counts[item.key] === null" class="h-5 w-6 shrink-0 rounded-full" />
         <UBadge
           v-else
-          class="shrink-0 font-semibold"
+          class="min-w-6 shrink-0 justify-center font-semibold"
           :color="badgeColor(counts[item.key])"
           :variant="counts[item.key] ? 'solid' : 'subtle'"
           size="sm"

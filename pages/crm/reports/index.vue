@@ -45,7 +45,7 @@
                   <USkeleton v-if="counts[card.key] === null" class="h-5 w-6 rounded-full" />
                   <UBadge
                     v-else
-                    class="shrink-0 font-semibold"
+                    class="min-w-6 shrink-0 justify-center font-semibold"
                     :color="badgeColor(counts[card.key])"
                     :variant="counts[card.key] ? 'solid' : 'subtle'"
                     size="sm"
