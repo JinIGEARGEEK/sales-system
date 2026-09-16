@@ -719,6 +719,22 @@ status ต้องสแกนได้เร็วที่สุดภาย�
 
 ตัวอย่างที่ใช้จริง: หน้า Leads list (`pages/crm/leads/index.vue`) แท็บ "Converted" — badge บนคือ Lead status เดิม (เช่น "Qualified", ค้างไว้ตลอด), caption ล่างคือ "Deal Won"/"Deal Lost"/ชื่อ stage ปัจจุบันของ Deal ที่ผูกอยู่ (component: `components/Table/Card/Status.vue`, props `caption`/`captionColor`)
 
+### 9.6 Per-entity status-color composables (added 2026-09-16)
+
+**ห้ามสร้าง status badge สีเดียว (neutral ตายตัว) แล้วปล่อยไว้** — ทุก status column ที่มีมากกว่า 1 ค่าที่เป็นไปได้ ต้อง map เป็นสี success/info/warning/error/neutral ตาม §9.0/§9.3 ผ่าน composable เฉพาะของ entity นั้น ไม่ใช่ inline ternary ที่จุดเรียกใช้ (กระจาย logic แล้วแก้ไม่ครบทุกที่) — แต่ละ composable ยังคงแยกไฟล์/ชื่อ export ของตัวเอง (`useXStatusColor`) ตาม convention เดิม เพื่อให้ยังหาเจอง่ายจากชื่อ entity, ส่วน switch/map ภายในใช้ helper กลาง `badgeColorFromMap` (`composables/utils/useBadgeColor.ts`) แทนการเขียน switch ซ้ำทุกไฟล์:
+
+| Composable | Entity status | สี |
+|---|---|---|
+| `useQuoteStatusColor` | Quote: draft/sent/accepted/rejected/expired | draft=neutral, sent=info, accepted=success, rejected=error, expired=warning |
+| `useContractStatusColor` | Contract: draft/sent/signed/expired | draft=neutral, sent=info, signed=success, expired=warning |
+| `useProjectStatusColor` | Project: Not Started/In Progress/On Hold/Completed/Cancelled | Not Started=neutral, In Progress=info, On Hold=warning, Completed=success, Cancelled=error |
+| `useCustomerProductStatusColor` | CustomerProduct: Interested/Trial/Active/Churned | Interested=neutral, Trial=info, Active=success, Churned=error |
+| `useLeadStatusColor` | Lead: New/Contacted/Qualified/Disqualified | New=neutral, Contacted=info, Qualified=success, Disqualified=error |
+
+`useDealStageColor`/`useProspectStageColor` ไม่ได้ใช้ `badgeColorFromMap` เพราะสีของ Deal/Prospect stage มาจาก flag ของแถว pipeline stage ใน store (`is_won_stage`/`is_lost_stage`/`is_disqualified_stage`, ดู admin pipeline config) ไม่ใช่ fixed map ของ string status — Admin เพิ่ม stage เองได้ ระบบต้องยัง infer สีถูกโดยไม่ต้องแก้ code
+
+เมื่อเพิ่ม status ใหม่ให้ entity ใดๆ ข้างต้น หรือเพิ่ม entity ใหม่ที่มี status column ต้องอัปเดต enum/type ที่เกี่ยวข้องใน `interfaces/crm.d.ts` และ map สีที่ composable ให้ครบ ไม่ปล่อยให้ fallback ไป neutral โดยไม่ได้ตั้งใจ
+
 ---
 
 ## 10. Typography
