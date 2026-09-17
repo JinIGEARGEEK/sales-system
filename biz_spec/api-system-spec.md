@@ -188,6 +188,8 @@ interface AdminUser extends User {
 | `GET` | `/users/:id` | Admin | 🟢 | Single staff record — `pages/admin/users/[id].vue`. |
 | `PUT` | `/users/:id` | Admin | 🟢 | Full update. `email` is required and re-validated against the same `@igeargeek.com` rule as create. Supplying a non-empty `password` resets it and re-sets `must_change_password: true`, same as a fresh create. |
 | `DELETE` | `/users/:id` | Admin | 🟢 | Soft-delete (deactivate), not a hard delete — see §1.6. |
+| `PATCH` | `/users/bulk-activate` | Admin | 🟢 **added 2026-09-17** | Body: `{ids: number[]}`. Sets `is_active: true` for every listed staff account in one transaction, writing a `bulk_activated` audit-log entry per row. Backs the Staff list's multi-select bulk toolbar (`components/Admin/UserBulkActionBar.vue`). |
+| `PATCH` | `/users/bulk-deactivate` | Admin | 🟢 **added 2026-09-17** | Body: `{ids: number[]}`. Sets `is_active: false` for every listed staff account in one transaction — same field flip as `DELETE /users/:id`, without the soft-delete — writing a `bulk_deactivated` audit-log entry per row. Unlike Deal/Lead/Prospect's `bulk-*` endpoints, this isn't gated by the separate Admin-or-Sales-Manager `bulkRoles` group — it's just another route in the already Admin-only `/users` group, so `UserHandler.bulkSetActive` skips the per-row `CanWrite` check those other handlers keep as defense-in-depth. |
 | `GET` | `/team-members` | any authenticated | 🟢 | Lightweight `{ id, name, email }[]` list (`TeamMember` in `interfaces/crm.d.ts`) for assignee dropdowns (`CrmTeamMemberSelect`) — do not require Admin role for this one, every Sales role needs it to assign Leads/Deals/Tasks. |
 
 ---

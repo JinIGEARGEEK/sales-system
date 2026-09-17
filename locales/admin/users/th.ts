@@ -23,6 +23,17 @@ export default {
       delete: 'ลบ',
     },
     deleteSuccess: 'ลบพนักงานสำเร็จ',
+    bulkActionBar: {
+      selectedCount: 'เลือกพนักงานแล้ว {count} คน',
+      activate: 'เปิดใช้งาน',
+      deactivate: 'ปิดใช้งาน',
+      deactivateConfirmTitle: 'ปิดใช้งานพนักงาน {count} คน?',
+      deactivateConfirmBody: 'พนักงานเหล่านี้จะไม่สามารถเข้าสู่ระบบได้ คุณสามารถเปิดใช้งานอีกครั้งได้ในภายหลัง',
+      deactivateConfirmButton: 'ปิดใช้งาน',
+      cancel: 'ยกเลิก',
+      activateSuccess: 'เปิดใช้งานพนักงาน {count} คนแล้ว',
+      deactivateSuccess: 'ปิดใช้งานพนักงาน {count} คนแล้ว',
+    },
   },
   form: {
     firstName: 'ชื่อ',
