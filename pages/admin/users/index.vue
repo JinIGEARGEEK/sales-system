@@ -3,11 +3,19 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
-        <ButtonPrimary
-          :label="t('admin.users.index.addStaff')"
-          icon="material-symbols:add"
-          @click="navigateTo('/admin/users/create')"
-        />
+        <div class="flex items-center gap-2">
+          <ButtonPrimary
+            outline
+            :label="isSelectMode ? t('crm.components.tableSelect.cancelSelect') : t('crm.components.tableSelect.selectRows')"
+            :disabled="!isSelectMode && displayUsers.length === 0"
+            @click="toggleSelectMode"
+          />
+          <ButtonPrimary
+            :label="t('admin.users.index.addStaff')"
+            icon="material-symbols:add"
+            @click="navigateTo('/admin/users/create')"
+          />
+        </div>
       </div>
 
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
@@ -35,6 +43,7 @@
 
       <TableData
         v-model:page="page"
+        v-model:select-value="selected"
         server-paginated
         :columns="columns"
         :rows="displayUsers"
@@ -42,11 +51,20 @@
         :total-page="totalPage"
         :per-page="perPage"
         :loading="loading"
+        :is-show-select="isSelectMode"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-detail="onViewDetail"
         @edit="onEdit"
         @delete="requestDelete"
+      />
+
+      <AdminUserBulkActionBar
+        v-if="selectedIds.length > 0"
+        :selected-ids="selectedIds"
+        @activate="onBulkActivate"
+        @deactivate="onBulkDeactivate"
+        @cancel="selected = []"
       />
 
       <CrmConfirmDeleteModal
@@ -116,6 +134,12 @@ guardMounted(fetch)
 watch(search, () => refetchDebounced())
 watch([roleFilter, statusFilter], () => refetchFromStart())
 
+const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<AdminUser>()
+
+// Selection is scoped to the currently visible page — a page/filter change
+// invalidates whatever was selected before it, same as Leads' own list page.
+watch([page, roleFilter, statusFilter], () => { selected.value = [] })
+
 const displayUsers = computed(() => rows.value.map((user) => {
   const updater = usersStore.items.find(u => u.id === user.updated_by)
   return {
@@ -134,6 +158,7 @@ const displayUsers = computed(() => rows.value.map((user) => {
 }))
 
 const columns = computed<TableDataColumn[]>(() => [
+  ...(isSelectMode.value ? [{ label: '', align: 'left', field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
   { label: t('admin.users.index.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.users.index.columns.email'), align: 'left', field: 'email' },
   { label: t('admin.users.index.columns.role'), align: 'left', field: 'roleBadge', type: TABLE_CARD_TYPE.STATUS },
@@ -176,4 +201,19 @@ const confirmDelete = async () => {
     closeDelete()
   }
 }
+
+const onBulkSetActive = async (active: boolean) => {
+  const count = selectedIds.value.length
+  try {
+    await usersStore.bulkSetActive(selectedIds.value, active)
+    success(t(active ? 'admin.users.index.bulkActionBar.activateSuccess' : 'admin.users.index.bulkActionBar.deactivateSuccess', { count }))
+    selected.value = []
+    await fetch()
+  } catch (err) {
+    notifyApiError(err)
+  }
+}
+
+const onBulkActivate = () => onBulkSetActive(true)
+const onBulkDeactivate = () => onBulkSetActive(false)
 </script>

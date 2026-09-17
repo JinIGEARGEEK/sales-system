@@ -68,5 +68,25 @@ export const useUsersStore = defineStore('users', {
       const user = this.items.find(u => u.id === id)
       if (user) user.is_active = false
     },
+    // Shared implementation behind bulkActivate/bulkDeactivate below, mirroring
+    // the backend's own UserHandler.bulkSetActive (Admin only, same route-group
+    // gate as every other /users endpoint) — the Users list has no assignee/
+    // tags concept like Leads/Companies do, so an is_active toggle is the
+    // natural bulk action here instead of reusing CrmBulkActionBar's
+    // reassign/tag/archive shape.
+    async bulkSetActive (ids: number[], active: boolean) {
+      const { $api } = useNuxtApp()
+      await $api.patch(`/users/bulk-${active ? 'activate' : 'deactivate'}`, { ids })
+      for (const id of ids) {
+        const user = this.items.find(u => u.id === id)
+        if (user) user.is_active = active
+      }
+    },
+    bulkActivate (ids: number[]) {
+      return this.bulkSetActive(ids, true)
+    },
+    bulkDeactivate (ids: number[]) {
+      return this.bulkSetActive(ids, false)
+    },
   },
 })

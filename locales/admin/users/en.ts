@@ -23,6 +23,17 @@ export default {
       delete: 'Delete',
     },
     deleteSuccess: 'Staff deleted successfully',
+    bulkActionBar: {
+      selectedCount: '{count} staff selected',
+      activate: 'Activate',
+      deactivate: 'Deactivate',
+      deactivateConfirmTitle: 'Deactivate {count} staff?',
+      deactivateConfirmBody: 'They will no longer be able to sign in. You can reactivate them later.',
+      deactivateConfirmButton: 'Deactivate',
+      cancel: 'Cancel',
+      activateSuccess: '{count} staff activated',
+      deactivateSuccess: '{count} staff deactivated',
+    },
   },
   form: {
     firstName: 'First Name',

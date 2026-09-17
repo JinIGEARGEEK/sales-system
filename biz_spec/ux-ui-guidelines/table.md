@@ -308,6 +308,7 @@ Table ควรประกอบด้วยองค์ประกอบด�
 > **Implementation จริงในระบบนี้:**
 > - **Keyboard**: `Table/Data.vue` รองรับ `Esc` เพื่อล้างการเลือกทั้งหมด และ `Cmd/Ctrl+A` เพื่อเลือกทุกแถวในหน้าปัจจุบัน (ทำงานเฉพาะเมื่อ table เองมี focus และเปิดโหมด selection อยู่)
 > - **Undo หลัง Bulk Archive**: เนื่องจาก Archive เป็น soft-delete (ย้ายไป Trash, กู้คืนได้ผ่าน `restore` ต่อ record) — toast ที่ขึ้นหลัง archive สำเร็จมีปุ่ม "Undo" แนบมาด้วยเสมอ (`useBulkArchiveUndo` composable) ผู้ใช้ไม่ต้องไปหน้า Trash เพื่อกู้คืนกรณี archive ผิด
+> - **Entity ที่ไม่มี assignee/tags (เช่น Staff/User)**: `CrmBulkActionBar`/`CrmCampaignBulkActionBar` ถูกออกแบบมาสำหรับ reassign/tag/archive/campaign โดยเฉพาะ — entity ที่ไม่มี concept เหล่านั้น (เช่น `pages/admin/users/index.vue`) ไม่ควรถูกยัดเข้า component เดิม แต่ให้สร้าง action bar เฉพาะที่ยังคงโครงเดิม (sticky bottom bar, selected-count label, ปุ่ม Cancel) ตามตัวอย่าง `components/Admin/UserBulkActionBar.vue` (Activate/Deactivate — Deactivate ผ่าน confirm modal เพราะ revoke การ login ทันที ส่วน Activate กลับคืนได้เองจึงไม่ต้อง confirm)
 
 ---
 
