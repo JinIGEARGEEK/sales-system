@@ -28,7 +28,7 @@
         class="flex flex-1 flex-col gap-2 p-3 backdrop-blur-xl"
         :class="{ 'cursor-pointer': allowQuickAdd }"
         :style="{ backgroundColor: getColumnTint(column.value) }"
-        @click.self="onEmptyAreaClick(String(column.value))"
+        @click.self="onEmptyAreaClick(column.value)"
       >
         <template v-for="item in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
           <!-- Trello-style "insert here" gap — invisible until hovered, sits
@@ -39,7 +39,7 @@
             type="button"
             :aria-label="t('crm.components.pipelineBoard.addInColumn')"
             class="-my-1 flex h-2 shrink-0 cursor-pointer items-center opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100"
-            @click="emit('addInColumn', String(column.value))"
+            @click="emitAddInColumn(column.value)"
           >
             <span class="h-px flex-1 border-t border-dashed border-(--color-gray)" />
             <UIcon name="material-symbols:add-circle" class="mx-1 size-4 shrink-0 text-(--color-gray)" />
@@ -66,7 +66,7 @@
           v-if="allowQuickAdd"
           type="button"
           class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
-          @click="emit('addInColumn', String(column.value))"
+          @click="emitAddInColumn(column.value)"
         >
           <UIcon name="material-symbols:add" class="size-4" />
           {{ t('crm.components.pipelineBoard.addInColumn') }}
@@ -151,7 +151,7 @@
           v-if="allowQuickAdd"
           type="button"
           class="flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
-          @click="emit('addInColumn', String(column.value))"
+          @click="emitAddInColumn(column.value)"
         >
           <UIcon name="material-symbols:add" class="size-4" />
           {{ t('crm.components.pipelineBoard.addInColumn') }}
@@ -309,13 +309,18 @@ const emit = defineEmits<{
   addInColumn: [value: string]
 }>()
 
+// Shared by the hover "insert here" gaps and the static "+ Add" rows
+// (desktop and mobile) — keeps the `column.value` -> string cast (`Select`'s
+// value can be a number) in one place.
+const emitAddInColumn = (value: string | number) => emit('addInColumn', String(value))
+
 // Bound via `@click.self` on the desktop lane's own background (not `.card`
 // or the mobile lane, which has no leftover background to click below its
 // last card) — fires on any click that lands on the lane container itself
 // rather than bubbling up from a card, whether the lane is empty or just has
 // blank space below its cards.
-const onEmptyAreaClick = (value: string) => {
-  if (props.allowQuickAdd) emit('addInColumn', value)
+const onEmptyAreaClick = (value: string | number) => {
+  if (props.allowQuickAdd) emitAddInColumn(value)
 }
 
 const draggingItem = ref<PipelineCard | null>(null)
