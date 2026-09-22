@@ -58,8 +58,10 @@
       :columns="pipelineStagesStore.activeOptions"
       :items="pipelineItems"
       :column-counts="columnCounts"
+      allow-quick-add
       @move="onMove"
       @select="onSelect"
+      @add-in-column="onAddInColumn"
     >
       <template #column-footer="{ column }">
         <button
@@ -499,5 +501,12 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
 
 const onSelect = (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' })) => {
   navigateTo(item._type === 'deal' ? `/crm/deals/${item.id}` : `/crm/leads/${item.id}`)
+}
+
+// Clicking a lane's own blank space always creates a Deal at that stage
+// (never a Lead, even though the lane may currently hold Lead cards too) —
+// see pages/crm/deals/create.vue reading `?stage=` off the route query.
+const onAddInColumn = (stage: string) => {
+  navigateTo({ path: '/crm/deals/create', query: { stage } })
 }
 </script>

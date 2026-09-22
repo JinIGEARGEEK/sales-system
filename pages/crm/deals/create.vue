@@ -121,13 +121,19 @@ const originatingLead = computed(() => leadOriginId.value
   ? leadsStore.items.find(l => l.id === leadOriginId.value)
   : null)
 
+// Pre-selected from the Kanban board's "add in column" click (see
+// pages/crm/deals/index.vue's onAddInColumn) — falls back to the default
+// 'Lead' stage when reached any other way (header "+ Add Deal" button,
+// direct nav, or a Lead-originated create via ?lead_id).
+const initialStage = typeof route.query.stage === 'string' ? route.query.stage : 'Lead'
+
 const form = reactive({
   title: '',
   company_id: route.query.company_id ? Number(route.query.company_id) : null as number | null,
   contact_id: '',
   value: 0,
-  stage: 'Lead',
-  forecast_category: stageDefaultForecastCategory('Lead') as ForecastCategory | '',
+  stage: initialStage,
+  forecast_category: stageDefaultForecastCategory(initialStage) as ForecastCategory | '',
   expected_close_date: '',
   assigned_to: '',
   business_unit: '' as BusinessUnit | '',
