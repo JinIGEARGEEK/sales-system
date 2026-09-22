@@ -184,7 +184,7 @@ const dealStageBuckets = ref<Record<string, DealStageBucket>>({})
 const loadingMoreStage = ref<string | null>(null)
 
 const fetchStageDeals = async (stageName: string, page = 1) => {
-  const result = await dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page })
+  const result = await dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page, sort: 'position' })
   const bucket = dealStageBuckets.value[stageName] ?? { items: [], total: 0, page: 0 }
   bucket.items = page === 1 ? result.items : [...bucket.items, ...result.items]
   bucket.total = result.total
@@ -209,7 +209,7 @@ const refetchStageDeals = async (stageName: string) => {
   const pagesToRefetch = Math.max(dealStageBuckets.value[stageName]?.page ?? 0, 1)
   const pages = Array.from({ length: pagesToRefetch }, (_, i) => i + 1)
   const results = await Promise.all(
-    pages.map(page => dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page })),
+    pages.map(page => dealsStore.fetchList({ stage: stageName, search: search.value || undefined, per_page: DEALS_PAGE_SIZE, page, sort: 'position' })),
   )
   dealStageBuckets.value[stageName] = {
     items: results.flatMap(result => result.items),
@@ -399,13 +399,17 @@ const columnCounts = computed(() => {
   return result
 })
 
-const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string) => {
+const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string, position?: number) => {
   if (item._type === 'deal') {
     const originStage = item.stage
-    if (originStage === newStage) return
+    const stageChanged = originStage !== newStage
+    if (!stageChanged && position === undefined) return
     try {
-      await dealsStore.updateStage(item.id, newStage as DealStage)
-      success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+      await dealsStore.updateStage(item.id, newStage as DealStage, position)
+      // A same-stage drop is just a within-lane reorder — no stage actually
+      // changed, so skip the "moved to X" toast (misleading when nothing
+      // moved between columns) and only refetch the one affected bucket.
+      if (stageChanged) success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
       // Board state for Deals lives in `dealStageBuckets`, keyed per stage —
       // simplest/safest way to keep both columns correct (including their
       // header totals) after a move is to refetch each affected stage rather
@@ -433,29 +437,14 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
 
   const newStatus = LEAD_STATUS_FOR_LANE.value[newStage]
   if (newStatus) {
-    if (lead.status === newStatus) return
+    const statusChanged = lead.status !== newStatus
+    if (!statusChanged && position === undefined) return
     try {
-      // PUT /leads/:id overwrites the record's full state from the request
-      // body every time (it isn't a partial-merge PATCH — see leadForm on
-      // the backend and pages/crm/leads/[id].vue's own onSave/onMarkSql,
-      // which resend this same full field set). Sending only `{ status }`
-      // here used to blank out every other field (name, email, company,
-      // assignee, ...) on the dragged card.
-      await leadsStore.update(lead.id, {
-        name: lead.name,
-        company_id: lead.company_id,
-        email: lead.email,
-        phone: lead.phone,
-        source: lead.source,
-        status: newStatus,
-        assigned_to: lead.assigned_to,
-        business_unit: lead.business_unit,
-        business_unit_item: lead.business_unit_item,
-        notes: lead.notes,
-        referred_by_type: lead.referred_by_type ?? null,
-        referred_by_id: lead.referred_by_id ?? null,
-      })
-      success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
+      // PATCH /leads/:id/status only ever touches status/position, unlike
+      // the full-record PUT /leads/:id — no risk of blanking the rest of the
+      // record on a drag-move (see leadsStore.updateStatus's own doc).
+      await leadsStore.updateStatus(lead.id, newStatus, position)
+      if (statusChanged) success(t('crm.deals.index.leadStatusUpdated', { status: newStatus }))
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }

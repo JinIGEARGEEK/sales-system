@@ -185,6 +185,10 @@ interface Lead {
   // source: 'Referral', but not enforced to only that source server-side.
   referred_by_type?: 'company' | 'contact' | null
   referred_by_id?: number | null
+  // Orders this Lead's Kanban card within its own status lane only — never
+  // compared across lanes. Set server-side (see stores/leads.ts's
+  // updateStatus, PATCH /leads/:id/status) — never sent by a create/update form.
+  position: number
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -233,6 +237,10 @@ interface Prospect {
   // FK. Carried over to the Lead automatically on conversion (server-side).
   business_unit: BusinessUnit | null
   business_unit_item: string | null
+  // Orders this Prospect's Kanban card within its own status lane only —
+  // never compared across lanes. Set server-side (see stores/prospects.ts's
+  // updateStatus, PATCH /prospects/:id/status) — never sent by a create/update form.
+  position: number
   // Present only on trash-listing responses (GET /prospects/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -270,6 +278,10 @@ interface Deal {
   // Commit/Best Case/Pipeline forecast bucket, defaulted server-side per-stage but
   // manually overridable — see ForecastCategory's own doc.
   forecast_category: ForecastCategory | null
+  // Orders this Deal's Kanban card within its own stage lane only — never
+  // compared across lanes. Set server-side (see stores/deals.ts's
+  // updateStage, PATCH /deals/:id/stage) — never sent by a create/update form.
+  position: number
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date

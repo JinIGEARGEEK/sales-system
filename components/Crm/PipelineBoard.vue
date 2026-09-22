@@ -8,7 +8,7 @@
       :key="column.value"
       class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl"
       :style="{ borderColor: getColumnBorderTint(String(column.value)) }"
-      @dragover.prevent
+      @dragover.prevent="onColumnDragOver(column.value)"
       @drop="onDrop(column.value)"
     >
       <div
@@ -30,7 +30,7 @@
         :style="{ backgroundColor: getColumnTint(column.value) }"
         @click.self="onEmptyAreaClick(column.value)"
       >
-        <template v-for="item in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
+        <template v-for="(item, idx) in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
           <!-- Trello-style "insert here" gap — invisible until hovered, sits
                above every card (including the first) so a card can be added
                ahead of any existing one, not just appended at the bottom. -->
@@ -46,18 +46,34 @@
             <span class="h-px flex-1 border-t border-dashed border-(--color-gray)" />
           </button>
 
+          <!-- Drag-reorder insertion indicator — only visible mid-drag,
+               driven by dropTarget rather than hover/click like the
+               quick-add gap above. Marks where the dragged card will land
+               within this lane if dropped now, including reordering among
+               its own current siblings (not just moving between lanes). -->
+          <div
+            v-if="isDropTargetAt(String(column.value), idx)"
+            class="-my-1 h-1 shrink-0 rounded-full bg-(--color-primary)"
+          />
+
           <div
             draggable="true"
             role="button"
             tabindex="0"
             class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
             @dragstart="onDragStart(item)"
+            @dragend="onDragEnd"
+            @dragover.prevent.stop="onCardDragOver($event, String(column.value), idx)"
             @click="emit('select', item)"
             @keydown.enter.space.prevent="emit('select', item)"
           >
             <slot name="card" :item="item" />
           </div>
         </template>
+        <div
+          v-if="isDropTargetAt(String(column.value), grouped[column.value]?.length || 0)"
+          class="-my-1 h-1 shrink-0 rounded-full bg-(--color-primary)"
+        />
 
         <!-- Static "+ Add" row — always visible under the last card (or
              alone, in an empty lane), same as Trello's persistent "+ Add a
@@ -306,7 +322,10 @@ const getColumnTint = (value: string) => {
 const getColumnBorderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 45%, transparent)`
 
 const emit = defineEmits<{
-  move: [item: PipelineCard, newValue: string]
+  // position is the drag's own computed insertion point within newValue's
+  // lane (undefined for the mobile dropdown-move, which has no drag geometry
+  // to compute one from — the backend then auto-appends to the lane's end).
+  move: [item: PipelineCard, newValue: string, position?: number]
   select: [item: PipelineCard]
   addInColumn: [value: string]
 }>()
@@ -327,23 +346,92 @@ const onEmptyAreaClick = (value: string | number) => {
 
 const draggingItem = ref<PipelineCard | null>(null)
 
+// Where the dragged card would land if dropped right now — set by
+// onCardDragOver/onColumnDragOver as the pointer moves, read by onDrop to
+// compute the actual position and by isDropTargetAt to render the insertion
+// indicator. `index` is a position within the *displayed* (position-sorted)
+// list for `lane`, including the dragged card's own current slot if it's
+// being reordered within its own lane.
+const dropTarget = ref<{ lane: string, index: number } | null>(null)
+
 const grouped = computed(() => {
   const result: Record<string, PipelineCard[]> = {}
   for (const item of props.items) {
     (result[item._lane] ||= []).push(item)
   }
+  for (const lane of Object.keys(result)) {
+    result[lane]!.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+  }
   return result
 })
+
+const isDropTargetAt = (lane: string, index: number) =>
+  !!draggingItem.value && dropTarget.value?.lane === lane && dropTarget.value.index === index
 
 const onDragStart = (item: PipelineCard) => {
   draggingItem.value = item
 }
 
-const onDrop = (columnValue: string) => {
-  if (draggingItem.value) {
-    emit('move', draggingItem.value, columnValue)
-    draggingItem.value = null
-  }
+const onDragEnd = () => {
+  draggingItem.value = null
+  dropTarget.value = null
+}
+
+// Bound with .stop so it doesn't also bubble into onColumnDragOver below —
+// hovering a specific card always wins over the column's own "append at the
+// end" fallback.
+const onCardDragOver = (event: DragEvent, lane: string, index: number) => {
+  if (!draggingItem.value) return
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const insertBefore = event.clientY < rect.top + rect.height / 2
+  dropTarget.value = { lane, index: insertBefore ? index : index + 1 }
+}
+
+// Fires for dragover anywhere in a lane that isn't over a specific card
+// (blank space below the last card, or an empty lane) — appends at the end.
+const onColumnDragOver = (columnValue: string | number) => {
+  if (!draggingItem.value) return
+  const lane = String(columnValue)
+  dropTarget.value = { lane, index: grouped.value[lane]?.length || 0 }
+}
+
+// Computes the fractional position to persist for a drop at `index` within
+// `lane`'s displayed (position-sorted) list — the midpoint of its new
+// neighbors' real Position values, excluding the dragged card itself from
+// that neighbor lookup so reordering within its own lane works. See
+// Deal.Position's doc comment (sales-system-api models/deal.go) for the full
+// per-lane fractional-index scheme this mirrors.
+//
+// `index` comes from dropTarget/onColumnDragOver's fallback, both computed
+// against the lane's full (unfiltered) displayed list — for a same-lane
+// reorder that list still includes the dragged card itself, so once it's
+// filtered out below, every slot after the dragged card's own current one
+// shifts left by one. Without correcting for that, dropping a card anywhere
+// after its own current position landed one slot short of where it visually
+// appeared to go (e.g. "move to the very end" silently became "move to
+// second-to-last").
+const computeDropPosition = (lane: string, index: number, dragged: PipelineCard): number => {
+  const laneItems = grouped.value[lane] || []
+  const draggedIndex = laneItems.findIndex(i => i._type === dragged._type && i.id === dragged.id)
+  const adjustedIndex = draggedIndex !== -1 && draggedIndex < index ? index - 1 : index
+  const siblings = laneItems.filter(i => !(i._type === dragged._type && i.id === dragged.id))
+  const prev = siblings[adjustedIndex - 1]
+  const next = siblings[adjustedIndex]
+  if (prev && next) return (prev.position + next.position) / 2
+  if (prev) return prev.position + 1
+  if (next) return next.position - 1
+  return 1
+}
+
+const onDrop = (columnValue: string | number) => {
+  const dragged = draggingItem.value
+  if (!dragged) return
+  const lane = String(columnValue)
+  const index = dropTarget.value?.lane === lane ? dropTarget.value.index : (grouped.value[lane]?.length || 0)
+  const position = computeDropPosition(lane, index, dragged)
+  emit('move', dragged, lane, position)
+  draggingItem.value = null
+  dropTarget.value = null
 }
 
 // Mobile sections default open (mirrors the desktop board showing every
