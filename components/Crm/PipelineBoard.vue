@@ -192,9 +192,11 @@ const props = defineProps<{
   // instead of the number of items actually loaded/rendered in that column.
   // Falls back to grouped[column.value]?.length when a column is absent/undefined.
   columnCounts?: Record<string, number>
-  // Opt-in per caller (Prospects only, for now — Deals' columns mix Deal and
-  // Lead cards with no single "create" target for a blank click, so it stays
-  // off there rather than guessing which one to open).
+  // Opt-in per caller. `addInColumn` always means "create a new item of
+  // *this* board's own primary entity in this lane" — on the Deals board a
+  // lane can already hold both Deal and Lead cards, but a blank-area click
+  // still only ever creates a Deal (mirroring the header's own "+ Add Deal"
+  // button), never a Lead.
   allowQuickAdd?: boolean
 }>()
 
