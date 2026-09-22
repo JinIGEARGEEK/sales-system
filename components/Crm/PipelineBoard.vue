@@ -30,24 +30,42 @@
         :style="{ backgroundColor: getColumnTint(column.value) }"
         @click.self="onEmptyAreaClick(String(column.value))"
       >
-        <div
-          v-for="item in grouped[column.value] || []"
-          :key="`${item._type}-${item.id}`"
-          draggable="true"
-          role="button"
-          tabindex="0"
-          class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
-          @dragstart="onDragStart(item)"
-          @click="emit('select', item)"
-          @keydown.enter.space.prevent="emit('select', item)"
-        >
-          <slot name="card" :item="item" />
-        </div>
+        <template v-for="item in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
+          <!-- Trello-style "insert here" gap — invisible until hovered, sits
+               above every card (including the first) so a card can be added
+               ahead of any existing one, not just appended at the bottom. -->
+          <button
+            v-if="allowQuickAdd"
+            type="button"
+            :aria-label="t('crm.components.pipelineBoard.addInColumn')"
+            class="-my-1 flex h-2 shrink-0 cursor-pointer items-center opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100"
+            @click="emit('addInColumn', String(column.value))"
+          >
+            <span class="h-px flex-1 border-t border-dashed border-(--color-gray)" />
+            <UIcon name="material-symbols:add-circle" class="mx-1 size-4 shrink-0 text-(--color-gray)" />
+            <span class="h-px flex-1 border-t border-dashed border-(--color-gray)" />
+          </button>
 
+          <div
+            draggable="true"
+            role="button"
+            tabindex="0"
+            class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+            @dragstart="onDragStart(item)"
+            @click="emit('select', item)"
+            @keydown.enter.space.prevent="emit('select', item)"
+          >
+            <slot name="card" :item="item" />
+          </div>
+        </template>
+
+        <!-- Static "+ Add" row — always visible under the last card (or
+             alone, in an empty lane), same as Trello's persistent "+ Add a
+             card" rather than only appearing once the lane is empty. -->
         <button
-          v-if="!grouped[column.value]?.length && allowQuickAdd"
+          v-if="allowQuickAdd"
           type="button"
-          class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg py-4 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
+          class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
           @click="emit('addInColumn', String(column.value))"
         >
           <UIcon name="material-symbols:add" class="size-4" />
@@ -125,10 +143,14 @@
           />
         </div>
 
+        <!-- No hover-to-insert-between-cards affordance here (unlike the
+             desktop lane above) — touch has no hover state, so mobile only
+             gets the always-visible bottom "+ Add" row, same as the desktop
+             lane's static one. -->
         <button
-          v-if="!grouped[column.value]?.length && allowQuickAdd"
+          v-if="allowQuickAdd"
           type="button"
-          class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg py-4 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
+          class="flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
           @click="emit('addInColumn', String(column.value))"
         >
           <UIcon name="material-symbols:add" class="size-4" />
