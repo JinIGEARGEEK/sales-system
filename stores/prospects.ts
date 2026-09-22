@@ -50,7 +50,7 @@ export const useProspectsStore = defineStore('prospects', {
       this.items = [...this.items.filter(p => p.id !== id), fetched]
       return fetched
     },
-    async add (prospect: Omit<Prospect, 'id'>): Promise<Prospect> {
+    async add (prospect: Omit<Prospect, 'id' | 'position'>): Promise<Prospect> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Prospect>>('/prospects', prospect)
       const created = parseDates(response.data.data)
@@ -60,6 +60,21 @@ export const useProspectsStore = defineStore('prospects', {
     async update (id: number, changes: ProspectUpdatePayload): Promise<Prospect> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Prospect>>(`/prospects/${id}`, changes)
+      const updated = parseDates(response.data.data)
+      const index = this.items.findIndex(p => p.id === id)
+      if (index !== -1) this.items[index] = updated
+      return updated
+    },
+    // Kanban board's own narrow move endpoint (status+position only) — unlike
+    // update() above, this never risks blanking the rest of the record, so
+    // the board's drag-move no longer needs to resend the Prospect's full
+    // state. position is the board's own computed drop-index within the
+    // destination status lane (PipelineBoard.vue) — omitted for the mobile
+    // dropdown-move, which the backend then auto-appends to the end of the
+    // destination lane.
+    async updateStatus (id: number, status: string, position?: number): Promise<Prospect> {
+      const { $api } = useNuxtApp()
+      const response = await $api.patch<ApiResponse<Prospect>>(`/prospects/${id}/status`, { status, position })
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(p => p.id === id)
       if (index !== -1) this.items[index] = updated

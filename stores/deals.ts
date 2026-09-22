@@ -57,7 +57,7 @@ export const useDealsStore = defineStore('deals', {
       this.items = [...this.items.filter(d => d.id !== id), fetched]
       return fetched
     },
-    async add (deal: Omit<Deal, 'id'>): Promise<Deal> {
+    async add (deal: Omit<Deal, 'id' | 'position'>): Promise<Deal> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Deal>>('/deals', deal)
       const created = parseDates(response.data.data)
@@ -80,9 +80,13 @@ export const useDealsStore = defineStore('deals', {
       if (index !== -1) this.items[index] = updated
       return updated
     },
-    async updateStage (id: number, stage: DealStage): Promise<Deal> {
+    // position is the Kanban board's own computed drop-index within the
+    // destination stage lane (PipelineBoard.vue) — omitted for the mobile
+    // dropdown-move, which has no drag geometry to compute one from; the
+    // backend then auto-appends to the end of the destination lane instead.
+    async updateStage (id: number, stage: DealStage, position?: number): Promise<Deal> {
       const { $api } = useNuxtApp()
-      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage })
+      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage, position })
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(d => d.id === id)
       if (index !== -1) this.items[index] = updated
