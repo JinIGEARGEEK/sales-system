@@ -9,7 +9,7 @@
         <template #actions>
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
-            <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
+            <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
           </div>
         </template>
       </PageHeader>
