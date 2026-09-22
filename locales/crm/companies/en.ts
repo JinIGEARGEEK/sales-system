@@ -52,7 +52,7 @@ export default {
     industry: 'Industry',
     industryPlaceholder: 'Search or type a new industry',
     companySize: 'Company Size',
-    companySizePlaceholder: 'e.g. 51-200',
+    companySizePlaceholder: 'e.g. 51-200 คน',
     revenueSize: 'Revenue Size',
     revenueSizePlaceholder: 'e.g. 1M - 5M THB',
     website: 'Website',
