@@ -75,8 +75,10 @@
       v-if="viewMode === 'kanban'"
       :columns="prospectStagesStore.activeOptions"
       :items="pipelineItems"
+      allow-quick-add
       @move="onMove"
       @select="onSelect"
+      @add-in-column="onAddInColumn"
     >
       <template #card="{ item }">
         <div>
@@ -251,6 +253,13 @@ const onMove = async (item: Prospect & { _type: 'prospect' }, newStatus: string)
 
 const onSelect = (item: Prospect & { _type: 'prospect' }) => {
   navigateTo(`/crm/prospects/${item.id}`)
+}
+
+// Clicking a lane's own blank space (below its cards, or its empty state)
+// jumps to Create with that lane's status pre-selected — see
+// pages/crm/prospects/create.vue reading `?status=` off the route query.
+const onAddInColumn = (status: string) => {
+  navigateTo({ path: '/crm/prospects/create', query: { status } })
 }
 
 // ── List ───────────────────────────────────────────────────────────────

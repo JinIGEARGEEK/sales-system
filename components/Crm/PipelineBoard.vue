@@ -26,7 +26,9 @@
 
       <div
         class="flex flex-1 flex-col gap-2 p-3 backdrop-blur-xl"
+        :class="{ 'cursor-pointer': allowQuickAdd }"
         :style="{ backgroundColor: getColumnTint(column.value) }"
+        @click.self="onEmptyAreaClick(String(column.value))"
       >
         <div
           v-for="item in grouped[column.value] || []"
@@ -42,7 +44,16 @@
           <slot name="card" :item="item" />
         </div>
 
-        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
+        <button
+          v-if="!grouped[column.value]?.length && allowQuickAdd"
+          type="button"
+          class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg py-4 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
+          @click="emit('addInColumn', String(column.value))"
+        >
+          <UIcon name="material-symbols:add" class="size-4" />
+          {{ t('crm.components.pipelineBoard.addInColumn') }}
+        </button>
+        <div v-else-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 
@@ -114,7 +125,16 @@
           />
         </div>
 
-        <div v-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
+        <button
+          v-if="!grouped[column.value]?.length && allowQuickAdd"
+          type="button"
+          class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg py-4 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
+          @click="emit('addInColumn', String(column.value))"
+        >
+          <UIcon name="material-symbols:add" class="size-4" />
+          {{ t('crm.components.pipelineBoard.addInColumn') }}
+        </button>
+        <div v-else-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 
@@ -150,6 +170,10 @@ const props = defineProps<{
   // instead of the number of items actually loaded/rendered in that column.
   // Falls back to grouped[column.value]?.length when a column is absent/undefined.
   columnCounts?: Record<string, number>
+  // Opt-in per caller (Prospects only, for now — Deals' columns mix Deal and
+  // Lead cards with no single "create" target for a blank click, so it stays
+  // off there rather than guessing which one to open).
+  allowQuickAdd?: boolean
 }>()
 
 const FALLBACK_COLOR = 'var(--color-primary)'
@@ -260,7 +284,17 @@ const getColumnBorderTint = (value: string) => `color-mix(in srgb, ${getColumnCo
 const emit = defineEmits<{
   move: [item: PipelineCard, newValue: string]
   select: [item: PipelineCard]
+  addInColumn: [value: string]
 }>()
+
+// Bound via `@click.self` on the desktop lane's own background (not `.card`
+// or the mobile lane, which has no leftover background to click below its
+// last card) — fires on any click that lands on the lane container itself
+// rather than bubbling up from a card, whether the lane is empty or just has
+// blank space below its cards.
+const onEmptyAreaClick = (value: string) => {
+  if (props.allowQuickAdd) emit('addInColumn', value)
+}
 
 const draggingItem = ref<PipelineCard | null>(null)
 
