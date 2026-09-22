@@ -101,6 +101,7 @@ useHead({ title: t('crm.prospects.create.pageTitle') })
 
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const route = useRoute()
 const prospectsStore = useProspectsStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const prospectStagesStore = useProspectStagesStore()
@@ -120,7 +121,11 @@ const form = reactive({
   email: '',
   phone: '',
   source: '',
-  status: 'New',
+  // Pre-selected from the Kanban board's "add in column" click (see
+  // pages/crm/prospects/index.vue's onAddInColumn) — falls back to the
+  // default 'New' stage when reached any other way (header "+ Add" button,
+  // direct nav).
+  status: typeof route.query.status === 'string' ? route.query.status : 'New',
   assigned_to: '',
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',

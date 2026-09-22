@@ -1,6 +1,7 @@
 export default {
   pipelineBoard: {
     noItems: 'No items',
+    addInColumn: 'Add here',
     stageDescriptions: {
       lead: 'New potential customer',
       qualified: 'Confirmed as a good fit',

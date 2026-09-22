@@ -1,6 +1,7 @@
 export default {
   pipelineBoard: {
     noItems: 'ไม่มีรายการ',
+    addInColumn: 'เพิ่มที่นี่',
     stageDescriptions: {
       lead: 'ลูกค้าที่มีแนวโน้มใหม่',
       qualified: 'ผ่านการคัดกรองแล้ว',
