@@ -8,6 +8,21 @@ const parseDates = (size: CompanySizeOption): CompanySizeOption => ({
   created_at: new Date(size.created_at),
 })
 
+// The API returns sizes sorted by name as text, which puts "1000+ คน" right
+// after "1-10 คน". Order by headcount instead: each name's first number,
+// with a leading ">" meaning "just above" it (so "> 100 คน" sits between
+// 51-200 and 201-500). Names without a number (custom labels) go last,
+// alphabetically.
+const sizeRank = (name: string) => {
+  const match = name.match(/(\d[\d,]*)/)
+  if (!match) return Number.POSITIVE_INFINITY
+  const value = Number(match[1]!.replace(/,/g, ''))
+  return name.trimStart().startsWith('>') ? value + 0.5 : value
+}
+
+export const compareCompanySizes = (a: string, b: string) =>
+  sizeRank(a) - sizeRank(b) || a.localeCompare(b)
+
 export const useCompanySizeOptionsStore = defineStore('companySizeOptions', {
   state: () => ({
     items: [] as CompanySizeOption[],
@@ -21,7 +36,7 @@ export const useCompanySizeOptionsStore = defineStore('companySizeOptions', {
     async fetchAll () {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<CompanySizeOption[]>>('/admin/company-sizes')
-      this.items = response.data.data.map(parseDates)
+      this.items = response.data.data.map(parseDates).sort((a, b) => compareCompanySizes(a.name, b.name))
       return this.items
     },
     async add (size: Omit<CompanySizeOption, 'id' | 'created_at'>): Promise<CompanySizeOption> {
