@@ -2,12 +2,11 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
       <div class="overview-screen flex flex-col gap-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="min-w-0 flex-1">
-            <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
-            <p class="text-sm text-(--color-gray)">{{ t('crm.overviewPipeline.subheading') }}</p>
-          </div>
-          <div class="flex shrink-0 items-center gap-2">
+        <!-- Same header layout as the Kanban pages (Deals/Leads/Prospects):
+        heading left, actions right. -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
+          <div class="flex flex-wrap items-center gap-2">
             <span v-if="fetchedAtLabel" class="text-xs text-(--color-gray)">{{ fetchedAtLabel }}</span>
             <UTooltip :text="t('crm.overviewPipeline.refresh')">
               <UButton
@@ -30,6 +29,14 @@
             </UTooltip>
           </div>
         </div>
+
+        <UAlert
+          color="info"
+          variant="subtle"
+          icon="material-symbols:info-outline"
+          :description="t('crm.overviewPipeline.subheading')"
+          :ui="{ root: 'p-2', icon: 'size-4', description: 'text-xs text-(--color-black)' }"
+        />
 
         <UCard :ui="GLASS_PANEL_UI">
           <div class="flex flex-col gap-3">
@@ -65,25 +72,12 @@
           <div class="flex flex-col gap-4 transition-opacity" :class="loading ? 'opacity-60' : ''" :aria-busy="loading">
             <CrmOverviewPipelineSummaryStrip :summary="overview.summary" />
 
-            <!-- Built from the app's own warning tokens rather than UAlert,
-            whose warning/subtle variant renders low-contrast in this theme. -->
-            <div
+            <CrmOverviewPipelineStaleBanner
               v-if="counts.staleDeals > 0 && highlight !== 'stale'"
-              class="flex flex-col gap-3 rounded-xl border border-(--color-warning-hover)/50 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-bg) px-4 py-3 sm:flex-row sm:items-center"
-              role="status"
-              data-cy="overview-stale-alert"
-            >
-              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-(--color-warning-hover)/20 text-(--color-warning-hover)">
-                <UIcon name="material-symbols:schedule-outline" class="size-5" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-(--color-black)">
-                  {{ t('crm.overviewPipeline.attention.staleDeals', { count: counts.staleDeals, value: `${t('global.currencySymbol')}${priceFormatCompact(counts.staleDealValue)}`, days: OVERVIEW_STALE_DAYS }) }}
-                </p>
-                <p class="text-xs text-(--color-dark-gray)">{{ t('crm.overviewPipeline.attention.staleDealsHint') }}</p>
-              </div>
-              <ButtonPrimary outline icon="material-symbols:highlight-outline" :label="t('crm.overviewPipeline.attention.highlight')" @click="highlightStaleDeals" />
-            </div>
+              :count="counts.staleDeals"
+              :value="counts.staleDealValue"
+              @highlight="highlightStaleDeals"
+            />
 
             <div v-if="isEmpty" class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-(--color-card-border) bg-white px-6 py-12 text-center">
               <UIcon name="material-symbols:filter-list-off" class="size-8 text-(--color-gray)" />
@@ -148,7 +142,6 @@ import { GLASS_PANEL_UI } from '~/constants/ui'
 import { BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
 import {
   OVERVIEW_PERIOD_PRESETS,
-  OVERVIEW_STALE_DAYS,
   highlightCounts,
   overviewPeriodLength,
   overviewPeriodRange,
@@ -160,13 +153,15 @@ const { t } = useI18n()
 useHead({ title: t('crm.overviewPipeline.pageTitle') })
 
 const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
-const { dateFormat, priceFormatCompact } = useFormatter()
+const { dateFormat } = useFormatter()
 const { notifyApiError } = useApiErrorNotifier()
 const overviewStore = usePipelineOverviewStore()
 const teamMembersStore = useTeamMembersStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const tagsStore = useTagsStore()
+const pipelineStagesStore = usePipelineStagesStore()
+const prospectStagesStore = useProspectStagesStore()
 
 // Filters live in the URL so a review view (e.g. "last week, Mint's deals")
 // can be shared as a link or reopened with the back button.
@@ -274,6 +269,10 @@ guardMounted(() => {
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   if (tagsStore.items.length === 0) tagsStore.fetchAll().catch(notifyApiError)
+  // Lane colors/descriptions come from the stage configs, same as the
+  // Kanban boards (usePipelineStageColors), so custom stages match there.
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
+  if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
 })
 watch([periodPreset, assigneeFilter, sourceFilter, businessUnitFilter, tagFilter], () => { if (canAccess.value) refresh() })
 let searchTimer: ReturnType<typeof setTimeout> | undefined

@@ -131,3 +131,16 @@ export const highlightCounts = (zones: PipelineOverviewZone[], range: OverviewDa
   }
   return counts
 }
+
+// A zone's open (non-terminal) record count and value — the figures its
+// header, the "Jump to" chips and the open-pipeline share bars all use.
+export const zoneOpenTotals = (zone: PipelineOverviewZone) => {
+  let count = 0
+  let value = 0
+  for (const lane of zone.lanes) {
+    if (lane.terminal) continue
+    count += lane.count
+    value += lane.value
+  }
+  return { count, value }
+}
