@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { conversionPercent } from '~/composables/utils/usePipelineOverview'
-import { OVERVIEW_ZONE_COLORS } from '~/constants/ui'
+import { OVERVIEW_ZONES } from '~/constants/ui'
 
 const props = defineProps<{
   summary: PipelineOverview['summary']
@@ -56,9 +56,9 @@ const { numberFormat, priceFormatCompact } = useFormatter()
 const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
 
 const steps = computed(() => [
-  { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONE_COLORS.prospect, ...props.summary.new_prospects, extra: '' },
-  { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONE_COLORS.lead, ...props.summary.new_leads, extra: '' },
-  { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONE_COLORS.deal, ...props.summary.new_deals, extra: '' },
+  { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, ...props.summary.new_prospects, extra: '' },
+  { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, ...props.summary.new_leads, extra: '' },
+  { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, ...props.summary.new_deals, extra: '' },
   { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value) },
 ])
 

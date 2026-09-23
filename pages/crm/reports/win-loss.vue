@@ -83,7 +83,7 @@
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
 import { GLASS_PANEL_UI } from '~/constants/ui'
-import { LOST_REASON_OPTIONS } from '~/constants/mockData'
+import { lostReasonLabel } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -162,6 +162,6 @@ const onExport = () => downloadCsvBlob('/reports/win-loss-reasons/export', 'win-
 // copy of those labels under a new locale namespace.
 const reasonLabel = (reason: WinLossReasonRow['reason']) => {
   if (reason === 'won') return t('crm.reports.winLoss.won')
-  return LOST_REASON_OPTIONS.find(option => option.value === reason)?.label ?? reason
+  return lostReasonLabel(reason)
 }
 </script>

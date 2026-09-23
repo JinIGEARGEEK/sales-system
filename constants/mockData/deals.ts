@@ -56,6 +56,11 @@ export const LOST_REASON_OPTIONS: Select[] = [
   { label: 'Other', value: 'other' },
 ]
 
+// Display label for a stored lost_reason code, falling back to the raw code
+// for anything not in the list above (e.g. a value from before a rename).
+export const lostReasonLabel = (reason: string) =>
+  String(LOST_REASON_OPTIONS.find(option => option.value === reason)?.label ?? reason)
+
 // ── Business units (deal filtering on the dashboard) ──
 
 export const BUSINESS_UNIT_OPTIONS: Select[] = [

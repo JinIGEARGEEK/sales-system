@@ -8,7 +8,7 @@
     <template #header>
       <div v-if="selection" class="flex min-w-0 flex-1 items-start gap-3">
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONE_COLORS[selection.zone] }">
+          <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
             {{ t(`crm.overviewPipeline.panel.kind.${selection.zone}`) }} · #{{ selection.card.id }}
           </p>
           <h3 class="mt-0.5 text-lg font-semibold text-balance">{{ selection.card.name || '—' }}</h3>
@@ -121,8 +121,8 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LOST_REASON_OPTIONS } from '~/constants/mockData'
-import { OVERVIEW_ZONE_COLORS } from '~/constants/ui'
+import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
+import { OVERVIEW_ZONES } from '~/constants/ui'
 import { daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
@@ -155,29 +155,23 @@ const ACTIVITY_ICONS: Record<ActivityType, string> = {
   meeting: 'material-symbols:groups-outline',
   note: 'material-symbols:sticky-note-2-outline',
 }
-const FULL_PAGE_PATHS: Record<PipelineOverviewZoneKey, string> = {
-  prospect: '/crm/prospects',
-  lead: '/crm/leads',
-  deal: '/crm/deals',
-}
 
 const days = computed(() => (props.selection ? daysInStage(props.selection.card) : 0))
 const stale = computed(() => !!props.selection && !props.selection.lane.terminal && isStaleCard(props.selection.card))
 const lostReasonLabel = computed(() => {
   const reason = props.selection?.card.lost_reason
-  if (!reason) return ''
-  return String(LOST_REASON_OPTIONS.find(o => o.value === reason)?.label ?? reason)
+  return reason ? labelForLostReason(reason) : ''
 })
 
-// Prospect → Lead → Deal trail. A Lead or Deal that didn't start as a
-// Prospect shows only its own step (plus Lead for a Deal, since every Deal
-// on this board either came from a Lead or was created directly).
+// Prospect → Lead → Deal trail. `from_prospect` is the only lineage the API
+// reports, so a record that started as a Prospect shows the full trail up to
+// its own step (a Deal from a Prospect necessarily went through a Lead), and
+// anything else shows just its own step.
 const lineage = computed<PipelineOverviewZoneKey[]>(() => {
   if (!props.selection) return []
   const { zone, card } = props.selection
-  if (zone === 'prospect') return ['prospect']
-  const head: PipelineOverviewZoneKey[] = card.from_prospect ? ['prospect'] : []
-  return zone === 'lead' ? [...head, 'lead'] : [...head, 'deal']
+  const funnel: PipelineOverviewZoneKey[] = ['prospect', 'lead', 'deal']
+  return card.from_prospect ? funnel.slice(0, funnel.indexOf(zone) + 1) : [zone]
 })
 
 // "Converted" is system-set by Convert only, never picked by hand.
@@ -300,6 +294,6 @@ const onConfirmConvertProspect = async () => {
 
 const openFullPage = () => {
   if (!props.selection) return
-  navigateTo(`${FULL_PAGE_PATHS[props.selection.zone]}/${props.selection.card.id}`)
+  navigateTo(`${OVERVIEW_ZONES[props.selection.zone].path}/${props.selection.card.id}`)
 }
 </script>

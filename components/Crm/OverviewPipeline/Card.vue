@@ -49,15 +49,15 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LOST_REASON_OPTIONS } from '~/constants/mockData'
-import { OVERVIEW_ZONE_COLORS } from '~/constants/ui'
-import { daysInStage, isStaleCard, movedInPeriod } from '~/composables/utils/usePipelineOverview'
+import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
+import { OVERVIEW_ZONES } from '~/constants/ui'
+import { daysInStage, isStaleCard, movedInPeriod, type OverviewDateRange } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   card: PipelineOverviewCard
   lane: PipelineOverviewLane
   zone: PipelineOverviewZoneKey
-  period: { date_from: string, date_to: string }
+  period: OverviewDateRange
   selected?: boolean
 }>()
 
@@ -67,14 +67,11 @@ const { t } = useI18n()
 const { priceFormatCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 
-const zoneColor = computed(() => OVERVIEW_ZONE_COLORS[props.zone])
+const zoneColor = computed(() => OVERVIEW_ZONES[props.zone].color)
 const days = computed(() => daysInStage(props.card))
 const stale = computed(() => !props.lane.terminal && isStaleCard(props.card))
 const moved = computed(() => !props.lane.terminal && movedInPeriod(props.card, props.period))
-const lostReasonLabel = computed(() => {
-  if (!props.card.lost_reason) return ''
-  return String(LOST_REASON_OPTIONS.find(o => o.value === props.card.lost_reason)?.label ?? props.card.lost_reason)
-})
+const lostReasonLabel = computed(() => (props.card.lost_reason ? labelForLostReason(props.card.lost_reason) : ''))
 const ownerName = computed(() => props.card.assigned_to ? teamMembersStore.nameById(props.card.assigned_to) : t('crm.overviewPipeline.card.unassigned'))
 const ownerInitials = computed(() => {
   if (!props.card.assigned_to) return '–'

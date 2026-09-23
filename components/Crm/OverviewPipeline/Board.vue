@@ -25,9 +25,9 @@
             <p
               class="flex items-center gap-1.5 text-sm font-semibold"
               :class="isCollapsed(zone.key) ? 'sm:rotate-180 sm:[writing-mode:vertical-rl]' : ''"
-              :style="{ color: `color-mix(in oklab, ${OVERVIEW_ZONE_COLORS[zone.key]} 80%, var(--color-black))` }"
+              :style="{ color: `color-mix(in oklab, ${OVERVIEW_ZONES[zone.key].color} 80%, var(--color-black))` }"
             >
-              <UIcon :name="ZONE_ICONS[zone.key]" class="size-4.5" />
+              <UIcon :name="OVERVIEW_ZONES[zone.key].icon" class="size-4.5" />
               {{ t(`crm.overviewPipeline.zones.${zone.key}`) }}
             </p>
             <span
@@ -46,7 +46,7 @@
               icon="material-symbols:open-in-new"
               :aria-label="t('crm.overviewPipeline.openBoard', { zone: t(`crm.overviewPipeline.zones.${zone.key}`) })"
               :title="t('crm.overviewPipeline.openBoard', { zone: t(`crm.overviewPipeline.zones.${zone.key}`) })"
-              @click="navigateTo(ZONE_PATHS[zone.key])"
+              @click="navigateTo(OVERVIEW_ZONES[zone.key].path)"
             />
             <UButton
               class="hidden sm:inline-flex"
@@ -102,7 +102,7 @@
                 </p>
                 <NuxtLink
                   v-if="lane.count > lane.cards.length"
-                  :to="ZONE_PATHS[zone.key]"
+                  :to="OVERVIEW_ZONES[zone.key].path"
                   class="px-1 py-1 text-center text-xs text-(--color-info-toast) hover:underline"
                 >
                   {{ t('crm.overviewPipeline.laneMore', { count: numberFormat(lane.count - lane.cards.length), zone: t(`crm.overviewPipeline.zones.${zone.key}`) }) }}
@@ -118,11 +118,12 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { OVERVIEW_ZONE_COLORS } from '~/constants/ui'
+import { OVERVIEW_ZONES } from '~/constants/ui'
+import type { OverviewDateRange } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   zones: PipelineOverviewZone[]
-  period: { date_from: string, date_to: string }
+  period: OverviewDateRange
   collapsed: Partial<Record<PipelineOverviewZoneKey, boolean>>
   selectedKey?: string | null
 }>()
@@ -135,25 +136,14 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { numberFormat, priceFormatCompact } = useFormatter()
 
-const ZONE_ICONS: Record<PipelineOverviewZoneKey, string> = {
-  prospect: 'material-symbols:contact-mail-outline',
-  lead: 'material-symbols:person-search-outline',
-  deal: 'material-symbols:handshake-outline',
-}
-const ZONE_PATHS: Record<PipelineOverviewZoneKey, string> = {
-  prospect: '/crm/prospects',
-  lead: '/crm/leads',
-  deal: '/crm/deals',
-}
-
 // Deals is where a reviewer usually starts, so it's the default on phones.
 const mobileZone = ref<string>('deal')
 const zoneTabOptions = computed(() => props.zones.map(z => ({ label: t(`crm.overviewPipeline.zones.${z.key}`), value: z.key })))
 
 const isCollapsed = (key: PipelineOverviewZoneKey) => !!props.collapsed[key]
-const tint = (key: PipelineOverviewZoneKey, pct: number) => `color-mix(in srgb, ${OVERVIEW_ZONE_COLORS[key]} ${pct}%, transparent)`
+const tint = (key: PipelineOverviewZoneKey, pct: number) => `color-mix(in srgb, ${OVERVIEW_ZONES[key].color} ${pct}%, transparent)`
 const zoneStyle = (key: PipelineOverviewZoneKey) => ({
-  background: `color-mix(in srgb, ${OVERVIEW_ZONE_COLORS[key]} 6%, white)`,
+  background: `color-mix(in srgb, ${OVERVIEW_ZONES[key].color} 6%, white)`,
   borderColor: tint(key, 28),
 })
 

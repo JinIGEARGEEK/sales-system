@@ -30,12 +30,13 @@ export const CHART_CATEGORICAL_COLOR_VARS = [
   'var(--color-chart-violet)',
 ]
 
-// Overview Pipeline (FR-CRM-123) zone colors — one hue per funnel stage, drawn
-// from the validated categorical palette above so the three zones stay
-// distinguishable next to each other (violet = Marketing's Prospects, blue =
-// Leads, green = Deals).
-export const OVERVIEW_ZONE_COLORS: Record<PipelineOverviewZoneKey, string> = {
-  prospect: 'var(--color-chart-violet)',
-  lead: 'var(--color-info-toast)',
-  deal: 'var(--color-accent-green)',
+// Overview Pipeline (FR-CRM-123) zones, in funnel order. Colors come from the
+// validated categorical palette above so the three zones stay distinguishable
+// side by side (violet = Marketing's Prospects, blue = Leads, green = Deals);
+// icons match the sidebar nav; `path` is each entity's own board/list page
+// (a record's detail page is `${path}/${id}`).
+export const OVERVIEW_ZONES: Record<PipelineOverviewZoneKey, { color: string, icon: string, path: string }> = {
+  prospect: { color: 'var(--color-chart-violet)', icon: 'material-symbols:contact-mail-outline', path: '/crm/prospects' },
+  lead: { color: 'var(--color-info-toast)', icon: 'material-symbols:person-search-outline', path: '/crm/leads' },
+  deal: { color: 'var(--color-accent-green)', icon: 'material-symbols:handshake-outline', path: '/crm/deals' },
 }

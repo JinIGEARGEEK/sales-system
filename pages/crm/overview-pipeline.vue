@@ -235,30 +235,28 @@ const toggleCollapse = (zone: PipelineOverviewZoneKey) => {
   }
 }
 
-// The side panel keeps pointing at the same record across refetches: after a
-// stage move the card now sits in a different lane object, so it's looked up
-// again by zone + id rather than holding on to the stale one.
-const selectedRef = ref<{ zone: PipelineOverviewZoneKey, id: number } | null>(null)
+// The open panel follows its record across refetches: after a stage move the
+// card sits in a different lane object, so the selection is re-resolved from
+// fresh data by zone + id. If the record is no longer on the board (e.g. moved
+// into a terminal lane outside the period), the panel keeps the last snapshot
+// rather than blanking.
 const panelOpen = ref(false)
-const selectedKey = computed(() => (panelOpen.value && selectedRef.value ? `${selectedRef.value.zone}:${selectedRef.value.id}` : null))
-const lastSelection = ref<PipelineOverviewSelection | null>(null)
-const selection = computed<PipelineOverviewSelection | null>(() => {
-  const target = selectedRef.value
-  if (!target || !overview.value) return lastSelection.value
-  const zone = overview.value.zones.find(z => z.key === target.zone)
-  for (const lane of zone?.lanes ?? []) {
-    const card = lane.cards.find(c => c.id === target.id)
-    if (card) return { zone: target.zone, lane, card }
-  }
-  // Moved out of view (e.g. into a terminal lane outside the period): keep
-  // showing what we last had rather than blanking the open panel.
-  return lastSelection.value
-})
-watch(selection, (value) => { if (value) lastSelection.value = value })
+const selection = ref<PipelineOverviewSelection | null>(null)
+const selectedKey = computed(() => (panelOpen.value && selection.value ? `${selection.value.zone}:${selection.value.card.id}` : null))
 const selectionZoneLanes = computed(() => overview.value?.zones.find(z => z.key === selection.value?.zone)?.lanes ?? [])
+watch(overview, (data) => {
+  const current = selection.value
+  if (!data || !current) return
+  for (const lane of data.zones.find(z => z.key === current.zone)?.lanes ?? []) {
+    const card = lane.cards.find(c => c.id === current.card.id)
+    if (card) {
+      selection.value = { zone: current.zone, lane, card }
+      return
+    }
+  }
+})
 const onSelect = (payload: PipelineOverviewSelection) => {
-  lastSelection.value = payload
-  selectedRef.value = { zone: payload.zone, id: payload.card.id }
+  selection.value = payload
   panelOpen.value = true
 }
 
