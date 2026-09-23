@@ -188,7 +188,9 @@ interface NotificationFiring {
 // only records that entered them inside the selected period. `count`/`value`
 // are exact; `cards` is capped at the request's card_limit.
 type PipelineOverviewZoneKey = 'prospect' | 'lead' | 'deal'
-type PipelineOverviewLaneKind = 'open' | 'won' | 'lost' | 'converted'
+// 'other' (only when non-empty, name "") holds records whose stage isn't one
+// of the zone's lanes — blank, or a stage an Admin deactivated/renamed.
+type PipelineOverviewLaneKind = 'open' | 'won' | 'lost' | 'converted' | 'other'
 
 interface PipelineOverviewCard {
   id: number
@@ -203,6 +205,9 @@ interface PipelineOverviewCard {
   from_prospect: boolean
   stage_entered_at: string | null
   created_at: string
+  // The record's own stage/status value ("" if blank) — what an 'other'
+  // lane card shows, since that lane's name doesn't say.
+  stage: string
 }
 
 interface PipelineOverviewLane {

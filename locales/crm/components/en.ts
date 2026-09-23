@@ -14,6 +14,11 @@ export default {
       prospectNurturing: 'Warming up over time',
       prospectDisqualified: 'Not a good fit',
       prospectConverted: 'Handed off to Sales as a Lead',
+      leadNew: 'Just came in, not yet worked',
+      leadContacted: 'Reached out, awaiting a response',
+      leadQualified: 'Ready to become a Deal',
+      leadDisqualified: 'Not pursuing',
+      leadConverted: 'Became a Deal',
     },
   },
   activityTimeline: {

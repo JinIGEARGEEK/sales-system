@@ -35,9 +35,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="lane in zone.lanes" :key="lane.name" class="break-inside-avoid">
+          <tr v-for="lane in zone.lanes" :key="`${lane.kind}:${lane.name}`" class="break-inside-avoid">
             <td class="border border-(--color-light-gray-2) px-2 py-1">
-              {{ lane.name }}<span v-if="lane.terminal" class="text-(--color-dark-gray)"> ({{ t('crm.overviewPipeline.laneInPeriod') }})</span>
+              {{ lane.kind === 'other' ? t('crm.overviewPipeline.otherLane') : lane.name }}<span v-if="lane.terminal" class="text-(--color-dark-gray)"> ({{ t('crm.overviewPipeline.laneInPeriod') }})</span>
             </td>
             <td class="border border-(--color-light-gray-2) px-2 py-1 text-right tabular-nums">{{ numberFormat(lane.count) }}</td>
             <td v-if="zone.key === 'deal'" class="border border-(--color-light-gray-2) px-2 py-1 text-right tabular-nums">{{ money(lane.value) }}</td>

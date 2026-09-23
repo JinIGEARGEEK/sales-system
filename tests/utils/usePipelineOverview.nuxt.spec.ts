@@ -95,7 +95,7 @@ describe('usePipelineOverview', () => {
     it('highlightCounts totals stale/moved open cards and the stale Deal value', () => {
       const card = (over: Partial<PipelineOverviewCard>): PipelineOverviewCard => ({
         id: 1, name: 'x', company_id: null, company_name: '', assigned_to: null, source: '', value: 0,
-        probability: null, lost_reason: null, from_prospect: false, stage_entered_at: null, created_at: '', ...over,
+        probability: null, lost_reason: null, from_prospect: false, stage_entered_at: null, created_at: '', stage: '', ...over,
       })
       const lane = (terminal: boolean, cards: PipelineOverviewCard[]): PipelineOverviewLane => ({ name: 'L', kind: terminal ? 'won' : 'open', terminal, count: cards.length, value: 0, cards })
       const zones: PipelineOverviewZone[] = [

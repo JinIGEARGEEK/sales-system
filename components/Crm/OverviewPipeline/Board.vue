@@ -62,19 +62,22 @@
           <div v-if="!isCollapsed(zone.key)" class="flex flex-1 flex-col gap-4 px-3 pb-3 md:flex-row md:items-stretch">
             <div
               v-for="lane in zone.lanes"
-              :key="lane.name"
+              :key="`${lane.kind}:${lane.name}`"
               class="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl md:w-64"
-              :style="{ borderColor: getColumnBorderTint(lane.name) }"
-              :data-cy="`overview-lane-${zone.key}-${lane.name}`"
+              :style="{ borderColor: laneBorder(zone.key, lane) }"
+              :data-cy="`overview-lane-${zone.key}-${lane.kind === 'other' ? 'other' : lane.name}`"
             >
               <div
                 class="flex flex-col gap-1 border-b border-white/40 px-3 py-2 backdrop-blur-2xl"
-                :style="{ backgroundColor: getColumnHeaderTint(lane.name) }"
+                :style="{ backgroundColor: laneHeader(zone.key, lane) }"
               >
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex min-w-0 flex-col">
-                    <span class="truncate text-sm font-medium text-white" :title="lane.name">{{ lane.name }}</span>
-                    <span class="text-[11px] text-white/70">{{ lane.terminal ? t('crm.overviewPipeline.laneInPeriod') : getStageDescription(lane.name) }}</span>
+                    <span class="flex items-center gap-1 truncate text-sm font-medium text-white" :title="laneLabel(lane)">
+                      <UIcon v-if="lane.kind === 'other'" name="material-symbols:help-outline" class="size-4 shrink-0" />
+                      {{ laneLabel(lane) }}
+                    </span>
+                    <span class="text-[11px] text-white/70">{{ laneSubtitle(zone.key, lane) }}</span>
                   </div>
                   <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white tabular-nums">{{ numberFormat(lane.count) }}</span>
                 </div>
@@ -92,7 +95,7 @@
 
               <div
                 class="flex flex-1 flex-col gap-2 overflow-y-auto p-3 backdrop-blur-xl md:max-h-[62vh]"
-                :style="{ backgroundColor: getColumnTint(lane.name) }"
+                :style="{ backgroundColor: laneBody(zone.key, lane) }"
               >
                 <CrmOverviewPipelineCard
                   v-for="card in lane.cards"
@@ -147,6 +150,25 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { numberFormat, priceFormatCompact } = useFormatter()
 const { getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription } = usePipelineStageColors()
+
+// Lanes are colored and described per entity (a Leads "New" lane gets the
+// Lead look, not the Prospect "New" one). The "other" catch-all lane has no
+// stage of its own, so it's drawn in neutral gray.
+const OTHER_LANE_COLOR = 'var(--color-gray)'
+const laneHeader = (zone: PipelineOverviewZoneKey, lane: PipelineOverviewLane) => lane.kind === 'other'
+  ? `color-mix(in srgb, ${OTHER_LANE_COLOR} 80%, transparent)`
+  : getColumnHeaderTint(lane.name, zone)
+const laneBody = (zone: PipelineOverviewZoneKey, lane: PipelineOverviewLane) => lane.kind === 'other'
+  ? `color-mix(in srgb, color-mix(in srgb, ${OTHER_LANE_COLOR} 22%, white) 88%, transparent)`
+  : getColumnTint(lane.name, zone)
+const laneBorder = (zone: PipelineOverviewZoneKey, lane: PipelineOverviewLane) => lane.kind === 'other'
+  ? `color-mix(in srgb, ${OTHER_LANE_COLOR} 45%, transparent)`
+  : getColumnBorderTint(lane.name, zone)
+const laneLabel = (lane: PipelineOverviewLane) => (lane.kind === 'other' ? t('crm.overviewPipeline.otherLane') : lane.name)
+const laneSubtitle = (zone: PipelineOverviewZoneKey, lane: PipelineOverviewLane) => {
+  if (lane.kind === 'other') return t('crm.overviewPipeline.otherLaneHint')
+  return lane.terminal ? t('crm.overviewPipeline.laneInPeriod') : getStageDescription(lane.name, zone)
+}
 
 // Deals is where a reviewer usually starts, so it's the default on phones.
 const mobileZone = ref<string>('deal')

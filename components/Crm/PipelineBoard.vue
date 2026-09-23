@@ -7,17 +7,17 @@
       v-for="column in columns"
       :key="column.value"
       class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl"
-      :style="{ borderColor: getColumnBorderTint(String(column.value)) }"
+      :style="{ borderColor: getColumnBorderTint(String(column.value), entity) }"
       @dragover.prevent="onColumnDragOver(column.value)"
       @drop="onDrop(column.value)"
     >
       <div
         class="flex items-start justify-between gap-2 border-b border-white/40 px-3 py-2 backdrop-blur-2xl"
-        :style="{ backgroundColor: getColumnHeaderTint(column.value) }"
+        :style="{ backgroundColor: getColumnHeaderTint(column.value, entity) }"
       >
         <div class="flex flex-col">
           <span class="text-sm font-medium text-white">{{ column.label }}</span>
-          <span class="text-[11px] text-white/70">{{ getStageDescription(column.value) }}</span>
+          <span class="text-[11px] text-white/70">{{ getStageDescription(column.value, entity) }}</span>
         </div>
         <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
           {{ columnCounts?.[column.value] ?? (grouped[column.value]?.length || 0) }}
@@ -27,7 +27,7 @@
       <div
         class="flex flex-1 flex-col gap-2 p-3 backdrop-blur-xl"
         :class="{ 'cursor-pointer': allowQuickAdd }"
-        :style="{ backgroundColor: getColumnTint(column.value) }"
+        :style="{ backgroundColor: getColumnTint(column.value, entity) }"
         @click.self="onEmptyAreaClick(column.value)"
       >
         <template v-for="(item, idx) in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
@@ -106,17 +106,17 @@
       v-for="column in columns"
       :key="column.value"
       class="overflow-hidden rounded-lg border"
-      :style="{ borderColor: getColumnBorderTint(String(column.value)) }"
+      :style="{ borderColor: getColumnBorderTint(String(column.value), entity) }"
     >
       <button
         type="button"
         class="flex w-full items-start justify-between gap-2 px-3 py-2 backdrop-blur-2xl"
-        :style="{ backgroundColor: getColumnHeaderTint(String(column.value)) }"
+        :style="{ backgroundColor: getColumnHeaderTint(String(column.value), entity) }"
         @click="toggleExpanded(String(column.value))"
       >
         <div class="flex flex-col items-start">
           <span class="text-sm font-medium text-white">{{ column.label }}</span>
-          <span class="text-[11px] text-white/70">{{ getStageDescription(String(column.value)) }}</span>
+          <span class="text-[11px] text-white/70">{{ getStageDescription(String(column.value), entity) }}</span>
         </div>
         <div class="flex shrink-0 items-center gap-2">
           <span class="rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
@@ -132,7 +132,7 @@
       <div
         v-show="isExpanded(String(column.value))"
         class="flex flex-col gap-2 p-3 backdrop-blur-xl"
-        :style="{ backgroundColor: getColumnTint(String(column.value)) }"
+        :style="{ backgroundColor: getColumnTint(String(column.value), entity) }"
       >
         <div
           v-for="item in grouped[column.value] || []"
@@ -184,6 +184,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { StageEntity } from '~/composables/utils/usePipelineStageColors'
 
 const { t } = useI18n()
 
@@ -210,6 +211,11 @@ const props = defineProps<{
   // still only ever creates a Deal (mirroring the header's own "+ Add Deal"
   // button), never a Lead.
   allowQuickAdd?: boolean
+  // Whose stages these columns are ('deal' on the Deals board, 'prospect' on
+  // the Prospects board): stage colors/descriptions then come only from that
+  // entity's own config, so a same-named stage of another entity can't leak
+  // its color in (see usePipelineStageColors).
+  entity?: StageEntity
 }>()
 
 const { getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription } = usePipelineStageColors()

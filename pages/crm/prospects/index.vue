@@ -73,6 +73,7 @@
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
+      entity="prospect"
       :columns="prospectStagesStore.activeOptions"
       :items="pipelineItems"
       allow-quick-add

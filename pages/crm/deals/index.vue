@@ -55,6 +55,7 @@
 
     <CrmPipelineBoard
       v-if="viewMode === 'kanban'"
+      entity="deal"
       :columns="pipelineStagesStore.activeOptions"
       :items="pipelineItems"
       :column-counts="columnCounts"

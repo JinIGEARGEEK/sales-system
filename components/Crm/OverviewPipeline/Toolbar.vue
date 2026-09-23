@@ -56,6 +56,10 @@
             {{ t('crm.overviewPipeline.legend.terminal') }}
           </li>
           <li class="flex gap-2">
+            <UIcon name="material-symbols:help-outline" class="mt-0.5 size-4 shrink-0" />
+            {{ t('crm.overviewPipeline.legend.other') }}
+          </li>
+          <li class="flex gap-2">
             <UIcon name="material-symbols:drag-pan" class="mt-0.5 size-4 shrink-0" />
             {{ t('crm.overviewPipeline.legend.boards') }}
           </li>
