@@ -71,8 +71,8 @@ export default {
   legend: {
     moved: 'Moved',
     movedHint: 'changed stage in this period',
-    stale: 'stale: over {days} days in stage',
-    terminal: 'Dashed columns show only records closed in the selected period',
+    stale: 'over {days} days in the same stage — worth a question',
+    terminal: 'Won, Lost, Disqualified and Converted columns (marked "In period") show only records closed in the selected period',
     boards: 'To drag cards, use the Prospects, Leads or Deals board, or change the stage in a card\'s side panel',
   },
   card: {

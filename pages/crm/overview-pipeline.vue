@@ -72,25 +72,12 @@
           <div class="flex flex-col gap-4 transition-opacity" :class="loading ? 'opacity-60' : ''" :aria-busy="loading">
             <CrmOverviewPipelineSummaryStrip :summary="overview.summary" />
 
-            <!-- Built from the app's own warning tokens rather than UAlert,
-            whose warning/subtle variant renders low-contrast in this theme. -->
-            <div
+            <CrmOverviewPipelineStaleBanner
               v-if="counts.staleDeals > 0 && highlight !== 'stale'"
-              class="flex flex-col gap-3 rounded-xl border border-(--color-warning-hover)/50 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-bg) px-4 py-3 sm:flex-row sm:items-center"
-              role="status"
-              data-cy="overview-stale-alert"
-            >
-              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-(--color-warning-hover)/20 text-(--color-warning-hover)">
-                <UIcon name="material-symbols:schedule-outline" class="size-5" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-(--color-black)">
-                  {{ t('crm.overviewPipeline.attention.staleDeals', { count: counts.staleDeals, value: `${t('global.currencySymbol')}${priceFormatCompact(counts.staleDealValue)}`, days: OVERVIEW_STALE_DAYS }) }}
-                </p>
-                <p class="text-xs text-(--color-dark-gray)">{{ t('crm.overviewPipeline.attention.staleDealsHint') }}</p>
-              </div>
-              <ButtonPrimary outline icon="material-symbols:highlight-outline" :label="t('crm.overviewPipeline.attention.highlight')" @click="highlightStaleDeals" />
-            </div>
+              :count="counts.staleDeals"
+              :value="counts.staleDealValue"
+              @highlight="highlightStaleDeals"
+            />
 
             <div v-if="isEmpty" class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-(--color-card-border) bg-white px-6 py-12 text-center">
               <UIcon name="material-symbols:filter-list-off" class="size-8 text-(--color-gray)" />
@@ -155,7 +142,6 @@ import { GLASS_PANEL_UI } from '~/constants/ui'
 import { BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
 import {
   OVERVIEW_PERIOD_PRESETS,
-  OVERVIEW_STALE_DAYS,
   highlightCounts,
   overviewPeriodLength,
   overviewPeriodRange,
@@ -167,7 +153,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.overviewPipeline.pageTitle') })
 
 const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
-const { dateFormat, priceFormatCompact } = useFormatter()
+const { dateFormat } = useFormatter()
 const { notifyApiError } = useApiErrorNotifier()
 const overviewStore = usePipelineOverviewStore()
 const teamMembersStore = useTeamMembersStore()

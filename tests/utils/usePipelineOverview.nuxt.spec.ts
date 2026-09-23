@@ -8,6 +8,7 @@ import {
   movedInPeriod,
   overviewPeriodLength,
   overviewPeriodRange,
+  zoneOpenTotals,
 } from '~/composables/utils/usePipelineOverview'
 
 // Wednesday 23 Sep 2026, mid-afternoon local time.
@@ -103,5 +104,11 @@ describe('usePipelineOverview', () => {
       ]
       expect(highlightCounts(zones, range, NOW)).toEqual({ stale: 2, moved: 1, staleDeals: 1, staleDealValue: 500 })
     })
+  })
+
+  it('zoneOpenTotals sums open lanes only', () => {
+    const lane = (terminal: boolean, count: number, value: number): PipelineOverviewLane => ({ name: String(count), kind: terminal ? 'won' : 'open', terminal, count, value, cards: [] })
+    const zone: PipelineOverviewZone = { key: 'deal', lanes: [lane(false, 2, 100), lane(false, 3, 50), lane(true, 9, 999)] }
+    expect(zoneOpenTotals(zone)).toEqual({ count: 5, value: 150 })
   })
 })

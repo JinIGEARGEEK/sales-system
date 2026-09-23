@@ -129,7 +129,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { OVERVIEW_ZONES } from '~/constants/ui'
-import { cardMatchesHighlight, type OverviewDateRange, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
+import { cardMatchesHighlight, zoneOpenTotals, type OverviewDateRange, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   zones: PipelineOverviewZone[]
@@ -155,17 +155,15 @@ const zoneTabOptions = computed(() => props.zones.map(z => ({ label: zoneLabel(z
 
 const isCollapsed = (key: PipelineOverviewZoneKey) => !!props.collapsed[key]
 
-const openDealValue = (zone: PipelineOverviewZone) => zone.lanes.filter(l => !l.terminal).reduce((sum, l) => sum + l.value, 0)
 const lanePct = (zone: PipelineOverviewZone, lane: PipelineOverviewLane) => {
-  const total = openDealValue(zone)
+  const total = zoneOpenTotals(zone).value
   return total > 0 ? Math.round((lane.value / total) * 100) : 0
 }
 
 const zoneMeta = (zone: PipelineOverviewZone) => {
-  const count = zone.lanes.filter(l => !l.terminal).reduce((sum, l) => sum + l.count, 0)
+  const { count, value } = zoneOpenTotals(zone)
   const label = t('crm.overviewPipeline.zoneOpenCount', { count: numberFormat(count) })
-  if (zone.key !== 'deal') return label
-  return `${label} · ${t('global.currencySymbol')}${priceFormatCompact(openDealValue(zone))}`
+  return zone.key === 'deal' ? `${label} · ${t('global.currencySymbol')}${priceFormatCompact(value)}` : label
 }
 
 // Jump-to from the page's toolbar: on phones switch the visible zone, on
