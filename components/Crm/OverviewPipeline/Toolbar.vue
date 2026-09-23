@@ -6,14 +6,16 @@
         v-for="option in highlightOptions"
         :key="option.value"
         type="button"
-        class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs whitespace-nowrap transition-colors"
-        :class="highlight === option.value ? option.activeClass : 'border-(--color-light-gray-2) bg-white text-(--color-black) hover:bg-(--color-light-gray-1)'"
+        class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[var(--ui-radius)] border px-3 text-sm whitespace-nowrap transition-colors"
+        :class="highlight === option.value
+          ? 'border-(--color-primary) bg-(--color-primary-bg) text-(--color-primary)'
+          : 'border-(--color-light-gray-2) bg-white text-(--color-black) hover:bg-(--color-light-gray-1)'"
         :aria-pressed="highlight === option.value"
         @click="emit('update:highlight', option.value)"
       >
         <UIcon :name="option.icon" class="size-3.5" />
         {{ option.label }}
-        <span v-if="option.count !== null" class="rounded-full bg-black/5 px-1.5 tabular-nums">{{ option.count }}</span>
+        <UBadge v-if="option.count !== null" size="xs" variant="subtle" :color="option.badgeColor" :label="String(option.count)" />
       </button>
     </div>
 
@@ -23,7 +25,7 @@
         v-for="zone in zones"
         :key="zone.key"
         type="button"
-        class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-(--color-light-gray-2) bg-white px-2.5 text-xs whitespace-nowrap hover:bg-(--color-light-gray-1)"
+        class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[var(--ui-radius)] border border-(--color-light-gray-2) bg-white px-3 text-sm whitespace-nowrap transition-colors hover:bg-(--color-light-gray-1)"
         @click="emit('jump', zone.key)"
       >
         <span class="size-2 rounded-full" :style="{ background: OVERVIEW_ZONES[zone.key].color }" />
@@ -37,13 +39,11 @@
       <template #content>
         <ul class="flex max-w-xs flex-col gap-2.5 p-3 text-xs text-(--color-dark-gray)">
           <li class="flex gap-2">
-            <span class="mt-0.5 inline-flex h-fit items-center gap-0.5 rounded-full bg-(--color-info-toast)/12 px-1.5 py-px text-[11px] whitespace-nowrap text-(--color-info-toast)">
-              <UIcon name="material-symbols:arrow-upward" class="size-3" />{{ t('crm.overviewPipeline.legend.moved') }}
-            </span>
+            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="info" icon="material-symbols:arrow-upward" :label="t('crm.overviewPipeline.legend.moved')" />
             {{ t('crm.overviewPipeline.legend.movedHint') }}
           </li>
           <li class="flex gap-2">
-            <span class="mt-0.5 h-4 w-1 shrink-0 rounded-sm bg-(--color-warning-hover)" />
+            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.card.daysInStage', { days: OVERVIEW_STALE_DAYS + 1 })" />
             {{ t('crm.overviewPipeline.legend.stale', { days: OVERVIEW_STALE_DAYS }) }}
           </li>
           <li class="flex gap-2">
@@ -80,9 +80,9 @@ const { t } = useI18n()
 const { numberFormat } = useFormatter()
 
 const highlightOptions = computed(() => [
-  { value: 'all' as const, label: t('crm.overviewPipeline.highlight.all'), icon: 'material-symbols:view-kanban-outline', count: null, activeClass: 'border-(--color-primary) bg-(--color-primary-bg) text-(--color-primary)' },
-  { value: 'stale' as const, label: t('crm.overviewPipeline.highlight.stale'), icon: 'material-symbols:schedule-outline', count: props.counts.stale, activeClass: 'border-(--color-warning-hover) bg-(--color-warning-bg) text-(--color-warning-hover)' },
-  { value: 'moved' as const, label: t('crm.overviewPipeline.highlight.moved'), icon: 'material-symbols:arrow-upward', count: props.counts.moved, activeClass: 'border-(--color-info-toast) bg-(--color-info-toast)/10 text-(--color-info-toast)' },
+  { value: 'all' as const, label: t('crm.overviewPipeline.highlight.all'), icon: 'material-symbols:view-kanban-outline', count: null, badgeColor: 'neutral' as const },
+  { value: 'stale' as const, label: t('crm.overviewPipeline.highlight.stale'), icon: 'material-symbols:schedule-outline', count: props.counts.stale, badgeColor: 'warning' as const },
+  { value: 'moved' as const, label: t('crm.overviewPipeline.highlight.moved'), icon: 'material-symbols:arrow-upward', count: props.counts.moved, badgeColor: 'info' as const },
 ])
 
 const openCount = (zone: PipelineOverviewZone) => numberFormat(zone.lanes.filter(l => !l.terminal).reduce((sum, l) => sum + l.count, 0))

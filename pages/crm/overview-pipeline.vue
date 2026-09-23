@@ -2,12 +2,11 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
       <div class="overview-screen flex flex-col gap-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="min-w-0 flex-1">
-            <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
-            <p class="text-sm text-(--color-gray)">{{ t('crm.overviewPipeline.subheading') }}</p>
-          </div>
-          <div class="flex shrink-0 items-center gap-2">
+        <!-- Same header layout as the Kanban pages (Deals/Leads/Prospects):
+        heading left, actions right. -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
+          <div class="flex flex-wrap items-center gap-2">
             <span v-if="fetchedAtLabel" class="text-xs text-(--color-gray)">{{ fetchedAtLabel }}</span>
             <UTooltip :text="t('crm.overviewPipeline.refresh')">
               <UButton
@@ -30,6 +29,14 @@
             </UTooltip>
           </div>
         </div>
+
+        <UAlert
+          color="info"
+          variant="subtle"
+          icon="material-symbols:info-outline"
+          :description="t('crm.overviewPipeline.subheading')"
+          :ui="{ root: 'p-2', icon: 'size-4', description: 'text-xs text-(--color-black)' }"
+        />
 
         <UCard :ui="GLASS_PANEL_UI">
           <div class="flex flex-col gap-3">
@@ -167,6 +174,8 @@ const teamMembersStore = useTeamMembersStore()
 const prospectSourcesStore = useProspectSourcesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const tagsStore = useTagsStore()
+const pipelineStagesStore = usePipelineStagesStore()
+const prospectStagesStore = useProspectStagesStore()
 
 // Filters live in the URL so a review view (e.g. "last week, Mint's deals")
 // can be shared as a link or reopened with the back button.
@@ -274,6 +283,10 @@ guardMounted(() => {
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   if (tagsStore.items.length === 0) tagsStore.fetchAll().catch(notifyApiError)
+  // Lane colors/descriptions come from the stage configs, same as the
+  // Kanban boards (usePipelineStageColors), so custom stages match there.
+  if (pipelineStagesStore.items.length === 0) pipelineStagesStore.fetchAll().catch(notifyApiError)
+  if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
 })
 watch([periodPreset, assigneeFilter, sourceFilter, businessUnitFilter, tagFilter], () => { if (canAccess.value) refresh() })
 let searchTimer: ReturnType<typeof setTimeout> | undefined

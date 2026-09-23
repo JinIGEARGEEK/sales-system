@@ -1,43 +1,35 @@
 <template>
   <div>
-    <!-- Phone width: one zone at a time, picked here; the full three-zone
-    board only fits from sm up. -->
-    <div class="mb-3 sm:hidden">
+    <!-- Below md (same breakpoint as the Kanban boards): one zone at a time,
+    picked here; the three-zone board only fits side by side from md up. -->
+    <div class="mb-3 md:hidden">
       <CrmStatusPill v-model="mobileZone" :options="zoneTabOptions" class="flex-wrap" />
     </div>
 
     <div ref="scroller" class="overflow-x-auto scroll-smooth pb-2 motion-reduce:scroll-auto">
-      <div class="flex flex-col gap-3 sm:w-max sm:flex-row sm:items-stretch">
+      <div class="flex flex-col gap-4 md:w-max md:flex-row md:items-stretch">
         <section
           v-for="zone in zones"
           :id="`overview-zone-${zone.key}`"
           :key="zone.key"
-          class="scroll-ml-1 flex-col rounded-xl border sm:flex"
-          :class="[mobileZone === zone.key ? 'flex' : 'hidden', isCollapsed(zone.key) ? 'sm:w-14' : '']"
-          :style="zoneStyle(zone.key)"
-          :aria-label="t(`crm.overviewPipeline.zones.${zone.key}`)"
+          class="flex-col rounded-xl border bg-white/45 backdrop-blur-xl md:flex"
+          :class="[mobileZone === zone.key ? 'flex' : 'hidden', isCollapsed(zone.key) ? 'md:w-14' : '']"
+          :style="{ borderColor: `color-mix(in srgb, ${OVERVIEW_ZONES[zone.key].color} 35%, transparent)` }"
+          :aria-label="zoneLabel(zone.key)"
           :data-cy="`overview-zone-${zone.key}`"
         >
           <header
-            class="flex items-center gap-2 rounded-t-xl border-b px-3 py-2.5"
-            :class="isCollapsed(zone.key) ? 'sm:h-full sm:flex-col sm:rounded-xl sm:border-b-0 sm:px-1.5 sm:py-3' : ''"
-            :style="{ borderColor: tint(zone.key, 22), background: tint(zone.key, 10) }"
+            class="flex items-center gap-2 px-3 py-2.5"
+            :class="isCollapsed(zone.key) ? 'md:h-full md:flex-col md:px-1.5 md:py-3' : ''"
           >
-            <span
-              class="grid size-7 shrink-0 place-items-center rounded-lg text-white"
-              :style="{ background: OVERVIEW_ZONES[zone.key].color }"
-            >
+            <span class="grid size-7 shrink-0 place-items-center rounded-lg text-white" :style="{ background: OVERVIEW_ZONES[zone.key].color }">
               <UIcon :name="OVERVIEW_ZONES[zone.key].icon" class="size-4" />
             </span>
-            <div class="flex min-w-0 items-baseline gap-2" :class="isCollapsed(zone.key) ? 'sm:rotate-180 sm:flex-row-reverse sm:[writing-mode:vertical-rl]' : ''">
-              <p class="text-sm font-semibold" :style="{ color: `color-mix(in oklab, ${OVERVIEW_ZONES[zone.key].color} 75%, var(--color-black))` }">
-                {{ t(`crm.overviewPipeline.zones.${zone.key}`) }}
-              </p>
-              <span class="text-xs text-(--color-dark-gray) tabular-nums">{{ zoneMeta(zone) }}</span>
+            <div class="flex min-w-0 items-baseline gap-2" :class="isCollapsed(zone.key) ? 'md:rotate-180 md:flex-row-reverse md:[writing-mode:vertical-rl]' : ''">
+              <h3 class="text-base font-black">{{ zoneLabel(zone.key) }}</h3>
+              <span class="text-xs text-(--color-gray) tabular-nums">{{ zoneMeta(zone) }}</span>
             </div>
-            <span v-if="!isCollapsed(zone.key)" class="rounded-full bg-white/70 px-2 py-px text-[11px] text-(--color-dark-gray)">
-              {{ t(`crm.overviewPipeline.zoneOwner.${zone.key}`) }}
-            </span>
+            <UBadge v-if="!isCollapsed(zone.key)" size="sm" variant="subtle" color="neutral" :label="t(`crm.overviewPipeline.zoneOwner.${zone.key}`)" />
             <span v-if="!isCollapsed(zone.key)" class="flex-1" />
             <UTooltip v-if="!isCollapsed(zone.key)" :text="t('crm.overviewPipeline.openBoard', { zone: zoneLabel(zone.key) })">
               <UButton
@@ -51,7 +43,7 @@
             </UTooltip>
             <UTooltip :text="t(isCollapsed(zone.key) ? 'crm.overviewPipeline.expand' : 'crm.overviewPipeline.collapse', { zone: zoneLabel(zone.key) })">
               <UButton
-                class="hidden sm:inline-flex"
+                class="hidden md:inline-flex"
                 color="neutral"
                 variant="ghost"
                 size="sm"
@@ -63,42 +55,45 @@
             </UTooltip>
           </header>
 
-          <!-- items-start: each lane is as tall as its cards, so an empty
-          Won/Lost column doesn't stretch into a tall blank block. -->
-          <div v-if="!isCollapsed(zone.key)" class="flex flex-1 flex-col gap-2.5 p-2.5 sm:flex-row sm:items-start">
+          <!-- Lanes use the Kanban boards' exact column look (colored header
+          with white text + description, stage-tinted glass body), via the
+          same usePipelineStageColors(), so a stage reads identically here
+          and on its own board. Terminal lanes add an "In period" tag. -->
+          <div v-if="!isCollapsed(zone.key)" class="flex flex-1 flex-col gap-4 px-3 pb-3 md:flex-row md:items-stretch">
             <div
               v-for="lane in zone.lanes"
               :key="lane.name"
-              class="flex w-full flex-col overflow-hidden rounded-lg border sm:w-60"
-              :class="lane.terminal ? 'border-dashed border-(--color-card-border) bg-(--color-light-gray-1)/70' : 'border-(--color-card-border) bg-white'"
+              class="flex w-full shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl md:w-64"
+              :style="{ borderColor: getColumnBorderTint(lane.name) }"
               :data-cy="`overview-lane-${zone.key}-${lane.name}`"
             >
-              <div class="h-1" :style="{ background: laneAccent(zone.key, lane) }" />
-              <div class="border-b border-(--color-light-gray-2) px-3 pt-2 pb-2">
-                <p class="flex items-center gap-1.5 text-sm font-medium">
-                  <UIcon
-                    v-if="lane.terminal"
-                    :name="LANE_KIND_ICONS[lane.kind]"
-                    class="size-4 shrink-0"
-                    :style="{ color: laneAccent(zone.key, lane) }"
-                  />
-                  <span class="truncate" :title="lane.name">{{ lane.name }}</span>
-                  <span class="ml-auto rounded-full bg-(--color-light-gray-1) px-2 py-px text-xs text-(--color-dark-gray) tabular-nums">{{ numberFormat(lane.count) }}</span>
-                </p>
-                <div class="mt-1 flex items-center justify-between gap-2 text-xs text-(--color-gray)">
-                  <span v-if="zone.key === 'deal'" class="font-semibold text-(--color-black) tabular-nums">{{ t('global.currencySymbol') }}{{ priceFormatCompact(lane.value) }}</span>
-                  <span v-else />
-                  <span v-if="lane.terminal" class="text-[10.5px] tracking-wide uppercase">{{ t('crm.overviewPipeline.laneInPeriod') }}</span>
-                </div>
-                <!-- A Deal lane's share of open pipeline value, so the biggest
-                money columns stand out without reading every figure. -->
-                <UTooltip v-if="zone.key === 'deal' && !lane.terminal" :text="t('crm.overviewPipeline.laneShare', { pct: lanePct(zone, lane) })">
-                  <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-(--color-light-gray-2)">
-                    <div class="h-full rounded-full" :style="{ width: `${lanePct(zone, lane)}%`, background: OVERVIEW_ZONES.deal.color }" />
+              <div
+                class="flex flex-col gap-1 border-b border-white/40 px-3 py-2 backdrop-blur-2xl"
+                :style="{ backgroundColor: getColumnHeaderTint(lane.name) }"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-sm font-medium text-white" :title="lane.name">{{ lane.name }}</span>
+                    <span class="text-[11px] text-white/70">{{ lane.terminal ? t('crm.overviewPipeline.laneInPeriod') : getStageDescription(lane.name) }}</span>
                   </div>
-                </UTooltip>
+                  <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white tabular-nums">{{ numberFormat(lane.count) }}</span>
+                </div>
+                <template v-if="zone.key === 'deal'">
+                  <span class="text-xs font-semibold text-white tabular-nums">{{ t('global.currencySymbol') }}{{ priceFormatCompact(lane.value) }}</span>
+                  <!-- An open Deal lane's share of open pipeline value, so the
+                  biggest money columns stand out without reading each figure. -->
+                  <UTooltip v-if="!lane.terminal" :text="t('crm.overviewPipeline.laneShare', { pct: lanePct(zone, lane) })">
+                    <div class="h-1 overflow-hidden rounded-full bg-white/30">
+                      <div class="h-full rounded-full bg-white" :style="{ width: `${lanePct(zone, lane)}%` }" />
+                    </div>
+                  </UTooltip>
+                </template>
               </div>
-              <div class="flex flex-col gap-2 overflow-y-auto p-2 sm:max-h-[60vh]">
+
+              <div
+                class="flex flex-1 flex-col gap-2 overflow-y-auto p-3 backdrop-blur-xl md:max-h-[62vh]"
+                :style="{ backgroundColor: getColumnTint(lane.name) }"
+              >
                 <CrmOverviewPipelineCard
                   v-for="card in lane.cards"
                   :key="card.id"
@@ -110,17 +105,17 @@
                   :dimmed="!cardMatchesHighlight(card, lane, highlight, period)"
                   @select="emit('select', { zone: zone.key, lane, card })"
                 />
-                <p v-if="lane.count === 0" class="flex flex-col items-center gap-1 px-2 py-4 text-center text-xs text-(--color-gray)">
-                  <UIcon :name="lane.terminal ? 'material-symbols:event-available-outline' : 'material-symbols:inbox-outline'" class="size-5 opacity-60" />
+                <div v-if="lane.count === 0" class="py-4 text-center text-xs text-(--color-gray)">
                   {{ lane.terminal ? t('crm.overviewPipeline.laneEmptyTerminal') : t('crm.overviewPipeline.laneEmptyOpen') }}
-                </p>
+                </div>
+                <!-- Same dashed "load more" look as the Deals board's
+                column-footer button; here it links to the entity's board. -->
                 <NuxtLink
                   v-if="lane.count > lane.cards.length"
                   :to="OVERVIEW_ZONES[zone.key].path"
-                  class="flex items-center justify-center gap-1 rounded-md px-1 py-1.5 text-xs text-(--color-info-toast) hover:bg-(--color-info-toast)/8"
+                  class="mt-1 shrink-0 rounded-md border border-dashed border-(--color-light-gray-2) py-1.5 text-center text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
                 >
                   {{ t('crm.overviewPipeline.laneMore', { count: numberFormat(lane.count - lane.cards.length), zone: zoneLabel(zone.key) }) }}
-                  <UIcon name="material-symbols:arrow-forward" class="size-3.5" />
                 </NuxtLink>
               </div>
             </div>
@@ -151,13 +146,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { numberFormat, priceFormatCompact } = useFormatter()
-
-const LANE_KIND_ICONS: Record<PipelineOverviewLaneKind, string> = {
-  open: '',
-  won: 'material-symbols:trophy-outline',
-  converted: 'material-symbols:check-circle-outline',
-  lost: 'material-symbols:cancel-outline',
-}
+const { getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription } = usePipelineStageColors()
 
 // Deals is where a reviewer usually starts, so it's the default on phones.
 const mobileZone = ref<string>('deal')
@@ -165,16 +154,6 @@ const zoneLabel = (key: PipelineOverviewZoneKey) => t(`crm.overviewPipeline.zone
 const zoneTabOptions = computed(() => props.zones.map(z => ({ label: zoneLabel(z.key), value: z.key })))
 
 const isCollapsed = (key: PipelineOverviewZoneKey) => !!props.collapsed[key]
-const tint = (key: PipelineOverviewZoneKey, pct: number) => `color-mix(in srgb, ${OVERVIEW_ZONES[key].color} ${pct}%, transparent)`
-const zoneStyle = (key: PipelineOverviewZoneKey) => ({
-  background: `color-mix(in srgb, ${OVERVIEW_ZONES[key].color} 5%, white)`,
-  borderColor: tint(key, 28),
-})
-const laneAccent = (key: PipelineOverviewZoneKey, lane: PipelineOverviewLane) => {
-  if (lane.kind === 'won' || lane.kind === 'converted') return 'var(--color-accent-green)'
-  if (lane.kind === 'lost') return 'var(--color-chart-lost)'
-  return tint(key, 55)
-}
 
 const openDealValue = (zone: PipelineOverviewZone) => zone.lanes.filter(l => !l.terminal).reduce((sum, l) => sum + l.value, 0)
 const lanePct = (zone: PipelineOverviewZone, lane: PipelineOverviewLane) => {
@@ -183,8 +162,7 @@ const lanePct = (zone: PipelineOverviewZone, lane: PipelineOverviewLane) => {
 }
 
 const zoneMeta = (zone: PipelineOverviewZone) => {
-  const open = zone.lanes.filter(l => !l.terminal)
-  const count = open.reduce((sum, l) => sum + l.count, 0)
+  const count = zone.lanes.filter(l => !l.terminal).reduce((sum, l) => sum + l.count, 0)
   const label = t('crm.overviewPipeline.zoneOpenCount', { count: numberFormat(count) })
   if (zone.key !== 'deal') return label
   return `${label} · ${t('global.currencySymbol')}${priceFormatCompact(openDealValue(zone))}`
