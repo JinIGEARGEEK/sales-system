@@ -43,4 +43,51 @@ describe('usePipelineStageColors', () => {
     expect(getStageDescription('Won')).toBe('crm.components.pipelineBoard.stageDescriptions.won')
     expect(getStageDescription('Legal Review')).toBe('')
   })
+
+  describe('with an entity', () => {
+    it('keeps same-named stages of different entities apart', () => {
+      const { getColumnColor, getStageDescription } = usePipelineStageColors()
+      // "New" is both a Prospect and a Lead status; "Qualified" both a Lead
+      // status and a Deal stage.
+      expect(getStageDescription('New', 'lead')).toBe('crm.components.pipelineBoard.stageDescriptions.leadNew')
+      expect(getStageDescription('New', 'prospect')).toBe('crm.components.pipelineBoard.stageDescriptions.prospectNew')
+      expect(getStageDescription('Qualified', 'lead')).toBe('crm.components.pipelineBoard.stageDescriptions.leadQualified')
+      expect(getStageDescription('Qualified', 'deal')).toBe('crm.components.pipelineBoard.stageDescriptions.qualified')
+      // Contacted fell through to the flat fallback before.
+      expect(getColumnColor('Contacted', 'lead')).not.toBe(getColumnColor('Contacted'))
+      expect(getColumnColor('Converted', 'lead')).toBe(getColumnColor('Won', 'deal'))
+    })
+
+    it("doesn't let another entity's custom stage color leak in", () => {
+      useProspectStagesStore().items = [
+        { id: 2, name: 'Follow Up', sort_order: 3, is_active: true, is_disqualified_stage: true, created_at: new Date() },
+      ]
+      usePipelineStagesStore().items = [
+        { id: 11, name: 'Follow Up', sort_order: 3, is_active: true, is_won_stage: false, is_lost_stage: false, created_at: new Date() },
+      ]
+      const { getColumnColor } = usePipelineStageColors()
+      // Name-only lookup checks Prospect first, so a Deal lane would turn red.
+      expect(getColumnColor('Follow Up')).toBe(getColumnColor('Lost', 'deal'))
+      expect(getColumnColor('Follow Up', 'deal')).toBe(CHART_CATEGORICAL_COLOR_VARS[11 % CHART_CATEGORICAL_COLOR_VARS.length])
+      expect(getColumnColor('Follow Up', 'prospect')).toBe(getColumnColor('Lost', 'deal'))
+    })
+
+    it('keeps the default stages\' existing colors on the Kanbans', () => {
+      const { getColumnColor } = usePipelineStageColors()
+      for (const stage of ['Lead', 'Qualified', 'Proposal Sent', 'Negotiation', 'Won', 'Lost']) {
+        expect(getColumnColor(stage, 'deal')).toBe(getColumnColor(stage))
+      }
+      for (const status of ['New', 'Engaging', 'Nurturing', 'Disqualified', 'Converted']) {
+        expect(getColumnColor(status, 'prospect')).toBe(getColumnColor(status))
+      }
+    })
+  })
+
+  it('exposes the tint recipes each stage lane uses, for lanes with no stage', () => {
+    const { getColumnColor, getColumnHeaderTint, getColumnTint, getColumnBorderTint, headerTintOf, bodyTintOf, borderTintOf } = usePipelineStageColors()
+    const color = getColumnColor('Negotiation', 'deal')
+    expect(getColumnHeaderTint('Negotiation', 'deal')).toBe(headerTintOf(color))
+    expect(getColumnTint('Negotiation', 'deal')).toBe(bodyTintOf(color))
+    expect(getColumnBorderTint('Negotiation', 'deal')).toBe(borderTintOf(color))
+  })
 })

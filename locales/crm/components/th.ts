@@ -14,6 +14,11 @@ export default {
       prospectNurturing: 'ดูแลอย่างต่อเนื่อง',
       prospectDisqualified: 'ไม่เหมาะสม',
       prospectConverted: 'ส่งต่อให้เซลล์เป็น Lead แล้ว',
+      leadNew: 'เพิ่งเข้ามา ยังไม่ได้ติดต่อ',
+      leadContacted: 'ติดต่อแล้ว รอการตอบกลับ',
+      leadQualified: 'พร้อมเปลี่ยนเป็น Deal',
+      leadDisqualified: 'ไม่ดำเนินการต่อ',
+      leadConverted: 'เปลี่ยนเป็น Deal แล้ว',
     },
   },
   activityTimeline: {

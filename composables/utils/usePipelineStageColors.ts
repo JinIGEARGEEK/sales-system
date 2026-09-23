@@ -5,7 +5,16 @@ import { CHART_CATEGORICAL_COLOR_VARS } from '~/constants/ui'
 // Stage column colors and short descriptions shared by every stage-lane
 // board — CrmPipelineBoard (the Deals/Leads/Prospects Kanbans) and the
 // Overview Pipeline (FR-CRM-123) — so a stage looks the same wherever it
-// appears. Moved here verbatim from PipelineBoard.vue.
+// appears. Moved here from PipelineBoard.vue.
+//
+// Every function takes an optional `entity`. Stage names repeat across
+// entities ("New" is a Prospect and a Lead status, "Qualified" a Lead
+// status and a Deal stage), so a caller that knows whose lane it's drawing
+// should pass it: the lookup then only consults that entity's own colors,
+// descriptions and stage config, and a same-named stage elsewhere can't
+// leak in. Without it, the original name-only lookup order applies.
+export type StageEntity = 'deal' | 'lead' | 'prospect'
+
 export const usePipelineStageColors = () => {
   const { t } = useI18n()
   const pipelineStagesStore = usePipelineStagesStore()
@@ -37,8 +46,26 @@ export const usePipelineStageColors = () => {
     Converted: 'prospectConverted',
   }
 
-  const getStageDescription = (value: string) => {
-    const key = STAGE_DESCRIPTION_KEYS[value as DealStage] || PROSPECT_STATUS_DESCRIPTION_KEYS[value]
+  // Lead statuses are a fixed enum (no Admin config), plus the Overview's
+  // derived "Converted" lane.
+  const LEAD_STATUS_DESCRIPTION_KEYS: Record<string, string> = {
+    New: 'leadNew',
+    Contacted: 'leadContacted',
+    Qualified: 'leadQualified',
+    Disqualified: 'leadDisqualified',
+    Converted: 'leadConverted',
+  }
+
+  const DESCRIPTION_KEYS_BY_ENTITY: Record<StageEntity, Record<string, string>> = {
+    deal: STAGE_DESCRIPTION_KEYS,
+    lead: LEAD_STATUS_DESCRIPTION_KEYS,
+    prospect: PROSPECT_STATUS_DESCRIPTION_KEYS,
+  }
+
+  const getStageDescription = (value: string, entity?: StageEntity) => {
+    const key = entity
+      ? DESCRIPTION_KEYS_BY_ENTITY[entity][value]
+      : STAGE_DESCRIPTION_KEYS[value as DealStage] || PROSPECT_STATUS_DESCRIPTION_KEYS[value]
     return key ? t(`crm.components.pipelineBoard.stageDescriptions.${key}`) : ''
   }
 
@@ -90,31 +117,73 @@ export const usePipelineStageColors = () => {
   // Admin-added Deal stage still renders won/lost sensibly, and any other
   // custom (in-between) stage gets its own distinct palette color instead of
   // the flat FALLBACK_COLOR.
-  const getColumnColor = (value: string) => {
-    if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
+  // Lead statuses: the same hues their names already got through the
+  // name-only lookup below (New/Qualified/Disqualified), plus a distinct one
+  // for Contacted, which had none and fell through to the flat
+  // FALLBACK_COLOR, and won-green for the Overview's Converted lane.
+  const LEAD_STATUS_COLORS: Record<string, string> = {
+    New: '#5B5FE9',
+    Contacted: '#00C2B8',
+    Qualified: '#4A9FE8',
+    Disqualified: LOST_COLOR,
+    Converted: WON_COLOR,
+  }
+
+  const prospectColor = (value: string): string | undefined => {
     if (DEFAULT_PROSPECT_STAGE_COLORS[value]) return DEFAULT_PROSPECT_STAGE_COLORS[value]
     if (value === PROSPECT_CONVERTED_STATUS) return WON_COLOR
     const prospectStage = prospectStagesStore.byName(value)
     if (prospectStage) return prospectStage.is_disqualified_stage ? LOST_COLOR : colorForStageId(prospectStage.id)
+    return undefined
+  }
+
+  const dealColor = (value: string): string | undefined => {
+    if (DEAL_STAGE_COLORS[value as DealStage]) return DEAL_STAGE_COLORS[value as DealStage]
     const dealStage = pipelineStagesStore.byName(value)
     if (dealStage?.is_won_stage) return WON_COLOR
     if (dealStage?.is_lost_stage) return LOST_COLOR
     if (dealStage) return colorForStageId(dealStage.id)
-    return FALLBACK_COLOR
+    return undefined
   }
 
-  const getColumnHeaderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 80%, transparent)`
+  const getColumnColor = (value: string, entity?: StageEntity) => {
+    if (entity === 'lead') return LEAD_STATUS_COLORS[value] ?? FALLBACK_COLOR
+    if (entity === 'prospect') return prospectColor(value) ?? FALLBACK_COLOR
+    if (entity === 'deal') return dealColor(value) ?? FALLBACK_COLOR
+    // Name-only: default Deal stage colors first, then Prospect (hand-picked,
+    // Converted, config), then Deal config — the original order.
+    return DEAL_STAGE_COLORS[value as DealStage] ?? prospectColor(value) ?? dealColor(value) ?? FALLBACK_COLOR
+  }
+
+  // Tint recipes for a lane of a given base color — exposed so a lane with
+  // no stage of its own (the Overview's "Other stage", drawn gray) matches
+  // every stage lane's look without re-deriving these mixes.
+  const headerTintOf = (color: string) => `color-mix(in srgb, ${color} 80%, transparent)`
+  const borderTintOf = (color: string) => `color-mix(in srgb, ${color} 45%, transparent)`
+
+  const getColumnHeaderTint = (value: string, entity?: StageEntity) => headerTintOf(getColumnColor(value, entity))
 
   // A strong, saturated glass tint (not the old barely-there 14% wash) — each
   // lane should read as its own colored panel at a glance, not a near-white
   // card with a faint hint of hue. Kept slightly translucent (88%) so the
   // backdrop-blur still shows some glass-through effect against the page.
-  const getColumnTint = (value: string) => {
-    const solidTint = `color-mix(in srgb, ${getColumnColor(value)} 32%, white)`
+  const bodyTintOf = (color: string) => {
+    const solidTint = `color-mix(in srgb, ${color} 32%, white)`
     return `color-mix(in srgb, ${solidTint} 88%, transparent)`
   }
 
-  const getColumnBorderTint = (value: string) => `color-mix(in srgb, ${getColumnColor(value)} 45%, transparent)`
+  const getColumnTint = (value: string, entity?: StageEntity) => bodyTintOf(getColumnColor(value, entity))
 
-  return { getColumnColor, getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription }
+  const getColumnBorderTint = (value: string, entity?: StageEntity) => borderTintOf(getColumnColor(value, entity))
+
+  return {
+    getColumnColor,
+    getColumnHeaderTint,
+    getColumnTint,
+    getColumnBorderTint,
+    getStageDescription,
+    headerTintOf,
+    bodyTintOf,
+    borderTintOf,
+  }
 }

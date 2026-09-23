@@ -37,6 +37,14 @@
         />
       </UTooltip>
       <template v-else>
+        <UBadge
+          v-if="isOtherLane(lane)"
+          size="xs"
+          variant="outline"
+          color="neutral"
+          icon="material-symbols:help-outline"
+          :label="t('crm.overviewPipeline.card.actualStage', { stage: stageName })"
+        />
         <UTooltip :text="stageTooltip" :ui="MULTILINE_TOOLTIP_UI">
           <UBadge
             size="xs"
@@ -46,7 +54,7 @@
             :label="stale ? `${t('crm.overviewPipeline.highlight.stale')} · ${t('crm.overviewPipeline.card.daysInStage', { days })}` : t('crm.overviewPipeline.card.daysInStage', { days })"
           />
         </UTooltip>
-        <UTooltip v-if="moved" :text="t('crm.overviewPipeline.card.movedOn', { stage: lane.name, date: enteredOn })" :ui="MULTILINE_TOOLTIP_UI">
+        <UTooltip v-if="moved" :text="t('crm.overviewPipeline.card.movedOn', { stage: stageName, date: enteredOn })" :ui="MULTILINE_TOOLTIP_UI">
           <UBadge
             size="xs"
             variant="subtle"
@@ -72,7 +80,7 @@
 import { useI18n } from 'vue-i18n'
 import { MULTILINE_TOOLTIP_UI } from '~/constants/ui'
 import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
-import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard, movedInPeriod, type OverviewDateRange } from '~/composables/utils/usePipelineOverview'
+import { OVERVIEW_STALE_DAYS, daysInStage, isOtherLane, isStaleCard, movedInPeriod, overviewCardStage, type OverviewDateRange } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   card: PipelineOverviewCard
@@ -96,11 +104,12 @@ const moved = computed(() => !props.lane.terminal && movedInPeriod(props.card, p
 // The date this record entered its current lane (falls back to created_at
 // for rows that predate stage_entered_at, same as daysInStage).
 const enteredOn = computed(() => dateFormat(props.card.stage_entered_at ?? props.card.created_at))
+const stageName = computed(() => overviewCardStage(props.card, props.lane, t))
 const stageTooltip = computed(() => t(
   stale.value ? 'crm.overviewPipeline.card.staleSince' : 'crm.overviewPipeline.card.stageSince',
-  { stage: props.lane.name, date: enteredOn.value, days: days.value, limit: OVERVIEW_STALE_DAYS },
+  { stage: stageName.value, date: enteredOn.value, days: days.value, limit: OVERVIEW_STALE_DAYS },
 ))
 const lostReasonLabel = computed(() => (props.card.lost_reason ? labelForLostReason(props.card.lost_reason) : ''))
 const ownerName = computed(() => props.card.assigned_to ? teamMembersStore.nameById(props.card.assigned_to) : t('crm.overviewPipeline.card.unassigned'))
-const ariaLabel = computed(() => [props.card.name, props.card.company_name, props.lane.name, ownerName.value].filter(Boolean).join(', '))
+const ariaLabel = computed(() => [props.card.name, props.card.company_name, stageName.value, ownerName.value].filter(Boolean).join(', '))
 </script>

@@ -38,8 +38,9 @@
           <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.stage') }}</dt>
           <dd>
             <InputSelect
-              :model-value="selection.lane.name"
+              :model-value="currentStage"
               :options="stageOptions"
+              :placeholder="t('crm.overviewPipeline.panel.pickStage')"
               :disable="moving"
               name="overviewStage"
               data-cy="overview-panel-stage"
@@ -75,6 +76,14 @@
             <dd>{{ lostReasonLabel }}</dd>
           </template>
         </dl>
+
+        <p
+          v-if="isOtherLane(selection.lane)"
+          class="flex gap-2 rounded-lg border border-(--color-card-border) bg-(--color-light-gray-1) px-3 py-2 text-xs text-(--color-dark-gray)"
+        >
+          <UIcon name="material-symbols:help-outline" class="mt-px size-4 shrink-0" />
+          {{ t('crm.overviewPipeline.panel.otherStageNote', { stage: overviewCardStage(selection.card, selection.lane, t) }) }}
+        </p>
 
         <div>
           <p class="mb-2 text-xs font-semibold tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.panel.recentActivity') }}</p>
@@ -125,7 +134,7 @@
 import { useI18n } from 'vue-i18n'
 import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
 import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
-import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
+import { OVERVIEW_STALE_DAYS, daysInStage, isOtherLane, isStaleCard, overviewCardStage } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   open: boolean
@@ -176,10 +185,16 @@ const lineage = computed<PipelineOverviewZoneKey[]>(() => {
   return card.from_prospect ? funnel.slice(0, funnel.indexOf(zone) + 1) : [zone]
 })
 
-// "Converted" is system-set by Convert only, never picked by hand.
+// "Converted" is system-set by Convert only, and the "other" lane isn't a
+// stage at all, so neither can be picked by hand.
 const stageOptions = computed<Select[]>(() => props.zoneLanes
-  .filter(lane => lane.kind !== 'converted')
+  .filter(lane => lane.kind !== 'converted' && !isOtherLane(lane))
   .map(lane => ({ label: lane.name, value: lane.name })))
+// A card in the "other" lane has no valid stage to preselect.
+const currentStage = computed(() => {
+  const lane = props.selection?.lane
+  return !lane || isOtherLane(lane) ? '' : lane.name
+})
 
 const canConvert = computed(() => {
   if (!props.selection || props.selection.lane.terminal) return false
@@ -208,24 +223,28 @@ const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string) 
 
 const onChangeStage = async (stage: string) => {
   const current = props.selection
-  if (!current || stage === current.lane.name || moving.value) return
+  if (!current || !stage || stage === currentStage.value || moving.value) return
   const { zone, card } = current
-  const from = current.lane.name
+  // Moving out of the "other" lane fixes an invalid/blank stage, so there's
+  // nothing valid to undo back to.
+  const from = isOtherLane(current.lane) ? null : current.lane.name
   moving.value = true
   try {
     await moveTo(zone, card.id, stage)
     emit('changed')
-    success(t('crm.overviewPipeline.panel.movedTo', { stage }), {
-      label: t('crm.overviewPipeline.panel.undo'),
-      onClick: async () => {
-        try {
-          await moveTo(zone, card.id, from)
-          emit('changed')
-        } catch (err) {
-          error(getApiErrorMessage(err, t('global.genericError')))
-        }
-      },
-    })
+    success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null
+      ? undefined
+      : {
+          label: t('crm.overviewPipeline.panel.undo'),
+          onClick: async () => {
+            try {
+              await moveTo(zone, card.id, from)
+              emit('changed')
+            } catch (err) {
+              error(getApiErrorMessage(err, t('global.genericError')))
+            }
+          },
+        })
   } catch (err) {
     if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
       error(t('crm.deals.detail.contractRequiredToast'))
