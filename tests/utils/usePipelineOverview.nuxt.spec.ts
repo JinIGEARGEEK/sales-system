@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
+  cardMatchesHighlight,
   conversionPercent,
+  highlightCounts,
   daysInStage,
   isStaleCard,
   movedInPeriod,
@@ -72,5 +74,34 @@ describe('usePipelineOverview', () => {
   it('conversionPercent rounds, and returns null with nothing to convert from', () => {
     expect(conversionPercent(3, 1)).toBe(33)
     expect(conversionPercent(0, 2)).toBeNull()
+  })
+
+  describe('highlight', () => {
+    const range = { date_from: '2026-09-21', date_to: '2026-09-23' }
+    const staleCard = { stage_entered_at: new Date(2026, 8, 1).toISOString(), created_at: new Date(2026, 7, 1).toISOString() }
+    const movedCard = { stage_entered_at: new Date(2026, 8, 22).toISOString(), created_at: new Date(2026, 8, 1).toISOString() }
+    const open = { terminal: false }
+    const terminal = { terminal: true }
+
+    it('"all" matches everything; "stale"/"moved" match only open-lane cards that qualify', () => {
+      expect(cardMatchesHighlight(staleCard, terminal, 'all', range, NOW)).toBe(true)
+      expect(cardMatchesHighlight(staleCard, open, 'stale', range, NOW)).toBe(true)
+      expect(cardMatchesHighlight(movedCard, open, 'stale', range, NOW)).toBe(false)
+      expect(cardMatchesHighlight(movedCard, open, 'moved', range, NOW)).toBe(true)
+      expect(cardMatchesHighlight(movedCard, terminal, 'moved', range, NOW)).toBe(false)
+    })
+
+    it('highlightCounts totals stale/moved open cards and the stale Deal value', () => {
+      const card = (over: Partial<PipelineOverviewCard>): PipelineOverviewCard => ({
+        id: 1, name: 'x', company_id: null, company_name: '', assigned_to: null, source: '', value: 0,
+        probability: null, lost_reason: null, from_prospect: false, stage_entered_at: null, created_at: '', ...over,
+      })
+      const lane = (terminal: boolean, cards: PipelineOverviewCard[]): PipelineOverviewLane => ({ name: 'L', kind: terminal ? 'won' : 'open', terminal, count: cards.length, value: 0, cards })
+      const zones: PipelineOverviewZone[] = [
+        { key: 'lead', lanes: [lane(false, [card(staleCard), card(movedCard)])] },
+        { key: 'deal', lanes: [lane(false, [card({ ...staleCard, value: 500 })]), lane(true, [card({ ...staleCard, value: 900 })])] },
+      ]
+      expect(highlightCounts(zones, range, NOW)).toEqual({ stale: 2, moved: 1, staleDeals: 1, staleDealValue: 500 })
+    })
   })
 })

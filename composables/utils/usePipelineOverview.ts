@@ -93,3 +93,41 @@ export const movedInPeriod = (card: CardTiming, range: OverviewDateRange) => {
 // Conversion from one funnel step to the next, as a whole percent, or null
 // when there's nothing to convert from.
 export const conversionPercent = (from: number, to: number) => (from > 0 ? Math.round((to / from) * 100) : null)
+
+// Board highlight modes: dim every card that doesn't match, so a reviewer can
+// scan for what needs a question without losing the board's shape.
+export type OverviewHighlight = 'all' | 'stale' | 'moved'
+
+export const cardMatchesHighlight = (
+  card: CardTiming,
+  lane: Pick<PipelineOverviewLane, 'terminal'>,
+  highlight: OverviewHighlight,
+  range: OverviewDateRange,
+  now = new Date(),
+) => {
+  if (highlight === 'all') return true
+  if (lane.terminal) return false
+  return highlight === 'stale' ? isStaleCard(card, now) : movedInPeriod(card, range)
+}
+
+// Open-lane cards currently loaded that are stale / moved, per zone. Counts
+// cover loaded cards only (each lane returns up to card_limit of them).
+export const highlightCounts = (zones: PipelineOverviewZone[], range: OverviewDateRange, now = new Date()) => {
+  const counts = { stale: 0, moved: 0, staleDeals: 0, staleDealValue: 0 }
+  for (const zone of zones) {
+    for (const lane of zone.lanes) {
+      if (lane.terminal) continue
+      for (const card of lane.cards) {
+        if (isStaleCard(card, now)) {
+          counts.stale++
+          if (zone.key === 'deal') {
+            counts.staleDeals++
+            counts.staleDealValue += card.value
+          }
+        }
+        if (movedInPeriod(card, range)) counts.moved++
+      }
+    }
+  }
+  return counts
+}

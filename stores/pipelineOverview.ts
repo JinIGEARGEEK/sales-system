@@ -6,6 +6,8 @@
 export const usePipelineOverviewStore = defineStore('pipelineOverview', {
   state: () => ({
     data: null as PipelineOverview | null,
+    // When `data` last landed, for the page's "Updated hh:mm" note.
+    fetchedAt: null as Date | null,
     loading: false,
     // Bumped on every fetch so a slow response for an older filter set can't
     // overwrite a newer one that already landed (fast filter/period clicks).
@@ -20,6 +22,7 @@ export const usePipelineOverviewStore = defineStore('pipelineOverview', {
         const response = await $api.get<ApiResponse<PipelineOverview>>('/pipeline/overview', { params })
         if (seq !== this.requestSeq) return this.data
         this.data = response.data.data
+        this.fetchedAt = new Date()
         return this.data
       } finally {
         if (seq === this.requestSeq) this.loading = false

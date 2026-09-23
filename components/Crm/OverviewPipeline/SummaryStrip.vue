@@ -1,42 +1,53 @@
 <template>
   <section
-    class="grid overflow-hidden rounded-xl border border-(--color-card-border) bg-white sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+    class="grid grid-cols-2 overflow-hidden rounded-xl border border-(--color-card-border) bg-white lg:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.25fr)]"
     :aria-label="t('crm.overviewPipeline.heading')"
     data-cy="overview-summary"
   >
     <div
       v-for="(step, index) in steps"
       :key="step.key"
-      class="relative flex flex-col gap-0.5 border-b border-(--color-light-gray-2) px-4 py-3 xl:border-r xl:border-b-0"
+      class="flex min-w-0 flex-col gap-1 border-(--color-light-gray-2) px-4 py-3.5"
+      :class="[index % 2 === 0 ? 'border-r' : 'lg:border-r', 'border-b lg:border-b-0']"
     >
-      <p class="flex items-center gap-1.5 text-xs font-medium tracking-wide text-(--color-dark-gray) uppercase">
-        <span class="size-2 rounded-sm" :style="{ background: step.color }" />
-        {{ step.label }}
+      <p class="flex items-center gap-2 text-xs font-medium text-(--color-dark-gray)">
+        <span class="grid size-6 shrink-0 place-items-center rounded-md" :style="{ background: `color-mix(in srgb, ${step.color} 16%, transparent)`, color: step.color }">
+          <UIcon :name="step.icon" class="size-3.5" />
+        </span>
+        <span class="truncate">{{ step.label }}</span>
       </p>
-      <p class="text-2xl leading-tight font-semibold tabular-nums">
-        {{ numberFormat(step.current) }}
-        <span v-if="step.extra" class="ml-1 text-sm font-medium text-(--color-dark-gray)">{{ step.extra }}</span>
-      </p>
-      <div class="flex flex-wrap items-center gap-2 text-xs text-(--color-gray)">
-        <span class="rounded-full px-1.5 py-px font-medium" :class="deltaClass(step.current - step.previous)">
+      <p class="flex items-baseline gap-2">
+        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ numberFormat(step.current) }}</span>
+        <span v-if="step.extra" class="truncate text-sm font-semibold tabular-nums" :style="{ color: step.color }">{{ step.extra }}</span>
+        <span class="ml-auto shrink-0 rounded-full px-1.5 py-px text-[11px] font-medium tabular-nums" :class="deltaClass(step.current - step.previous)">
           {{ deltaLabel(step.current - step.previous) }}
         </span>
-        <span>{{ t('crm.overviewPipeline.vsPrevious', { days: periodDays }) }}</span>
-      </div>
-      <span
-        v-if="index < steps.length - 1"
-        class="absolute top-1/2 -right-3.5 z-10 hidden -translate-y-1/2 rounded-full border border-(--color-light-gray-2) bg-white px-1.5 py-px text-[11px] whitespace-nowrap text-(--color-dark-gray) tabular-nums xl:inline"
-        :title="t('crm.overviewPipeline.summary.conversionTitle', { from: step.label, to: steps[index + 1]!.label })"
-      >
-        {{ conversionLabel(step.current, steps[index + 1]!.current) }} →
-      </span>
-    </div>
-    <div class="flex flex-col justify-center gap-0.5 bg-(--color-light-gray-1) px-4 py-3 sm:col-span-2 xl:col-span-1 xl:min-w-52">
-      <p class="text-xs font-medium tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.summary.openPipeline') }}</p>
-      <p class="text-xl font-semibold tabular-nums">{{ money(summary.open_pipeline.value) }}</p>
-      <p class="text-xs text-(--color-gray) tabular-nums">
-        {{ t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(summary.open_pipeline.count), value: money(summary.open_pipeline.weighted_value) }) }}
       </p>
+      <UTooltip v-if="index > 0" :text="t('crm.overviewPipeline.summary.ofPreviousHint')">
+        <p class="flex w-fit cursor-help items-center gap-1 text-xs text-(--color-gray) tabular-nums">
+          <UIcon name="material-symbols:subdirectory-arrow-right" class="size-3.5" />
+          {{ conversionLabel(steps[index - 1]!, step) }}
+        </p>
+      </UTooltip>
+      <p v-else class="text-xs text-(--color-gray)">&nbsp;</p>
+    </div>
+
+    <div class="col-span-2 flex min-w-0 flex-col gap-1 bg-(--color-light-gray-1) px-4 py-3.5 lg:col-span-1">
+      <p class="flex items-center gap-2 text-xs font-medium text-(--color-dark-gray)">
+        <span class="grid size-6 shrink-0 place-items-center rounded-md bg-(--color-primary)/10 text-(--color-primary)">
+          <UIcon name="material-symbols:account-balance-wallet-outline" class="size-3.5" />
+        </span>
+        {{ t('crm.overviewPipeline.summary.openPipeline') }}
+      </p>
+      <p class="flex flex-wrap items-baseline gap-x-2">
+        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ money(summary.open_pipeline.value) }}</span>
+        <span class="text-xs text-(--color-gray) tabular-nums">{{ t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(summary.open_pipeline.count), value: money(summary.open_pipeline.weighted_value) }) }}</span>
+      </p>
+      <UTooltip :text="t('crm.overviewPipeline.summary.weightedShare')">
+        <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-(--color-light-gray-2)" role="presentation">
+          <div class="h-full rounded-full bg-(--color-accent-green)" :style="{ width: `${weightedPct}%` }" />
+        </div>
+      </UTooltip>
     </div>
   </section>
 </template>
@@ -48,23 +59,31 @@ import { OVERVIEW_ZONES } from '~/constants/ui'
 
 const props = defineProps<{
   summary: PipelineOverview['summary']
-  periodDays: number
 }>()
 
 const { t } = useI18n()
 const { numberFormat, priceFormatCompact } = useFormatter()
 const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
 
-const steps = computed(() => [
-  { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, ...props.summary.new_prospects, extra: '' },
-  { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, ...props.summary.new_leads, extra: '' },
-  { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, ...props.summary.new_deals, extra: '' },
-  { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value) },
+type Step = { key: string, label: string, color: string, icon: string, current: number, previous: number, extra: string }
+
+const steps = computed<Step[]>(() => [
+  { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, icon: OVERVIEW_ZONES.prospect.icon, ...props.summary.new_prospects, extra: '' },
+  { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, icon: OVERVIEW_ZONES.lead.icon, ...props.summary.new_leads, extra: '' },
+  { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, icon: OVERVIEW_ZONES.deal.icon, ...props.summary.new_deals, extra: '' },
+  { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', icon: 'material-symbols:trophy-outline', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value) },
 ])
 
-const conversionLabel = (from: number, to: number) => {
-  const pct = conversionPercent(from, to)
-  return pct === null ? '–' : `${pct}%`
+const weightedPct = computed(() => {
+  const { value, weighted_value: weighted } = props.summary.open_pipeline
+  return value > 0 ? Math.min(100, Math.round((weighted / value) * 100)) : 0
+})
+
+// Each step after the first says how it compares with the step before it,
+// on its own line, rather than as a chip squeezed between two tiles.
+const conversionLabel = (from: Step, to: Step) => {
+  const pct = conversionPercent(from.current, to.current)
+  return pct === null ? '–' : t('crm.overviewPipeline.summary.ofPrevious', { pct, step: from.label })
 }
 
 const deltaLabel = (delta: number) => {
