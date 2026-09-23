@@ -10,6 +10,7 @@ export default {
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
     tags: 'Tag',
+    overviewPipeline: 'ภาพรวมไปป์ไลน์',
     prospects: 'Prospects',
     leads: 'Leads',
     deals: 'Deals',

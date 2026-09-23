@@ -189,6 +189,10 @@ interface Lead {
   // compared across lanes. Set server-side (see stores/leads.ts's
   // updateStatus, PATCH /leads/:id/status) — never sent by a create/update form.
   position: number
+  // When this Lead entered its current status lane (ISO string). Server-set on
+  // create and on every real status change; drives the Overview Pipeline's
+  // days-in-stage figures (FR-CRM-123).
+  stage_entered_at?: string | null
   // Present only on trash-listing responses (GET /leads/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -241,6 +245,10 @@ interface Prospect {
   // never compared across lanes. Set server-side (see stores/prospects.ts's
   // updateStatus, PATCH /prospects/:id/status) — never sent by a create/update form.
   position: number
+  // When this Prospect entered its current status lane (ISO string). Server-set on
+  // create and on every real status change; drives the Overview Pipeline's
+  // days-in-stage figures (FR-CRM-123).
+  stage_entered_at?: string | null
   // Present only on trash-listing responses (GET /prospects/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -282,6 +290,10 @@ interface Deal {
   // compared across lanes. Set server-side (see stores/deals.ts's
   // updateStage, PATCH /deals/:id/stage) — never sent by a create/update form.
   position: number
+  // When this Deal entered its current stage lane (ISO string). Server-set on
+  // create and on every real stage change; drives the Overview Pipeline's
+  // days-in-stage figures (FR-CRM-123).
+  stage_entered_at?: string | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date

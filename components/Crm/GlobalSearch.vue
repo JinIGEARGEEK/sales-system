@@ -81,10 +81,9 @@ const prospectsStore = useProspectsStore()
 // so a Production user could still jump straight into a Deal/Company/Contact
 // via search even though those links are hidden from their sidebar.
 const canSearchSalesPipeline = computed(() => hasRole(...SALES_PIPELINE_ROLES))
-// Prospects is Marketing's own group — a separate gate (PROSPECT_ROLES)
-// since Marketing isn't in SALES_PIPELINE_ROLES at all (no Deal/Lead/
-// Company/Contact access), but Admin/Sales Manager/Sales Rep still see both
-// groups (they're in both role lists).
+// Prospects keeps its own gate (PROSPECT_ROLES). The two role lists are
+// currently set-equal (Marketing joined SALES_PIPELINE_ROLES on 2026-09-23),
+// but they're separate rules and may diverge again.
 const canSearchProspects = computed(() => hasRole(...PROSPECT_ROLES))
 
 const RESULT_LIMIT = 5

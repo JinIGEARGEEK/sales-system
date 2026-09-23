@@ -181,3 +181,76 @@ interface NotificationFiring {
   company_name?: string
   notified_at: Date
 }
+
+// GET /pipeline/overview (FR-CRM-123) — the Overview Pipeline page's whole
+// payload: a period summary strip plus Prospect/Lead/Deal lanes. Open lanes
+// hold every current record; terminal lanes (kind won/lost/converted) hold
+// only records that entered them inside the selected period. `count`/`value`
+// are exact; `cards` is capped at the request's card_limit.
+type PipelineOverviewZoneKey = 'prospect' | 'lead' | 'deal'
+type PipelineOverviewLaneKind = 'open' | 'won' | 'lost' | 'converted'
+
+interface PipelineOverviewCard {
+  id: number
+  name: string
+  company_id: number | null
+  company_name: string
+  assigned_to: number | null
+  source: string
+  value: number
+  probability: number | null
+  lost_reason: string | null
+  from_prospect: boolean
+  stage_entered_at: string | null
+  created_at: string
+}
+
+interface PipelineOverviewLane {
+  name: string
+  kind: PipelineOverviewLaneKind
+  terminal: boolean
+  count: number
+  value: number
+  cards: PipelineOverviewCard[]
+}
+
+interface PipelineOverviewZone {
+  key: PipelineOverviewZoneKey
+  lanes: PipelineOverviewLane[]
+}
+
+interface PipelineOverviewCompare {
+  current: number
+  previous: number
+}
+
+interface PipelineOverview {
+  period: { date_from: string, date_to: string, prev_date_from: string, prev_date_to: string }
+  summary: {
+    new_prospects: PipelineOverviewCompare
+    new_leads: PipelineOverviewCompare
+    new_deals: PipelineOverviewCompare
+    won: PipelineOverviewCompare & { value: number, previous_value: number }
+    open_pipeline: { count: number, value: number, weighted_value: number }
+  }
+  zones: PipelineOverviewZone[]
+}
+
+interface PipelineOverviewParams {
+  date_from?: string
+  date_to?: string
+  assigned_to?: string
+  source?: string
+  business_unit?: string
+  tag?: string
+  search?: string
+  card_limit?: number
+}
+
+// The card a viewer clicked on the Overview Pipeline board, with the lane and
+// zone it sits in (frontend-only).
+interface PipelineOverviewSelection {
+  zone: PipelineOverviewZoneKey
+  lane: PipelineOverviewLane
+  card: PipelineOverviewCard
+}

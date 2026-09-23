@@ -11,6 +11,7 @@ import crmDashboard from './crm/dashboard/en'
 import crmLeads from './crm/leads/en'
 import crmProspects from './crm/prospects/en'
 import crmDeals from './crm/deals/en'
+import crmOverviewPipeline from './crm/overviewPipeline/en'
 import crmContacts from './crm/contacts/en'
 import crmCompanies from './crm/companies/en'
 import crmTags from './crm/tags/en'
@@ -44,6 +45,7 @@ export default {
     leads: crmLeads,
     prospects: crmProspects,
     deals: crmDeals,
+    overviewPipeline: crmOverviewPipeline,
     contacts: crmContacts,
     companies: crmCompanies,
     tags: crmTags,

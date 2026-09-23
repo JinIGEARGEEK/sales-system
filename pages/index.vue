@@ -5,10 +5,9 @@
       <p class="text-sm text-(--color-gray)">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
-    <!-- Only rendered for a role that can see both tabs (Admin/Sales Manager/
-    Sales Rep — every role in both SALES_PIPELINE_ROLES and PROSPECT_ROLES) —
-    a Marketing-only user has just the one tab's content, with no switcher to
-    a tab they can't see anyway. -->
+    <!-- Only rendered for a role that can see both tabs (every role in both
+    SALES_PIPELINE_ROLES and PROSPECT_ROLES — Admin/Sales Manager/Sales Rep/
+    Marketing since Marketing's 2026-09-23 pipeline access). -->
     <UTabs v-if="showDashboardTabs" v-model="activeDashboardTab" :items="dashboardTabItems" class="mb-4" />
 
     <template v-if="activeDashboardTab === 'sales'">
@@ -92,11 +91,10 @@
     hidden from anyone outside PROSPECT_ROLES the same way the tab itself is
     (canViewProspectSummary gate is still needed here even without the tab
     switcher, since activeDashboardTab could still equal 'marketing' for a
-    role that only qualifies for one tab). Lead stats alongside it, read-only
-    (:linkable="false") since Marketing has no access of its own to
-    /crm/leads or /crm/reports/lead-source — see canViewLeadSummary. -->
+    role that only qualifies for one tab). The read-only Lead Funnel copy
+    that used to sit here for Marketing is gone: Marketing now sees the full,
+    clickable one on the Sales tab. -->
     <template v-if="activeDashboardTab === 'marketing' && canViewProspectSummary">
-      <DashboardLeadSummary v-if="!canViewSalesPipelineWidgets" :summary="leadSummary" :linkable="false" />
       <DashboardMarketingSummary :summary="prospectSummary" />
     </template>
 
@@ -151,21 +149,21 @@ const riskAlertCounts = computed(() => attentionCountsStore.counts)
 // `watch` + `immediate` reasoning as the dashboard-tab default above, rather
 // than a plain onMounted that could fire before hasRole is trustworthy.
 watch(canViewRiskAlerts, (canView) => { if (canView) attentionCountsStore.fetchCounts() }, { immediate: true })
-// Only Admin/Sales Manager/Sales Rep are in both role lists — everyone else
-// has just one tab's worth of content, so no switcher is shown at all for
-// them.
+// Admin/Sales Manager/Sales Rep/Marketing are in both role lists — anyone
+// else has at most one tab's worth of content, so no switcher is shown.
 const showDashboardTabs = computed(() => canViewSalesPipelineWidgets.value && canViewProspectSummary.value)
 const dashboardTabItems = computed(() => [
   { label: t('crm.dashboard.tabSales'), value: 'sales' },
   { label: t('crm.dashboard.tabMarketing'), value: 'marketing' },
 ])
 const activeDashboardTab = ref<'sales' | 'marketing'>('sales')
-// Defaults a Marketing-only user straight onto their own tab instead of
-// landing on an empty "sales" tab they can't see anything on. Role
-// resolution can land after mount (hydrate-auth.client.ts), hence `watch`
-// with `immediate` rather than a one-shot computed at setup time.
-watch(canViewSalesPipelineWidgets, (canViewSales) => {
-  if (!canViewSales && canViewProspectSummary.value) activeDashboardTab.value = 'marketing'
+// Marketing lands on its own tab by default (it can open the Sales tab too
+// since 2026-09-23), as does any role that can't see the Sales tab at all.
+// Role resolution can land after mount (hydrate-auth.client.ts), hence
+// `watch` with `immediate` rather than a one-shot computed at setup time.
+const isMarketing = computed(() => hasRole('Marketing'))
+watch([canViewSalesPipelineWidgets, isMarketing], ([canViewSales, marketing]) => {
+  if ((!canViewSales || marketing) && canViewProspectSummary.value) activeDashboardTab.value = 'marketing'
 }, { immediate: true })
 const { error } = useNotify()
 // Every fire-and-forget fetch below is a bare `if (...) store.fetchAll()` (no
@@ -317,10 +315,7 @@ watch(canViewProspectSummary, (canView) => {
   if (canView && !prospectSummary.value) fetchProspectSummary()
 }, { immediate: true })
 
-// Lead stats — shown on the Sales tab (full, clickable) and, read-only, on
-// Marketing's own tab (Marketing has no access of its own to Leads/Deals,
-// but still cares about the funnel it feeds into — see DashboardLeadSummary's
-// `linkable` prop). GET /dashboard/lead-summary itself isn't role-gated
+// Lead stats — shown on the Sales tab (full, clickable). GET /dashboard/lead-summary itself isn't role-gated
 // (same "frontend decides which tab" convention as prospect-summary/summary
 // above), so either role can fetch it; deliberately its own fetch/params
 // rather than folded into fetchSummary above, same reasoning as
@@ -380,7 +375,7 @@ const UPCOMING_TASKS_LIMIT = 6
 const { resolveRelated } = useRelatedRecord()
 
 // Deal/Contact/Company-linked tasks resolve to pages nav-hides from
-// Marketing/Production (SALES_PIPELINE_ROLES) — previously this widget
+// Production (outside SALES_PIPELINE_ROLES) — previously this widget
 // surfaced them to every role regardless, so a Marketing/Production user
 // could click straight into a Deal detail page with no nav trail back.
 // Prospect-linked tasks stay visible to PROSPECT_ROLES (Marketing owns that

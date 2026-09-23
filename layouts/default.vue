@@ -271,11 +271,14 @@ const menuList = computed<MenuEntry[]>(() => {
   const items: MenuEntry[] = [
     { icon: 'material-symbols:monitoring', label: t('layout.nav.salesDashboard'), path: '/', separator: false },
     { icon: 'material-symbols:bar-chart-outline', label: t('layout.nav.reports'), path: '/crm/reports', separator: true, roles: ['Admin', 'Sales Manager'] },
-    // Prospects (§3.1a) — the pre-Lead marketing funnel, kept its own
-    // separator-bounded group ahead of the sales-pipeline group below rather
-    // than folded into SALES_PIPELINE_ROLES, since it's Marketing's own
-    // destination, not a Sales one.
-    { icon: 'material-symbols:contact-mail-outline', label: t('layout.nav.prospects'), path: '/crm/prospects', separator: true, roles: PROSPECT_ROLES },
+    // Overview Pipeline (FR-CRM-123) — Prospect, Lead and Deal lanes on one
+    // board, for the weekly review. Sits at the top of the funnel group it
+    // summarizes, with the per-entity boards below it.
+    { icon: 'material-symbols:view-kanban-outline', label: t('layout.nav.overviewPipeline'), path: '/crm/overview-pipeline', separator: true, roles: SALES_PIPELINE_ROLES },
+    // Prospects (§3.1a) — the pre-Lead marketing funnel, gated on its own
+    // PROSPECT_ROLES rather than SALES_PIPELINE_ROLES (set-equal today, but
+    // separate rules).
+    { icon: 'material-symbols:contact-mail-outline', label: t('layout.nav.prospects'), path: '/crm/prospects', separator: false, roles: PROSPECT_ROLES },
     { icon: 'material-symbols:person-search-outline', label: t('layout.nav.leads'), path: '/crm/leads', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:handshake-outline', label: t('layout.nav.deals'), path: '/crm/deals', separator: false, roles: SALES_PIPELINE_ROLES },
     { icon: 'material-symbols:checklist', label: t('layout.nav.tasks'), path: '/crm/tasks', separator: false, roles: TASK_ROLES },

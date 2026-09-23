@@ -179,11 +179,9 @@ const { notifyApiError } = useApiErrorNotifier()
 // /prospects* — same reasoning as pages/crm/prospects/index.vue.
 const { canAccess, guardMounted } = usePageAccess(...PROSPECT_ROLES)
 const { hasRole } = useRole()
-// Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
-// not Marketing) — internal/routes/routes.go. Marketing owns Prospects day to
-// day but isn't in this allow-list, so hide the button rather than let it
-// 403 on click, same as Lead/Company/Deal's own canManageAttachments. Same
-// role set as SALES_PIPELINE_ROLES, so reuse it rather than re-listing.
+// Matches the backend's POST /attachments RBAC (salesPipelineRoles, Marketing
+// included since 2026-09-23) — internal/routes/routes.go. Same role set as
+// SALES_PIPELINE_ROLES, so reuse it rather than re-listing.
 const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()

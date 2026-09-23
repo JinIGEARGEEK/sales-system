@@ -29,3 +29,13 @@ export const CHART_CATEGORICAL_COLOR_VARS = [
   'var(--color-warning-hover)',
   'var(--color-chart-violet)',
 ]
+
+// Overview Pipeline (FR-CRM-123) zone colors — one hue per funnel stage, drawn
+// from the validated categorical palette above so the three zones stay
+// distinguishable next to each other (violet = Marketing's Prospects, blue =
+// Leads, green = Deals).
+export const OVERVIEW_ZONE_COLORS: Record<PipelineOverviewZoneKey, string> = {
+  prospect: 'var(--color-chart-violet)',
+  lead: 'var(--color-info-toast)',
+  deal: 'var(--color-accent-green)',
+}

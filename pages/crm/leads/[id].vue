@@ -65,10 +65,9 @@
             <!-- FR-CRM-007's manual "sales-ready" override — the only classification
             a rep can set directly; mql/none stay entirely score-driven. Both this
             and Convert to Deal are Sales-pipeline actions (backend-enforced too,
-            PUT/convert on /leads/:id — see internal/routes/routes.go): a Marketing
-            viewer can still reach this page read-only (the Prospect detail page's
-            "View Lead" link, once converted) without these buttons implying
-            actions that aren't theirs to take. -->
+            PUT/convert on /leads/:id — see internal/routes/routes.go). Marketing
+            has had them too since 2026-09-23; Production can still reach this
+            page read-only via a direct link, without these buttons. -->
             <ButtonPrimary
               v-if="canManageLead && lead.classification !== 'sql'"
               :label="t('crm.leads.detail.markSql')"
@@ -141,8 +140,8 @@
               <InputTextarea v-model="form.notes" :label="t('crm.leads.detail.notes')" name="notes" />
             </div>
           </div>
-          <!-- Hidden (not just left to 403 on submit) for a Marketing viewer who
-          reached this page read-only via the Prospect "View Lead" link — same
+          <!-- Hidden (not just left to 403 on submit) for a read-only viewer
+          (Production, via a direct link) — same
           canManageLead gate as Mark SQL/Convert to Deal above, now that
           PUT /leads/:id is backend-restricted to SALES_PIPELINE_ROLES too. -->
           <div v-if="canManageLead" class="mt-4 flex gap-3">
@@ -212,11 +211,10 @@ const goBack = useBackNavigation('/crm/leads')
 
 // Matches the backend's POST /attachments RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go. Same role set as
-// SALES_PIPELINE_ROLES, so reuse it rather than re-listing the same 3 roles.
+// SALES_PIPELINE_ROLES, so reuse it rather than re-listing the same roles.
 const canManageAttachments = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 // Matches the backend's PUT/convert RBAC on /leads/:id (same SALES_PIPELINE_ROLES
-// set) — Mark SQL and Convert to Deal are Sales-pipeline actions, not something
-// Marketing does even though they can reach this page read-only.
+// set, Marketing included since 2026-09-23).
 const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)

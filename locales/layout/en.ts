@@ -10,6 +10,7 @@ export default {
     companies: 'Companies',
     contacts: 'Contacts',
     tags: 'Tags',
+    overviewPipeline: 'Overview Pipeline',
     prospects: 'Prospects',
     leads: 'Leads',
     deals: 'Deals',
