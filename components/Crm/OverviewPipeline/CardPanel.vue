@@ -78,11 +78,11 @@
         </dl>
 
         <p
-          v-if="selection.lane.kind === 'other'"
+          v-if="isOtherLane(selection.lane)"
           class="flex gap-2 rounded-lg border border-(--color-card-border) bg-(--color-light-gray-1) px-3 py-2 text-xs text-(--color-dark-gray)"
         >
           <UIcon name="material-symbols:help-outline" class="mt-px size-4 shrink-0" />
-          {{ t('crm.overviewPipeline.panel.otherStageNote', { stage: selection.card.stage || t('crm.overviewPipeline.card.noStage') }) }}
+          {{ t('crm.overviewPipeline.panel.otherStageNote', { stage: overviewCardStage(selection.card, selection.lane, t) }) }}
         </p>
 
         <div>
@@ -134,7 +134,7 @@
 import { useI18n } from 'vue-i18n'
 import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
 import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
-import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
+import { OVERVIEW_STALE_DAYS, daysInStage, isOtherLane, isStaleCard, overviewCardStage } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   open: boolean
@@ -188,10 +188,13 @@ const lineage = computed<PipelineOverviewZoneKey[]>(() => {
 // "Converted" is system-set by Convert only, and the "other" lane isn't a
 // stage at all, so neither can be picked by hand.
 const stageOptions = computed<Select[]>(() => props.zoneLanes
-  .filter(lane => lane.kind !== 'converted' && lane.kind !== 'other')
+  .filter(lane => lane.kind !== 'converted' && !isOtherLane(lane))
   .map(lane => ({ label: lane.name, value: lane.name })))
 // A card in the "other" lane has no valid stage to preselect.
-const currentStage = computed(() => (props.selection?.lane.kind === 'other' ? '' : props.selection?.lane.name ?? ''))
+const currentStage = computed(() => {
+  const lane = props.selection?.lane
+  return !lane || isOtherLane(lane) ? '' : lane.name
+})
 
 const canConvert = computed(() => {
   if (!props.selection || props.selection.lane.terminal) return false
@@ -224,7 +227,7 @@ const onChangeStage = async (stage: string) => {
   const { zone, card } = current
   // Moving out of the "other" lane fixes an invalid/blank stage, so there's
   // nothing valid to undo back to.
-  const from = current.lane.kind === 'other' ? null : current.lane.name
+  const from = isOtherLane(current.lane) ? null : current.lane.name
   moving.value = true
   try {
     await moveTo(zone, card.id, stage)

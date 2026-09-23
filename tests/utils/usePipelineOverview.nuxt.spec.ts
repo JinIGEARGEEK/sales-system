@@ -3,6 +3,9 @@ import {
   cardMatchesHighlight,
   conversionPercent,
   highlightCounts,
+  isOtherLane,
+  overviewCardStage,
+  overviewLaneLabel,
   daysInStage,
   isStaleCard,
   movedInPeriod,
@@ -110,5 +113,24 @@ describe('usePipelineOverview', () => {
     const lane = (terminal: boolean, count: number, value: number): PipelineOverviewLane => ({ name: String(count), kind: terminal ? 'won' : 'open', terminal, count, value, cards: [] })
     const zone: PipelineOverviewZone = { key: 'deal', lanes: [lane(false, 2, 100), lane(false, 3, 50), lane(true, 9, 999)] }
     expect(zoneOpenTotals(zone)).toEqual({ count: 5, value: 150 })
+  })
+
+  describe('"other" lane labels', () => {
+    const t = (key: string) => key
+    const other = { kind: 'other' as const, name: '' }
+    const open = { kind: 'open' as const, name: 'Qualified' }
+
+    it('names the catch-all lane, and every other lane by its stage', () => {
+      expect(isOtherLane(other)).toBe(true)
+      expect(isOtherLane(open)).toBe(false)
+      expect(overviewLaneLabel(other, t)).toBe('crm.overviewPipeline.otherLane')
+      expect(overviewLaneLabel(open, t)).toBe('Qualified')
+    })
+
+    it("gives a card its raw stage in the catch-all lane, marking a blank one", () => {
+      expect(overviewCardStage({ stage: 'Warm Hold' }, other, t)).toBe('Warm Hold')
+      expect(overviewCardStage({ stage: '' }, other, t)).toBe('crm.overviewPipeline.card.noStage')
+      expect(overviewCardStage({ stage: 'ignored' }, open, t)).toBe('Qualified')
+    })
   })
 })

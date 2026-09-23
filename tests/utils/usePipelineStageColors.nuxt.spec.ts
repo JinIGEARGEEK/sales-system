@@ -82,4 +82,12 @@ describe('usePipelineStageColors', () => {
       }
     })
   })
+
+  it('exposes the tint recipes each stage lane uses, for lanes with no stage', () => {
+    const { getColumnColor, getColumnHeaderTint, getColumnTint, getColumnBorderTint, headerTintOf, bodyTintOf, borderTintOf } = usePipelineStageColors()
+    const color = getColumnColor('Negotiation', 'deal')
+    expect(getColumnHeaderTint('Negotiation', 'deal')).toBe(headerTintOf(color))
+    expect(getColumnTint('Negotiation', 'deal')).toBe(bodyTintOf(color))
+    expect(getColumnBorderTint('Negotiation', 'deal')).toBe(borderTintOf(color))
+  })
 })

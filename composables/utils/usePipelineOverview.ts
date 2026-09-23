@@ -144,3 +144,20 @@ export const zoneOpenTotals = (zone: PipelineOverviewZone) => {
   }
   return { count, value }
 }
+
+// The "other" catch-all lane (records whose stage isn't one of the zone's
+// lanes) has no stage name of its own, so labels come from these.
+type Translate = (key: string) => string
+
+export const isOtherLane = (lane: Pick<PipelineOverviewLane, 'kind'>) => lane.kind === 'other'
+
+export const overviewLaneLabel = (lane: Pick<PipelineOverviewLane, 'kind' | 'name'>, t: Translate) =>
+  (isOtherLane(lane) ? t('crm.overviewPipeline.otherLane') : lane.name)
+
+// A card's own stage: the lane's name, except in the "other" lane, where the
+// card carries its raw (possibly blank) stage value.
+export const overviewCardStage = (
+  card: Pick<PipelineOverviewCard, 'stage'>,
+  lane: Pick<PipelineOverviewLane, 'kind' | 'name'>,
+  t: Translate,
+) => (isOtherLane(lane) ? (card.stage || t('crm.overviewPipeline.card.noStage')) : lane.name)

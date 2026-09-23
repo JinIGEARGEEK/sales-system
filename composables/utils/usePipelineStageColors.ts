@@ -155,18 +155,35 @@ export const usePipelineStageColors = () => {
     return DEAL_STAGE_COLORS[value as DealStage] ?? prospectColor(value) ?? dealColor(value) ?? FALLBACK_COLOR
   }
 
-  const getColumnHeaderTint = (value: string, entity?: StageEntity) => `color-mix(in srgb, ${getColumnColor(value, entity)} 80%, transparent)`
+  // Tint recipes for a lane of a given base color — exposed so a lane with
+  // no stage of its own (the Overview's "Other stage", drawn gray) matches
+  // every stage lane's look without re-deriving these mixes.
+  const headerTintOf = (color: string) => `color-mix(in srgb, ${color} 80%, transparent)`
+  const borderTintOf = (color: string) => `color-mix(in srgb, ${color} 45%, transparent)`
+
+  const getColumnHeaderTint = (value: string, entity?: StageEntity) => headerTintOf(getColumnColor(value, entity))
 
   // A strong, saturated glass tint (not the old barely-there 14% wash) — each
   // lane should read as its own colored panel at a glance, not a near-white
   // card with a faint hint of hue. Kept slightly translucent (88%) so the
   // backdrop-blur still shows some glass-through effect against the page.
-  const getColumnTint = (value: string, entity?: StageEntity) => {
-    const solidTint = `color-mix(in srgb, ${getColumnColor(value, entity)} 32%, white)`
+  const bodyTintOf = (color: string) => {
+    const solidTint = `color-mix(in srgb, ${color} 32%, white)`
     return `color-mix(in srgb, ${solidTint} 88%, transparent)`
   }
 
-  const getColumnBorderTint = (value: string, entity?: StageEntity) => `color-mix(in srgb, ${getColumnColor(value, entity)} 45%, transparent)`
+  const getColumnTint = (value: string, entity?: StageEntity) => bodyTintOf(getColumnColor(value, entity))
 
-  return { getColumnColor, getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription }
+  const getColumnBorderTint = (value: string, entity?: StageEntity) => borderTintOf(getColumnColor(value, entity))
+
+  return {
+    getColumnColor,
+    getColumnHeaderTint,
+    getColumnTint,
+    getColumnBorderTint,
+    getStageDescription,
+    headerTintOf,
+    bodyTintOf,
+    borderTintOf,
+  }
 }
