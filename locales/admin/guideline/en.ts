@@ -21,12 +21,12 @@ export default {
         {
           nav: 'leads',
           text: 'Create the Lead with source, company, and contact details filled in — this is what Sales Managers use to judge lead quality later. Tag which Project or Product they\'re interested in via Business Unit if it\'s already known; it carries forward automatically once the Lead becomes a Deal.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'leads',
           text: 'Qualify the Lead using the Lead Score; once it is sales-ready, convert it into a Deal so it enters the Pipeline.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
@@ -36,7 +36,7 @@ export default {
         {
           nav: 'deals',
           text: 'Keep the Deal\'s Stage, value, and next Activity up to date as it moves through the Pipeline toward Won/Lost.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -48,22 +48,22 @@ export default {
         {
           nav: 'deals',
           text: 'Record the product and billing cycle (monthly or yearly) on the customer\'s Deal or Project record.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'tasks',
           text: 'Create a Task to schedule a follow-up Activity ahead of each renewal date so it never gets missed.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'Check in with the customer before renewal to confirm usage and satisfaction, and log the outcome as an Activity on the Deal.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'If the Subscription is renewed, update the record with the new cycle dates; if not, capture the reason for reporting.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -75,22 +75,22 @@ export default {
         {
           nav: 'projects',
           text: 'Open a Project against the won Deal and break the work into delivery Milestones.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'projects',
           text: 'Update Milestone status as work progresses.',
-          restriction: 'Sales Rep, Sales Manager, Admin, and Production — Production may only update status/reference fields',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin, and Production — Production may only update status/reference fields',
         },
         {
           nav: 'deals',
           text: 'Open the Deal\'s Contract, Quote, and Payment tabs to raise the agreed payment schedule, then track each Payment Milestone as it is invoiced and collected.',
-          restriction: 'Sales Rep, Sales Manager, Admin — not available to Production',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin — not available to Production',
         },
         {
           nav: 'projects',
           text: 'Flag any Milestone that is overdue on delivery or payment so it surfaces in reporting.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -102,22 +102,22 @@ export default {
         {
           nav: 'companies',
           text: 'Review a Company or Contact\'s Deal and Subscription history to spot renewal or expansion opportunities.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'contacts',
           text: 'Log loyalty touchpoints (check-ins, satisfaction notes) as Activities so the relationship history stays visible to the whole team.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'When an upsell opportunity appears, create a new Deal linked to the existing Company/Contact rather than starting from a cold Lead.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'tags',
           text: 'Tag high-value or long-tenure customers so Sales Managers can prioritize account-growth efforts.',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },

@@ -6,15 +6,17 @@
 // Companies/Contacts/Tags) as a primary destination — user-story.md §4 is
 // explicit that Production "is not a full user of this CRM; their only
 // interaction is keeping a Project's status/reference current," so
-// Production is excluded here. This started as UI-only (nav visibility,
+// Production is excluded here. Marketing joined on 2026-09-23 (full Sales Rep
+// parity on Leads/Deals, FR-CRM-123, alongside the Overview Pipeline page),
+// mirroring the backend's `salesPipelineRoles` gate. This started as UI-only (nav visibility,
 // search results, dashboard widget visibility) — the backend still allows
 // Production's own read access to these resources; nothing here removes
 // that. It also happens to be the exact role list the backend's own
 // `POST /attachments` and Project-create RBAC enforce (internal/routes/
 // routes.go), so every canManageAttachments/canManageProjects computed
 // across Lead/Company/Contact/Prospect/Deal/Project pages reuses it too,
-// rather than each re-listing the same 3 roles.
-export const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager']
+// rather than each re-listing the same roles.
+export const SALES_PIPELINE_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager', 'Marketing']
 
 // The other recurring role pairing in this codebase — bulk actions, exports,
 // Reports, and Trash are all Admin/Sales Manager only (matches the backend's
@@ -34,15 +36,12 @@ export const MANAGER_ROLES: Role[] = ['Admin', 'Sales Manager']
 // the same rule; they're free to diverge again later.
 export const PROSPECT_ROLES: Role[] = ['Admin', 'Marketing', 'Sales Manager', 'Sales Rep']
 
-// Tasks are the one page every SALES_PIPELINE_ROLES role AND Marketing
-// legitimately use — Marketing owns Prospect-linked Tasks the same way Sales
-// owns Deal/Contact/Company-linked ones (backend's own `/tasks*` route group
-// has no role restriction at all, internal/routes/routes.go). Kept as its
-// own union rather than folding Marketing into SALES_PIPELINE_ROLES itself,
-// since that constant's whole point is "excludes Marketing" everywhere else
-// (Leads/Deals/Companies/Contacts/Tags nav, GlobalSearch, attachment/project
-// RBAC mirrors) — only Tasks is the exception.
-export const TASK_ROLES: Role[] = [...SALES_PIPELINE_ROLES, 'Marketing']
+// Who uses the Tasks and Campaigns pages (backend's own `/tasks*` route group
+// has no role restriction at all, internal/routes/routes.go). Used to be
+// SALES_PIPELINE_ROLES plus Marketing; since Marketing joined that constant
+// (2026-09-23) the two are set-equal, but it stays its own name since Task
+// access and pipeline access are separate rules that may diverge again.
+export const TASK_ROLES: Role[] = [...SALES_PIPELINE_ROLES]
 
 // Roles an Admin can temporarily "use as" via the header's
 // AdminRoleFocusSwitcher (stores/user.ts's focusRole/effectiveRole) — every

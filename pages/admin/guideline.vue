@@ -56,16 +56,16 @@ const stepMatchesQuery = (step: GuidelineStep) =>
   matchesQuery(step.text) || matchesQuery(step.restriction ?? '') || matchesQuery(t(`layout.nav.${step.nav}`))
 
 // Which guideline topics are relevant per role — Production only touches
-// project delivery milestones, Marketing only touches the Prospect funnel
-// (they have no access to Leads/Deals at all), everyone else in
-// PROSPECT_ROLES (Sales Rep/Sales Manager/Admin) sees both the full sales
-// workflow and Prospect intake.
+// project delivery milestones; every PROSPECT_ROLES role (Sales Rep/Sales
+// Manager/Admin, and Marketing since its 2026-09-23 Lead/Deal access) sees
+// both the full sales workflow and Prospect intake. Marketing's tab lists
+// Prospect intake first since that's still its main job.
 const ALL_TOPIC_KEYS = ['leadToDeal', 'subscriptionFollowup', 'projectMilestones', 'loyaltyUpsell']
 const topicKeysByTab: Record<string, string[]> = {
   salesRep: [...ALL_TOPIC_KEYS, 'prospectIntake'],
   salesManager: [...ALL_TOPIC_KEYS, 'prospectIntake'],
   admin: [...ALL_TOPIC_KEYS, 'prospectIntake'],
-  marketing: ['prospectIntake'],
+  marketing: ['prospectIntake', ...ALL_TOPIC_KEYS],
   production: ['projectMilestones'],
 }
 // Superset of every topic key that exists anywhere, regardless of tab —

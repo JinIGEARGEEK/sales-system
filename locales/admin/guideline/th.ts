@@ -21,12 +21,12 @@ export default {
         {
           nav: 'leads',
           text: 'สร้าง Lead พร้อมระบุแหล่งที่มา บริษัท และข้อมูลผู้ติดต่อให้ครบ ข้อมูลนี้ Sales Manager จะใช้ประเมินคุณภาพ Lead ในภายหลัง หากทราบแล้วว่าสนใจ Project หรือ Product ใด ให้ระบุผ่านช่องหน่วยธุรกิจ ข้อมูลนี้จะถูกส่งต่อไปยัง Deal โดยอัตโนมัติเมื่อแปลง Lead',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'leads',
           text: 'ประเมินคุณภาพ Lead ด้วย Lead Score เมื่อพร้อมขายแล้วให้แปลงเป็น Deal เพื่อเข้าสู่ Pipeline',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
@@ -36,7 +36,7 @@ export default {
         {
           nav: 'deals',
           text: 'อัปเดต Stage มูลค่า และ Activity ถัดไปของ Deal อย่างต่อเนื่องจนกว่าจะปิดเป็น Won หรือ Lost',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -48,22 +48,22 @@ export default {
         {
           nav: 'deals',
           text: 'บันทึกสินค้าและรอบการเรียกเก็บเงิน (รายเดือน/รายปี) ไว้ในข้อมูล Deal หรือ Project ของลูกค้า',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'tasks',
           text: 'สร้าง Task เพื่อกำหนด Activity ติดตามล่วงหน้าก่อนถึงวันต่ออายุ เพื่อไม่ให้พลาดการติดตาม',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'ติดต่อลูกค้าก่อนวันต่ออายุเพื่อตรวจสอบการใช้งานและความพึงพอใจ แล้วบันทึกผลเป็น Activity บน Deal',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'หาก Subscription ต่ออายุ ให้อัปเดตรอบวันที่ใหม่ หากไม่ต่อ ให้บันทึกเหตุผลไว้สำหรับทำรายงาน',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -75,22 +75,22 @@ export default {
         {
           nav: 'projects',
           text: 'สร้าง Project จาก Deal ที่ปิดสำเร็จ และแบ่งงานส่งมอบเป็น Milestone',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'projects',
           text: 'อัปเดตสถานะ Milestone ตามความคืบหน้า',
-          restriction: 'Sales Rep, Sales Manager, Admin และ Production — Production อัปเดตได้เฉพาะสถานะ/ข้อมูลอ้างอิง',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin และ Production — Production อัปเดตได้เฉพาะสถานะ/ข้อมูลอ้างอิง',
         },
         {
           nav: 'deals',
           text: 'เปิดแท็บ Contract, Quote และ Payment ของ Deal เพื่อออกแผนการชำระเงินที่ตกลงกัน แล้วติดตาม Payment Milestone แต่ละงวดตั้งแต่ออกใบแจ้งหนี้จนเก็บเงินได้',
-          restriction: 'Sales Rep, Sales Manager, Admin — ไม่รวม Production',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin — ไม่รวม Production',
         },
         {
           nav: 'projects',
           text: 'ตั้งสถานะแจ้งเตือน Milestone ที่ล่าช้าทั้งด้านการส่งมอบและการชำระเงิน เพื่อให้ปรากฏในรายงาน',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },
@@ -102,22 +102,22 @@ export default {
         {
           nav: 'companies',
           text: 'ตรวจสอบประวัติ Deal และ Subscription ของ Company หรือ Contact เพื่อหาโอกาสต่ออายุหรือขยายการขาย',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'contacts',
           text: 'บันทึกการติดต่อดูแลลูกค้า (เช็คอิน บันทึกความพึงพอใจ) เป็น Activity เพื่อให้ทั้งทีมเห็นประวัติความสัมพันธ์',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'deals',
           text: 'เมื่อพบโอกาส Upsell ให้สร้าง Deal ใหม่ผูกกับ Company/Contact เดิม แทนการเริ่มจาก Lead ใหม่',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
         {
           nav: 'tags',
           text: 'ติด Tag ลูกค้าที่มีมูลค่าสูงหรือใช้งานมานาน เพื่อให้ Sales Manager จัดลำดับความสำคัญในการดูแลบัญชีลูกค้า',
-          restriction: 'Sales Rep, Sales Manager, Admin',
+          restriction: 'Sales Rep, Marketing, Sales Manager, Admin',
         },
       ],
     },

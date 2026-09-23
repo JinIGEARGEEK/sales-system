@@ -65,6 +65,12 @@
   - Loading Indicators: ใช้ skeleton screens หรือ spinners เพื่อบอกสถานะการโหลด
   - Success/Failure Toasts: แจ้งผลการทำงานด้วย toast notifications ที่ไม่รบกวน flow
   - Undo Option: ให้ผู้ใช้สามารถย้อนกลับ action ได้ เช่น delete
+- Overview boards (read-first): สำหรับหน้าภาพรวมที่ใช้ "อ่าน" มากกว่า "ย้ายการ์ด" เช่น Overview Pipeline (FR-CRM-123)
+  - ไม่รองรับ drag-and-drop — ให้ลิงก์ไปยังบอร์ดของแต่ละ entity แทน และให้เปลี่ยนขั้นตอนได้จาก side panel (พร้อม Undo)
+  - คอลัมน์ปลายทาง (Won/Lost/Disqualified/Converted) แสดงเฉพาะรายการในช่วงเวลาที่เลือก ใช้เส้นขอบแบบ dashed และป้าย "In period" เพื่อแยกจากคอลัมน์ที่เปิดอยู่
+  - สถานะที่ต้องสังเกตต้องแสดงด้วยรูปแบบ ไม่ใช่แค่ตัวเลข: ขอบซ้ายสีเหลือง = ค้าง (เกิน 14 วัน), ชิป "Moved" = เปลี่ยนขั้นตอนในช่วงเวลานี้
+  - ตัวกรองเก็บไว้ใน URL เพื่อแชร์มุมมองได้; การพับ/ขยายโซนเป็นค่าของผู้ใช้แต่ละคน (localStorage)
+  - บนมือถือ แสดงทีละโซนด้วย segmented control แทนบอร์ดแนวนอน
 - Content Display
   - Accordion/Expandable Sections: สำหรับข้อมูลที่ยาวหรือซับซ้อน
   - Infinite Scroll vs Pagination: เลือกตาม use case (content feed → infinite scroll, data table → pagination)

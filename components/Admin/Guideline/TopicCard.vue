@@ -109,10 +109,9 @@ const NAV_META: Record<string, { path: string, icon: string }> = {
 // The default/unrestricted phrasing used across the locale files whenever a
 // step has no special role limits — anything else describes a real
 // restriction and gets the amber "limited" treatment instead. Two variants:
-// the original Sales-side one, and Marketing's own (Prospects aren't part of
-// the Sales Rep/Sales Manager/Admin set at all, so its "open" phrasing names
-// different roles).
-const OPEN_TO_ALL_SALES_ROLES = 'Sales Rep, Sales Manager, Admin'
+// the Sales-pipeline one (Marketing included since 2026-09-23) and the
+// Prospect one, which predates that and names its roles in a different order.
+const OPEN_TO_ALL_SALES_ROLES = 'Sales Rep, Marketing, Sales Manager, Admin'
 const OPEN_TO_ALL_MARKETING_ROLES = 'Marketing, Sales Manager, Admin'
 const isOpenToAllSalesRoles = (restriction: string) =>
   restriction === OPEN_TO_ALL_SALES_ROLES || restriction === OPEN_TO_ALL_MARKETING_ROLES
