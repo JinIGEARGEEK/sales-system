@@ -4,6 +4,27 @@ export default {
   subheading: 'Prospect, Lead และ Deal ทั้งหมดในบอร์ดเดียว เลือกช่วงเวลาเพื่อดูว่ามีอะไรเข้ามาใหม่ อะไรขยับ และอะไรปิดไปแล้ว',
   exportPdf: 'ส่งออก PDF',
   exportPdfHint: 'เปิดหน้าต่างพิมพ์ของเบราว์เซอร์ เลือก "บันทึกเป็น PDF" เพื่อเก็บไฟล์',
+  refresh: 'รีเฟรช',
+  updatedAt: 'อัปเดตเมื่อ {time}',
+  periodContext: '{range} · เทียบกับ {days} วันก่อนหน้า',
+  empty: {
+    title: 'ไม่มีรายการที่ตรงกับตัวกรอง',
+    body: 'ลองเปลี่ยนผู้รับผิดชอบ แหล่งที่มา หรือคำค้นหา หรือล้างตัวกรอง',
+  },
+  attention: {
+    staleDeals: 'Deal ที่เปิดอยู่ {count} รายการ มูลค่า {value} อยู่ในขั้นตอนเดิมนานกว่า {days} วัน',
+    staleDealsHint: 'ควรหยิบยกขึ้นมาคุยในการประชุม',
+    highlight: 'ไฮไลต์รายการเหล่านี้',
+  },
+  highlight: {
+    label: 'ไฮไลต์',
+    all: 'การ์ดทั้งหมด',
+    stale: 'ค้าง',
+    moved: 'ขยับ',
+  },
+  jumpTo: 'ไปที่',
+  howToRead: 'วิธีอ่านบอร์ดนี้',
+  laneShare: '{pct}% ของมูลค่าไปป์ไลน์ที่เปิดอยู่',
   periods: {
     week: 'สัปดาห์นี้',
     lastWeek: 'สัปดาห์ที่แล้ว',
@@ -11,7 +32,6 @@ export default {
     quarter: 'ไตรมาสนี้',
   },
   periodRange: '{from} – {to}',
-  vsPrevious: 'เทียบกับ {days} วันก่อนหน้า',
   filters: {
     search: 'ค้นหาชื่อหรือบริษัท',
     allSources: 'ทุกแหล่งที่มา',
@@ -25,7 +45,9 @@ export default {
     won: 'Won',
     openPipeline: 'ไปป์ไลน์ที่เปิดอยู่',
     openDeals: 'Deal ที่เปิดอยู่ {count} รายการ · ถ่วงน้ำหนัก {value}',
-    conversionTitle: 'สัดส่วน {to} เทียบกับ {from}',
+    ofPrevious: '{pct}% ของ {step}',
+    ofPreviousHint: 'จำนวนที่สร้างในช่วงเวลานี้ในขั้นนี้ เทียบกับจำนวนที่สร้างในขั้นก่อนหน้า อาจเกิน 100% ได้เพราะนับแยกกัน',
+    weightedShare: 'ถ่วงน้ำหนักตามโอกาสปิดของแต่ละ Deal',
     noChange: 'ไม่เปลี่ยนแปลง',
   },
   zones: {

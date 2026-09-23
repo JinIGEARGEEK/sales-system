@@ -4,6 +4,27 @@ export default {
   subheading: 'Every Prospect, Lead and Deal on one board. Pick a period to see what came in, what moved and what closed.',
   exportPdf: 'Export PDF',
   exportPdfHint: 'Opens your browser\'s print dialog. Choose "Save as PDF" to keep a copy.',
+  refresh: 'Refresh',
+  updatedAt: 'Updated {time}',
+  periodContext: '{range} · compared with the previous {days} days',
+  empty: {
+    title: 'Nothing matches these filters',
+    body: 'Try a different owner, source or search, or clear the filters.',
+  },
+  attention: {
+    staleDeals: '{count} open deals worth {value} have sat in the same stage for more than {days} days',
+    staleDealsHint: 'Worth a question in the review.',
+    highlight: 'Highlight them',
+  },
+  highlight: {
+    label: 'Highlight',
+    all: 'All cards',
+    stale: 'Stale',
+    moved: 'Moved',
+  },
+  jumpTo: 'Jump to',
+  howToRead: 'How to read this board',
+  laneShare: '{pct}% of open pipeline value',
   periods: {
     week: 'This week',
     lastWeek: 'Last week',
@@ -11,7 +32,6 @@ export default {
     quarter: 'This quarter',
   },
   periodRange: '{from} – {to}',
-  vsPrevious: 'vs the previous {days} days',
   filters: {
     search: 'Search name or company',
     allSources: 'All sources',
@@ -25,7 +45,9 @@ export default {
     won: 'Won',
     openPipeline: 'Open pipeline',
     openDeals: '{count} open deals · weighted {value}',
-    conversionTitle: '{to} as a share of {from}',
+    ofPrevious: '{pct}% of {step}',
+    ofPreviousHint: 'Records created in this period at this step, as a share of those created at the step before. It can go above 100% because the two groups are counted independently.',
+    weightedShare: 'Weighted by each deal\'s probability',
     noChange: 'no change',
   },
   zones: {

@@ -1,79 +1,121 @@
 <template>
   <div class="p-5">
     <AccessGate :can-access="canAccess">
-      <div class="overview-screen">
-        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div class="overview-screen flex flex-col gap-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
             <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
             <p class="text-sm text-(--color-gray)">{{ t('crm.overviewPipeline.subheading') }}</p>
           </div>
-          <div class="flex flex-wrap items-center gap-3">
-            <CrmStatusPill v-model="period" :options="periodOptions" class="flex-wrap [&>button]:whitespace-nowrap" data-cy="overview-period" />
-            <ButtonPrimary
-              outline
-              icon="material-symbols:picture-as-pdf-outline"
-              :label="t('crm.overviewPipeline.exportPdf')"
-              :title="t('crm.overviewPipeline.exportPdfHint')"
-              :disabled="!overview"
-              @click="onExportPdf"
-            />
+          <div class="flex shrink-0 items-center gap-2">
+            <span v-if="fetchedAtLabel" class="text-xs text-(--color-gray)">{{ fetchedAtLabel }}</span>
+            <UTooltip :text="t('crm.overviewPipeline.refresh')">
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="material-symbols:refresh"
+                :loading="loading"
+                :aria-label="t('crm.overviewPipeline.refresh')"
+                @click="refresh"
+              />
+            </UTooltip>
+            <UTooltip :text="t('crm.overviewPipeline.exportPdfHint')">
+              <ButtonPrimary
+                outline
+                icon="material-symbols:picture-as-pdf-outline"
+                :label="t('crm.overviewPipeline.exportPdf')"
+                :disabled="!overview"
+                @click="onExportPdf"
+              />
+            </UTooltip>
           </div>
         </div>
 
-        <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-          <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div class="flex-1">
-              <InputText v-model="search" :placeholder="t('crm.overviewPipeline.filters.search')" name="overviewSearch" />
+        <UCard :ui="GLASS_PANEL_UI">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <CrmStatusPill v-model="period" :options="periodOptions" class="flex-wrap [&>button]:whitespace-nowrap" data-cy="overview-period" />
+              <span class="flex items-center gap-1 text-xs text-(--color-dark-gray)">
+                <UIcon name="material-symbols:calendar-month-outline" class="size-4 text-(--color-gray)" />
+                {{ t('crm.overviewPipeline.periodContext', { range: periodRangeLabel, days: periodDays }) }}
+              </span>
             </div>
-            <div class="w-full lg:w-44">
-              <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" name="overviewAssignee" />
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div class="flex-1">
+                <InputText v-model="search" :placeholder="t('crm.overviewPipeline.filters.search')" name="overviewSearch" />
+              </div>
+              <div class="w-full lg:w-44">
+                <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" name="overviewAssignee" />
+              </div>
+              <div class="w-full lg:w-44">
+                <InputSelect v-model="sourceFilter" :options="sourceOptions" name="overviewSource" />
+              </div>
+              <div class="w-full lg:w-44">
+                <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" name="overviewBusinessUnit" />
+              </div>
+              <div class="w-full lg:w-40">
+                <InputSelect v-model="tagFilter" :options="tagOptions" name="overviewTag" />
+              </div>
+              <UButton v-if="hasFilters" color="neutral" variant="link" icon="material-symbols:filter-alt-off-outline" :label="t('crm.overviewPipeline.filters.clear')" @click="clearFilters" />
             </div>
-            <div class="w-full lg:w-44">
-              <InputSelect v-model="sourceFilter" :options="sourceOptions" name="overviewSource" />
-            </div>
-            <div class="w-full lg:w-44">
-              <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" name="overviewBusinessUnit" />
-            </div>
-            <div class="w-full lg:w-40">
-              <InputSelect v-model="tagFilter" :options="tagOptions" name="overviewTag" />
-            </div>
-            <UButton v-if="hasFilters" color="neutral" variant="link" :label="t('crm.overviewPipeline.filters.clear')" @click="clearFilters" />
           </div>
         </UCard>
 
         <template v-if="overview">
-          <div class="transition-opacity" :class="loading ? 'opacity-60' : ''">
-            <CrmOverviewPipelineSummaryStrip :summary="overview.summary" :period-days="periodDays" class="mb-3" />
+          <div class="flex flex-col gap-4 transition-opacity" :class="loading ? 'opacity-60' : ''" :aria-busy="loading">
+            <CrmOverviewPipelineSummaryStrip :summary="overview.summary" />
 
-            <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-(--color-dark-gray)">
-              <span class="flex items-center gap-1">
-                <span class="inline-flex items-center gap-0.5 rounded-full bg-(--color-info-toast)/12 px-1.5 py-px text-[11px] text-(--color-info-toast)">
-                  <UIcon name="material-symbols:arrow-upward" class="size-3" />{{ t('crm.overviewPipeline.legend.moved') }}
-                </span>
-                {{ t('crm.overviewPipeline.legend.movedHint') }}
+            <!-- Built from the app's own warning tokens rather than UAlert,
+            whose warning/subtle variant renders low-contrast in this theme. -->
+            <div
+              v-if="counts.staleDeals > 0 && highlight !== 'stale'"
+              class="flex flex-col gap-3 rounded-xl border border-(--color-warning-hover)/50 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-bg) px-4 py-3 sm:flex-row sm:items-center"
+              role="status"
+              data-cy="overview-stale-alert"
+            >
+              <span class="grid size-9 shrink-0 place-items-center rounded-full bg-(--color-warning-hover)/20 text-(--color-warning-hover)">
+                <UIcon name="material-symbols:schedule-outline" class="size-5" />
               </span>
-              <span class="flex items-center gap-1">
-                <span class="h-3.5 w-1 rounded-sm bg-(--color-warning-hover)" />
-                {{ t('crm.overviewPipeline.legend.stale', { days: OVERVIEW_STALE_DAYS }) }}
-              </span>
-              <span>{{ t('crm.overviewPipeline.legend.terminal') }}</span>
-              <span class="text-(--color-gray) lg:ml-auto">{{ t('crm.overviewPipeline.legend.boards') }}</span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-(--color-black)">
+                  {{ t('crm.overviewPipeline.attention.staleDeals', { count: counts.staleDeals, value: `${t('global.currencySymbol')}${priceFormatCompact(counts.staleDealValue)}`, days: OVERVIEW_STALE_DAYS }) }}
+                </p>
+                <p class="text-xs text-(--color-dark-gray)">{{ t('crm.overviewPipeline.attention.staleDealsHint') }}</p>
+              </div>
+              <ButtonPrimary outline icon="material-symbols:highlight-outline" :label="t('crm.overviewPipeline.attention.highlight')" @click="highlightStaleDeals" />
             </div>
 
-            <CrmOverviewPipelineBoard
-              :zones="overview.zones"
-              :period="periodRange"
-              :collapsed="collapsed"
-              :selected-key="selectedKey"
-              @select="onSelect"
-              @toggle-collapse="toggleCollapse"
-            />
+            <div v-if="isEmpty" class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-(--color-card-border) bg-white px-6 py-12 text-center">
+              <UIcon name="material-symbols:filter-list-off" class="size-8 text-(--color-gray)" />
+              <p class="font-medium">{{ t('crm.overviewPipeline.empty.title') }}</p>
+              <p class="text-sm text-(--color-gray)">{{ t('crm.overviewPipeline.empty.body') }}</p>
+              <ButtonPrimary v-if="hasFilters" outline class="mt-2" :label="t('crm.overviewPipeline.filters.clear')" @click="clearFilters" />
+            </div>
+            <template v-else>
+              <CrmOverviewPipelineToolbar
+                v-model:highlight="highlight"
+                :zones="overview.zones"
+                :counts="counts"
+                @jump="onJump"
+              />
+              <CrmOverviewPipelineBoard
+                ref="board"
+                :zones="overview.zones"
+                :period="periodRange"
+                :collapsed="collapsed"
+                :selected-key="selectedKey"
+                :highlight="highlight"
+                @select="onSelect"
+                @toggle-collapse="toggleCollapse"
+              />
+            </template>
           </div>
         </template>
-        <div v-else class="flex flex-col gap-3">
-          <USkeleton class="h-24 w-full" />
+        <div v-else class="flex flex-col gap-4">
+          <USkeleton class="h-28 w-full rounded-xl" />
+          <USkeleton class="h-7 w-96 max-w-full" />
           <div class="flex gap-3 overflow-hidden">
-            <USkeleton v-for="n in 5" :key="n" class="h-80 w-60 shrink-0" />
+            <USkeleton v-for="n in 5" :key="n" class="h-72 w-60 shrink-0 rounded-lg" />
           </div>
         </div>
       </div>
@@ -107,8 +149,10 @@ import { BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
 import {
   OVERVIEW_PERIOD_PRESETS,
   OVERVIEW_STALE_DAYS,
+  highlightCounts,
   overviewPeriodLength,
   overviewPeriodRange,
+  type OverviewHighlight,
   type OverviewPeriodPreset,
 } from '~/composables/utils/usePipelineOverview'
 
@@ -116,7 +160,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.overviewPipeline.pageTitle') })
 
 const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
-const { dateFormat } = useFormatter()
+const { dateFormat, priceFormatCompact } = useFormatter()
 const { notifyApiError } = useApiErrorNotifier()
 const overviewStore = usePipelineOverviewStore()
 const teamMembersStore = useTeamMembersStore()
@@ -191,6 +235,30 @@ const buildParams = (): PipelineOverviewParams => {
 
 const overview = computed(() => overviewStore.data)
 const loading = computed(() => overviewStore.loading)
+const fetchedAtLabel = computed(() => {
+  const at = overviewStore.fetchedAt
+  if (!at) return ''
+  return t('crm.overviewPipeline.updatedAt', { time: `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}` })
+})
+const isEmpty = computed(() => !!overview.value && overview.value.zones.every(z => z.lanes.every(l => l.count === 0)))
+
+// Highlight dims every card that doesn't match, client-side over the cards
+// already loaded — a reviewer's "what needs a question?" pass, without
+// another request. Reset when the data underneath changes shape (period or
+// filters), since the matching set is different then.
+const highlight = ref<OverviewHighlight>('all')
+const counts = computed(() => (overview.value ? highlightCounts(overview.value.zones, periodRange.value) : { stale: 0, moved: 0, staleDeals: 0, staleDealValue: 0 }))
+watch([periodPreset, assigneeFilter, sourceFilter, businessUnitFilter, tagFilter, search], () => { highlight.value = 'all' })
+
+const board = useTemplateRef<{ jumpTo: (zone: PipelineOverviewZoneKey) => void }>('board')
+const onJump = (zone: PipelineOverviewZoneKey) => {
+  if (collapsed.value[zone]) toggleCollapse(zone)
+  nextTick(() => board.value?.jumpTo(zone))
+}
+const highlightStaleDeals = () => {
+  highlight.value = 'stale'
+  onJump('deal')
+}
 
 const refresh = async () => {
   try {
