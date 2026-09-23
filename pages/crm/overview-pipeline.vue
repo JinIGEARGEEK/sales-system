@@ -90,6 +90,7 @@
                 v-model:highlight="highlight"
                 :zones="overview.zones"
                 :counts="counts"
+                :period="periodRange"
                 @jump="onJump"
               />
               <CrmOverviewPipelineBoard

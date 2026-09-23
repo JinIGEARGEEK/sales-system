@@ -66,7 +66,9 @@
           <dt class="text-(--color-gray)">{{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closed') : t('crm.overviewPipeline.panel.inStage') }}</dt>
           <dd class="tabular-nums">
             {{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closedDays', { days }) : t('crm.overviewPipeline.panel.inStageDays', { days }) }}
-            <span v-if="stale" class="ml-1 rounded-full bg-(--color-warning-bg) px-1.5 py-px text-[11px] text-(--color-warning-hover)">{{ t('crm.overviewPipeline.panel.stale') }}</span>
+            <UTooltip v-if="stale" :text="t('crm.overviewPipeline.highlight.staleHint', { days: OVERVIEW_STALE_DAYS })" :ui="MULTILINE_TOOLTIP_UI">
+              <UBadge class="ml-1" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.panel.stale')" />
+            </UTooltip>
           </dd>
           <template v-if="lostReasonLabel">
             <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.lostReason') }}</dt>
@@ -122,8 +124,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
-import { OVERVIEW_ZONES } from '~/constants/ui'
-import { daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
+import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
+import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   open: boolean
