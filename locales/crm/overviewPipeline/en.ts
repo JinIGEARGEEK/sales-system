@@ -21,6 +21,9 @@ export default {
     all: 'All cards',
     stale: 'Stale',
     moved: 'Moved',
+    allHint: 'Show every card normally, with nothing dimmed.',
+    staleHint: 'Open cards that have stayed in the same stage for more than {days} days, counted from the day they entered that stage (not from when the record was created). Cards in closed columns (Won, Lost, Disqualified, Converted) are never stale.',
+    movedHint: 'Open cards that changed stage between {from} and {to} (the selected period). A record that was only created in this period, with no stage change after that, doesn\'t count.',
   },
   jumpTo: 'Jump to',
   howToRead: 'How to read this board',
@@ -69,9 +72,6 @@ export default {
   laneEmptyTerminal: 'None in this period',
   laneMore: '{count} more on the {zone} board',
   legend: {
-    moved: 'Moved',
-    movedHint: 'changed stage in this period',
-    stale: 'over {days} days in the same stage — worth a question',
     terminal: 'Won, Lost, Disqualified and Converted columns (marked "In period") show only records closed in the selected period',
     boards: 'To drag cards, use the Prospects, Leads or Deals board, or change the stage in a card\'s side panel',
   },
@@ -82,6 +82,10 @@ export default {
     fromProspect: 'from Prospect',
     fromProspectHint: 'Came in as a Prospect',
     unassigned: 'Unassigned',
+    stageSince: 'In "{stage}" since {date} · {days} days. Counts as stale after {limit} days.',
+    staleSince: 'In "{stage}" since {date} · {days} days — stale, over the {limit}-day limit.',
+    movedOn: 'Moved into "{stage}" on {date}, inside the selected period.',
+    closedOn: 'Entered "{stage}" on {date}, inside the selected period.',
   },
   panel: {
     kind: {

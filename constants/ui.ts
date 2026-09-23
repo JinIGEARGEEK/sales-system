@@ -40,3 +40,12 @@ export const OVERVIEW_ZONES: Record<PipelineOverviewZoneKey, { color: string, ic
   lead: { color: 'var(--color-info-toast)', icon: 'material-symbols:person-search-outline', path: '/crm/leads' },
   deal: { color: 'var(--color-accent-green)', icon: 'material-symbols:handshake-outline', path: '/crm/deals' },
 }
+
+// For a UTooltip carrying a sentence or two rather than a short label. Nuxt
+// UI's default tooltip is a fixed-height (h-6), single-line, `truncate`d
+// chip, so longer text gets cut off; this lets it wrap within a readable
+// width instead.
+export const MULTILINE_TOOLTIP_UI = {
+  content: 'h-auto max-w-xs py-1.5 leading-relaxed',
+  text: 'whitespace-normal overflow-visible',
+}

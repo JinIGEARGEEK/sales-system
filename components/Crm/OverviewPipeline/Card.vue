@@ -25,30 +25,36 @@
     <p v-if="lostReasonLabel" class="mt-1 text-xs text-(--color-chart-lost)">{{ lostReasonLabel }}</p>
 
     <div class="mt-2 flex flex-wrap items-center gap-1">
-      <UBadge
-        v-if="lane.terminal"
-        size="xs"
-        variant="subtle"
-        :color="lane.kind === 'lost' ? 'error' : 'success'"
-        :icon="lane.kind === 'lost' ? 'material-symbols:close' : 'material-symbols:check'"
-        :label="days === 0 ? t('crm.overviewPipeline.card.closedToday', { stage: lane.name }) : t('crm.overviewPipeline.card.closedAgo', { stage: lane.name, days })"
-      />
+      <!-- Each timing badge's tooltip gives this record's own dates, so a
+      reviewer can see why it is (or isn't) stale/moved. -->
+      <UTooltip v-if="lane.terminal" :text="t('crm.overviewPipeline.card.closedOn', { stage: lane.name, date: enteredOn })" :ui="MULTILINE_TOOLTIP_UI">
+        <UBadge
+          size="xs"
+          variant="subtle"
+          :color="lane.kind === 'lost' ? 'error' : 'success'"
+          :icon="lane.kind === 'lost' ? 'material-symbols:close' : 'material-symbols:check'"
+          :label="days === 0 ? t('crm.overviewPipeline.card.closedToday', { stage: lane.name }) : t('crm.overviewPipeline.card.closedAgo', { stage: lane.name, days })"
+        />
+      </UTooltip>
       <template v-else>
-        <UBadge
-          size="xs"
-          variant="subtle"
-          :color="stale ? 'warning' : 'neutral'"
-          :icon="stale ? 'material-symbols:schedule-outline' : undefined"
-          :label="t('crm.overviewPipeline.card.daysInStage', { days })"
-        />
-        <UBadge
-          v-if="moved"
-          size="xs"
-          variant="subtle"
-          color="info"
-          icon="material-symbols:arrow-upward"
-          :label="t('crm.overviewPipeline.legend.moved')"
-        />
+        <UTooltip :text="stageTooltip" :ui="MULTILINE_TOOLTIP_UI">
+          <UBadge
+            size="xs"
+            variant="subtle"
+            :color="stale ? 'warning' : 'neutral'"
+            :icon="stale ? 'material-symbols:schedule-outline' : undefined"
+            :label="stale ? `${t('crm.overviewPipeline.highlight.stale')} · ${t('crm.overviewPipeline.card.daysInStage', { days })}` : t('crm.overviewPipeline.card.daysInStage', { days })"
+          />
+        </UTooltip>
+        <UTooltip v-if="moved" :text="t('crm.overviewPipeline.card.movedOn', { stage: lane.name, date: enteredOn })" :ui="MULTILINE_TOOLTIP_UI">
+          <UBadge
+            size="xs"
+            variant="subtle"
+            color="info"
+            icon="material-symbols:arrow-upward"
+            :label="t('crm.overviewPipeline.highlight.moved')"
+          />
+        </UTooltip>
       </template>
       <UTooltip v-if="card.from_prospect" :text="t('crm.overviewPipeline.card.fromProspectHint')">
         <UBadge size="xs" variant="outline" color="neutral" icon="material-symbols:contact-mail-outline" :label="t('crm.overviewPipeline.card.fromProspect')" />
@@ -64,8 +70,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MULTILINE_TOOLTIP_UI } from '~/constants/ui'
 import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
-import { daysInStage, isStaleCard, movedInPeriod, type OverviewDateRange } from '~/composables/utils/usePipelineOverview'
+import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard, movedInPeriod, type OverviewDateRange } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   card: PipelineOverviewCard
@@ -80,12 +87,19 @@ const props = defineProps<{
 const emit = defineEmits<{ select: [] }>()
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { priceFormatCompact, dateFormat } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 
 const days = computed(() => daysInStage(props.card))
 const stale = computed(() => !props.lane.terminal && isStaleCard(props.card))
 const moved = computed(() => !props.lane.terminal && movedInPeriod(props.card, props.period))
+// The date this record entered its current lane (falls back to created_at
+// for rows that predate stage_entered_at, same as daysInStage).
+const enteredOn = computed(() => dateFormat(props.card.stage_entered_at ?? props.card.created_at))
+const stageTooltip = computed(() => t(
+  stale.value ? 'crm.overviewPipeline.card.staleSince' : 'crm.overviewPipeline.card.stageSince',
+  { stage: props.lane.name, date: enteredOn.value, days: days.value, limit: OVERVIEW_STALE_DAYS },
+))
 const lostReasonLabel = computed(() => (props.card.lost_reason ? labelForLostReason(props.card.lost_reason) : ''))
 const ownerName = computed(() => props.card.assigned_to ? teamMembersStore.nameById(props.card.assigned_to) : t('crm.overviewPipeline.card.unassigned'))
 const ariaLabel = computed(() => [props.card.name, props.card.company_name, props.lane.name, ownerName.value].filter(Boolean).join(', '))

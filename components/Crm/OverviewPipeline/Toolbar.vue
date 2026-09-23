@@ -9,9 +9,15 @@
         @update:model-value="emit('update:highlight', $event as OverviewHighlight)"
       >
         <template #option="{ option }">
-          <UIcon :name="option.icon" class="size-3.5" />
-          {{ option.label }}
-          <UBadge v-if="option.count !== null" size="xs" variant="subtle" :color="option.badgeColor" :label="numberFormat(option.count)" />
+          <!-- The tooltip spells out each mode's timing rule (e.g. what
+          "stale" is counted from), the question a reviewer asks first. -->
+          <UTooltip :text="option.hint" :content="{ side: 'bottom' }" :ui="MULTILINE_TOOLTIP_UI">
+            <span class="inline-flex items-center gap-1.5">
+              <UIcon :name="option.icon" class="size-3.5" />
+              {{ option.label }}
+              <UBadge v-if="option.count !== null" size="xs" variant="subtle" :color="option.badgeColor" :label="numberFormat(option.count)" />
+            </span>
+          </UTooltip>
         </template>
       </CrmStatusPill>
     </div>
@@ -36,14 +42,14 @@
     <UPopover class="ml-auto">
       <UButton color="neutral" variant="link" size="sm" icon="material-symbols:help-outline" :label="t('crm.overviewPipeline.howToRead')" />
       <template #content>
-        <ul class="flex max-w-xs flex-col gap-2.5 p-3 text-xs text-(--color-dark-gray)">
+        <ul class="flex max-w-sm flex-col gap-2.5 p-3 text-xs text-(--color-dark-gray)">
           <li class="flex gap-2">
-            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="info" icon="material-symbols:arrow-upward" :label="t('crm.overviewPipeline.legend.moved')" />
-            {{ t('crm.overviewPipeline.legend.movedHint') }}
+            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="info" icon="material-symbols:arrow-upward" :label="t('crm.overviewPipeline.highlight.moved')" />
+            {{ movedHint }}
           </li>
           <li class="flex gap-2">
             <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.highlight.stale')" />
-            {{ t('crm.overviewPipeline.legend.stale', { days: OVERVIEW_STALE_DAYS }) }}
+            {{ staleHint }}
           </li>
           <li class="flex gap-2">
             <UIcon name="material-symbols:event-available-outline" class="mt-0.5 size-4 shrink-0" />
@@ -61,13 +67,15 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { OVERVIEW_ZONES } from '~/constants/ui'
-import { OVERVIEW_STALE_DAYS, zoneOpenTotals, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
+import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
+import { OVERVIEW_STALE_DAYS, zoneOpenTotals, type OverviewDateRange, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   zones: PipelineOverviewZone[]
   highlight: OverviewHighlight
   counts: { stale: number, moved: number }
+  // The selected period, quoted in the "Moved" explanation.
+  period: OverviewDateRange
 }>()
 
 const emit = defineEmits<{
@@ -76,11 +84,18 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { numberFormat } = useFormatter()
+const { numberFormat, dateFormat } = useFormatter()
+
+// One wording for each rule, shared by the button tooltips and the legend.
+const staleHint = computed(() => t('crm.overviewPipeline.highlight.staleHint', { days: OVERVIEW_STALE_DAYS }))
+const movedHint = computed(() => t('crm.overviewPipeline.highlight.movedHint', {
+  from: dateFormat(props.period.date_from),
+  to: dateFormat(props.period.date_to),
+}))
 
 const highlightOptions = computed(() => [
-  { value: 'all', label: t('crm.overviewPipeline.highlight.all'), icon: 'material-symbols:view-kanban-outline', count: null, badgeColor: 'neutral' as const },
-  { value: 'stale', label: t('crm.overviewPipeline.highlight.stale'), icon: 'material-symbols:schedule-outline', count: props.counts.stale, badgeColor: 'warning' as const },
-  { value: 'moved', label: t('crm.overviewPipeline.highlight.moved'), icon: 'material-symbols:arrow-upward', count: props.counts.moved, badgeColor: 'info' as const },
+  { value: 'all', label: t('crm.overviewPipeline.highlight.all'), hint: t('crm.overviewPipeline.highlight.allHint'), icon: 'material-symbols:view-kanban-outline', count: null, badgeColor: 'neutral' as const },
+  { value: 'stale', label: t('crm.overviewPipeline.highlight.stale'), hint: staleHint.value, icon: 'material-symbols:schedule-outline', count: props.counts.stale, badgeColor: 'warning' as const },
+  { value: 'moved', label: t('crm.overviewPipeline.highlight.moved'), hint: movedHint.value, icon: 'material-symbols:arrow-upward', count: props.counts.moved, badgeColor: 'info' as const },
 ])
 </script>
