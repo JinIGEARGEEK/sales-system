@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   cardMatchesHighlight,
   conversionPercent,
-  highlightCounts,
   isOtherLane,
   overviewCardStage,
   overviewLaneLabel,
@@ -47,13 +46,14 @@ describe('usePipelineOverview', () => {
     it('counts calendar days since the card entered its lane', () => {
       const card = { stage_entered_at: new Date(2026, 8, 20, 23, 0).toISOString(), created_at: new Date(2026, 8, 1).toISOString() }
       expect(daysInStage(card, NOW)).toBe(3)
-      expect(isStaleCard(card, NOW)).toBe(false)
+      expect(isStaleCard(card, 14, NOW)).toBe(false)
     })
 
     it('falls back to created_at when stage_entered_at is missing, and flags over 14 days as stale', () => {
       const card = { stage_entered_at: null, created_at: new Date(2026, 8, 1).toISOString() }
       expect(daysInStage(card, NOW)).toBe(22)
-      expect(isStaleCard(card, NOW)).toBe(true)
+      expect(isStaleCard(card, 14, NOW)).toBe(true)
+      expect(isStaleCard(card, 30, NOW), 'a stage with a longer limit isn\'t stale yet').toBe(false)
     })
   })
 
@@ -82,12 +82,13 @@ describe('usePipelineOverview', () => {
 
   describe('highlight', () => {
     const range = { date_from: '2026-09-21', date_to: '2026-09-23' }
-    const staleCard = { stage_entered_at: new Date(2026, 8, 1).toISOString(), created_at: new Date(2026, 7, 1).toISOString() }
-    const movedCard = { stage_entered_at: new Date(2026, 8, 22).toISOString(), created_at: new Date(2026, 8, 1).toISOString() }
-    const open = { terminal: false }
-    const terminal = { terminal: true }
+    const staleCard = { stage_entered_at: new Date(2026, 8, 1).toISOString(), created_at: new Date(2026, 7, 1).toISOString(), direction: '' as const }
+    const movedCard = { stage_entered_at: new Date(2026, 8, 22).toISOString(), created_at: new Date(2026, 8, 1).toISOString(), direction: 'forward' as const }
+    const slippedCard = { ...movedCard, direction: 'backward' as const }
+    const open = { terminal: false, stale_days: 14 }
+    const terminal = { terminal: true, stale_days: 0 }
 
-    it('"all" matches everything; "stale"/"moved" match only open-lane cards that qualify', () => {
+    it('"all" matches everything; the rest match only open-lane cards that qualify', () => {
       expect(cardMatchesHighlight(staleCard, terminal, 'all', range, NOW)).toBe(true)
       expect(cardMatchesHighlight(staleCard, open, 'stale', range, NOW)).toBe(true)
       expect(cardMatchesHighlight(movedCard, open, 'stale', range, NOW)).toBe(false)
@@ -95,22 +96,20 @@ describe('usePipelineOverview', () => {
       expect(cardMatchesHighlight(movedCard, terminal, 'moved', range, NOW)).toBe(false)
     })
 
-    it('highlightCounts totals stale/moved open cards and the stale Deal value', () => {
-      const card = (over: Partial<PipelineOverviewCard>): PipelineOverviewCard => ({
-        id: 1, name: 'x', company_id: null, company_name: '', assigned_to: null, source: '', value: 0,
-        probability: null, lost_reason: null, from_prospect: false, stage_entered_at: null, created_at: '', stage: '', ...over,
-      })
-      const lane = (terminal: boolean, cards: PipelineOverviewCard[]): PipelineOverviewLane => ({ name: 'L', kind: terminal ? 'won' : 'open', terminal, count: cards.length, value: 0, cards })
-      const zones: PipelineOverviewZone[] = [
-        { key: 'lead', lanes: [lane(false, [card(staleCard), card(movedCard)])] },
-        { key: 'deal', lanes: [lane(false, [card({ ...staleCard, value: 500 })]), lane(true, [card({ ...staleCard, value: 900 })])] },
-      ]
-      expect(highlightCounts(zones, range, NOW)).toEqual({ stale: 2, moved: 1, staleDeals: 1, staleDealValue: 500 })
+    it('"stale" uses the lane\'s own threshold', () => {
+      expect(cardMatchesHighlight(staleCard, { terminal: false, stale_days: 60 }, 'stale', range, NOW)).toBe(false)
+    })
+
+    it('"slipped" matches only backward moves inside the period', () => {
+      expect(cardMatchesHighlight(slippedCard, open, 'slipped', range, NOW)).toBe(true)
+      expect(cardMatchesHighlight(slippedCard, open, 'moved', range, NOW), 'a slip is still a move').toBe(true)
+      expect(cardMatchesHighlight(movedCard, open, 'slipped', range, NOW)).toBe(false)
+      expect(cardMatchesHighlight({ ...staleCard, direction: 'backward' }, open, 'slipped', range, NOW), 'outside the period').toBe(false)
     })
   })
 
   it('zoneOpenTotals sums open lanes only', () => {
-    const lane = (terminal: boolean, count: number, value: number): PipelineOverviewLane => ({ name: String(count), kind: terminal ? 'won' : 'open', terminal, count, value, cards: [] })
+    const lane = (terminal: boolean, count: number, value: number): PipelineOverviewLane => ({ name: String(count), kind: terminal ? 'won' : 'open', terminal, stale_days: terminal ? 0 : 14, count, value, cards: [] })
     const zone: PipelineOverviewZone = { key: 'deal', lanes: [lane(false, 2, 100), lane(false, 3, 50), lane(true, 9, 999)] }
     expect(zoneOpenTotals(zone)).toEqual({ count: 5, value: 150 })
   })

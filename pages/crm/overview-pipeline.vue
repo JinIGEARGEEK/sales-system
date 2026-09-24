@@ -73,9 +73,9 @@
             <CrmOverviewPipelineSummaryStrip :summary="overview.summary" />
 
             <CrmOverviewPipelineStaleBanner
-              v-if="counts.staleDeals > 0 && highlight !== 'stale'"
-              :count="counts.staleDeals"
-              :value="counts.staleDealValue"
+              v-if="counts.stale_deals > 0 && highlight !== 'stale'"
+              :count="counts.stale_deals"
+              :value="counts.stale_deal_value"
               @highlight="highlightStaleDeals"
             />
 
@@ -143,7 +143,6 @@ import { GLASS_PANEL_UI } from '~/constants/ui'
 import { BUSINESS_UNIT_FILTER_OPTIONS } from '~/constants/mockData'
 import {
   OVERVIEW_PERIOD_PRESETS,
-  highlightCounts,
   overviewPeriodLength,
   overviewPeriodRange,
   type OverviewHighlight,
@@ -240,10 +239,13 @@ const isEmpty = computed(() => !!overview.value && overview.value.zones.every(z 
 
 // Highlight dims every card that doesn't match, client-side over the cards
 // already loaded — a reviewer's "what needs a question?" pass, without
-// another request. Reset when the data underneath changes shape (period or
-// filters), since the matching set is different then.
+// another request (the counts beside each mode are the API's exact totals).
+// Reset when the data underneath changes shape (period or filters), since
+// the matching set is different then.
 const highlight = ref<OverviewHighlight>('all')
-const counts = computed(() => (overview.value ? highlightCounts(overview.value.zones, periodRange.value) : { stale: 0, moved: 0, staleDeals: 0, staleDealValue: 0 }))
+// Exact, board-wide counts from the API — not a tally of the loaded cards,
+// which are capped per lane.
+const counts = computed(() => overview.value?.highlight ?? { stale: 0, moved: 0, slipped: 0, stale_deals: 0, stale_deal_value: 0 })
 watch([periodPreset, assigneeFilter, sourceFilter, businessUnitFilter, tagFilter, search], () => { highlight.value = 'all' })
 
 const board = useTemplateRef<{ jumpTo: (zone: PipelineOverviewZoneKey) => void }>('board')

@@ -8,6 +8,20 @@
         <div class="grid grid-cols-1 gap-3">
           <InputText v-model="form.name" :label="t('admin.pipelineConfig.prospectStages.name')" name="name" rules="required" />
           <InputText v-model.number="form.sort_order" type="number" :label="t('admin.pipelineConfig.prospectStages.sortOrder')" name="sort_order" rules="required" />
+          <!-- Optional per-stage stale threshold for the Overview Pipeline
+          (FR-CRM-123); empty means the 14-day default. -->
+          <!-- Hidden on a closed (terminal) stage, which is never stale. -->
+          <div v-if="!form.is_disqualified_stage" class="flex flex-col gap-1">
+            <InputText
+              v-model="form.stale_days"
+              type="number"
+              :label="t('admin.pipelineConfig.staleDays')"
+              :placeholder="t('admin.pipelineConfig.staleDaysPlaceholder')"
+              name="stale_days"
+              rules="integer|min_value:1|max_value:365"
+            />
+            <p class="text-xs text-(--color-gray)">{{ t('admin.pipelineConfig.staleDaysHint') }}</p>
+          </div>
           <div class="flex flex-col gap-2">
             <UCheckbox v-model="form.is_disqualified_stage" :label="t('admin.pipelineConfig.prospectStages.isDisqualifiedStage')" />
             <UCheckbox v-model="form.is_active" :label="t('admin.pipelineConfig.stages.isActive')" />
@@ -38,13 +52,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean }]
+  submit: [payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean, stale_days: number | null }]
 }>()
 
 const emptyForm = () => ({
   name: props.stage?.name ?? '',
   sort_order: props.stage?.sort_order ?? 0,
   is_active: props.stage?.is_active ?? true,
+  // Kept as text in the form so an empty field means "use the default".
+  stale_days: props.stage?.stale_days ? String(props.stage.stale_days) : '',
   is_disqualified_stage: props.stage?.is_disqualified_stage ?? false,
 })
 
@@ -60,7 +76,7 @@ const onSubmit = guard(async () => {
     error(t('admin.pipelineConfig.prospectStages.reservedNameError'))
     return
   }
-  emit('submit', { ...form })
+  emit('submit', { ...form, stale_days: form.stale_days === '' ? null : Number(form.stale_days) })
   onUpdateOpen(false)
 })
 

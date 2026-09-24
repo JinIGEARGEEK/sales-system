@@ -74,15 +74,15 @@ const summaryItems = computed(() => {
     const d = c.current - c.previous
     return `${d > 0 ? '+' : ''}${numberFormat(d)}`
   }
-  const rate = (from: number, to: number) => {
-    const pct = conversionPercent(from, to)
-    return pct === null ? '' : ` · ${pct}% →`
+  const cohort = (key: string, c: PipelineOverviewCohort) => {
+    const pct = conversionPercent(c.cohort, c.converted)
+    return ` · ${t(`crm.overviewPipeline.summary.${key}`, { converted: numberFormat(c.converted), cohort: numberFormat(c.cohort) })}${pct === null ? '' : ` (${pct}%)`}`
   }
   return [
-    { label: t('crm.overviewPipeline.summary.newProspects'), value: numberFormat(s.new_prospects.current), sub: withDelta(s.new_prospects) + rate(s.new_prospects.current, s.new_leads.current) },
-    { label: t('crm.overviewPipeline.summary.newLeads'), value: numberFormat(s.new_leads.current), sub: withDelta(s.new_leads) + rate(s.new_leads.current, s.new_deals.current) },
-    { label: t('crm.overviewPipeline.summary.newDeals'), value: numberFormat(s.new_deals.current), sub: withDelta(s.new_deals) + rate(s.new_deals.current, s.won.current) },
-    { label: t('crm.overviewPipeline.summary.won'), value: `${numberFormat(s.won.current)} · ${money(s.won.value)}`, sub: withDelta(s.won) },
+    { label: t('crm.overviewPipeline.summary.newProspects'), value: numberFormat(s.new_prospects.current), sub: withDelta(s.new_prospects) },
+    { label: t('crm.overviewPipeline.summary.newLeads'), value: numberFormat(s.new_leads.current), sub: withDelta(s.new_leads) + cohort('cohortProspectToLead', s.conversion.prospect_to_lead) },
+    { label: t('crm.overviewPipeline.summary.newDeals'), value: numberFormat(s.new_deals.current), sub: withDelta(s.new_deals) + cohort('cohortLeadToDeal', s.conversion.lead_to_deal) },
+    { label: t('crm.overviewPipeline.summary.won'), value: `${numberFormat(s.won.current)} · ${money(s.won.value)}`, sub: withDelta(s.won) + cohort('cohortDealToWon', s.conversion.deal_to_won) },
     { label: t('crm.overviewPipeline.summary.openPipeline'), value: money(s.open_pipeline.value), sub: t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(s.open_pipeline.count), value: money(s.open_pipeline.weighted_value) }) },
   ]
 })

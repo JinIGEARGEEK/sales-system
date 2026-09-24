@@ -21,6 +21,12 @@ export default {
       leadConverted: 'Became a Deal',
     },
   },
+  lostReasonModal: {
+    title: 'Why was this deal lost?',
+    label: 'Loss reason',
+    confirm: 'Mark as Lost',
+    cancel: 'Cancel',
+  },
   activityTimeline: {
     noActivity: 'No activity logged yet.',
     by: 'by',

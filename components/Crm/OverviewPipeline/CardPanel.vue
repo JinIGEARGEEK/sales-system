@@ -67,7 +67,7 @@
           <dt class="text-(--color-gray)">{{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closed') : t('crm.overviewPipeline.panel.inStage') }}</dt>
           <dd class="tabular-nums">
             {{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closedDays', { days }) : t('crm.overviewPipeline.panel.inStageDays', { days }) }}
-            <UTooltip v-if="stale" :text="t('crm.overviewPipeline.highlight.staleHint', { days: OVERVIEW_STALE_DAYS })" :ui="MULTILINE_TOOLTIP_UI">
+            <UTooltip v-if="stale" :text="t('crm.overviewPipeline.highlight.staleHint', { days: selection.lane.stale_days || OVERVIEW_STALE_DAYS })" :ui="MULTILINE_TOOLTIP_UI">
               <UBadge class="ml-1" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.panel.stale')" />
             </UTooltip>
           </dd>
@@ -128,6 +128,7 @@
     confirm-color="primary"
     @confirm="onConfirmConvertProspect"
   />
+  <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLost" />
 </template>
 
 <script setup lang="ts">
@@ -168,7 +169,7 @@ const ACTIVITY_ICONS: Record<ActivityType, string> = {
 }
 
 const days = computed(() => (props.selection ? daysInStage(props.selection.card) : 0))
-const stale = computed(() => !!props.selection && !props.selection.lane.terminal && isStaleCard(props.selection.card))
+const stale = computed(() => !!props.selection && !props.selection.lane.terminal && isStaleCard(props.selection.card, props.selection.lane.stale_days))
 const lostReasonLabel = computed(() => {
   const reason = props.selection?.card.lost_reason
   return reason ? labelForLostReason(reason) : ''
@@ -215,22 +216,44 @@ watch(() => [props.open, props.selection?.zone, props.selection?.card.id] as con
 }, { immediate: true })
 
 const moving = ref(false)
-const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string) => {
-  if (zone === 'deal') await dealsStore.updateStage(id, stage as DealStage)
+const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason) => {
+  if (zone === 'deal') await dealsStore.updateStage(id, stage as DealStage, undefined, lostReason)
   else if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)
   else await prospectsStore.updateStatus(id, stage)
 }
 
-const onChangeStage = async (stage: string) => {
+// Moving a Deal into a Lost stage asks why first — the reason is what a
+// review wants to know about a loss, and the quick-move wouldn't otherwise
+// record one.
+const lostReasonOpen = ref(false)
+const pendingLostStage = ref<string | null>(null)
+const onChangeStage = (stage: string) => {
   const current = props.selection
   if (!current || !stage || stage === currentStage.value || moving.value) return
+  if (current.zone === 'deal' && props.zoneLanes.find(l => l.name === stage)?.kind === 'lost') {
+    pendingLostStage.value = stage
+    lostReasonOpen.value = true
+    return
+  }
+  performMove(stage)
+}
+const onConfirmLost = async (reason: LostReason) => {
+  if (!pendingLostStage.value) return
+  const stage = pendingLostStage.value
+  pendingLostStage.value = null
+  await performMove(stage, reason)
+}
+
+const performMove = async (stage: string, reason?: LostReason) => {
+  const current = props.selection
+  if (!current) return
   const { zone, card } = current
   // Moving out of the "other" lane fixes an invalid/blank stage, so there's
   // nothing valid to undo back to.
   const from = isOtherLane(current.lane) ? null : current.lane.name
   moving.value = true
   try {
-    await moveTo(zone, card.id, stage)
+    await moveTo(zone, card.id, stage, reason)
     emit('changed')
     success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null
       ? undefined

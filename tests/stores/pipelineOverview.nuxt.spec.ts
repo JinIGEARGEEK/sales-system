@@ -15,7 +15,13 @@ const makeOverview = (won: number): PipelineOverview => ({
     new_deals: { current: 1, previous: 0 },
     won: { current: won, previous: 0, value: 0, previous_value: 0 },
     open_pipeline: { count: 0, value: 0, weighted_value: 0 },
+    conversion: {
+      prospect_to_lead: { cohort: 1, converted: 0 },
+      lead_to_deal: { cohort: 1, converted: 0 },
+      deal_to_won: { cohort: 1, converted: 0 },
+    },
   },
+  highlight: { stale: 0, moved: 0, slipped: 0, stale_deals: 0, stale_deal_value: 0 },
   zones: [],
 })
 

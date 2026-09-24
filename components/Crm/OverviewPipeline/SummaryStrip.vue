@@ -23,10 +23,10 @@
           {{ deltaLabel(step.current - step.previous) }}
         </span>
       </p>
-      <UTooltip v-if="index > 0" :text="t('crm.overviewPipeline.summary.ofPreviousHint')">
+      <UTooltip v-if="step.cohort" :text="t('crm.overviewPipeline.summary.cohortHint')" :ui="MULTILINE_TOOLTIP_UI">
         <p class="flex w-fit cursor-help items-center gap-1 text-xs text-(--color-gray) tabular-nums">
-          <UIcon name="material-symbols:subdirectory-arrow-right" class="size-3.5" />
-          {{ conversionLabel(steps[index - 1]!, step) }}
+          <UIcon name="material-symbols:subdirectory-arrow-right" class="size-3.5 shrink-0" />
+          {{ cohortLabel(step.cohort) }}
         </p>
       </UTooltip>
       <p v-else class="text-xs text-(--color-gray)">&nbsp;</p>
@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { conversionPercent } from '~/composables/utils/usePipelineOverview'
-import { OVERVIEW_ZONES } from '~/constants/ui'
+import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
 
 const props = defineProps<{
   summary: PipelineOverview['summary']
@@ -65,25 +65,30 @@ const { t } = useI18n()
 const { numberFormat, priceFormatCompact } = useFormatter()
 const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
 
-type Step = { key: string, label: string, color: string, icon: string, current: number, previous: number, extra: string }
+// Each step after the first says how the previous step's new records
+// converted into it — a cohort figure, so it can't exceed 100%.
+type Cohort = PipelineOverviewCohort & { key: string }
+type Step = { key: string, label: string, color: string, icon: string, current: number, previous: number, extra: string, cohort?: Cohort }
 
-const steps = computed<Step[]>(() => [
-  { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, icon: OVERVIEW_ZONES.prospect.icon, ...props.summary.new_prospects, extra: '' },
-  { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, icon: OVERVIEW_ZONES.lead.icon, ...props.summary.new_leads, extra: '' },
-  { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, icon: OVERVIEW_ZONES.deal.icon, ...props.summary.new_deals, extra: '' },
-  { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', icon: 'material-symbols:trophy-outline', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value) },
-])
+const steps = computed<Step[]>(() => {
+  const { conversion } = props.summary
+  return [
+    { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, icon: OVERVIEW_ZONES.prospect.icon, ...props.summary.new_prospects, extra: '' },
+    { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, icon: OVERVIEW_ZONES.lead.icon, ...props.summary.new_leads, extra: '', cohort: { key: 'cohortProspectToLead', ...conversion.prospect_to_lead } },
+    { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, icon: OVERVIEW_ZONES.deal.icon, ...props.summary.new_deals, extra: '', cohort: { key: 'cohortLeadToDeal', ...conversion.lead_to_deal } },
+    { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', icon: 'material-symbols:trophy-outline', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value), cohort: { key: 'cohortDealToWon', ...conversion.deal_to_won } },
+  ]
+})
 
 const weightedPct = computed(() => {
   const { value, weighted_value: weighted } = props.summary.open_pipeline
   return value > 0 ? Math.min(100, Math.round((weighted / value) * 100)) : 0
 })
 
-// Each step after the first says how it compares with the step before it,
-// on its own line, rather than as a chip squeezed between two tiles.
-const conversionLabel = (from: Step, to: Step) => {
-  const pct = conversionPercent(from.current, to.current)
-  return pct === null ? '–' : t('crm.overviewPipeline.summary.ofPrevious', { pct, step: from.label })
+const cohortLabel = (cohort: Cohort) => {
+  const text = t(`crm.overviewPipeline.summary.${cohort.key}`, { converted: numberFormat(cohort.converted), cohort: numberFormat(cohort.cohort) })
+  const pct = conversionPercent(cohort.cohort, cohort.converted)
+  return pct === null ? text : `${text} · ${pct}%`
 }
 
 const deltaLabel = (delta: number) => {

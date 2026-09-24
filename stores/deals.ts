@@ -84,9 +84,11 @@ export const useDealsStore = defineStore('deals', {
     // destination stage lane (PipelineBoard.vue) — omitted for the mobile
     // dropdown-move, which has no drag geometry to compute one from; the
     // backend then auto-appends to the end of the destination lane instead.
-    async updateStage (id: number, stage: DealStage, position?: number): Promise<Deal> {
+    // lostReason is optional (the Kanban drag doesn't collect one); when sent
+    // with a move into a Lost stage the backend validates and saves it.
+    async updateStage (id: number, stage: DealStage, position?: number, lostReason?: LostReason): Promise<Deal> {
       const { $api } = useNuxtApp()
-      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage, position })
+      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage, position, lost_reason: lostReason })
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(d => d.id === id)
       if (index !== -1) this.items[index] = updated

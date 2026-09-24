@@ -10,9 +10,9 @@ export type OverviewDateRange = { date_from: string, date_to: string }
 
 type CardTiming = Pick<PipelineOverviewCard, 'stage_entered_at' | 'created_at'>
 
-// A card that has sat in one open lane longer than this (two weeks without a
-// move) gets the "stale" flag. A fixed review heuristic, deliberately not tied
-// to any Admin-configured notification rule's threshold.
+// The default stale threshold (two weeks without a move). Each open lane
+// carries its own `stale_days` (the stage's CRM Settings value, else this),
+// so this is only the fallback; it matches the backend's DefaultStaleDays.
 export const OVERVIEW_STALE_DAYS = 14
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -74,8 +74,8 @@ export const daysInStage = (card: CardTiming, now = new Date()) => {
   return Math.max(0, Math.floor((startOfDay(now).getTime() - startOfDay(entered).getTime()) / DAY_MS))
 }
 
-export const isStaleCard = (card: CardTiming, now = new Date()) =>
-  daysInStage(card, now) > OVERVIEW_STALE_DAYS
+export const isStaleCard = (card: CardTiming, staleDays = OVERVIEW_STALE_DAYS, now = new Date()) =>
+  daysInStage(card, now) > (staleDays || OVERVIEW_STALE_DAYS)
 
 // "Moved" = changed lanes inside the period. A record created in the period
 // and never moved also has stage_entered_at inside it, so that alone isn't
@@ -95,41 +95,22 @@ export const movedInPeriod = (card: CardTiming, range: OverviewDateRange) => {
 export const conversionPercent = (from: number, to: number) => (from > 0 ? Math.round((to / from) * 100) : null)
 
 // Board highlight modes: dim every card that doesn't match, so a reviewer can
-// scan for what needs a question without losing the board's shape.
-export type OverviewHighlight = 'all' | 'stale' | 'moved'
+// scan for what needs a question without losing the board's shape. The
+// counts shown next to each mode come from the API (exact, board-wide).
+export type OverviewHighlight = 'all' | 'stale' | 'moved' | 'slipped'
 
 export const cardMatchesHighlight = (
-  card: CardTiming,
-  lane: Pick<PipelineOverviewLane, 'terminal'>,
+  card: CardTiming & Pick<PipelineOverviewCard, 'direction'>,
+  lane: Pick<PipelineOverviewLane, 'terminal' | 'stale_days'>,
   highlight: OverviewHighlight,
   range: OverviewDateRange,
   now = new Date(),
 ) => {
   if (highlight === 'all') return true
   if (lane.terminal) return false
-  return highlight === 'stale' ? isStaleCard(card, now) : movedInPeriod(card, range)
-}
-
-// Open-lane cards currently loaded that are stale / moved, per zone. Counts
-// cover loaded cards only (each lane returns up to card_limit of them).
-export const highlightCounts = (zones: PipelineOverviewZone[], range: OverviewDateRange, now = new Date()) => {
-  const counts = { stale: 0, moved: 0, staleDeals: 0, staleDealValue: 0 }
-  for (const zone of zones) {
-    for (const lane of zone.lanes) {
-      if (lane.terminal) continue
-      for (const card of lane.cards) {
-        if (isStaleCard(card, now)) {
-          counts.stale++
-          if (zone.key === 'deal') {
-            counts.staleDeals++
-            counts.staleDealValue += card.value
-          }
-        }
-        if (movedInPeriod(card, range)) counts.moved++
-      }
-    }
-  }
-  return counts
+  if (highlight === 'stale') return isStaleCard(card, lane.stale_days, now)
+  const moved = movedInPeriod(card, range)
+  return highlight === 'moved' ? moved : moved && card.direction === 'backward'
 }
 
 // A zone's open (non-terminal) record count and value — the figures its

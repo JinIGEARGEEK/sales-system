@@ -26,6 +26,12 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
     // matching the same store-then-fallback pattern as useDealStageColor.ts.
     wonStageName: (state): string => state.items.find(s => s.is_won_stage)?.name ?? 'Won',
     lostStageName: (state): string => state.items.find(s => s.is_lost_stage)?.name ?? 'Lost',
+    // Where a new Deal starts: the first active, non-won/lost stage in sort
+    // order (seeded as "Lead", but an Admin can rename it). Mirrors the
+    // backend's utils.DefaultPipelineStage.
+    firstOpenStageName: (state): string => [...state.items]
+      .filter(s => s.is_active && !s.is_won_stage && !s.is_lost_stage)
+      .sort((a, b) => a.sort_order - b.sort_order)[0]?.name ?? 'Lead',
   },
   actions: {
     async fetchAll () {

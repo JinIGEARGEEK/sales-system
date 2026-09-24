@@ -309,6 +309,8 @@ interface PipelineStage {
   is_active: boolean
   is_won_stage: boolean
   is_lost_stage: boolean
+  // Overview Pipeline stale threshold in days; null means the default (14).
+  stale_days?: number | null
   created_at: Date
 }
 
@@ -347,6 +349,8 @@ interface ProspectStage {
   sort_order: number
   is_active: boolean
   is_disqualified_stage: boolean
+  // Overview Pipeline stale threshold in days; null means the default (14).
+  stale_days?: number | null
   created_at: Date
 }
 
@@ -456,6 +460,11 @@ interface AppSettings {
   // defaults false). Once true, the backend blocks a Deal from moving into
   // Won unless it already has at least one Contract with status Signed.
   require_signed_contract_before_won: boolean
+  // The Monday-morning Overview Pipeline email to Admins/Sales Managers
+  // (on by default; only sends when SMTP is configured), and when it last
+  // went out (server-set).
+  weekly_digest_enabled: boolean
+  last_weekly_digest_at: string | null
   // Neither figure resets itself on a new quarter/year — this is surfaced in
   // the Admin config UI as a "last updated" hint so a stale value (e.g. last
   // year's annual goal still sitting there in February) doesn't go unnoticed.

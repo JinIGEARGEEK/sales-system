@@ -8,6 +8,7 @@
       :key="column.value"
       class="flex w-64 shrink-0 flex-col overflow-hidden rounded-lg border shadow-xl"
       :style="{ borderColor: getColumnBorderTint(String(column.value), entity) }"
+      :data-cy="`pipeline-column-${column.value}`"
       @dragover.prevent="onColumnDragOver(column.value)"
       @drop="onDrop(column.value)"
     >
@@ -60,6 +61,7 @@
             draggable="true"
             role="button"
             tabindex="0"
+            :data-cy="`pipeline-card-${item._type}-${item.id}`"
             class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
             @dragstart="onDragStart(item)"
             @dragend="onDragEnd"

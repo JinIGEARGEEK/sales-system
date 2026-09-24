@@ -121,6 +121,7 @@
       :channel-filter="channelFilter"
       :stage-filter="stageFilter"
     />
+    <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
   </div>
 </template>
 
@@ -339,16 +340,19 @@ const filteredLeads = computed(() => {
 // the card badge). The "Lost" column is resolved through the PipelineStage
 // row's is_lost_stage flag (via pipelineStagesStore.lostStageName, same store
 // added for the Mark Won fix) instead of the literal name "Lost", since an
-// Admin can rename that stage. "Lead" has no equivalent flag on PipelineStage
-// (only is_won_stage/is_lost_stage exist) so it stays the literal default
-// stage name — same for the `lead.status === 'Qualified'` comparisons below,
-// which check the fixed (non-admin-configurable) Lead.Status enum, not a Deal
-// pipeline stage; it's coincidence, not a lookup, that the enum value and the
-// default "Qualified" stage name are spelled the same.
+// Admin can rename that stage. New/Contacted Leads go in the first open stage
+// by sort order (pipelineStagesStore.firstOpenStageName — seeded "Lead", but
+// renameable, so not the literal name). A Qualified Lead goes in the stage
+// named "Qualified" when it exists, else the first open stage too. The
+// `lead.status === 'Qualified'` checks compare the fixed Lead.Status enum,
+// not a Deal stage; it's coincidence that the default stage shares the name.
+const qualifiedLane = computed(() => (pipelineStagesStore.activeOptions.some(o => o.value === 'Qualified')
+  ? 'Qualified'
+  : pipelineStagesStore.firstOpenStageName))
 const leadLane = (lead: Lead): string => {
   if (lead.status === 'Disqualified') return pipelineStagesStore.lostStageName
-  if (lead.status === 'Qualified') return 'Qualified'
-  return 'Lead'
+  if (lead.status === 'Qualified') return qualifiedLane.value
+  return pipelineStagesStore.firstOpenStageName
 }
 
 // Status a Lead should take when dropped directly on one of its own lanes.
@@ -357,8 +361,8 @@ const leadLane = (lead: Lead): string => {
 // same lane values leadLane() returns, so the lost-flagged column's key must
 // also track pipelineStagesStore.lostStageName rather than a hardcoded "Lost".
 const LEAD_STATUS_FOR_LANE = computed<Record<string, LeadStatus>>(() => ({
-  Lead: 'New',
-  Qualified: 'Qualified',
+  [pipelineStagesStore.firstOpenStageName]: 'New',
+  [qualifiedLane.value]: 'Qualified',
   [pipelineStagesStore.lostStageName]: 'Disqualified',
 }))
 
@@ -400,39 +404,62 @@ const columnCounts = computed(() => {
   return result
 })
 
+// Dragging (or, on phones, picking) a Deal into the Lost stage asks why
+// first, same as the Overview Pipeline's side panel; the move only happens
+// once a reason is chosen, and cancelling leaves the card where it was.
+const lostReasonOpen = ref(false)
+const pendingLostMove = ref<{ item: Deal & { _type: 'deal' }, newStage: string, position?: number } | null>(null)
+const onConfirmLostReason = (reason: LostReason) => {
+  const pending = pendingLostMove.value
+  pendingLostMove.value = null
+  if (pending) moveDeal(pending.item, pending.newStage, pending.position, reason)
+}
+
 const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string, position?: number) => {
   if (item._type === 'deal') {
-    const originStage = item.stage
-    const stageChanged = originStage !== newStage
-    if (!stageChanged && position === undefined) return
-    try {
-      await dealsStore.updateStage(item.id, newStage as DealStage, position)
-      // A same-stage drop is just a within-lane reorder — no stage actually
-      // changed, so skip the "moved to X" toast (misleading when nothing
-      // moved between columns) and only refetch the one affected bucket.
-      if (stageChanged) success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
-      // Board state for Deals lives in `dealStageBuckets`, keyed per stage —
-      // simplest/safest way to keep both columns correct (including their
-      // header totals) after a move is to refetch each affected stage rather
-      // than hand-splice the moved card between local arrays. Origin and
-      // destination may be the same bucket in edge cases (e.g. two rapid
-      // drops), Promise.all still resolves both fine.
-      await Promise.all([
-        refetchStageDeals(originStage),
-        refetchStageDeals(newStage),
-      ])
-    } catch (err) {
-      // Nothing was mutated optimistically, so there's nothing to roll back —
-      // the card simply stays put in its origin column.
-      if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-        error(t('crm.deals.detail.contractRequiredToast'))
-      } else {
-        error(getApiErrorMessage(err, t('global.genericError')))
-      }
+    if (item.stage !== newStage && newStage === pipelineStagesStore.lostStageName) {
+      pendingLostMove.value = { item, newStage, position }
+      lostReasonOpen.value = true
+      return
     }
+    await moveDeal(item, newStage, position)
     return
   }
+  await moveLead(item, newStage, position)
+}
 
+const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, position?: number, lostReason?: LostReason) => {
+  const originStage = item.stage
+  const stageChanged = originStage !== newStage
+  if (!stageChanged && position === undefined) return
+  try {
+    await dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason)
+    // A same-stage drop is just a within-lane reorder — no stage actually
+    // changed, so skip the "moved to X" toast (misleading when nothing
+    // moved between columns) and only refetch the one affected bucket.
+    if (stageChanged) success(t('crm.deals.index.dealMovedTo', { stage: newStage }))
+    // Board state for Deals lives in `dealStageBuckets`, keyed per stage —
+    // simplest/safest way to keep both columns correct (including their
+    // header totals) after a move is to refetch each affected stage rather
+    // than hand-splice the moved card between local arrays. Origin and
+    // destination may be the same bucket in edge cases (e.g. two rapid
+    // drops), Promise.all still resolves both fine.
+    await Promise.all([
+      refetchStageDeals(originStage),
+      refetchStageDeals(newStage),
+    ])
+  } catch (err) {
+    // Nothing was mutated optimistically, so there's nothing to roll back —
+    // the card simply stays put in its origin column.
+    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
+      error(t('crm.deals.detail.contractRequiredToast'))
+    } else {
+      error(getApiErrorMessage(err, t('global.genericError')))
+    }
+  }
+}
+
+const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, position?: number) => {
   const lead = leadsStore.items.find(l => l.id === item.id)
   if (!lead) return
 
