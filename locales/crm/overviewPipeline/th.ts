@@ -134,9 +134,6 @@ export default {
     convertLeadTitle: 'แปลง Prospect นี้เป็น Lead หรือไม่?',
     convertLeadDescription: 'ระบบจะสร้าง Lead (รวมถึงบริษัทและผู้ติดต่อ หากยังไม่มี) และเปลี่ยนสถานะ Prospect เป็น Converted',
     convertConfirm: 'แปลง',
-    lostReasonTitle: 'เหตุใด Deal นี้จึงแพ้?',
-    lostReasonLabel: 'เหตุผลที่แพ้',
-    lostReasonConfirm: 'ทำเครื่องหมายว่า Lost',
   },
   print: {
     generated: 'สร้างเมื่อ {date}',

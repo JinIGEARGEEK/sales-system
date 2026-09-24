@@ -21,6 +21,12 @@ export default {
       leadConverted: 'เปลี่ยนเป็น Deal แล้ว',
     },
   },
+  lostReasonModal: {
+    title: 'เหตุใด Deal นี้จึงแพ้?',
+    label: 'เหตุผลที่แพ้',
+    confirm: 'ทำเครื่องหมายว่า Lost',
+    cancel: 'ยกเลิก',
+  },
   activityTimeline: {
     noActivity: 'ยังไม่มีกิจกรรมที่บันทึกไว้',
     by: 'โดย',

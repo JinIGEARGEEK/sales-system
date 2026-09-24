@@ -460,6 +460,11 @@ interface AppSettings {
   // defaults false). Once true, the backend blocks a Deal from moving into
   // Won unless it already has at least one Contract with status Signed.
   require_signed_contract_before_won: boolean
+  // The Monday-morning Overview Pipeline email to Admins/Sales Managers
+  // (on by default; only sends when SMTP is configured), and when it last
+  // went out (server-set).
+  weekly_digest_enabled: boolean
+  last_weekly_digest_at: string | null
   // Neither figure resets itself on a new quarter/year — this is surfaced in
   // the Admin config UI as a "last updated" hint so a stale value (e.g. last
   // year's annual goal still sitting there in February) doesn't go unnoticed.

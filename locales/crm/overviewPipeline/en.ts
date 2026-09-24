@@ -134,9 +134,6 @@ export default {
     convertLeadTitle: 'Convert this Prospect to a Lead?',
     convertLeadDescription: 'This creates a Lead (and its Company and Contact if they don\'t exist yet) and marks the Prospect as Converted.',
     convertConfirm: 'Convert',
-    lostReasonTitle: 'Why was this deal lost?',
-    lostReasonLabel: 'Loss reason',
-    lostReasonConfirm: 'Mark as Lost',
   },
   print: {
     generated: 'Generated {date}',

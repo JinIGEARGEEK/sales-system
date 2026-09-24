@@ -15,6 +15,20 @@ export const useAppSettingsStore = defineStore('appSettings', {
       this.settings = response.data.data
       return this.settings
     },
+    // GET /admin/weekly-digest/preview — Monday's email as it would go out
+    // now, without sending it.
+    async previewWeeklyDigest (): Promise<WeeklyDigestPreview> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<WeeklyDigestPreview>>('/admin/weekly-digest/preview')
+      return response.data.data
+    },
+    // POST /admin/weekly-digest/test — emails the current digest to the
+    // signed-in Admin only; returns the address it went to.
+    async sendWeeklyDigestTest (): Promise<string> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<{ sent_to: string }>>('/admin/weekly-digest/test')
+      return response.data.data.sent_to
+    },
     async update (changes: Partial<Omit<AppSettings, 'id'>>): Promise<AppSettings> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<AppSettings>>('/admin/settings', changes)

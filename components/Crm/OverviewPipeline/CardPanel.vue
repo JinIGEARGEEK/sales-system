@@ -128,30 +128,12 @@
     confirm-color="primary"
     @confirm="onConfirmConvertProspect"
   />
-  <!-- `title` (not a custom #header slot) so the dialog gets an accessible
-  name — a screen reader announces the question, not just "dialog". -->
-  <UModal v-model:open="lostReasonOpen" :title="t('crm.overviewPipeline.panel.lostReasonTitle')">
-    <template #body>
-      <InputSelect
-        v-model="lostReason"
-        :options="LOST_REASON_OPTIONS"
-        :label="t('crm.overviewPipeline.panel.lostReasonLabel')"
-        name="overviewLostReason"
-        data-cy="overview-lost-reason"
-      />
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.overviewPipeline.panel.close')" cancel @click="lostReasonOpen = false" />
-        <ButtonPrimary color="error" :label="t('crm.overviewPipeline.panel.lostReasonConfirm')" :disabled="!lostReason" @click="onConfirmLost" />
-      </div>
-    </template>
-  </UModal>
+  <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLost" />
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LOST_REASON_OPTIONS, lostReasonLabel as labelForLostReason } from '~/constants/mockData'
+import { lostReasonLabel as labelForLostReason } from '~/constants/mockData'
 import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
 import { OVERVIEW_STALE_DAYS, daysInStage, isOtherLane, isStaleCard, overviewCardStage } from '~/composables/utils/usePipelineOverview'
 
@@ -245,24 +227,21 @@ const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, 
 // record one.
 const lostReasonOpen = ref(false)
 const pendingLostStage = ref<string | null>(null)
-const lostReason = ref('')
 const onChangeStage = (stage: string) => {
   const current = props.selection
   if (!current || !stage || stage === currentStage.value || moving.value) return
   if (current.zone === 'deal' && props.zoneLanes.find(l => l.name === stage)?.kind === 'lost') {
     pendingLostStage.value = stage
-    lostReason.value = ''
     lostReasonOpen.value = true
     return
   }
   performMove(stage)
 }
-const onConfirmLost = async () => {
-  if (!pendingLostStage.value || !lostReason.value) return
+const onConfirmLost = async (reason: LostReason) => {
+  if (!pendingLostStage.value) return
   const stage = pendingLostStage.value
-  lostReasonOpen.value = false
   pendingLostStage.value = null
-  await performMove(stage, lostReason.value as LostReason)
+  await performMove(stage, reason)
 }
 
 const performMove = async (stage: string, reason?: LostReason) => {

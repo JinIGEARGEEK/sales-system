@@ -282,3 +282,16 @@ interface PipelineOverviewSelection {
   lane: PipelineOverviewLane
   card: PipelineOverviewCard
 }
+
+// GET /admin/weekly-digest/preview — the weekly Overview Pipeline email as
+// it would go out now (FR-CRM-123).
+interface WeeklyDigestPreview {
+  subject: string
+  body: string
+  recipients: string[]
+  week_from: string
+  week_to: string
+  enabled: boolean
+  smtp_configured: boolean
+  last_sent_at: string | null
+}

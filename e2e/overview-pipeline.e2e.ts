@@ -58,7 +58,7 @@ test.describe('Overview Pipeline', () => {
     const dialog = page.getByRole('dialog', { name: /Why was this deal lost/ })
     await expect(dialog).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Mark as Lost' })).toBeDisabled()
-    await dialog.locator('[role="combobox"][data-cy="overview-lost-reason"]').click()
+    await dialog.locator('[role="combobox"][data-cy="lost-reason-select"]').click()
     await page.getByRole('option', { name: 'Competitor' }).click()
     await dialog.getByRole('button', { name: 'Mark as Lost' }).click()
 

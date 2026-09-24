@@ -122,10 +122,12 @@ const originatingLead = computed(() => leadOriginId.value
   : null)
 
 // Pre-selected from the Kanban board's "add in column" click (see
-// pages/crm/deals/index.vue's onAddInColumn) — falls back to the default
-// 'Lead' stage when reached any other way (header "+ Add Deal" button,
-// direct nav, or a Lead-originated create via ?lead_id).
-const initialStage = typeof route.query.stage === 'string' ? route.query.stage : 'Lead'
+// pages/crm/deals/index.vue's onAddInColumn) — falls back to the first open
+// stage when reached any other way (header "+ Add Deal" button, direct nav,
+// or a Lead-originated create via ?lead_id). That's seeded as "Lead" but an
+// Admin can rename it, so it's resolved from the stage config (below, once
+// it loads) rather than hardcoded.
+const initialStage = typeof route.query.stage === 'string' ? route.query.stage : pipelineStagesStore.firstOpenStageName
 
 const form = reactive({
   title: '',
@@ -138,6 +140,16 @@ const form = reactive({
   assigned_to: '',
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',
+})
+// The stage list may still be loading at setup; once it lands, swap an
+// unset/stale default for the real first open stage (never overriding a
+// stage the user already picked or came in with via ?stage=).
+watch(() => pipelineStagesStore.firstOpenStageName, (first) => {
+  if (typeof route.query.stage === 'string') return
+  if (!pipelineStagesStore.activeOptions.some(o => o.value === form.stage)) {
+    form.stage = first
+    form.forecast_category = stageDefaultForecastCategory(first)
+  }
 })
 
 // Declared here (before the Lead-hydration watch below) rather than at the

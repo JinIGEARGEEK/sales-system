@@ -36,6 +36,7 @@
 
     <div v-else-if="activeTab === 'revenue'">
       <AdminPipelineConfigSalesQuotaCard />
+      <AdminPipelineConfigWeeklyDigestCard />
       <AdminPipelineConfigSalesTargetsPanel :loading="targetsLoading" />
     </div>
 
