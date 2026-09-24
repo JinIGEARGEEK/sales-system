@@ -44,8 +44,12 @@
       <template #content>
         <ul class="flex max-w-sm flex-col gap-2.5 p-3 text-xs text-(--color-dark-gray)">
           <li class="flex gap-2">
-            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="info" icon="material-symbols:arrow-upward" :label="t('crm.overviewPipeline.highlight.moved')" />
+            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="info" icon="material-symbols:swap-vert" :label="t('crm.overviewPipeline.highlight.moved')" />
             {{ movedHint }}
+          </li>
+          <li class="flex gap-2">
+            <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="error" icon="material-symbols:arrow-downward" :label="t('crm.overviewPipeline.highlight.slipped')" />
+            {{ slippedHint }}
           </li>
           <li class="flex gap-2">
             <UBadge class="h-fit shrink-0" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.highlight.stale')" />
@@ -77,7 +81,8 @@ import { OVERVIEW_STALE_DAYS, zoneOpenTotals, type OverviewDateRange, type Overv
 const props = defineProps<{
   zones: PipelineOverviewZone[]
   highlight: OverviewHighlight
-  counts: { stale: number, moved: number }
+  // Exact board-wide counts from the API (PipelineOverview.highlight).
+  counts: { stale: number, moved: number, slipped: number }
   // The selected period, quoted in the "Moved" explanation.
   period: OverviewDateRange
 }>()
@@ -92,14 +97,14 @@ const { numberFormat, dateFormat } = useFormatter()
 
 // One wording for each rule, shared by the button tooltips and the legend.
 const staleHint = computed(() => t('crm.overviewPipeline.highlight.staleHint', { days: OVERVIEW_STALE_DAYS }))
-const movedHint = computed(() => t('crm.overviewPipeline.highlight.movedHint', {
-  from: dateFormat(props.period.date_from),
-  to: dateFormat(props.period.date_to),
-}))
+const periodDates = computed(() => ({ from: dateFormat(props.period.date_from), to: dateFormat(props.period.date_to) }))
+const movedHint = computed(() => t('crm.overviewPipeline.highlight.movedHint', periodDates.value))
+const slippedHint = computed(() => t('crm.overviewPipeline.highlight.slippedHint', periodDates.value))
 
 const highlightOptions = computed(() => [
   { value: 'all', label: t('crm.overviewPipeline.highlight.all'), hint: t('crm.overviewPipeline.highlight.allHint'), icon: 'material-symbols:view-kanban-outline', count: null, badgeColor: 'neutral' as const },
   { value: 'stale', label: t('crm.overviewPipeline.highlight.stale'), hint: staleHint.value, icon: 'material-symbols:schedule-outline', count: props.counts.stale, badgeColor: 'warning' as const },
-  { value: 'moved', label: t('crm.overviewPipeline.highlight.moved'), hint: movedHint.value, icon: 'material-symbols:arrow-upward', count: props.counts.moved, badgeColor: 'info' as const },
+  { value: 'moved', label: t('crm.overviewPipeline.highlight.moved'), hint: movedHint.value, icon: 'material-symbols:swap-vert', count: props.counts.moved, badgeColor: 'info' as const },
+  { value: 'slipped', label: t('crm.overviewPipeline.highlight.slipped'), hint: slippedHint.value, icon: 'material-symbols:arrow-downward', count: props.counts.slipped, badgeColor: 'error' as const },
 ])
 </script>

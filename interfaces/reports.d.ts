@@ -208,12 +208,20 @@ interface PipelineOverviewCard {
   // The record's own stage/status value ("" if blank) — what an 'other'
   // lane card shows, since that lane's name doesn't say.
   stage: string
+  // The lane it left on its last move ("" if it never moved), and whether
+  // that move went forward or backward in the zone's lane order ("" when it
+  // can't be said, e.g. out of Lost or a retired stage).
+  previous_stage: string
+  direction: '' | 'forward' | 'backward'
 }
 
 interface PipelineOverviewLane {
   name: string
   kind: PipelineOverviewLaneKind
   terminal: boolean
+  // Days a card may sit here before it's stale (the stage's own setting,
+  // else 14); 0 on terminal lanes, which are never stale.
+  stale_days: number
   count: number
   value: number
   cards: PipelineOverviewCard[]
@@ -229,14 +237,29 @@ interface PipelineOverviewCompare {
   previous: number
 }
 
+// Of the records created in the period (cohort), how many reached the next
+// funnel step so far (converted).
+interface PipelineOverviewCohort {
+  cohort: number
+  converted: number
+}
+
 interface PipelineOverview {
   period: { date_from: string, date_to: string, prev_date_from: string, prev_date_to: string }
+  // Exact board-wide counts over every open-lane record (not just the
+  // cards returned per lane).
+  highlight: { stale: number, moved: number, slipped: number, stale_deals: number, stale_deal_value: number }
   summary: {
     new_prospects: PipelineOverviewCompare
     new_leads: PipelineOverviewCompare
     new_deals: PipelineOverviewCompare
     won: PipelineOverviewCompare & { value: number, previous_value: number }
     open_pipeline: { count: number, value: number, weighted_value: number }
+    conversion: {
+      prospect_to_lead: PipelineOverviewCohort
+      lead_to_deal: PipelineOverviewCohort
+      deal_to_won: PipelineOverviewCohort
+    }
   }
   zones: PipelineOverviewZone[]
 }

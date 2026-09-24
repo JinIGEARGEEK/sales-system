@@ -45,6 +45,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { GLASS_PANEL_UI } from '~/constants/ui'
+import { OVERVIEW_STALE_DAYS as DEFAULT_STALE_DAYS } from '~/composables/utils/usePipelineOverview'
 
 defineProps<{
   loading: boolean
@@ -67,7 +68,7 @@ const onEditStage = (row: ProspectStage) => {
   stageModalOpen.value = true
 }
 
-const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean }) => {
+const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean, is_disqualified_stage: boolean, stale_days: number | null }) => {
   try {
     if (editingStage.value) {
       await prospectStagesStore.update(editingStage.value.id, payload)
@@ -98,6 +99,11 @@ const stageRows = computed(() => [...prospectStagesStore.items]
   .map(stage => ({
     ...stage,
     flagsBadge: stage.is_disqualified_stage ? t('admin.pipelineConfig.prospectStages.disqualifiedBadge') : '-',
+    // A Disqualified stage is closed, so never stale — no threshold to show.
+    staleDaysLabel: stage.is_disqualified_stage
+      ? '—'
+      : t('admin.pipelineConfig.staleDaysValue', { days: stage.stale_days ?? DEFAULT_STALE_DAYS })
+        + (stage.stale_days ? '' : ` ${t('admin.pipelineConfig.staleDaysDefaultTag')}`),
     statusBadge: stage.is_active
       ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
       : toBadge(t('admin.pipelineConfig.statusInactive')),
@@ -107,6 +113,7 @@ const stageColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.prospectStages.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.prospectStages.columns.sortOrder'), align: 'left', field: 'sort_order' },
   { label: t('admin.pipelineConfig.prospectStages.columns.flags'), align: 'left', field: 'flagsBadge' },
+  { label: t('admin.pipelineConfig.staleDaysColumn'), align: 'left', field: 'staleDaysLabel' },
   { label: t('admin.pipelineConfig.prospectStages.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.prospectStages.columns.action'),

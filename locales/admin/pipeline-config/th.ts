@@ -17,6 +17,12 @@ export default {
     tagsHint: 'Tag มีหน้าจัดการแยกต่างหาก ใช้ร่วมกันระหว่างบริษัท ผู้ติดต่อ Lead และ Deal',
     manageTags: 'จัดการ Tag',
   },
+  staleDays: 'ถือว่าค้างเมื่อเกิน (วัน)',
+  staleDaysPlaceholder: 'ค่าเริ่มต้น: 14',
+  staleDaysHint: 'ในหน้าภาพรวมไปป์ไลน์ การ์ดที่อยู่ในขั้นตอนนี้นานกว่าจำนวนวันนี้จะถูกระบุว่าค้าง เว้นว่างไว้เพื่อใช้ 14 วัน',
+  staleDaysColumn: 'ค้างเมื่อเกิน',
+  staleDaysValue: '{days} วัน',
+  staleDaysDefaultTag: '(ค่าเริ่มต้น)',
   stages: {
     heading: 'ขั้นตอนของไปป์ไลน์',
     addStage: 'เพิ่มขั้นตอน',

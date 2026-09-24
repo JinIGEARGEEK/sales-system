@@ -17,6 +17,12 @@ export default {
     tagsHint: 'Tags are managed on their own page, shared across Companies, Contacts, Leads, and Deals.',
     manageTags: 'Manage Tags',
   },
+  staleDays: 'Stale after (days)',
+  staleDaysPlaceholder: 'Default: 14',
+  staleDaysHint: 'On the Overview Pipeline, a card in this stage longer than this is flagged stale. Leave empty for 14 days.',
+  staleDaysColumn: 'Stale after',
+  staleDaysValue: '{days} days',
+  staleDaysDefaultTag: '(default)',
   stages: {
     heading: 'Pipeline Stages',
     addStage: 'Add Stage',

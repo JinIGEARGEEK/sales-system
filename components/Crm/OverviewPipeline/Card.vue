@@ -54,13 +54,13 @@
             :label="stale ? `${t('crm.overviewPipeline.highlight.stale')} · ${t('crm.overviewPipeline.card.daysInStage', { days })}` : t('crm.overviewPipeline.card.daysInStage', { days })"
           />
         </UTooltip>
-        <UTooltip v-if="moved" :text="t('crm.overviewPipeline.card.movedOn', { stage: stageName, date: enteredOn })" :ui="MULTILINE_TOOLTIP_UI">
+        <UTooltip v-if="moved" :text="movedTooltip" :ui="MULTILINE_TOOLTIP_UI">
           <UBadge
             size="xs"
             variant="subtle"
-            color="info"
-            icon="material-symbols:arrow-upward"
-            :label="t('crm.overviewPipeline.highlight.moved')"
+            :color="card.direction === 'backward' ? 'error' : 'info'"
+            :icon="MOVE_ICONS[card.direction]"
+            :label="card.direction === 'backward' ? t('crm.overviewPipeline.highlight.slipped') : t('crm.overviewPipeline.highlight.moved')"
           />
         </UTooltip>
       </template>
@@ -99,7 +99,7 @@ const { priceFormatCompact, dateFormat } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 
 const days = computed(() => daysInStage(props.card))
-const stale = computed(() => !props.lane.terminal && isStaleCard(props.card))
+const stale = computed(() => !props.lane.terminal && isStaleCard(props.card, props.lane.stale_days))
 const moved = computed(() => !props.lane.terminal && movedInPeriod(props.card, props.period))
 // The date this record entered its current lane (falls back to created_at
 // for rows that predate stage_entered_at, same as daysInStage).
@@ -107,8 +107,21 @@ const enteredOn = computed(() => dateFormat(props.card.stage_entered_at ?? props
 const stageName = computed(() => overviewCardStage(props.card, props.lane, t))
 const stageTooltip = computed(() => t(
   stale.value ? 'crm.overviewPipeline.card.staleSince' : 'crm.overviewPipeline.card.stageSince',
-  { stage: stageName.value, date: enteredOn.value, days: days.value, limit: OVERVIEW_STALE_DAYS },
+  { stage: stageName.value, date: enteredOn.value, days: days.value, limit: props.lane.stale_days || OVERVIEW_STALE_DAYS },
 ))
+// Forward moves point up, slips point down; a move whose direction can't be
+// told (out of Lost, or from a retired stage) gets a neutral icon.
+const MOVE_ICONS: Record<PipelineOverviewCard['direction'], string> = {
+  forward: 'material-symbols:arrow-upward',
+  backward: 'material-symbols:arrow-downward',
+  '': 'material-symbols:swap-vert',
+}
+const movedTooltip = computed(() => {
+  const from = props.card.previous_stage
+  if (!from) return t('crm.overviewPipeline.card.movedOn', { stage: stageName.value, date: enteredOn.value })
+  const key = props.card.direction === 'backward' ? 'slippedFrom' : 'movedFrom'
+  return t(`crm.overviewPipeline.card.${key}`, { from, stage: stageName.value, date: enteredOn.value })
+})
 const lostReasonLabel = computed(() => (props.card.lost_reason ? labelForLostReason(props.card.lost_reason) : ''))
 const ownerName = computed(() => props.card.assigned_to ? teamMembersStore.nameById(props.card.assigned_to) : t('crm.overviewPipeline.card.unassigned'))
 const ariaLabel = computed(() => [props.card.name, props.card.company_name, stageName.value, ownerName.value].filter(Boolean).join(', '))

@@ -45,6 +45,7 @@
 import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { GLASS_PANEL_UI } from '~/constants/ui'
+import { OVERVIEW_STALE_DAYS as DEFAULT_STALE_DAYS } from '~/composables/utils/usePipelineOverview'
 
 defineProps<{
   loading: boolean
@@ -69,7 +70,7 @@ const onEditStage = (row: PipelineStage) => {
   stageModalOpen.value = true
 }
 
-const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean, is_won_stage: boolean, is_lost_stage: boolean }) => {
+const onSubmitStage = async (payload: { name: string, sort_order: number, is_active: boolean, is_won_stage: boolean, is_lost_stage: boolean, stale_days: number | null }) => {
   try {
     if (editingStage.value) {
       await pipelineStagesStore.update(editingStage.value.id, payload)
@@ -103,6 +104,11 @@ const stageRows = computed(() => [...pipelineStagesStore.items]
       stage.is_won_stage ? t('admin.pipelineConfig.stages.wonBadge') : '',
       stage.is_lost_stage ? t('admin.pipelineConfig.stages.lostBadge') : '',
     ].filter(Boolean).join(' / ') || '-',
+    // Won/Lost stages are closed, so never stale — no threshold to show.
+    staleDaysLabel: stage.is_won_stage || stage.is_lost_stage
+      ? '—'
+      : t('admin.pipelineConfig.staleDaysValue', { days: stage.stale_days ?? DEFAULT_STALE_DAYS })
+        + (stage.stale_days ? '' : ` ${t('admin.pipelineConfig.staleDaysDefaultTag')}`),
     statusBadge: stage.is_active
       ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
       : toBadge(t('admin.pipelineConfig.statusInactive')),
@@ -112,6 +118,7 @@ const stageColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.stages.columns.name'), align: 'left', field: 'name' },
   { label: t('admin.pipelineConfig.stages.columns.sortOrder'), align: 'left', field: 'sort_order' },
   { label: t('admin.pipelineConfig.stages.columns.flags'), align: 'left', field: 'flagsBadge' },
+  { label: t('admin.pipelineConfig.staleDaysColumn'), align: 'left', field: 'staleDaysLabel' },
   { label: t('admin.pipelineConfig.stages.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.stages.columns.action'),

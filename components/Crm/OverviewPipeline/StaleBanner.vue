@@ -11,7 +11,7 @@
     </span>
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-(--color-black)">
-        {{ t('crm.overviewPipeline.attention.staleDeals', { count: numberFormat(count), value: `${t('global.currencySymbol')}${priceFormatCompact(value)}`, days: OVERVIEW_STALE_DAYS }) }}
+        {{ t('crm.overviewPipeline.attention.staleDeals', { count: numberFormat(count), value: `${t('global.currencySymbol')}${priceFormatCompact(value)}` }) }}
       </p>
       <p class="text-xs text-(--color-dark-gray)">{{ t('crm.overviewPipeline.attention.staleDealsHint') }}</p>
     </div>
@@ -21,10 +21,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { OVERVIEW_STALE_DAYS } from '~/composables/utils/usePipelineOverview'
 
-// "N open deals worth ฿X have sat in the same stage for more than 14 days",
-// with a one-click way to highlight them on the board.
+// "N open deals worth ฿X have sat in their stage longer than its stale limit"
+// (exact counts from the API), with a one-click way to highlight them.
 defineProps<{
   count: number
   value: number

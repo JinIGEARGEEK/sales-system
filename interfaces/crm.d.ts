@@ -309,6 +309,8 @@ interface PipelineStage {
   is_active: boolean
   is_won_stage: boolean
   is_lost_stage: boolean
+  // Overview Pipeline stale threshold in days; null means the default (14).
+  stale_days?: number | null
   created_at: Date
 }
 
@@ -347,6 +349,8 @@ interface ProspectStage {
   sort_order: number
   is_active: boolean
   is_disqualified_stage: boolean
+  // Overview Pipeline stale threshold in days; null means the default (14).
+  stale_days?: number | null
   created_at: Date
 }
 
