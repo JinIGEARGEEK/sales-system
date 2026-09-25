@@ -41,3 +41,30 @@ test('weekly email: preview and switch', async ({ page }) => {
   await expect.poll(() => patches.length).toBe(1)
   expect(patches[0]).toEqual({ quarterly_sales_target: 3000000, annual_revenue_goal: 12000000, weekly_digest_enabled: false })
 })
+
+test('weekly email: send a test to yourself, only when SMTP is set up', async ({ page }) => {
+  let testSends = 0
+  let smtp = true
+  await signIn(page)
+  await mockApi(page, {
+    'GET /auth/me': route => json(route, ADMIN),
+    'GET /admin/settings': route => json(route, { ...SETTINGS, smtp_configured: smtp }),
+    'POST /admin/weekly-digest/test': async (route) => {
+      testSends++
+      await json(route, { sent_to: 'admin@example.com' })
+    },
+  })
+  await page.goto('/admin/pipeline-config')
+  await page.getByRole('tab', { name: /Sales Quota/ }).click()
+
+  const card = page.getByTestId('weekly-digest-card')
+  await card.getByTestId('weekly-digest-send-test').click()
+  await expect(page.getByText('Test email sent to admin@example.com').first()).toBeVisible()
+  expect(testSends).toBe(1)
+
+  smtp = false
+  await page.reload()
+  await page.getByRole('tab', { name: /Sales Quota/ }).click()
+  await expect(card.getByTestId('weekly-digest-send-test')).toBeDisabled()
+  await expect(card).toContainText('Email isn\'t configured on the server (SMTP)')
+})

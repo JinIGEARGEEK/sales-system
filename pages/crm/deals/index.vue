@@ -381,9 +381,11 @@ const leadLane = (lead: Lead): string => {
 // a real conversion — see the `else` branch of onMove below. Keyed by the
 // same lane values leadLane() returns, so the lost-flagged column's key must
 // also track pipelineStagesStore.lostStageName rather than a hardcoded "Lost".
+// With no "Qualified" stage, qualifiedLane is the first lane too; 'New' is
+// listed last so it wins there, rather than a drop promoting a Lead.
 const LEAD_STATUS_FOR_LANE = computed<Record<string, LeadStatus>>(() => ({
-  [pipelineStagesStore.firstOpenStageName]: 'New',
   [qualifiedLane.value]: 'Qualified',
+  [pipelineStagesStore.firstOpenStageName]: 'New',
   [pipelineStagesStore.lostStageName]: 'Disqualified',
 }))
 
@@ -484,7 +486,9 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
   const lead = leadsStore.items.find(l => l.id === item.id)
   if (!lead) return
 
-  const newStatus = LEAD_STATUS_FOR_LANE.value[newStage]
+  // A drop inside the Lead's own lane is a reorder: it keeps its status
+  // (e.g. Contacted, which shares the first lane with New).
+  const newStatus = leadLane(lead) === newStage ? lead.status : LEAD_STATUS_FOR_LANE.value[newStage]
   if (newStatus) {
     const statusChanged = lead.status !== newStatus
     if (!statusChanged && position === undefined) return
