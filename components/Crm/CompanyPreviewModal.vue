@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="emit('update:open', $event)">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ company?.name || t('crm.components.companyPreviewModal.title') }}</h3>
-    </template>
+  <UModal :open="open" :title="company?.name || t('crm.components.companyPreviewModal.title')" @update:open="emit('update:open', $event)">
     <template #body>
       <div v-if="company" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">

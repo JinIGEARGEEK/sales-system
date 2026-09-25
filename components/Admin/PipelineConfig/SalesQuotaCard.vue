@@ -37,11 +37,18 @@
               :open="mqlThresholdTooltipOpen"
               @update:open="mqlThresholdTooltipOpen = $event"
             >
-              <UIcon
-                name="material-symbols:info-outline"
-                class="ml-1 size-3 shrink-0 cursor-pointer align-middle text-(--color-gray)"
+              <!-- A real button (not a clickable icon) so keyboard/touch users
+              can toggle the help text too; the tooltip itself still opens on
+              hover/focus. -->
+              <button
+                type="button"
+                class="ml-1 inline-flex cursor-pointer align-middle rounded-full text-(--color-gray) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
+                :aria-label="t('admin.pipelineConfig.salesQuota.mqlThresholdHelpLabel')"
+                :aria-expanded="mqlThresholdTooltipOpen"
                 @click="mqlThresholdTooltipOpen = !mqlThresholdTooltipOpen"
-              />
+              >
+                <UIcon name="material-symbols:info-outline" class="size-3 shrink-0" aria-hidden="true" />
+              </button>
             </UTooltip>
           </template>
         </InputText>

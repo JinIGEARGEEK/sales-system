@@ -195,6 +195,7 @@ export default {
     annualGoalLabel: 'เป้าหมายรายได้รายปี',
     annualGoalHelp: 'ใช้คำนวณความคืบหน้าของเป้าหมายรายได้รายปีบนหน้า Dashboard',
     mqlThresholdLabel: 'เกณฑ์คะแนน MQL',
+    mqlThresholdHelpLabel: 'เกี่ยวกับเกณฑ์คะแนน MQL',
     mqlThresholdHelp: 'Lead ที่มีคะแนนรวมถึงค่านี้จะถูกจัดประเภทเป็น MQL',
     requireSignedContractLabel: 'ต้องมี Contract ที่เซ็นแล้วก่อนทำเครื่องหมาย Deal ว่า "Won"',
     requireSignedContractHelp: 'เมื่อเปิดใช้งาน Deal จะไม่สามารถเปลี่ยนเป็น Won ได้ (ทั้งจากบอร์ด pipeline หรือหน้ารายละเอียด) จนกว่าจะมี Contract ที่มีสถานะ Signed อย่างน้อยหนึ่งฉบับ ปิดใช้งานเป็นค่าเริ่มต้น',

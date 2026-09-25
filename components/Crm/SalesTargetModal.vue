@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ target ? t('admin.pipelineConfig.salesTargets.editTitle') : t('admin.pipelineConfig.salesTargets.addTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="target ? t('admin.pipelineConfig.salesTargets.editTitle') : t('admin.pipelineConfig.salesTargets.addTitle')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

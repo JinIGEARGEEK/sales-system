@@ -1,19 +1,23 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ t('crm.components.importModal.title') }}</h3>
-    </template>
+  <!-- Not dismissible mid-import: closing would hide an in-flight loop that
+  keeps creating records in the background. -->
+  <UModal
+    :open="open"
+    :title="t('crm.components.importModal.title')"
+    :description="t('crm.components.importModal.description')"
+    :dismissible="!importing"
+    :close="!importing"
+    @update:open="onUpdateOpen"
+  >
     <template #body>
       <div class="flex flex-col gap-4">
-        <p class="text-sm text-(--color-gray)">{{ t('crm.components.importModal.description') }}</p>
-
         <label
           class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
         >
           <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
           <span class="text-sm font-medium">{{ fileName || t('crm.components.importModal.chooseFile') }}</span>
           <span class="text-xs text-(--color-gray)">{{ t('crm.components.importModal.acceptedFormats') }}</span>
-          <input type="file" accept=".csv,.xls,.xlsx" class="hidden" @change="onFileChange" >
+          <input type="file" accept=".csv,.xls,.xlsx" class="hidden" :disabled="importing" @change="onFileChange" >
         </label>
 
         <UAlert
@@ -36,10 +40,13 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.importModal.cancel')" cancel @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.importModal.cancel')" cancel :disabled="importing" @click="onUpdateOpen(false)" />
         <ButtonPrimary
           :label="t('crm.components.importModal.confirmImport')"
-          :disabled="!preview || preview.newCompanies + preview.newContacts === 0"
+          :disabled="importing || !preview || preview.newCompanies + preview.newContacts === 0"
+          :loading="importing"
+          :loading-auto="false"
+          data-cy="import-contacts-confirm"
           @click="onConfirm"
         />
       </div>
@@ -236,7 +243,15 @@ const buildNotes = (row: ParsedRow) => {
   return lines.join('\n')
 }
 
+// Re-entry guard for the sequential create loop below: without it, a double
+// click on Import (or a click while a previous run is still going) starts a
+// second loop that races the first — both see a company as not-yet-existing
+// and both create it, leaving duplicates.
+const importing = ref(false)
+
 const onConfirm = async () => {
+  if (importing.value) return
+  importing.value = true
   let companiesCreated = 0
   let contactsCreated = 0
 
@@ -290,6 +305,8 @@ const onConfirm = async () => {
     // and retry (re-running is safe: findByName/alreadyLinked skip repeats).
     notifyApiError(err)
     return
+  } finally {
+    importing.value = false
   }
 
   emit('imported', { companies: companiesCreated, contacts: contactsCreated })

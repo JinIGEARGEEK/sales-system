@@ -39,9 +39,15 @@ export default {
   table: {
     selectAll: 'เลือกทั้งหมด',
     actions: 'การจัดการ',
+    empty: {
+      filteredTitle: 'ไม่พบรายการที่ตรงกับตัวกรอง',
+      filteredDescription: 'ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูรายการทั้งหมด',
+      clearFilters: 'ล้างตัวกรอง',
+    },
     pagination: {
       allItem: 'ทั้งหมด',
       rowPerPage: 'แถวต่อหน้า',
+      goToPage: 'ไปที่หน้า',
     },
   },
   input: {

@@ -13,6 +13,7 @@
         <USelect
           v-model="perPage"
           :items="perPageOptions"
+          :aria-label="$t('global.table.pagination.rowPerPage')"
           class="w-20"
           @update:model-value="emit('changePerPage', $event)"
         />
@@ -24,21 +25,26 @@
         v-if="props.totalPage > 1"
         class="flex items-center gap-x-1"
       >
-        <div
+        <button
+          type="button"
+          :aria-label="$t('global.previous')"
+          :disabled="disabledChevronLeft"
+          data-cy="pagination-prev"
           :class="[
-            'flex items-center justify-center rounded-full w-7 h-7',
-            { 'hover:bg-(--color-light-gray-2) cursor-pointer': !disabledChevronLeft }
+            'flex items-center justify-center rounded-full w-7 h-7 focus-visible:outline-2 focus-visible:outline-(--color-primary)',
+            disabledChevronLeft ? 'cursor-default' : 'hover:bg-(--color-light-gray-2) cursor-pointer'
           ]"
           @click="onPrevPage"
         >
           <UIcon
             name="material-symbols:chevron-left"
+            aria-hidden="true"
             :class="[
               'text-(--color-gray)',
               { 'text-(--color-light-gray-2)': disabledChevronLeft }
             ]"
           />
-        </div>
+        </button>
         <!-- Direct page entry — only worth showing once there are enough pages
         that clicking through one-at-a-time would actually be tedious. -->
         <UInput
@@ -46,25 +52,31 @@
           v-model="pageJumpInput"
           class="w-12"
           size="xs"
+          :aria-label="$t('global.table.pagination.goToPage')"
           :ui="{ base: 'text-center px-1' }"
           @keyup.enter="onJumpToPage"
           @blur="onJumpToPage"
         />
-        <div
+        <button
+          type="button"
+          :aria-label="$t('global.next')"
+          :disabled="disabledChevronRight"
+          data-cy="pagination-next"
           :class="[
-            'flex items-center justify-center rounded-full w-7 h-7',
-            { 'hover:bg-(--color-light-gray-2) cursor-pointer': !disabledChevronRight }
+            'flex items-center justify-center rounded-full w-7 h-7 focus-visible:outline-2 focus-visible:outline-(--color-primary)',
+            disabledChevronRight ? 'cursor-default' : 'hover:bg-(--color-light-gray-2) cursor-pointer'
           ]"
           @click="onNextPage"
         >
           <UIcon
             name="material-symbols:chevron-right"
+            aria-hidden="true"
             :class="[
               'text-(--color-gray)',
               { 'text-(--color-light-gray-2)': disabledChevronRight }
             ]"
           />
-        </div>
+        </button>
       </div>
     </div>
   </div>

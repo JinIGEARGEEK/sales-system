@@ -1,11 +1,15 @@
 <template>
   <div class="flex h-screen bg-linear-to-br from-[var(--color-app-shell-gradient-from)] via-[var(--color-app-shell-gradient-via)] to-[var(--color-app-shell-gradient-to)]">
-    <USlideover v-model:open="drawer" side="left" class="md:hidden">
-      <template #header>
+    <!-- The logo goes in the #title slot (not a custom #header) so it renders
+    inside Reka's DialogTitle and the drawer has an accessible name
+    ("CRM System, Navigation menu") instead of an unnamed dialog. -->
+    <USlideover v-model:open="drawer" side="left" class="md:hidden" :ui="{ title: 'font-normal' }">
+      <template #title>
         <NuxtLink to="/" class="flex items-center gap-2" @click="drawer = false">
           <UIcon name="material-symbols:hub-outline" class="size-5 text-yellow-400" />
           <span class="text-lg font-medium">CRM System</span>
         </NuxtLink>
+        <span class="sr-only">, {{ t('layout.navigationMenu') }}</span>
       </template>
       <template #body>
         <nav class="flex flex-col gap-1 p-2">

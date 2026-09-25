@@ -1,10 +1,6 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ title || (project ? t('crm.components.addProjectModal.editTitle') : t('crm.components.addProjectModal.title')) }}</h3>
-    </template>
+  <UModal :open="open" :title="title || (project ? t('crm.components.addProjectModal.editTitle') : t('crm.components.addProjectModal.title'))" :description="description" @update:open="onUpdateOpen">
     <template #body>
-      <p v-if="description" class="mb-3 text-sm text-(--color-gray)">{{ description }}</p>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
           <InputCompanySelect

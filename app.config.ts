@@ -65,6 +65,13 @@ export default defineAppConfig({
       slots: {
         overlay: 'fixed inset-0 bg-black/70 backdrop-blur-sm',
         content: 'bg-white/70 backdrop-blur-2xl divide-y divide-white/50 ring-0! shadow-[0_25px_50px_-12px_rgba(0,0,0,0.45),inset_0_2px_0_0_rgba(255,255,255,1),inset_2px_0_0_0_rgba(255,255,255,0.8)]!',
+        // Modals pass their heading via the `title` (and `description`)
+        // props rather than a custom #header slot, so Reka renders a real
+        // DialogTitle/DialogDescription and the dialog gets an accessible
+        // name (aria-labelledby). These match the `<h3 class="text-lg
+        // font-medium">` / gray subtitle the old custom headers used.
+        title: 'text-lg font-medium',
+        description: 'mt-1 text-sm text-(--color-gray)',
       },
     },
     /*

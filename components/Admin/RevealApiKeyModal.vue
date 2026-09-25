@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" :close="false" :dismissible="false" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ t('admin.apiKeys.index.revealTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="t('admin.apiKeys.index.revealTitle')" :close="false" :dismissible="false" @update:open="onUpdateOpen">
     <template #body>
       <div class="flex flex-col gap-3">
         <UAlert

@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ t('crm.components.addAttachmentModal.title') }}</h3>
-    </template>
+  <UModal :open="open" :title="t('crm.components.addAttachmentModal.title')" @update:open="onUpdateOpen">
     <template #body>
       <div class="flex flex-col gap-3">
         <div class="flex gap-2">

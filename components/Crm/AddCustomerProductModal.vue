@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ record ? t('crm.components.addCustomerProductModal.editTitle') : t('crm.components.addCustomerProductModal.title') }}</h3>
-    </template>
+  <UModal :open="open" :title="record ? t('crm.components.addCustomerProductModal.editTitle') : t('crm.components.addCustomerProductModal.title')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">

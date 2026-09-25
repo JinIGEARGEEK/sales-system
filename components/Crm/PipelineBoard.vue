@@ -83,7 +83,8 @@
         <button
           v-if="allowQuickAdd"
           type="button"
-          class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
+          :data-cy="`pipeline-add-${column.value}`"
+          class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
           @click="emitAddInColumn(column.value)"
         >
           <UIcon name="material-symbols:add" class="size-4" />
@@ -240,7 +241,10 @@ const emitAddInColumn = (value: string | number) => emit('addInColumn', String(v
 // or the mobile lane, which has no leftover background to click below its
 // last card) — fires on any click that lands on the lane container itself
 // rather than bubbling up from a card, whether the lane is empty or just has
-// blank space below its cards.
+// blank space below its cards. Mouse-only convenience by design: the lane
+// background isn't focusable, and keyboard/screen-reader users get the same
+// action from the always-rendered static "+ Add" <button> at the bottom of
+// every lane (plus the focusable "insert here" gaps between cards).
 const onEmptyAreaClick = (value: string | number) => {
   if (props.allowQuickAdd) emitAddInColumn(value)
 }

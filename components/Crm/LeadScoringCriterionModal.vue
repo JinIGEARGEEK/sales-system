@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ criterion ? t('admin.pipelineConfig.leadScoring.editTitle') : t('admin.pipelineConfig.leadScoring.addTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="criterion ? t('admin.pipelineConfig.leadScoring.editTitle') : t('admin.pipelineConfig.leadScoring.addTitle')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
