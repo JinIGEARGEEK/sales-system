@@ -1,10 +1,13 @@
 <template>
-  <div class="flex gap-2">
+  <!-- One scrollable row on narrow screens: labels never wrap ("All Status"
+  used to break onto two lines inside its pill on mobile); the group scrolls
+  sideways instead, with the scrollbar chrome hidden like other tab strips. -->
+  <div class="flex min-w-0 max-w-full gap-2 overflow-x-auto scrollbar-hide">
     <button
       v-for="option in options"
       :key="option.value"
       type="button"
-      class="inline-flex h-8 items-center gap-1.5 rounded-(--ui-radius) border px-3 text-sm cursor-pointer transition-colors"
+      class="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-(--ui-radius) border px-3 text-sm cursor-pointer transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--color-primary)"
       :class="isActive(option)
         ? 'border-(--color-primary) bg-(--color-primary-bg) text-(--color-primary)'
         : 'border-(--color-light-gray-2) bg-white text-(--color-black) hover:bg-(--color-light-gray-1)'"

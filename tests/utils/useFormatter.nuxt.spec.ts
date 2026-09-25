@@ -1,7 +1,32 @@
 import { describe, it, expect } from 'vitest'
 
 describe('useFormatter', () => {
-  const { phoneFormat, priceFormat, numberFormat, severityColor, parseTags, toDateInputValue } = useFormatter()
+  const { dateFormat, dateTimeFormat, localeYear, fromLocaleYear, phoneFormat, priceFormat, numberFormat, severityColor, parseTags, toDateInputValue } = useFormatter()
+
+  describe('dateFormat / dateTimeFormat', () => {
+    it('formats a date in the Buddhist era with a 4-digit year', () => {
+      expect(dateFormat('2026-09-25')).toBe('25/09/2569')
+    })
+
+    it('formats a date-time with the same Buddhist-era 4-digit year as dateFormat', () => {
+      expect(dateTimeFormat(new Date(2026, 8, 25, 14, 5))).toBe('25/09/2569 14:05')
+    })
+  })
+
+  describe('localeYear / fromLocaleYear', () => {
+    it('shows the Buddhist-era year in the Thai locale', () => {
+      expect(localeYear(2026, 'th')).toBe(2569)
+    })
+
+    it('leaves the Gregorian year unchanged in other locales', () => {
+      expect(localeYear(2026, 'en')).toBe(2026)
+    })
+
+    it('round-trips a displayed year back to the Gregorian year', () => {
+      expect(fromLocaleYear(localeYear(2026, 'th'), 'th')).toBe(2026)
+      expect(fromLocaleYear(2026, 'en')).toBe(2026)
+    })
+  })
 
   describe('phoneFormat', () => {
     it('formats a plain 10-digit mobile number as xxx-xxx-xxxx', () => {

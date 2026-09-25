@@ -37,6 +37,11 @@ export default {
     confirmBodyFallback: 'Are you sure you want to delete this item? This action cannot be undone.',
     cancel: 'Cancel',
     delete: 'Confirm',
+    trashTitle: 'Move to Trash',
+    trashBody: 'Move "{name}" to Trash?',
+    trashBodyFallback: 'Move this item to Trash?',
+    trashHint: 'An Admin or Sales Manager can restore it from Trash.',
+    moveToTrash: 'Move to Trash',
   },
   companyPreviewModal: {
     title: 'Company',

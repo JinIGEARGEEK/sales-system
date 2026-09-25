@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ t('crm.quotes.detail.saveAsTemplateTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="t('crm.quotes.detail.saveAsTemplateTitle')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <InputText

@@ -42,12 +42,20 @@ const lang = {
   table: {
     selectAll: 'Select All',
     actions: 'Actions',
+    empty: {
+      filteredTitle: 'No results match your filters',
+      filteredDescription: 'Try a different search, or clear the filters to see everything.',
+      clearFilters: 'Clear filters',
+    },
     pagination: {
       allItem: 'Total',
       rowPerPage: 'Rows per page',
+      goToPage: 'Go to page',
     },
   },
   input: {
+    datePlaceholder: 'DD/MM/YYYY',
+    dateRangePlaceholder: 'DD/MM/YYYY - DD/MM/YYYY',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     searching: 'Searching...',
