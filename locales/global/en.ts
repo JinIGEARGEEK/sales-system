@@ -55,6 +55,19 @@ const lang = {
   },
   sessionExpired: 'Your session has expired. Please sign in again.',
   unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
+  leaveConfirm: {
+    title: 'Discard unsaved changes?',
+    stay: 'Keep editing',
+    leave: 'Discard & leave',
+  },
+  undoDelete: {
+    deleted: '{name} moved to Trash',
+    undo: 'Undo',
+    restored: '{name} restored',
+  },
+  moreFilters: 'More filters',
+  unnamedCompany: '(Unnamed company)',
+  fewerFilters: 'Fewer filters',
   draftFound: 'We found a draft you didn\'t finish. Restore it?',
   draftRestore: 'Restore draft',
 }
