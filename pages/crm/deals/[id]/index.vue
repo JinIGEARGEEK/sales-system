@@ -255,12 +255,12 @@ watch(deal, (value) => {
   if (value) projectsStore.fetchForCompany(value.company_id).catch(notifyApiError)
 }, { immediate: true })
 
-const { companyName: displayCompanyName, isUnnamed: isUnnamedCompany } = useCompanyName()
+const { companyLabelById, isUnnamed: isUnnamedCompany } = useCompanyName()
 const linkedCompany = computed(() => deal.value ? companiesStore.items.find(c => c.id === deal.value!.company_id) : undefined)
 // A Company converted from a Prospect with no linked company has an empty
 // name (backend convert.go) — show a muted placeholder instead of a blank link.
 const companyNameBlank = computed(() => Boolean(linkedCompany.value) && isUnnamedCompany(linkedCompany.value!.name))
-const companyName = computed(() => linkedCompany.value ? displayCompanyName(linkedCompany.value.name) : '-')
+const companyName = computed(() => companyLabelById(deal.value?.company_id))
 const contactName = computed(() => deal.value ? contactsStore.items.find(c => c.id === deal.value!.contact_id)?.name || '-' : '-')
 
 const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)

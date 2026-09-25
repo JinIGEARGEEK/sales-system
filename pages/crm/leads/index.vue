@@ -127,7 +127,7 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
@@ -266,14 +266,6 @@ watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFr
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
-// nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
-// with a blank name (created by converting a company-less Prospect) gets the
-// "(Unnamed company)" placeholder instead of an empty cell.
-const companyLabel = (id: number | null | undefined) => {
-  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
-  return company ? companyName(company.name) : '-'
-}
-
 // Lead Scoring is optional (FR-CRM-006) — with no active criteria every Lead
 // scores 0, and a column of "0" badges is just noise. Admins can read the
 // criteria list (GET /admin/lead-scoring-criteria is adminOnly), so for them
@@ -294,7 +286,7 @@ const displayRows = computed(() => {
     classificationBadge: classificationBadge(lead),
     createdDate: dateFormat(lead.created_at.toISOString()),
     assignedToName: teamMembersStore.nameById(lead.assigned_to),
-    companyName: companyLabel(lead.company_id),
+    companyName: companyLabelById(lead.company_id),
   }))
 })
 

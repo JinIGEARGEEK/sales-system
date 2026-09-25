@@ -81,7 +81,7 @@
         <template v-if="item._type === 'deal'">
           <div>
             <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
             {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
@@ -105,7 +105,7 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -148,7 +148,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.deals.index.pageTitle') })
 
 const { priceFormatCompact } = useFormatter()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -315,15 +315,6 @@ watch([search, viewMode], ([, mode], previous) => {
     }, 400)
   }
 })
-
-// nameById's own '-' stays for a Company not loaded yet (or no Company at
-// all — Lead cards); a loaded Company with a blank name (created by
-// converting a company-less Prospect) gets the "(Unnamed company)"
-// placeholder instead.
-const companyLabel = (id: number | null | undefined) => {
-  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
-  return company ? companyName(company.name) : '-'
-}
 
 const stageFilterOptions = computed(() => [
   { label: t('crm.dashboard.allStages'), value: 'all' },
