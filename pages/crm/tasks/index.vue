@@ -317,11 +317,15 @@ const toggleSelectMode = () => {
   selectedIds.value = []
 }
 
-// Each group's TaskList only knows its own rows, so its "select all" emits
-// just that group's selection — merge it with the other groups' picks.
-const onGroupSelection = (groupTasks: Task[], groupSelection: number[]) => {
+// Each group's TaskList only knows its own rows (its "select all" covers just
+// that group), so take this group's part of what it emitted and keep every
+// other group's picks as they were.
+const onGroupSelection = (groupTasks: Task[], emitted: number[]) => {
   const groupIds = new Set(groupTasks.map(task => task.id))
-  selectedIds.value = [...selectedIds.value.filter(id => !groupIds.has(id)), ...groupSelection]
+  selectedIds.value = [
+    ...selectedIds.value.filter(id => !groupIds.has(id)),
+    ...emitted.filter(id => groupIds.has(id)),
+  ]
 }
 
 // A filter/search change can drop a selected task out of view entirely —
