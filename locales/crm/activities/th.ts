@@ -10,8 +10,6 @@ export default {
     stageChangeSubject: 'เปลี่ยนสถานะ: {from} → {to}',
     stageChangeSubjectNoFrom: 'กำหนดสถานะ: {to}',
     stageChangeSubjectUnknown: 'เปลี่ยนสถานะ',
-    moreFilters: 'ตัวกรองเพิ่มเติม',
-    fewerFilters: 'ซ่อนตัวกรอง',
     clearFilters: 'ล้างตัวกรอง',
     emptyTitle: 'ยังไม่มีกิจกรรม',
     emptyDescription: 'บันทึกการโทร อีเมล หรือการประชุม เพื่อเริ่มต้นไทม์ไลน์',

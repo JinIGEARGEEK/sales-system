@@ -10,8 +10,6 @@ export default {
     stageChangeSubject: 'Stage changed: {from} → {to}',
     stageChangeSubjectNoFrom: 'Stage set: {to}',
     stageChangeSubjectUnknown: 'Stage changed',
-    moreFilters: 'More filters',
-    fewerFilters: 'Fewer filters',
     clearFilters: 'Clear filters',
     emptyTitle: 'No activities yet',
     emptyDescription: 'Log a call, email or meeting to start the timeline.',

@@ -30,10 +30,7 @@
         <div class="w-full sm:w-40">
           <InputSelect v-model="statusFilter" :options="TASK_STATUS_FILTER_OPTIONS" name="statusFilter" />
         </div>
-        <!-- Secondary filters: always shown from sm up; on a phone they sit
-        behind the "More filters (n)" toggle below, the same pattern as the
-        dashboard's filter bar. -->
-        <div :class="showMoreFilters ? 'contents' : 'hidden sm:contents'">
+        <CrmMoreFilters :count="secondaryFilterCount">
           <div class="w-full sm:w-48">
             <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" name="assigneeFilter" />
           </div>
@@ -53,31 +50,17 @@
               name="campaignFilter"
             />
           </div>
-        </div>
-        <div class="flex gap-2 sm:contents">
-          <UButton
-            class="sm:hidden"
-            :label="showMoreFilters ? t('crm.tasks.index.fewerFilters') : t('crm.tasks.index.moreFilters')"
-            :icon="showMoreFilters ? 'material-symbols:expand-less' : 'material-symbols:tune'"
-            variant="subtle"
-            color="primary"
-            data-cy="tasks-more-filters"
-            @click="showMoreFilters = !showMoreFilters"
-          >
-            <template v-if="secondaryFilterCount > 0" #trailing>
-              <UBadge :label="secondaryFilterCount" size="xs" color="primary" variant="solid" />
-            </template>
-          </UButton>
-          <UButton
-            v-if="hasActiveFilters"
-            icon="material-symbols:filter-alt-off-outline"
-            variant="outline"
-            color="neutral"
-            :label="t('crm.tasks.index.clearFilters')"
-            data-cy="tasks-clear-filters"
-            @click="clearFilters"
-          />
-        </div>
+        </CrmMoreFilters>
+        <UButton
+          v-if="hasActiveFilters"
+          class="self-start"
+          icon="material-symbols:filter-alt-off-outline"
+          variant="outline"
+          color="neutral"
+          :label="t('crm.tasks.index.clearFilters')"
+          data-cy="tasks-clear-filters"
+          @click="clearFilters"
+        />
       </div>
     </UCard>
 
@@ -85,13 +68,12 @@
       <div v-if="initialLoading" class="flex flex-col gap-2">
         <USkeleton v-for="i in 5" :key="`task-skeleton-${i}`" class="h-14 w-full rounded-lg" />
       </div>
-      <CrmListEmptyState
+      <TableEmpty
         v-else-if="totalCount === 0"
         icon="material-symbols:task-alt"
-        :title="hasActiveFilters ? t('crm.tasks.index.emptyFilteredTitle') : t('crm.tasks.index.emptyTitle')"
-        :description="hasActiveFilters ? t('crm.tasks.index.emptyFilteredDescription') : t('crm.tasks.index.emptyDescription')"
+        :title="t('crm.tasks.index.emptyTitle')"
+        :description="t('crm.tasks.index.emptyDescription')"
         :action-label="t('crm.tasks.index.addTask')"
-        :clear-filters-label="t('crm.tasks.index.clearFilters')"
         :filtered="hasActiveFilters"
         @action="openAddTask"
         @clear-filters="clearFilters"
@@ -202,7 +184,6 @@ const campaignFilterOptions = computed<Select[]>(() => [
   ...campaignsStore.items.map(campaign => ({ label: campaign.name, value: String(campaign.id) })),
 ])
 
-const showMoreFilters = ref(false)
 const secondaryFilterCount = computed(() => [assigneeFilter, businessUnitFilter, campaignFilter].filter(f => f.value !== 'all').length)
 const hasActiveFilters = computed(() => Boolean(search.value) || statusFilter.value !== 'pending' || secondaryFilterCount.value > 0)
 const clearFilters = () => {

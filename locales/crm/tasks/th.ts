@@ -29,12 +29,8 @@ export default {
       done: 'เสร็จแล้ว',
     },
     showMore: 'แสดงเพิ่ม (อีก {count} รายการ)',
-    moreFilters: 'ตัวกรองเพิ่มเติม',
-    fewerFilters: 'ซ่อนตัวกรอง',
     clearFilters: 'ล้างตัวกรอง',
     emptyTitle: 'ยังไม่มีงาน',
     emptyDescription: 'เพิ่มงานติดตามเพื่อไม่ให้พลาดสิ่งที่ต้องทำต่อไป',
-    emptyFilteredTitle: 'ไม่พบงานที่ตรงกับตัวกรอง',
-    emptyFilteredDescription: 'ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูงานทั้งหมด',
   },
 }

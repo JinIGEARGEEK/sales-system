@@ -18,9 +18,7 @@
           <div class="flex-1 sm:min-w-56">
             <InputText v-model="search" :placeholder="t('crm.activities.index.searchPlaceholder')" name="search" />
           </div>
-          <!-- Secondary filters: always shown from sm up, behind the "More
-          filters (n)" toggle on a phone (same pattern as the dashboard). -->
-          <div :class="showMoreFilters ? 'contents' : 'hidden sm:contents'">
+          <CrmMoreFilters :count="secondaryFilterCount">
             <div class="w-full sm:w-48">
               <InputSelect
                 v-model="typeFilter"
@@ -37,31 +35,17 @@
                 name="relatedTypeFilter"
               />
             </div>
-          </div>
-          <div class="flex gap-2 sm:contents">
-            <UButton
-              class="sm:hidden"
-              :label="showMoreFilters ? t('crm.activities.index.fewerFilters') : t('crm.activities.index.moreFilters')"
-              :icon="showMoreFilters ? 'material-symbols:expand-less' : 'material-symbols:tune'"
-              variant="subtle"
-              color="primary"
-              data-cy="activities-more-filters"
-              @click="showMoreFilters = !showMoreFilters"
-            >
-              <template v-if="secondaryFilterCount > 0" #trailing>
-                <UBadge :label="secondaryFilterCount" size="xs" color="primary" variant="solid" />
-              </template>
-            </UButton>
-            <UButton
-              v-if="hasActiveFilters"
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              :label="t('crm.activities.index.clearFilters')"
-              data-cy="activities-clear-filters"
-              @click="clearFilters"
-            />
-          </div>
+          </CrmMoreFilters>
+          <UButton
+            v-if="hasActiveFilters"
+            class="self-start"
+            icon="material-symbols:filter-alt-off-outline"
+            variant="outline"
+            color="neutral"
+            :label="t('crm.activities.index.clearFilters')"
+            data-cy="activities-clear-filters"
+            @click="clearFilters"
+          />
         </div>
       </UCard>
 
@@ -127,7 +111,6 @@ const search = useQuerySyncedRef('search', '', 400)
 const typeFilter = useQuerySyncedRef('type')
 const relatedTypeFilter = useQuerySyncedRef('related_type')
 
-const showMoreFilters = ref(false)
 const secondaryFilterCount = computed(() => [typeFilter, relatedTypeFilter].filter(f => f.value !== 'all').length)
 const hasActiveFilters = computed(() => Boolean(search.value) || secondaryFilterCount.value > 0)
 const clearFilters = () => {
