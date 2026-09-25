@@ -34,7 +34,6 @@ export default {
       viewLead: 'View Lead',
       delete: 'Delete',
     },
-    deleteSuccess: 'Prospect deleted',
   },
   create: {
     pageTitle: 'Add Prospect',

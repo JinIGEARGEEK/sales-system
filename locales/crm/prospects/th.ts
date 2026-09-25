@@ -34,7 +34,6 @@ export default {
       viewLead: 'ดู Lead',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบ Prospect สำเร็จ',
   },
   create: {
     pageTitle: 'เพิ่ม Prospect',

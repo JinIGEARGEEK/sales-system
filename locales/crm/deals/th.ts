@@ -34,7 +34,6 @@ export default {
       edit: 'แก้ไข',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบ Deal สำเร็จ',
   },
   create: {
     pageTitle: 'เพิ่ม Deal',

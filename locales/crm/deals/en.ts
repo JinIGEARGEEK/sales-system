@@ -34,7 +34,6 @@ export default {
       edit: 'Edit',
       delete: 'Delete',
     },
-    deleteSuccess: 'Deal deleted',
   },
   create: {
     pageTitle: 'Add Deal',
