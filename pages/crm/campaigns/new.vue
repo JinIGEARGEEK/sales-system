@@ -193,11 +193,7 @@ const defaultDueDate = computed(() => {
 const defaultAssignedTo = computed(() => (userStore.id ? String(userStore.id) : ''))
 
 // --- Step 3: confirm -------------------------------------------------------
-// `form` is optional: CrmCampaignTaskSetupForm currently only exposes
-// `submit`, so its own fields (task title/description/etc.) are tracked only
-// once it also exposes `form` — until then the guard below covers this page's
-// own Step-1 targeting choices.
-const setupForm = ref<{ submit: () => void, form?: unknown } | null>(null)
+const setupForm = ref<{ submit: () => void, form: unknown } | null>(null)
 const submitting = ref(false)
 
 const { markClean } = useUnsavedChangesGuard(() => [entityType.value, staleDays.value, hasWonDealOnly.value, entitySearch.value, setupForm.value?.form])
