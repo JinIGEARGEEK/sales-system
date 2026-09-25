@@ -229,7 +229,6 @@ const projectsStore = useProjectsStore()
 onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
-  if (tasksStore.items.length === 0) tasksStore.fetchAll().catch(notifyFetchError)
   // Scoped to Production only — no other role sees this widget, and
   // fetchAll's per_page:1000 cross-company pull isn't worth firing for
   // everyone just to sit unused.
@@ -401,32 +400,40 @@ const isAnnualGoalOnTrack = computed(() => {
 const UPCOMING_TASKS_LIMIT = 6
 const { resolveRelated } = useRelatedRecord()
 
-// Deal/Contact/Company-linked tasks resolve to pages nav-hides from
-// Production (outside SALES_PIPELINE_ROLES) — previously this widget
-// surfaced them to every role regardless, so a Marketing/Production user
-// could click straight into a Deal detail page with no nav trail back.
-// Prospect-linked tasks stay visible to PROSPECT_ROLES (Marketing owns that
-// entity) — gated on that, not just "not a pipeline role", since Production
-// is also outside SALES_PIPELINE_ROLES but isn't in PROSPECT_ROLES either;
-// the previous `|| task.related_type === 'prospect'` had no role check at
-// all, so a Production viewer with any prospect-linked task in the shared
-// tasksStore.pending list would still have it resolveRelated()'d below —
-// hitting GET /prospects/:id, which 403s for Production (not a PROSPECT_ROLES
-// member) and surfaced as a stray error toast on an otherwise-unrelated page
-// load. Production has no task-linked entity of its own (Tasks aren't tied
-// to Projects), so it now correctly sees none here.
+// Deal/Contact/Company-linked tasks open pages outside Marketing/Production's
+// nav, so a role without the pipeline widgets only sees Prospect-linked tasks
+// (and only if it can see Prospects at all — Production sees none). Its own
+// server query, soonest due first: the store's task cache only holds whatever
+// records' Tasks tabs were opened, not the team's pending tasks.
+const upcomingTaskRows = ref<Task[]>([])
+const fetchUpcomingTasks = async () => {
+  if (!canViewSalesPipelineWidgets.value && !canViewProspectSummary.value) {
+    upcomingTaskRows.value = []
+    return
+  }
+  try {
+    const { items } = await tasksStore.fetchList({
+      status: 'pending',
+      sort: 'due_date',
+      per_page: UPCOMING_TASKS_LIMIT,
+      ...(canViewSalesPipelineWidgets.value ? {} : { related_type: 'prospect' }),
+    })
+    upcomingTaskRows.value = items
+  } catch (err) {
+    notifyFetchError(err)
+  }
+}
+// Role resolution can land after mount (hydrate-auth.client.ts).
+watch([canViewSalesPipelineWidgets, canViewProspectSummary], fetchUpcomingTasks, { immediate: true })
+
 const upcomingTasks = computed(() => {
-  const now = Date.now()
-  return tasksStore.pending
-    .filter(task => canViewSalesPipelineWidgets.value || (canViewProspectSummary.value && task.related_type === 'prospect'))
-    .map(task => ({
-      ...task,
-      ...resolveRelated(task.related_type, task.related_id),
-      isOverdue: isTaskOverdue(task, now),
-      assignedToName: teamMembersStore.nameById(task.assigned_to),
-    }))
-    .sort((a, b) => a.due_date.getTime() - b.due_date.getTime())
-    .slice(0, UPCOMING_TASKS_LIMIT)
+  const now = new Date()
+  return upcomingTaskRows.value.map(task => ({
+    ...task,
+    ...resolveRelated(task.related_type, task.related_id),
+    isOverdue: isTaskOverdue(task, now),
+    assignedToName: teamMembersStore.nameById(task.assigned_to),
+  }))
 })
 
 // ── My day (2026-09-25) ─────────────────────────────────────────

@@ -234,7 +234,12 @@ watch(search, () => {
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(fetch, 400)
 })
-watch([statusFilter, assigneeFilter, businessUnitFilter, campaignFilter], () => fetch())
+// A filter change fetches at once — and supersedes a pending search fetch
+// (Clear filters resets both in the same tick).
+watch([statusFilter, assigneeFilter, businessUnitFilter, campaignFilter], () => {
+  clearTimeout(searchDebounce)
+  fetch()
+})
 
 const enrich = (tasks: Task[]) => tasks.map(task => ({
   ...task,

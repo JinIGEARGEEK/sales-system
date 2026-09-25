@@ -2,7 +2,7 @@
   <div class="mb-8" data-cy="dashboard-my-day">
     <DashboardSectionHeader
       :title="t('crm.dashboard.sectionMyDay')"
-      link-to="/crm/tasks"
+      :link-to="myTasksLink"
       :link-text="t('crm.dashboard.myDayAllTasks')"
     />
 
@@ -28,7 +28,7 @@
           <NuxtLink
             v-for="task in tasks"
             :key="task.id"
-            :to="task.path || '/crm/tasks'"
+            :to="task.path || myTasksLink"
             class="flex items-center justify-between gap-3 rounded-lg border border-(--color-light-gray-2) px-4 py-2.5 hover:bg-(--color-light-gray-1)"
           >
             <div class="min-w-0">
@@ -41,7 +41,7 @@
           </NuxtLink>
           <NuxtLink
             v-if="overdueTotal + todayTotal > tasks.length"
-            to="/crm/tasks"
+            :to="myTasksLink"
             class="text-center text-xs font-medium text-(--color-primary) hover:underline"
           >
             {{ t('crm.dashboard.myDayMoreTasks', { count: overdueTotal + todayTotal - tasks.length }) }}
@@ -92,6 +92,10 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
+const userStore = useUserStore()
+
+// The Tasks page filtered to the viewer, so its list matches these counts.
+const myTasksLink = computed(() => `/crm/tasks?assigned_to=${userStore.id}`)
 
 defineProps<{
   // The signed-in user's pending tasks due today or earlier, most overdue first.

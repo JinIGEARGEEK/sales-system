@@ -18,29 +18,11 @@ export const useTasksStore = defineStore('tasks', {
     forRelated: state => (relatedType: TaskRelatedType, relatedId: number) => state.items
       .filter(task => task.related_type === relatedType && task.related_id === relatedId)
       .sort((a, b) => a.due_date.getTime() - b.due_date.getTime()),
-    pending: state => state.items.filter(task => task.status === 'pending'),
   },
   actions: {
-    // Loads up to 200 tasks into `items` (the cache the detail pages' Tasks
-    // tabs read via `forRelated`). 200 is the backend's real per-page
-    // ceiling: the previous per_page:1000 was outside utils.Pagination's
-    // 1..200 range, so the backend silently fell back to its 20-row default
-    // and this only ever loaded the 20 newest tasks. The all-tasks page and
-    // the dashboard's "My day" widget don't use this any more; they page
-    // server-side through fetchList below.
-    async fetchAll (params?: Record<string, unknown>) {
-      const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Task[]>>('/tasks', {
-        params: { per_page: 200, ...params },
-      })
-      this.items = response.data.data.map(parseDates)
-      return this.items
-    },
-    // Server-paginated fetch for the all-tasks page's due-date groups and
-    // the dashboard's "My day" widget. Deliberately does NOT touch `items`
-    // (same split as stores/companies.ts' fetchList): a filtered page
-    // written into the cache would make `items.length > 0` and stop
-    // fetchAll's callers from ever loading their own set.
+    // Server-paginated fetch (the all-tasks page's due-date groups, the
+    // dashboard's widgets). Doesn't touch `items`, which only caches the
+    // records whose Tasks tabs were opened (fetchForRelated).
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Task[]>>('/tasks', { params })

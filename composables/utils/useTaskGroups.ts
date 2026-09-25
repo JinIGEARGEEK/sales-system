@@ -159,7 +159,9 @@ export const useTaskGroups = (
         if (gen !== generation) return
         group.items = result.items
         group.total = result.total
-        group.page = pages
+        // From what actually came back: capped at MAX_PER_PAGE, a group that
+        // had loaded more would otherwise skip rows on its next loadMore.
+        group.page = Math.max(1, Math.ceil(result.items.length / pageSize))
       }))
     } catch (err) {
       notifyApiError(err)
