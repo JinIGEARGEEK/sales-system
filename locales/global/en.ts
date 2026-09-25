@@ -21,7 +21,7 @@ const lang = {
   auth: {
     signIn: 'Sign in',
     forgotPassword: 'Forgot Password?',
-    loginSuccess: 'Logged in successfully',
+    loginSuccess: 'Logged in',
     loginFailed: 'Invalid email or password.',
     emailLabel: 'Email',
     emailPlaceholder: 'Email',
@@ -36,7 +36,7 @@ const lang = {
     confirmPasswordLabel: 'Confirm New Password',
     confirmPasswordPlaceholder: 'Confirm new password',
     updatePassword: 'Update Password',
-    changePasswordSuccess: 'Password changed successfully',
+    changePasswordSuccess: 'Password changed',
     changePasswordFailed: 'Could not change password',
   },
   table: {

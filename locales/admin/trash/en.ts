@@ -44,6 +44,6 @@ export default {
   },
   confirmRestoreTitle: 'Restore record?',
   confirmRestoreBody: 'Restore "{name}"? It will reappear in its normal list.',
-  restoreSuccess: '{entity} restored successfully',
+  restoreSuccess: '{entity} restored',
   restoreError: 'Could not restore this record.',
 }

@@ -49,7 +49,7 @@ export default {
       noMatches: 'No matches yet — try different filters.',
     },
     cancel: 'Cancel',
-    createSuccess: '"{name}" campaign created with {count} follow-up tasks.',
-    addSuccess: 'Added {count} follow-up tasks to "{name}".',
+    createSuccess: '"{name}" campaign created with {count} follow-up tasks',
+    addSuccess: 'Added {count} follow-up tasks to "{name}"',
   },
 }

@@ -5,7 +5,7 @@ export default {
     subheading: 'Calls, emails, and meetings logged across all companies, contacts, and deals.',
     searchPlaceholder: 'Search by subject or record name...',
     addActivity: 'Log Activity',
-    addActivitySuccess: 'Activity logged successfully',
+    addActivitySuccess: 'Activity logged',
     stageChangeType: 'Stage Change',
     stageChangeSubject: 'Stage changed: {from} → {to}',
     stageChangeSubjectNoFrom: 'Stage set: {to}',

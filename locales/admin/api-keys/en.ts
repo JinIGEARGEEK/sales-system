@@ -14,7 +14,7 @@ export default {
     ownerHelp: 'This key will act as this user — records it creates/updates are attributed to them, and it can do anything their role can do. If this key is going to an external party, pick a dedicated integration account rather than a real staff member\'s — otherwise their data will look like that person\'s own work.',
     cancel: 'Cancel',
     create: 'Create',
-    createSuccess: 'API key created successfully',
+    createSuccess: 'API key created',
     revealTitle: 'API Key Created',
     revealWarning: 'Copy this key now — it won\'t be shown again.',
     copy: 'Copy',

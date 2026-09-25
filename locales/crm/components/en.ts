@@ -55,7 +55,7 @@ export default {
     product: 'Product',
     placeholder: 'Select which one',
     addProjectHint: 'Create a new Project',
-    addProjectSuccess: 'Project created successfully',
+    addProjectSuccess: 'Project created',
   },
   referredByField: {
     typeLabel: 'Referred By',
@@ -199,7 +199,7 @@ export default {
     markPending: 'Mark as not done',
     editTask: 'Edit task',
     removeTask: 'Delete task',
-    removeSuccess: 'Task removed successfully',
+    removeSuccess: 'Task deleted',
     confirmDoneTitle: 'Mark task as done?',
     confirmDoneBody: 'Mark "{title}" as done?',
     confirmDoneButton: 'Mark as Done',

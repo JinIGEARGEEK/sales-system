@@ -170,7 +170,7 @@ export default {
     createProjectSuccess: 'สร้าง Project สำเร็จ',
     close: 'ปิด',
     updateSuccess: 'แก้ไข Deal สำเร็จ',
-    markWonSuccess: 'ปิด Deal สำเร็จแล้ว',
+    markWonSuccess: 'ปิด Deal สำเร็จ',
     wonFollowUpTaskTitle: 'นัดหมาย Kickoff Call',
     wonFollowUpTaskCreated: 'สร้างงานติดตามแล้ว: นัดหมาย Kickoff Call',
   },
