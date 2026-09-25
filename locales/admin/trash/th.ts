@@ -6,6 +6,7 @@ export default {
   searchPlaceholder: 'ค้นหาด้วยชื่อ (ทุกแท็บ)...',
   tabs: {
     deals: 'Deal',
+    prospects: 'Prospect',
     leads: 'Lead',
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
@@ -15,6 +16,13 @@ export default {
       title: 'ชื่อ Deal',
       company: 'บริษัท',
       value: 'มูลค่า',
+      deletedAt: 'ลบเมื่อ',
+      action: 'การดำเนินการ',
+    },
+    prospects: {
+      name: 'ชื่อ',
+      company: 'บริษัท',
+      source: 'แหล่งที่มา',
       deletedAt: 'ลบเมื่อ',
       action: 'การดำเนินการ',
     },
