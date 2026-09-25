@@ -5,7 +5,7 @@
     <!-- All 9 KPI cards in one grid: lg:grid-cols-3 divides evenly into 3
          full rows. (Previously split into two 4-col grids — 4 + 5 cards —
          which always left 3 empty trailing cells in the second row.) -->
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-2 gap-2 lg:grid-cols-3">
       <CrmStatCard
         reserve-hint-space
         :label="t('crm.dashboard.openPipelineValue')"
