@@ -4,6 +4,36 @@ export default defineAppConfig({
       primary: 'primary',
       secondary: 'secondary',
     },
+    /*
+     * Nuxt UI's own built-in icons (modal/toast close, select chevrons,
+     * calendar arrows, loading spinners, ...) default to Lucide. Override
+     * every key of Nuxt UI 3's `ui.icons` with the Material Symbols
+     * equivalent so the whole app renders one icon set (CLAUDE.md rule) and
+     * nothing needs the Lucide collection at all. If a Nuxt UI upgrade adds a
+     * new key, add it here too (see node_modules/@nuxt/ui's default `icons`).
+     */
+    icons: {
+      arrowLeft: 'material-symbols:arrow-back',
+      arrowRight: 'material-symbols:arrow-forward',
+      check: 'material-symbols:check',
+      chevronDoubleLeft: 'material-symbols:keyboard-double-arrow-left',
+      chevronDoubleRight: 'material-symbols:keyboard-double-arrow-right',
+      chevronDown: 'material-symbols:keyboard-arrow-down',
+      chevronLeft: 'material-symbols:keyboard-arrow-left',
+      chevronRight: 'material-symbols:keyboard-arrow-right',
+      chevronUp: 'material-symbols:keyboard-arrow-up',
+      close: 'material-symbols:close',
+      ellipsis: 'material-symbols:more-horiz',
+      external: 'material-symbols:arrow-outward',
+      file: 'material-symbols:draft-outline',
+      folder: 'material-symbols:folder-outline',
+      folderOpen: 'material-symbols:folder-open-outline',
+      loading: 'material-symbols:progress-activity',
+      minus: 'material-symbols:remove',
+      plus: 'material-symbols:add',
+      search: 'material-symbols:search',
+      upload: 'material-symbols:upload',
+    },
     tabs: {
       slots: {
         // `shadow-xl` here used to spread a large soft shadow well past the
