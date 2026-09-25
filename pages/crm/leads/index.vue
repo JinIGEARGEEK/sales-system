@@ -279,14 +279,14 @@ const companyLabel = (id: number | null | undefined) => {
 // Lead Scoring is optional (FR-CRM-006) — with no active criteria every Lead
 // scores 0, and a column of "0" badges is just noise. Admins can read the
 // criteria list (GET /admin/lead-scoring-criteria is adminOnly), so for them
-// the column tracks whether any criterion is active; everyone else falls back
-// to "does any Lead on this page actually have a score".
+// the column also shows whenever any criterion is active. A Lead on this page
+// with a score or a manual MQL/SQL mark shows it regardless.
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
 const criteriaLoaded = ref(false)
-const showScoreColumn = computed(() => {
-  if (criteriaLoaded.value) return leadScoringCriteriaStore.items.some(c => c.is_active)
-  return rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql')
-})
+const showScoreColumn = computed(() =>
+  (criteriaLoaded.value && leadScoringCriteriaStore.items.some(c => c.is_active))
+  || rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql'),
+)
 
 const displayRows = computed(() => {
   const dealsById = new Map(dealsStore.items.map(deal => [deal.id, deal]))
