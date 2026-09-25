@@ -48,6 +48,8 @@ const lang = {
     },
   },
   input: {
+    datePlaceholder: 'DD/MM/YYYY',
+    dateRangePlaceholder: 'DD/MM/YYYY - DD/MM/YYYY',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     searching: 'Searching...',

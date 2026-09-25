@@ -52,9 +52,9 @@ defineProps<{
   loading: boolean
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { success, error } = useNotify()
-const { toBadge, numberFormat } = useFormatter()
+const { toBadge, numberFormat, localeYear } = useFormatter()
 const salesTargetsStore = useSalesTargetsStore()
 
 // ── Quarterly sales targets (FR-CRM-092) ──────────────────────────
@@ -112,7 +112,8 @@ const currentPeriod = computed(() => {
 
 const targetRows = computed(() => salesTargetsStore.sorted.map(target => ({
   ...target,
-  quarterLabel: `Q${target.quarter} ${target.year}`,
+  // Buddhist-era year in Thai ("Q3 2569") — display only, `year` stays Gregorian.
+  quarterLabel: `Q${target.quarter} ${localeYear(target.year, locale.value)}`,
   targetValueDisplay: numberFormat(target.target_value),
   periodBadge: (target.year === currentPeriod.value.year && target.quarter === currentPeriod.value.quarter)
     ? toBadge(t('admin.pipelineConfig.salesTargets.currentBadge'), 'success')

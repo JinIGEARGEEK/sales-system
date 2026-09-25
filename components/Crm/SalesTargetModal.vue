@@ -7,9 +7,9 @@
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputText
-            v-model.number="form.year"
+            v-model.number="displayYear"
             type="number"
-            :label="t('admin.pipelineConfig.salesTargets.year')"
+            :label="yearLabel"
             name="year"
             rules="required"
           />
@@ -43,7 +43,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { localeYear, fromLocaleYear } = useFormatter()
 
 const QUARTER_OPTIONS: Select[] = [
   { label: 'Q1', value: 1 },
@@ -72,6 +73,24 @@ const emptyForm = () => ({
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+
+// The year field shows/accepts the Buddhist-era year in the Thai locale
+// (2569), matching how dates read everywhere else — but form.year (and the
+// submitted payload) always stays the Gregorian year the API stores.
+const displayYear = computed({
+  get: (): number | string => {
+    const year = form.year as number | string | null
+    return year === '' || year === null ? '' : localeYear(Number(year), locale.value)
+  },
+  set: (value: number | string) => {
+    // Keep a cleared field empty (so `required` still fires) instead of
+    // turning '' into -543.
+    form.year = (value === '' || value === null ? value : fromLocaleYear(Number(value), locale.value)) as number
+  },
+})
+const yearLabel = computed(() => locale.value === 'th'
+  ? `${t('admin.pipelineConfig.salesTargets.year')} (พ.ศ.)`
+  : t('admin.pipelineConfig.salesTargets.year'))
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 

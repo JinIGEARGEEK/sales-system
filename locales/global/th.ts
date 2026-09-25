@@ -45,6 +45,8 @@ export default {
     },
   },
   input: {
+    datePlaceholder: 'วว/ดด/ปปปป',
+    dateRangePlaceholder: 'วว/ดด/ปปปป - วว/ดด/ปปปป',
     showPassword: 'แสดงรหัสผ่าน',
     hidePassword: 'ซ่อนรหัสผ่าน',
     searching: 'กำลังค้นหา...',
