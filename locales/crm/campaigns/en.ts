@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No campaigns yet',
+    emptyDescription: 'A campaign creates follow-up tasks for a group of companies, contacts, or leads in one go, and tracks their progress here.',
     pageTitle: 'Campaigns',
     heading: 'Campaigns',
     subheading: 'Reach out to past customers and new prospects to find sales opportunities.',

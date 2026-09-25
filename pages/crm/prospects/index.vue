@@ -43,12 +43,14 @@
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.prospects.index.searchPlaceholder')" name="search" />
           </div>
-          <div class="w-full sm:w-48">
-            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.prospects.index.allSources'), value: 'all' }, ...prospectSourcesStore.activeOptions]" :placeholder="t('crm.prospects.index.sourcePlaceholder')" name="sourceFilter" />
-          </div>
-          <div class="w-full sm:w-48">
-            <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.prospects.index.assigneePlaceholder')" name="assigneeFilter" />
-          </div>
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <div class="w-full sm:w-48">
+              <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.prospects.index.allSources'), value: 'all' }, ...prospectSourcesStore.activeOptions]" :placeholder="t('crm.prospects.index.sourcePlaceholder')" name="sourceFilter" />
+            </div>
+            <div class="w-full sm:w-48">
+              <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.prospects.index.assigneePlaceholder')" name="assigneeFilter" />
+            </div>
+          </CrmMoreFilters>
         </div>
       </div>
     </UCard>
@@ -84,7 +86,7 @@
       <template #card="{ item }">
         <div>
           <p class="line-clamp-2 text-sm font-medium">{{ item.name }}</p>
-          <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
+          <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
         </div>
         <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
           <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -105,6 +107,13 @@
         :per-page="perPage"
         :loading="loading"
         :is-show-select="isSelectMode"
+        :empty-title="t('crm.prospects.index.emptyTitle')"
+        :empty-description="t('crm.prospects.index.emptyDescription')"
+        empty-icon="material-symbols:person-add-outline"
+        :empty-action-label="t('crm.prospects.index.addProspect')"
+        empty-action-to="/crm/prospects/create"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @sort="onSort"
@@ -129,6 +138,7 @@
     <CrmConfirmDeleteModal
       v-model:open="open"
       :name="target?.name || ''"
+      restorable
       @confirm="confirmDelete"
     />
     </AccessGate>
@@ -146,9 +156,10 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.prospects.index.pageTitle') })
 
-const route = useRoute()
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyDeletedWithUndo } = useUndoDelete()
+const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 // Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
@@ -168,14 +179,32 @@ const { statusBadgeColor } = useProspectStageColor()
 // backend, same as Leads' — Marketing itself has no bulk access.
 const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 
-// Deep-linked from the Marketing dashboard tab's status/source breakdown rows
-// via a query param — seeded once at setup, same pattern as Deals' own
-// deep-link seeding in pages/crm/deals/index.vue. See useQueryFilter for the
-// 'all'-fallback convention.
+// URL-synced (useQuerySyncedRef): the Marketing dashboard tab's status/source
+// breakdown rows deep-link here via these same query params, and a
+// filter/search/view picked by hand is written back so refresh and
+// back/forward restore it too.
 const search = useQuerySyncedRef('search', '', 400)
-const statusFilter = useQueryFilter(route.query, 'status')
-const sourceFilter = useQueryFilter(route.query, 'source')
-const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
+const statusFilter = useQuerySyncedRef('status')
+const sourceFilter = useQuerySyncedRef('source')
+const assigneeFilter = useQuerySyncedRef('assigned_to')
+
+// Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
+// search + the status pill stay visible.
+const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
+const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
+const clearFilters = () => {
+  search.value = ''
+  statusFilter.value = 'all'
+  sourceFilter.value = 'all'
+  assigneeFilter.value = 'all'
+}
+
+// nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
+// with a blank name gets the "(Unnamed company)" placeholder instead.
+const companyLabel = (id: number | null | undefined) => {
+  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
+  return company ? companyName(company.name) : '-'
+}
 
 // Status/source/assignee filters are visible and functional in both views
 // now (CrmStatusPill above used to be List-only) — pipelineItems below is
@@ -184,7 +213,7 @@ const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
 // visible controls to set them while filters were List-only. A deep link no
 // longer needs to force List view to make its filter visible; it stays on
 // Kanban, Marketing's primary view, with the filter already applied.
-const viewMode = ref<'kanban' | 'list'>('kanban')
+const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', 'kanban', 0, ['kanban', 'list'])
 
 // ── Kanban ─────────────────────────────────────────────────────────────
 // Prospect volume doesn't warrant Deals' per-stage server-paginated bucket
@@ -306,7 +335,7 @@ const displayRows = computed(() => rows.value.map(prospect => ({
   statusBadge: toBadge(prospect.status, statusBadgeColor(prospect.status)),
   createdDate: dateFormat(prospect.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(prospect.assigned_to),
-  companyName: companiesStore.nameById(prospect.company_id),
+  companyName: companyLabel(prospect.company_id),
 })))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Prospect>()
@@ -363,8 +392,9 @@ const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Prospect>(
 const confirmDelete = async () => {
   if (target.value) {
     try {
-      await prospectsStore.remove(target.value.id)
-      success(t('crm.prospects.index.deleteSuccess'))
+      const { id, name } = target.value
+      await prospectsStore.remove(id)
+      notifyDeletedWithUndo({ id, name, restore: restoreId => prospectsStore.restore(restoreId), onRestored: () => Promise.all([fetch(), prospectsStore.fetchAll({ exclude_converted: true })]).then(() => {}) })
       await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))

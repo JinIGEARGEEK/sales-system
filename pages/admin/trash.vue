@@ -6,7 +6,7 @@
         <p class="text-sm text-(--color-gray)">{{ t('admin.trash.subtitle') }}</p>
       </div>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
@@ -26,6 +26,11 @@
           :per-page="dealsPerPage"
           :loading="dealsLoading"
           server-paginated
+          :empty-title="t('admin.trash.emptyTitle')"
+          :empty-description="t('admin.trash.emptyDescription')"
+          empty-icon="material-symbols:delete-outline"
+          :filtered="search !== ''"
+          @clear-filters="search = ''"
           @change-page="onChangeDealsPage"
           @change-per-page="onChangeDealsPerPage"
           @restore="(row: Deal) => requestRestore({ entity: 'deal', row, name: row.title })"
@@ -41,6 +46,11 @@
           :per-page="leadsPerPage"
           :loading="leadsLoading"
           server-paginated
+          :empty-title="t('admin.trash.emptyTitle')"
+          :empty-description="t('admin.trash.emptyDescription')"
+          empty-icon="material-symbols:delete-outline"
+          :filtered="search !== ''"
+          @clear-filters="search = ''"
           @change-page="onChangeLeadsPage"
           @change-per-page="onChangeLeadsPerPage"
           @restore="(row: Lead) => requestRestore({ entity: 'lead', row, name: row.name })"
@@ -56,6 +66,11 @@
           :per-page="companiesPerPage"
           :loading="companiesLoading"
           server-paginated
+          :empty-title="t('admin.trash.emptyTitle')"
+          :empty-description="t('admin.trash.emptyDescription')"
+          empty-icon="material-symbols:delete-outline"
+          :filtered="search !== ''"
+          @clear-filters="search = ''"
           @change-page="onChangeCompaniesPage"
           @change-per-page="onChangeCompaniesPerPage"
           @restore="(row: Company) => requestRestore({ entity: 'company', row, name: row.name })"
@@ -71,6 +86,11 @@
           :per-page="contactsPerPage"
           :loading="contactsLoading"
           server-paginated
+          :empty-title="t('admin.trash.emptyTitle')"
+          :empty-description="t('admin.trash.emptyDescription')"
+          empty-icon="material-symbols:delete-outline"
+          :filtered="search !== ''"
+          @clear-filters="search = ''"
           @change-page="onChangeContactsPage"
           @change-per-page="onChangeContactsPerPage"
           @restore="(row: Contact) => requestRestore({ entity: 'contact', row, name: row.name })"
@@ -111,11 +131,18 @@ const contactsStore = useContactsStore()
 // Trash is Admin/Sales Manager only, matching GET /deals/trash and /leads/trash RBAC.
 const { canAccess, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
-const activeTab = ref('deals')
+// URL-synced (tab + search) so refresh and back/forward — e.g. returning
+// from a restored record — land on the same tab with the same search.
+const TRASH_TABS = ['deals', 'leads', 'companies', 'contacts']
+const activeTab = useQuerySyncedRef('tab', 'deals', 0, TRASH_TABS)
+// A refresh/back-forward onto a later tab would otherwise leave it scrolled
+// out of sight in this horizontally-scrolling strip on mobile.
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
 // One search box shared across all four tabs (rather than per-tab, since a
 // rep hunting for a specific deleted record usually doesn't know which
 // entity type it was) — each fetchXTrash below reads this by closure.
-const search = ref('')
+const search = useQuerySyncedRef('search', '', 400)
 const tabItems = computed(() => [
   { label: t('admin.trash.tabs.deals'), value: 'deals' },
   { label: t('admin.trash.tabs.leads'), value: 'leads' },

@@ -36,12 +36,14 @@
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.leads.index.searchPlaceholder')" name="search" />
           </div>
-          <div class="w-full sm:w-48">
-            <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.leads.index.allSources'), value: 'all' }, ...leadSourcesStore.activeOptions]" :placeholder="t('crm.leads.index.sourcePlaceholder')" name="sourceFilter" />
-          </div>
-          <div class="w-full sm:w-48">
-            <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.leads.index.assigneePlaceholder')" name="assigneeFilter" />
-          </div>
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <div class="w-full sm:w-48">
+              <InputSelect v-model="sourceFilter" :options="[{ label: t('crm.leads.index.allSources'), value: 'all' }, ...leadSourcesStore.activeOptions]" :placeholder="t('crm.leads.index.sourcePlaceholder')" name="sourceFilter" />
+            </div>
+            <div class="w-full sm:w-48">
+              <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.leads.index.assigneePlaceholder')" name="assigneeFilter" />
+            </div>
+          </CrmMoreFilters>
         </div>
       </div>
     </UCard>
@@ -57,6 +59,13 @@
       :per-page="perPage"
       :loading="loading"
       :is-show-select="isSelectMode"
+      :empty-title="scopeFilter === 'converted' ? t('crm.leads.index.emptyConvertedTitle') : t('crm.leads.index.emptyTitle')"
+      :empty-description="scopeFilter === 'converted' ? t('crm.leads.index.emptyConvertedDescription') : t('crm.leads.index.emptyDescription')"
+      :empty-icon="scopeFilter === 'converted' ? 'material-symbols:handshake-outline' : 'material-symbols:person-search-outline'"
+      :empty-action-label="scopeFilter === 'converted' ? undefined : t('crm.leads.index.addLead')"
+      :empty-action-to="scopeFilter === 'converted' ? undefined : '/crm/leads/create'"
+      :filtered="hasActiveFilters"
+      @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -91,6 +100,7 @@
     <CrmConfirmDeleteModal
       v-model:open="open"
       :name="target?.name || ''"
+      restorable
       @confirm="confirmDelete"
     />
 
@@ -116,6 +126,8 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyDeletedWithUndo } = useUndoDelete()
+const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
@@ -151,6 +163,20 @@ const scopeFilter = useQuerySyncedRef('scope', 'active')
 const statusFilter = useQuerySyncedRef('status')
 const sourceFilter = useQuerySyncedRef('source')
 const assigneeFilter = useQuerySyncedRef('assigned_to')
+
+// Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
+// search + the status pill stay visible. Active/Converted is a view switch,
+// not a filter, so neither counts nor gets reset by Clear filters.
+const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
+const hasActiveFilters = computed(() => search.value !== ''
+  || (scopeFilter.value === 'active' && statusFilter.value !== 'all')
+  || secondaryFilterCount.value > 0)
+const clearFilters = () => {
+  search.value = ''
+  statusFilter.value = 'all'
+  sourceFilter.value = 'all'
+  assigneeFilter.value = 'all'
+}
 
 // Maps a TableData column field to the `sort` query param the backend
 // understands (see GET /leads: created_at/name plain columns, company_name
@@ -204,6 +230,11 @@ onMounted(() => {
   // 200-newest snapshot (or was created after this ran) still needs the
   // per-row fetchOne fallback below; see that watcher's own comment.
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (hasRole('Admin')) {
+    // Failure is non-fatal (the column just falls back to the row-based
+    // check), so no error toast for a config read the page doesn't need.
+    leadScoringCriteriaStore.fetchAll().then(() => { criteriaLoaded.value = true }).catch(() => {})
+  }
 })
 
 // The `fetchAll` seed above is a capped, point-in-time snapshot (see its own
@@ -237,6 +268,26 @@ watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFr
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
+// nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
+// with a blank name (created by converting a company-less Prospect) gets the
+// "(Unnamed company)" placeholder instead of an empty cell.
+const companyLabel = (id: number | null | undefined) => {
+  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
+  return company ? companyName(company.name) : '-'
+}
+
+// Lead Scoring is optional (FR-CRM-006) — with no active criteria every Lead
+// scores 0, and a column of "0" badges is just noise. Admins can read the
+// criteria list (GET /admin/lead-scoring-criteria is adminOnly), so for them
+// the column tracks whether any criterion is active; everyone else falls back
+// to "does any Lead on this page actually have a score".
+const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
+const criteriaLoaded = ref(false)
+const showScoreColumn = computed(() => {
+  if (criteriaLoaded.value) return leadScoringCriteriaStore.items.some(c => c.is_active)
+  return rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql')
+})
+
 const displayRows = computed(() => {
   const dealsById = new Map(dealsStore.items.map(deal => [deal.id, deal]))
   return rows.value.map(lead => ({
@@ -245,7 +296,7 @@ const displayRows = computed(() => {
     classificationBadge: classificationBadge(lead),
     createdDate: dateFormat(lead.created_at.toISOString()),
     assignedToName: teamMembersStore.nameById(lead.assigned_to),
-    companyName: companiesStore.nameById(lead.company_id),
+    companyName: companyLabel(lead.company_id),
   }))
 })
 
@@ -289,14 +340,16 @@ const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.leads.index.columns.company'), align: 'left', field: 'companyName', isSort: true, width: 180 },
   { label: t('crm.leads.index.columns.source'), align: 'left', field: 'source', width: 140 },
   { label: t('crm.leads.index.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS, width: 140 },
-  {
-    label: t('crm.leads.index.columns.classification'),
-    align: 'left',
-    field: 'classificationBadge',
-    type: TABLE_CARD_TYPE.STATUS,
-    tooltip: t('crm.leads.index.columns.classificationTooltip'),
-    width: 160,
-  },
+  ...(showScoreColumn.value
+    ? [{
+        label: t('crm.leads.index.columns.classification'),
+        align: 'left' as const,
+        field: 'classificationBadge',
+        type: TABLE_CARD_TYPE.STATUS,
+        tooltip: t('crm.leads.index.columns.classificationTooltip'),
+        width: 160,
+      }]
+    : []),
   { label: t('crm.leads.index.columns.assignedTo'), align: 'left', field: 'assignedToName', width: 160 },
   { label: t('crm.leads.index.columns.created'), align: 'left', field: 'createdDate', isSort: true, width: 130 },
   {
@@ -336,8 +389,9 @@ const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Lead>()
 const confirmDelete = async () => {
   if (target.value) {
     try {
-      await leadsStore.remove(target.value.id)
-      success(t('crm.leads.index.deleteSuccess'))
+      const { id, name } = target.value
+      await leadsStore.remove(id)
+      notifyDeletedWithUndo({ id, name, restore: restoreId => leadsStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))

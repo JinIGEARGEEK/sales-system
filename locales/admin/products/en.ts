@@ -1,4 +1,6 @@
 export default {
+  emptyTitle: 'No products yet',
+  emptyDescription: 'Products are the packaged offerings you sell and charge for through Contracts.',
   addProduct: 'Add Product',
   exportCsv: 'Export CSV',
   addSuccess: 'Product added successfully',

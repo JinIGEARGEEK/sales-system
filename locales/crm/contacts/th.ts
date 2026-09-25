@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีผู้ติดต่อ',
+    emptyDescription: 'ผู้ติดต่อคือบุคคลที่คุณติดต่อในแต่ละบริษัท เพิ่มผู้ติดต่อใหม่ หรือนำเข้าไฟล์ CSV',
     pageTitle: 'ผู้ติดต่อ',
     heading: 'ผู้ติดต่อ',
     addContact: 'เพิ่มผู้ติดต่อ',

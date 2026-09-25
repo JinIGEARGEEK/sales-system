@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มี API Key',
+    emptyDescription: 'API Key ช่วยให้เครื่องมือภายนอก (เช่น ฟอร์มบนเว็บไซต์) สร้างข้อมูลในระบบนี้แทนพนักงานได้',
     pageTitle: 'API Keys',
     heading: 'API Keys',
     subheading: 'ข้อมูลรับรองตัวตนสำหรับระบบภายนอกที่เรียกใช้ API ของระบบนี้โดยตรง',

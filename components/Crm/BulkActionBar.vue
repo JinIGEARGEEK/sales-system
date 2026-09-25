@@ -59,6 +59,7 @@
       :body="t('crm.components.bulkActionBar.archiveConfirmBody', { count: selectedIds.length, entity: entityLabel })"
       :confirm-label="t('crm.components.bulkActionBar.archiveConfirmButton')"
       confirm-color="error"
+      restorable
       @confirm="confirmArchive"
     />
   </div>

@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีโปรเจกต์',
+    emptyDescription: 'โปรเจกต์ใช้ติดตามงานพัฒนาซอฟต์แวร์เฉพาะของแต่ละบริษัท ตั้งแต่เสนอราคาจนส่งมอบ',
     pageTitle: 'Projects',
     heading: 'Projects & Products',
     tabs: {

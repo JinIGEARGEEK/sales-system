@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No API keys yet',
+    emptyDescription: 'API keys let external tools (like a website form) create records in this system on behalf of a staff member.',
     pageTitle: 'API Keys',
     heading: 'API Keys',
     subheading: 'Credentials for external integrations calling this system\'s API directly.',

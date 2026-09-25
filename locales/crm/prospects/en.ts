@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No prospects yet',
+    emptyDescription: 'Prospects are early contacts from marketing channels, before they become Leads. Add one to get started.',
     pageTitle: 'Prospects',
     heading: 'Prospects',
     addProspect: 'Add Prospect',

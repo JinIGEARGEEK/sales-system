@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No deals yet',
+    emptyDescription: 'Deals track each sales opportunity from first conversation to won or lost. Add one, or convert a qualified Lead.',
     pageTitle: 'Deals Pipeline',
     heading: 'Deals Pipeline',
     addDeal: 'Add Deal',

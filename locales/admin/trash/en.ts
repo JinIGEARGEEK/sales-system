@@ -1,4 +1,6 @@
 export default {
+  emptyTitle: 'Trash is empty',
+  emptyDescription: 'Deleted records of this type will appear here, ready to restore.',
   title: 'Trash',
   subtitle: 'Deleted or archived records — restore them here before they\'re gone for good.',
   searchPlaceholder: 'Search by name across all tabs...',

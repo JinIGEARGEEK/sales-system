@@ -1,5 +1,9 @@
 export default {
   index: {
+    emptyTitle: 'No active leads',
+    emptyDescription: 'Leads are potential customers you are qualifying. Add one, or convert a Prospect.',
+    emptyConvertedTitle: 'No converted leads yet',
+    emptyConvertedDescription: 'Leads you convert into Deals will show up here.',
     pageTitle: 'Leads',
     heading: 'Leads',
     addLead: 'Add Lead',

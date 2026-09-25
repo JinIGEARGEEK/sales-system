@@ -1,5 +1,9 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มี Lead ที่กำลังดำเนินการ',
+    emptyDescription: 'Lead คือว่าที่ลูกค้าที่คุณกำลังคัดกรอง เพิ่ม Lead ใหม่ หรือแปลงจาก Prospect',
+    emptyConvertedTitle: 'ยังไม่มี Lead ที่แปลงแล้ว',
+    emptyConvertedDescription: 'Lead ที่แปลงเป็นดีลแล้วจะแสดงที่นี่',
     pageTitle: 'Lead',
     heading: 'Lead',
     addLead: 'เพิ่ม Lead',

@@ -42,38 +42,40 @@
               name="search"
             />
           </div>
-          <div class="w-full sm:w-48">
-            <InputSelect
-              v-model="industryFilter"
-              :options="[{ label: t('crm.companies.index.allIndustries'), value: 'all' }, ...industryOptionsStore.activeOptions]"
-              :placeholder="t('crm.companies.index.industryPlaceholder')"
-              name="industryFilter"
-            />
-          </div>
-          <div class="w-full sm:w-48">
-            <InputSelect
-              v-model="tagFilter"
-              :options="[{ label: t('crm.companies.index.allTags'), value: 'all' }, ...tagOptions]"
-              :placeholder="t('crm.companies.index.tagPlaceholder')"
-              name="tagFilter"
-            />
-          </div>
-          <div class="w-full sm:w-56">
-            <InputSelect
-              v-model="staleDaysFilter"
-              :options="STALE_DAYS_OPTIONS"
-              :placeholder="t('crm.companies.index.staleDaysPlaceholder')"
-              name="staleDaysFilter"
-            />
-          </div>
-          <div class="w-full sm:w-56">
-            <InputSelect
-              v-model="hasWonDealFilter"
-              :options="HAS_WON_DEAL_OPTIONS"
-              :placeholder="t('crm.companies.index.hasWonDealPlaceholder')"
-              name="hasWonDealFilter"
-            />
-          </div>
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <div class="w-full sm:w-48">
+              <InputSelect
+                v-model="industryFilter"
+                :options="[{ label: t('crm.companies.index.allIndustries'), value: 'all' }, ...industryOptionsStore.activeOptions]"
+                :placeholder="t('crm.companies.index.industryPlaceholder')"
+                name="industryFilter"
+              />
+            </div>
+            <div class="w-full sm:w-48">
+              <InputSelect
+                v-model="tagFilter"
+                :options="[{ label: t('crm.companies.index.allTags'), value: 'all' }, ...tagOptions]"
+                :placeholder="t('crm.companies.index.tagPlaceholder')"
+                name="tagFilter"
+              />
+            </div>
+            <div class="w-full sm:w-56">
+              <InputSelect
+                v-model="staleDaysFilter"
+                :options="STALE_DAYS_OPTIONS"
+                :placeholder="t('crm.companies.index.staleDaysPlaceholder')"
+                name="staleDaysFilter"
+              />
+            </div>
+            <div class="w-full sm:w-56">
+              <InputSelect
+                v-model="hasWonDealFilter"
+                :options="HAS_WON_DEAL_OPTIONS"
+                :placeholder="t('crm.companies.index.hasWonDealPlaceholder')"
+                name="hasWonDealFilter"
+              />
+            </div>
+          </CrmMoreFilters>
         </div>
       </div>
     </UCard>
@@ -89,6 +91,13 @@
       :per-page="perPage"
       :loading="loading"
       :is-show-select="isSelectMode"
+      :empty-title="t('crm.companies.index.emptyTitle')"
+      :empty-description="t('crm.companies.index.emptyDescription')"
+      empty-icon="material-symbols:domain"
+      :empty-action-label="t('crm.companies.index.addCompany')"
+      empty-action-to="/crm/companies/create"
+      :filtered="hasActiveFilters"
+      @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -108,7 +117,8 @@
 
     <CrmConfirmDeleteModal
       v-model:open="open"
-      :name="target?.name || ''"
+      :name="target ? companyName(target.name) : ''"
+      restorable
       @confirm="confirmDelete"
     />
 
@@ -140,6 +150,8 @@ useHead({ title: t('crm.companies.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { lastContactInfo, CONTACT_STALE_TIER_DAYS } = useLastContact()
 const { success, error } = useNotify()
+const { notifyDeletedWithUndo } = useUndoDelete()
+const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
@@ -171,6 +183,20 @@ const HAS_WON_DEAL_OPTIONS: Select[] = [
 ]
 const hasWonDealFilter = useQuerySyncedRef('has_won_deal')
 const showImport = ref(false)
+
+// Everything but the status pill and search collapses behind "More filters"
+// below md (CrmMoreFilters) — this badge count keeps an active hidden filter
+// from going unnoticed while collapsed.
+const secondaryFilterCount = computed(() => [industryFilter, tagFilter, staleDaysFilter, hasWonDealFilter].filter(f => f.value !== 'all').length)
+const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
+const clearFilters = () => {
+  search.value = ''
+  statusFilter.value = 'all'
+  industryFilter.value = 'all'
+  tagFilter.value = 'all'
+  staleDaysFilter.value = 'all'
+  hasWonDealFilter.value = 'all'
+}
 
 const onExport = () => downloadCsvBlob('/companies/export', 'companies.csv')
 
@@ -229,6 +255,18 @@ watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilte
 // list page).
 watch([page, () => buildParams()], () => { selected.value = [] })
 
+// useLastContact's own palette paints "never contacted" and 90d+ red, which
+// on this list (where most companies have never had a logged Activity) turned
+// nearly every row red — alarm fatigue that hid the genuinely lapsed
+// accounts. Here: never contacted is neutral (no signal either way), 60–119d
+// is amber, and only 120d+ (the dormant tier) stays red.
+const lastContactColor = (days: number | null, tier: ReturnType<typeof lastContactInfo>['tier']) => {
+  if (days === null) return 'neutral'
+  if (tier === 'tier3') return 'error'
+  if (tier === 'tier1' || tier === 'tier2') return 'warning'
+  return 'success'
+}
+
 const displayCompanies = computed(() => rows.value.map((company) => {
   // Server-computed last_activity_at (most recent company-scoped Activity's
   // created_at, or null) — authoritative list-wide, unlike the previous
@@ -237,12 +275,13 @@ const displayCompanies = computed(() => rows.value.map((company) => {
   const contact = lastContactInfo(company.last_activity_at ? new Date(company.last_activity_at) : null)
   return {
     ...company,
+    name: companyName(company.name),
     tagsDisplay: company.tags?.join(', ') || '-',
     statusBadge: company.status === 'active'
       ? toBadge(t('crm.companies.index.statusActive'), 'success')
       : toBadge(t('crm.companies.index.statusArchived')),
     createdDate: dateFormat(company.created_at.toISOString()),
-    lastContactBadge: toBadge(contact.label, contact.color),
+    lastContactBadge: toBadge(contact.label, lastContactColor(contact.days, contact.tier)),
   }
 }))
 
@@ -252,7 +291,7 @@ const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModa
   { create: 'crm.companies.index.campaignCreateSuccess', add: 'crm.companies.index.campaignAddSuccess' },
   clearSelection,
 )
-const openCampaignModal = (companies: Company[]) => openCampaignModalFor(companies.map(company => ({ type: 'company', id: company.id, name: company.name })))
+const openCampaignModal = (companies: Company[]) => openCampaignModalFor(companies.map(company => ({ type: 'company', id: company.id, name: companyName(company.name) })))
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),
@@ -290,8 +329,9 @@ const onEdit = (row: Company) => {
 const confirmDelete = async () => {
   if (target.value) {
     try {
-      await companiesStore.remove(target.value.id)
-      success(t('crm.companies.index.deleteSuccess'))
+      const { id, name } = target.value
+      await companiesStore.remove(id)
+      notifyDeletedWithUndo({ id, name: companyName(name), restore: restoreId => companiesStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))

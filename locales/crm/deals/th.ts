@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีดีล',
+    emptyDescription: 'ดีลใช้ติดตามโอกาสการขายแต่ละรายการ ตั้งแต่เริ่มคุยจนปิดได้หรือเสียไป เพิ่มดีลใหม่ หรือแปลง Lead ที่ผ่านการคัดกรองแล้ว',
     pageTitle: 'Deals Pipeline',
     heading: 'Deals Pipeline',
     addDeal: 'เพิ่ม Deal',

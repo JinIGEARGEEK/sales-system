@@ -18,8 +18,24 @@
         <USkeleton v-for="i in 3" :key="`campaign-skeleton-${i}`" class="h-20 w-full rounded-lg" />
       </div>
 
-      <div v-else-if="campaignsStore.items.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.campaigns.index.noCampaigns') }}
+      <!-- Not a TableData page (campaigns render as cards), so it carries
+      its own copy of the list pages' empty state: icon, what this list is
+      for, and the same create action as the header button. -->
+      <div
+        v-else-if="campaignsStore.items.length === 0"
+        class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-(--color-light-gray-2) px-4 py-10 text-center"
+        data-cy="campaigns-empty"
+      >
+        <UIcon name="material-symbols:campaign-outline" class="size-10 text-(--color-gray)" />
+        <p class="text-base font-semibold">{{ t('crm.campaigns.index.emptyTitle') }}</p>
+        <p class="max-w-md text-sm text-(--color-gray)">{{ t('crm.campaigns.index.emptyDescription') }}</p>
+        <ButtonPrimary
+          class="mt-2"
+          fit-content
+          icon="material-symbols:add"
+          :label="t('crm.campaigns.index.startCampaign')"
+          @click="navigateTo('/crm/campaigns/new')"
+        />
       </div>
 
       <div v-else class="flex flex-col gap-3">

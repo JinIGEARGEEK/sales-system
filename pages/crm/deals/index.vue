@@ -33,15 +33,17 @@
         <div class="w-full sm:w-56">
           <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.deals.index.assigneePlaceholder')" name="assigneeFilter" />
         </div>
-        <div class="w-full sm:w-48">
-          <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
-        </div>
-        <div class="w-full sm:w-44">
-          <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
-        </div>
-        <div class="w-full sm:w-48">
-          <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
-        </div>
+        <CrmMoreFilters :count="secondaryFilterCount">
+          <div class="w-full sm:w-48">
+            <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
+          </div>
+          <div class="w-full sm:w-44">
+            <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
+          </div>
+          <div class="w-full sm:w-48">
+            <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
+          </div>
+        </CrmMoreFilters>
       </div>
     </UCard>
 
@@ -79,7 +81,7 @@
         <template v-if="item._type === 'deal'">
           <div>
             <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
             {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
@@ -103,7 +105,7 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
           </div>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -120,6 +122,13 @@
       :business-unit-filter="businessUnitFilter"
       :channel-filter="channelFilter"
       :stage-filter="stageFilter"
+      :empty-title="t('crm.deals.index.emptyTitle')"
+      :empty-description="t('crm.deals.index.emptyDescription')"
+      empty-icon="material-symbols:handshake-outline"
+      :empty-action-label="t('crm.deals.index.addDeal')"
+      empty-action-to="/crm/deals/create"
+      :filtered="hasActiveFilters"
+      @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
   </div>
@@ -140,6 +149,7 @@ useHead({ title: t('crm.deals.index.pageTitle') })
 
 const route = useRoute()
 const { priceFormatCompact } = useFormatter()
+const { companyName } = useCompanyName()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -256,22 +266,35 @@ onMounted(async () => {
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
-// Deep-linked from dashboard cards/breakdown rows (e.g. Team Performance's
-// per-rep rows, Pipeline by Stage's bars) via a query param — seeded once at
-// setup so a bookmarked/shared URL behaves the same as clicking the card.
-// See useQueryFilter for the 'all'-fallback convention.
-const search = ref('')
-const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
-const businessUnitFilter = useQueryFilter(route.query, 'business_unit')
-const channelFilter = useQueryFilter(route.query, 'channel')
-const stageFilter = useQueryFilter(route.query, 'stage')
+// URL-synced (useQuerySyncedRef): Dashboard cards/breakdown rows (e.g. Team
+// Performance's per-rep rows, Pipeline by Stage's bars) deep-link here via
+// these same query params, and a filter/search/view picked by hand is
+// written back so refresh and back/forward restore it too.
+const search = useQuerySyncedRef('search', '', 400)
+const assigneeFilter = useQuerySyncedRef('assigned_to')
+const businessUnitFilter = useQuerySyncedRef('business_unit')
+const channelFilter = useQuerySyncedRef('channel')
+const stageFilter = useQuerySyncedRef('stage')
+const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', 'kanban', 0, ['kanban', 'list'])
 
-const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
 // The Kanban board shows every stage side by side, so a single-stage/assignee
 // deep link reads better landing on the List view, where the filter bar and
-// results are unambiguous — same reasoning as forcing Prospects into list
-// view for its own deep links (pages/crm/prospects/index.vue).
-const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
+// results are unambiguous. Only when the link doesn't name a view itself —
+// a refreshed/shared URL that already says ?view=kanban keeps it.
+const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
+if (hasDeepLinkFilter && route.query.view === undefined) viewMode.value = 'list'
+
+// Business unit/channel/stage collapse behind "More filters" below md
+// (CrmMoreFilters); search + assignee stay visible.
+const secondaryFilterCount = computed(() => [businessUnitFilter, channelFilter, stageFilter].filter(f => f.value !== 'all').length)
+const hasActiveFilters = computed(() => search.value !== '' || assigneeFilter.value !== 'all' || secondaryFilterCount.value > 0)
+const clearFilters = () => {
+  search.value = ''
+  assigneeFilter.value = 'all'
+  businessUnitFilter.value = 'all'
+  channelFilter.value = 'all'
+  stageFilter.value = 'all'
+}
 
 // Kanban's own board fetch (fetchStageDeals) needs a re-fetch whenever
 // `search` changes while Kanban is showing (debounced, same 400ms as List
@@ -294,6 +317,15 @@ watch([search, viewMode], ([, mode], previous) => {
     }, 400)
   }
 })
+
+// nameById's own '-' stays for a Company not loaded yet (or no Company at
+// all — Lead cards); a loaded Company with a blank name (created by
+// converting a company-less Prospect) gets the "(Unnamed company)"
+// placeholder instead.
+const companyLabel = (id: number | null | undefined) => {
+  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
+  return company ? companyName(company.name) : '-'
+}
 
 const stageFilterOptions = computed(() => [
   { label: t('crm.dashboard.allStages'), value: 'all' },
