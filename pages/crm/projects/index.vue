@@ -192,7 +192,7 @@ onMounted(async () => {
   if (productCategoryOptionsStore.items.length === 0) productCategoryOptionsStore.fetchAll().catch(notifyApiError)
 })
 
-const activeTab = useQuerySyncedRef('tab', 'projects')
+const activeTab = useQuerySyncedRef('tab', 'projects', 0, ['projects', 'products'])
 const tabItems = computed(() => [
   { label: t('crm.projects.index.tabs.projects'), value: 'projects' },
   { label: t('crm.projects.index.tabs.products'), value: 'products' },

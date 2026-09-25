@@ -430,7 +430,8 @@ const revenueSizeOptions = computed<Select[]>(() => {
 // (route-driven via child routes rather than a query param, since Deal's
 // tabs are separate page files; Company's tabs all live in this one file, so
 // a query param is the lighter-weight way to get the same result).
-const activeTab = useQuerySyncedRef('tab', 'overview')
+const COMPANY_TABS = ['overview', 'contacts', 'deals', 'quotesContracts', 'products', 'projects', 'activity', 'tasks', 'attachments']
+const activeTab = useQuerySyncedRef('tab', 'overview', 0, COMPANY_TABS)
 const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
