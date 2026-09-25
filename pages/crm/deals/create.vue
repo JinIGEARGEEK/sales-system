@@ -31,7 +31,7 @@
           <InputText v-model="form.title" :label="t('crm.deals.create.dealTitle')" :placeholder="t('crm.deals.create.dealTitlePlaceholder')" name="title" rules="required" />
           <InputCompanySelect v-model="form.company_id" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" rules="required" />
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
-          <InputText v-model="form.value" thousands :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" rules="required" />
+          <InputText v-model="form.value" thousands :decimals="2" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" rules="required" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <div>
             <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.create.forecastCategory')" name="forecast_category" />

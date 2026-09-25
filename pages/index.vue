@@ -230,7 +230,7 @@ onMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyFetchError)
   if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyFetchError)
   // Scoped to Production only — no other role sees this widget, and
-  // fetchAll's per_page:1000 cross-company pull isn't worth firing for
+  // fetchAll's cross-company pull isn't worth firing for
   // everyone just to sit unused.
   if (canViewProductionWidgets.value && projectsStore.items.length === 0) projectsStore.fetchAll().catch(notifyFetchError)
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyFetchError)

@@ -19,7 +19,7 @@
         :data-cy="props.dataCy"
         :placeholder="props.placeholder"
         :type="props.thousands ? 'text' : props.type"
-        :inputmode="props.thousands ? 'decimal' : undefined"
+        :inputmode="props.thousands ? (props.decimals > 0 ? 'decimal' : 'numeric') : undefined"
         :disabled="props.disable"
         :maxlength="props.maxlength"
         :size="props.size"
@@ -79,8 +79,8 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // Displays a numeric modelValue with thousands separators and up to 2
-  // decimals (e.g. 3000000.5 -> "3,000,000.5") while typing (helpers in
+  // Displays a numeric modelValue with thousands separators (and up to
+  // `decimals` fraction digits, e.g. 3000000.5 -> "3,000,000.5") while typing (helpers in
   // composables/utils/thousandsInput.ts), forcing the underlying input to
   // `type="text"` (a native `type="number"` input rejects commas outright,
   // so this can't just be a display-only overlay on top of it). modelValue
@@ -90,6 +90,12 @@ const props = defineProps({
   thousands: {
     type: Boolean,
     default: false,
+  },
+  // Fraction digits `thousands` mode accepts — 0 (whole numbers) unless the
+  // backend field is a float (e.g. Deal value: :decimals="2").
+  decimals: {
+    type: Number,
+    default: 0,
   },
 })
 
@@ -147,7 +153,7 @@ const onUpdateModelValue = (value: unknown) => {
   emit('update:model-value', value)
 }
 
-const displayValue = ref(formatThousands(props.modelValue))
+const displayValue = ref(formatThousands(props.modelValue, props.decimals))
 
 // Resyncs from genuinely external changes (a form reset, a store value
 // loading in after this field already mounted) — while the user is actively
@@ -157,9 +163,9 @@ const displayValue = ref(formatThousands(props.modelValue))
 // carrying a watcher it has no use for.
 if (props.thousands) {
   watch(() => props.modelValue, (value) => {
-    const currentNumeric = parseThousandsInput(sanitizeThousandsInput(displayValue.value))
+    const currentNumeric = parseThousandsInput(sanitizeThousandsInput(displayValue.value, props.decimals))
     const incomingNumeric = value === '' || value === null || value === undefined ? null : Number(value)
-    if (currentNumeric !== incomingNumeric) displayValue.value = formatThousands(value)
+    if (currentNumeric !== incomingNumeric) displayValue.value = formatThousands(value, props.decimals)
   })
 }
 
@@ -171,8 +177,8 @@ const onThousandsInput = async (event: Event) => {
   const el = event.target as HTMLInputElement
   const cursorBefore = el.selectionStart ?? el.value.length
   const digitsBeforeCursor = el.value.slice(0, cursorBefore).replace(/[^0-9.]/g, '').length
-  const canonical = sanitizeThousandsInput(el.value)
-  const formatted = formatThousands(canonical)
+  const canonical = sanitizeThousandsInput(el.value, props.decimals)
+  const formatted = formatThousands(canonical, props.decimals)
 
   displayValue.value = formatted
   emit('update:model-value', parseThousandsInput(canonical))

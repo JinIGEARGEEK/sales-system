@@ -13,7 +13,7 @@
         <Form @submit="onSave">
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.title" :label="t('crm.deals.detail.dealTitle')" name="title" rules="required" />
-            <InputText v-model="form.value" :label="t('crm.deals.detail.dealValue')" thousands name="value" rules="required" data-cy="deal-value-input" />
+            <InputText v-model="form.value" :label="t('crm.deals.detail.dealValue')" thousands :decimals="2" name="value" rules="required" data-cy="deal-value-input" />
             <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.detail.stage')" name="stage" rules="required" />
             <div>
               <InputText

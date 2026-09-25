@@ -26,6 +26,15 @@ describe('sanitizeThousandsInput', () => {
   })
 })
 
+describe('whole-number mode (fractionDigits 0)', () => {
+  it('drops a decimal point and everything after it', () => {
+    expect(sanitizeThousandsInput('1,234.56', 0)).toBe('1234')
+    expect(sanitizeThousandsInput('1500.', 0)).toBe('1500')
+    expect(formatThousands('1234567.8', 0)).toBe('1,234,567')
+    expect(formatThousands(1500.5, 0)).toBe('1,501')
+  })
+})
+
 describe('parseThousandsInput', () => {
   it('returns a number, or null when nothing was typed', () => {
     expect(parseThousandsInput('1500.5')).toBe(1500.5)
