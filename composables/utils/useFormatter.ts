@@ -5,6 +5,8 @@ import 'dayjs/locale/th'
 
 extend(buddhistEra)
 
+export const BUDDHIST_ERA_OFFSET = 543
+
 export const useFormatter = () => {
   // Both use the Buddhist era with a 4-digit year (`BBBB`, from the dayjs
   // buddhistEra plugin: Gregorian year + 543) so a date reads the same with
@@ -13,12 +15,11 @@ export const useFormatter = () => {
   const dateFormat = (value: Date | string) => dayjs(value).format('DD/MM/BBBB')
   const dateTimeFormat = (value: Date | string) => dayjs(value).format('DD/MM/BBBB HH:mm')
 
-  // Display form of a bare Gregorian calendar year (e.g. a SalesTarget's
-  // `year`) for the active UI locale: Buddhist era (+543) in Thai, unchanged
-  // otherwise. Display only — stored/sent years always stay Gregorian.
-  const BUDDHIST_ERA_OFFSET = 543
-  const localeYear = (year: number, locale: string) => (locale === 'th' ? year + BUDDHIST_ERA_OFFSET : year)
-  const fromLocaleYear = (year: number, locale: string) => (locale === 'th' ? year - BUDDHIST_ERA_OFFSET : year)
+  // A bare Gregorian calendar year (e.g. a SalesTarget's `year`) as shown and
+  // typed in the UI: Buddhist era (+543), in every locale, like the dates
+  // above. Display only — stored/sent years always stay Gregorian.
+  const buddhistYear = (year: number) => year + BUDDHIST_ERA_OFFSET
+  const fromBuddhistYear = (year: number) => year - BUDDHIST_ERA_OFFSET
 
   // Normalizes to a consistent `xxx-xxx-xxxx` (or `xx-xxx-xxxx` for a 9-digit
   // landline number) regardless of how the raw value was entered/stored —
@@ -69,8 +70,8 @@ export const useFormatter = () => {
   return {
     dateFormat,
     dateTimeFormat,
-    localeYear,
-    fromLocaleYear,
+    buddhistYear,
+    fromBuddhistYear,
     phoneFormat,
     priceFormat,
     priceFormatCompact,

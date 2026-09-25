@@ -6,7 +6,7 @@
           <InputText
             v-model.number="displayYear"
             type="number"
-            :label="yearLabel"
+            :label="t('admin.pipelineConfig.salesTargets.yearBuddhist')"
             name="year"
             rules="required"
           />
@@ -40,8 +40,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-const { t, locale } = useI18n()
-const { localeYear, fromLocaleYear } = useFormatter()
+const { t } = useI18n()
+const { buddhistYear, fromBuddhistYear } = useFormatter()
 
 const QUARTER_OPTIONS: Select[] = [
   { label: 'Q1', value: 1 },
@@ -71,23 +71,20 @@ const emptyForm = () => ({
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
-// The year field shows/accepts the Buddhist-era year in the Thai locale
-// (2569), matching how dates read everywhere else — but form.year (and the
-// submitted payload) always stays the Gregorian year the API stores.
+// The year field shows/accepts the Buddhist-era year (2569), matching how
+// dates read everywhere else — but form.year (and the submitted payload)
+// always stays the Gregorian year the API stores.
 const displayYear = computed({
   get: (): number | string => {
     const year = form.year as number | string | null
-    return year === '' || year === null ? '' : localeYear(Number(year), locale.value)
+    return year === '' || year === null ? '' : buddhistYear(Number(year))
   },
   set: (value: number | string) => {
     // Keep a cleared field empty (so `required` still fires) instead of
     // turning '' into -543.
-    form.year = (value === '' || value === null ? value : fromLocaleYear(Number(value), locale.value)) as number
+    form.year = (value === '' || value === null ? value : fromBuddhistYear(Number(value))) as number
   },
 })
-const yearLabel = computed(() => locale.value === 'th'
-  ? `${t('admin.pipelineConfig.salesTargets.year')} (พ.ศ.)`
-  : t('admin.pipelineConfig.salesTargets.year'))
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 

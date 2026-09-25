@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 describe('useFormatter', () => {
-  const { dateFormat, dateTimeFormat, localeYear, fromLocaleYear, phoneFormat, priceFormat, numberFormat, severityColor, parseTags, toDateInputValue } = useFormatter()
+  const { dateFormat, dateTimeFormat, buddhistYear, fromBuddhistYear, phoneFormat, priceFormat, numberFormat, severityColor, parseTags, toDateInputValue } = useFormatter()
 
   describe('dateFormat / dateTimeFormat', () => {
     it('formats a date in the Buddhist era with a 4-digit year', () => {
@@ -13,18 +13,13 @@ describe('useFormatter', () => {
     })
   })
 
-  describe('localeYear / fromLocaleYear', () => {
-    it('shows the Buddhist-era year in the Thai locale', () => {
-      expect(localeYear(2026, 'th')).toBe(2569)
-    })
-
-    it('leaves the Gregorian year unchanged in other locales', () => {
-      expect(localeYear(2026, 'en')).toBe(2026)
+  describe('buddhistYear / fromBuddhistYear', () => {
+    it('shows the Buddhist-era year', () => {
+      expect(buddhistYear(2026)).toBe(2569)
     })
 
     it('round-trips a displayed year back to the Gregorian year', () => {
-      expect(fromLocaleYear(localeYear(2026, 'th'), 'th')).toBe(2026)
-      expect(fromLocaleYear(2026, 'en')).toBe(2026)
+      expect(fromBuddhistYear(buddhistYear(2026))).toBe(2026)
     })
   })
 

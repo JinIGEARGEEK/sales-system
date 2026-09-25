@@ -210,6 +210,7 @@ export default {
     addTitle: 'เพิ่มเป้าหมายรายไตรมาส',
     editTitle: 'แก้ไขเป้าหมายรายไตรมาส',
     year: 'ปี',
+    yearBuddhist: 'ปี (พ.ศ.)',
     quarter: 'ไตรมาส',
     targetValue: 'มูลค่าเป้าหมาย',
     columns: {

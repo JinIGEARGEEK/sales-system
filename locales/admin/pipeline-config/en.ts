@@ -210,6 +210,7 @@ export default {
     addTitle: 'Add Quarterly Target',
     editTitle: 'Edit Quarterly Target',
     year: 'Year',
+    yearBuddhist: 'Year (B.E.)',
     quarter: 'Quarter',
     targetValue: 'Target Value',
     columns: {
