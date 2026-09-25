@@ -210,56 +210,23 @@ const confirmRemoveQuote = async () => {
   }
 }
 
-const onUpdateQuoteStatus = async (id: number, status: QuoteStatus) => {
-  try {
-    // updateStatus rebuilds the full PUT payload from the loaded Quote.
-    await quotesStore.updateStatus(id, status)
-    success(t('crm.deals.detail.updateQuoteStatusSuccess'))
-  } catch (err) {
-    notifyApiError(err)
-    // Snap the select back to the still-saved status on failure too.
-    statusSelectResetKey.value++
-  }
-}
-
 const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
 const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
 
-const pendingStatusChange = ref<{ quote: Quote, status: QuoteStatus } | null>(null)
-// Bumped to remount the inline selects (via :key) so a cancelled or failed
-// change visibly reverts to the saved status instead of keeping the picked one.
-const statusSelectResetKey = ref(0)
-
-// InputSelect can report one pick twice (its own USelect and the wrapping
-// vee-validate Field both emit update:model-value) — `inFlightStatus`
-// collapses that into a single PUT/confirm per pick.
-const inFlightStatus = new Map<number, QuoteStatus>()
-
-const requestQuoteStatusChange = async (quote: Quote, status: QuoteStatus) => {
-  if (status === quote.status || inFlightStatus.get(quote.id) === status) return
-  if (CONFIRMED_QUOTE_STATUSES.includes(status)) {
-    pendingStatusChange.value = { quote, status }
-    return
-  }
-  inFlightStatus.set(quote.id, status)
-  try {
-    await onUpdateQuoteStatus(quote.id, status)
-  } finally {
-    inFlightStatus.delete(quote.id)
-  }
-}
-
-const cancelQuoteStatusChange = () => {
-  pendingStatusChange.value = null
-  statusSelectResetKey.value++
-}
-
-const confirmQuoteStatusChange = async () => {
-  const pending = pendingStatusChange.value
-  if (!pending) return
-  await onUpdateQuoteStatus(pending.quote.id, pending.status)
-  pendingStatusChange.value = null
-}
+const {
+  pending: pendingStatusChange,
+  resetKey: statusSelectResetKey,
+  request: requestQuoteStatusChange,
+  cancel: cancelQuoteStatusChange,
+  confirm: confirmQuoteStatusChange,
+} = useConfirmedStatusChange<QuoteStatus, Quote>({
+  confirmStatuses: CONFIRMED_QUOTE_STATUSES,
+  save: async (quote, status) => {
+    // updateStatus rebuilds the full PUT payload from the loaded Quote.
+    await quotesStore.updateStatus(quote.id, status)
+    success(t('crm.deals.detail.updateQuoteStatusSuccess'))
+  },
+})
 
 const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)
 </script>
