@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { LOST_REASON_OPTIONS } from '~/constants/mockData'
 
@@ -46,22 +45,16 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const instance = getCurrentInstance()
+const emitConfirm = useAwaitableEmit<[LostReason]>('confirm')
 const reason = ref('')
 watch(() => props.open, (isOpen) => { if (isOpen) reason.value = '' })
 
-// Keeps the modal open with a spinner until the caller's (possibly async)
-// @confirm handler — the actual stage move — settles, and ignores re-clicks
-// meanwhile so a double click can't send the move twice. emit() never
-// returns the listener's promise, so the raw listener is called off the
-// vnode instead (same approach as ConfirmDeleteModal).
+// Stays open with a spinner until the caller's @confirm (the actual stage
+// move) settles, ignoring re-clicks so a double click can't move twice.
 const { loading, guard } = useSubmitGuard()
 const onConfirm = guard(async () => {
   if (!reason.value) return
-  const value = reason.value as LostReason
-  const handler = instance?.vnode.props?.onConfirm as ((reason: LostReason) => unknown) | undefined
-  if (handler) await handler(value)
-  else emit('confirm', value)
+  await emitConfirm(reason.value as LostReason)
   emit('update:open', false)
 })
 </script>

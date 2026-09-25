@@ -29,11 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const instance = getCurrentInstance()
+const emitConfirm = useAwaitableEmit('confirm')
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -79,18 +78,9 @@ watch(() => props.open, (isOpen) => {
   nextTick(() => confirmButtonRef.value?.$el?.focus())
 })
 
-// NOTE: Vue's emit() always returns `undefined` at runtime — it never forwards
-// the bound listener's return value — so `await emit('confirm')` would be a
-// silent no-op and this button's loadingAuto spinner (and re-click guard)
-// would never actually track the caller's async confirmDelete() work.
-// Instead, call the raw `onConfirm` listener straight off the vnode props
-// (bypassing emit()'s void-returning wrapper) so its real promise is awaited
-// here, with zero changes needed at any of the ~15+ call sites.
+// Awaits the caller's (usually async) delete, so the button's loadingAuto
+// spinner and re-click guard track it.
 const onConfirm = async () => {
-  const handler = instance?.vnode.props?.onConfirm as (() => unknown) | undefined
-  const result = handler?.()
-  if (result && typeof (result as Promise<unknown>)?.then === 'function') {
-    await result
-  }
+  await emitConfirm()
 }
 </script>

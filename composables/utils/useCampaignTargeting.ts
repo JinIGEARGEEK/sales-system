@@ -29,13 +29,16 @@ export const useCampaignTargeting = (
     createCampaignOpen.value = true
   }
 
-  const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload) => {
+  // Resolves false on failure so CrmCreateCampaignModal stays open.
+  const onSubmitCampaign = async (payload: CampaignTaskSetupSubmitPayload): Promise<boolean> => {
     try {
       const campaign = await campaignsStore.submitCampaignTasks(campaignTargets.value, payload)
       success(t(payload.mode === 'existing' ? successKeys.add : successKeys.create, { name: campaign.name, count: campaignTargets.value.length }))
       onSuccess?.()
+      return true
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
+      return false
     }
   }
 

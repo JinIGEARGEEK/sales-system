@@ -73,9 +73,11 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-// Guarded (like the other Add*Modals) so a double click on Save can't emit
-// the task twice; `loading` drives the Save button's spinner/disabled state.
-const onSubmit = guard(() => {
+// Awaits the caller's save, so `loading` spins Save until it lands and the
+// guard turns away a second click meanwhile.
+const emitSubmit = useAwaitableEmit('submit')
+const emitUpdate = useAwaitableEmit('update')
+const onSubmit = guard(async () => {
   const shared = {
     title: form.title,
     description: form.description,
@@ -84,9 +86,9 @@ const onSubmit = guard(() => {
     assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
   }
   if (props.task) {
-    emit('update', shared)
+    await emitUpdate(shared)
   } else {
-    emit('submit', {
+    await emitSubmit({
       ...shared,
       ...(props.showRelatedPicker
         ? { related_type: form.related_type as TaskRelatedType, related_id: Number(form.related_id) }
