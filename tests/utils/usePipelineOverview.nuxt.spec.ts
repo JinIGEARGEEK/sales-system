@@ -10,6 +10,7 @@ import {
   movedInPeriod,
   overviewPeriodLength,
   overviewPeriodRange,
+  staleDaysRange,
   zoneOpenTotals,
 } from '~/composables/utils/usePipelineOverview'
 
@@ -112,6 +113,23 @@ describe('usePipelineOverview', () => {
     const lane = (terminal: boolean, count: number, value: number): PipelineOverviewLane => ({ name: String(count), kind: terminal ? 'won' : 'open', terminal, stale_days: terminal ? 0 : 14, count, value, cards: [] })
     const zone: PipelineOverviewZone = { key: 'deal', lanes: [lane(false, 2, 100), lane(false, 3, 50), lane(true, 9, 999)] }
     expect(zoneOpenTotals(zone)).toEqual({ count: 5, value: 150 })
+  })
+
+  describe('staleDaysRange', () => {
+    const lane = (staleDays: number, terminal = false): PipelineOverviewLane => ({ name: String(staleDays), kind: terminal ? 'won' : 'open', terminal, stale_days: staleDays, count: 0, value: 0, cards: [] })
+
+    it('is null with no open lanes, so the caller can quote the default', () => {
+      expect(staleDaysRange([])).toBeNull()
+      expect(staleDaysRange([{ lanes: [lane(0, true)] }])).toBeNull()
+    })
+
+    it('collapses to one value when every open lane shares it, ignoring terminal lanes', () => {
+      expect(staleDaysRange([{ lanes: [lane(14), lane(14), lane(0, true)] }, { lanes: [lane(14)] }])).toEqual({ min: 14, max: 14 })
+    })
+
+    it('spans every zone, treating a 0 threshold as the 14-day default', () => {
+      expect(staleDaysRange([{ lanes: [lane(7), lane(0)] }, { lanes: [lane(30)] }])).toEqual({ min: 7, max: 30 })
+    })
   })
 
   describe('"other" lane labels', () => {

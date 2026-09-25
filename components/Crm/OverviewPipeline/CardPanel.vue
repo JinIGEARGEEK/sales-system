@@ -3,9 +3,17 @@
     :open="open"
     side="right"
     :ui="{ content: 'max-w-md' }"
+    :title="dialogTitle"
+    :description="dialogDescription"
     @update:open="emit('update:open', $event)"
   >
-    <template #header>
+    <!-- #content (not #header/#body/#footer) so the `title`/`description`
+    props above render as a visually-hidden DialogTitle/Description — the
+    dialog's accessible name — while the visible header below keeps its own
+    custom layout. The three wrappers reuse Slideover's own header/body/
+    footer slot classes, so the look is unchanged. -->
+    <template #content>
+    <div class="flex min-h-16 items-center gap-1.5 p-4 sm:px-6">
       <div v-if="selection" class="flex min-w-0 flex-1 items-start gap-3">
         <div class="min-w-0 flex-1">
           <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
@@ -30,9 +38,9 @@
           @click="emit('update:open', false)"
         />
       </div>
-    </template>
+    </div>
 
-    <template #body>
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6">
       <div v-if="selection" class="flex flex-col gap-5">
         <dl class="grid grid-cols-[7.5rem_1fr] items-center gap-x-3 gap-y-2.5 text-sm">
           <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.stage') }}</dt>
@@ -67,7 +75,7 @@
           <dt class="text-(--color-gray)">{{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closed') : t('crm.overviewPipeline.panel.inStage') }}</dt>
           <dd class="tabular-nums">
             {{ selection.lane.terminal ? t('crm.overviewPipeline.panel.closedDays', { days }) : t('crm.overviewPipeline.panel.inStageDays', { days }) }}
-            <UTooltip v-if="stale" :text="t('crm.overviewPipeline.highlight.staleHint', { days: selection.lane.stale_days || OVERVIEW_STALE_DAYS })" :ui="MULTILINE_TOOLTIP_UI">
+            <UTooltip v-if="stale" :text="t('crm.overviewPipeline.highlight.staleHintLane', { days: selection.lane.stale_days || OVERVIEW_STALE_DAYS, default: OVERVIEW_STALE_DAYS })" :ui="MULTILINE_TOOLTIP_UI">
               <UBadge class="ml-1" size="xs" variant="subtle" color="warning" icon="material-symbols:schedule-outline" :label="t('crm.overviewPipeline.panel.stale')" />
             </UTooltip>
           </dd>
@@ -101,9 +109,9 @@
           <p v-else class="text-sm text-(--color-gray)">{{ t('crm.overviewPipeline.panel.noActivity') }}</p>
         </div>
       </div>
-    </template>
+    </div>
 
-    <template #footer>
+    <div class="flex items-center gap-1.5 p-4 sm:px-6">
       <div v-if="selection" class="flex w-full flex-wrap gap-2">
         <ButtonPrimary :label="t('crm.overviewPipeline.panel.logActivity')" icon="material-symbols:edit-note-outline" outline @click="activityOpen = true" />
         <ButtonPrimary :label="t('crm.overviewPipeline.panel.addTask')" icon="material-symbols:add-task" outline @click="taskOpen = true" />
@@ -115,6 +123,7 @@
         />
         <ButtonPrimary :label="t('crm.overviewPipeline.panel.openFullPage')" icon="material-symbols:open-in-new" outline @click="openFullPage" />
       </div>
+    </div>
     </template>
   </USlideover>
 
@@ -160,6 +169,11 @@ const tasksStore = useTasksStore()
 const dealsStore = useDealsStore()
 const leadsStore = useLeadsStore()
 const prospectsStore = useProspectsStore()
+
+// The dialog's accessible name/description (rendered visually hidden — the
+// visible header shows the same facts in its own layout).
+const dialogTitle = computed(() => (props.selection ? props.selection.card.name || `#${props.selection.card.id}` : t('crm.overviewPipeline.panel.dialogTitle')))
+const dialogDescription = computed(() => (props.selection ? `${t(`crm.overviewPipeline.panel.kind.${props.selection.zone}`)} · #${props.selection.card.id}` : undefined))
 
 const ACTIVITY_ICONS: Record<ActivityType, string> = {
   call: 'material-symbols:call-outline',
