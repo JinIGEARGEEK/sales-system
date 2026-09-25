@@ -120,7 +120,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
+            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @edit="openEditTask" />
           </UCard>
         </div>
       </div>
@@ -265,7 +265,7 @@ const {
   'crm.contacts.detail.updateProjectSuccess',
 )
 
-const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('contact', contactId, 'crm.contacts.detail.addActivitySuccess')
 const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 

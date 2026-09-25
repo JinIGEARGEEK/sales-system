@@ -281,7 +281,7 @@
               @click="openAddTask"
             />
           </div>
-          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
+          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @edit="openEditTask" />
         </ContainerTemplate>
 
         <CrmAddTaskModal
@@ -486,7 +486,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))

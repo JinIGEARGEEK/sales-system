@@ -7,6 +7,9 @@ const parseDates = (task: Task): Task => ({
   created_at: new Date(task.created_at),
 })
 
+// In-flight fetchForRelated requests, keyed by related_type:related_id.
+const relatedFetches = new Map<string, Promise<Task[]>>()
+
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
     items: [] as Task[],
@@ -51,17 +54,26 @@ export const useTasksStore = defineStore('tasks', {
     // One record's tasks (GET /tasks?related_type=&related_id=), merged into
     // `items` so `forRelated` picks them up. For a detail page's Tasks tab,
     // which otherwise only shows whatever an earlier visit happened to cache.
-    async fetchForRelated (relatedType: TaskRelatedType, relatedId: number) {
-      const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Task[]>>('/tasks', {
-        params: { related_type: relatedType, related_id: relatedId, per_page: 200, sort: 'due_date' },
-      })
-      const fetched = response.data.data.map(parseDates)
-      this.items = [
-        ...this.items.filter(task => !(task.related_type === relatedType && task.related_id === relatedId)),
-        ...fetched,
-      ]
-      return fetched
+    // Concurrent calls for the same record share one request (the Deal
+    // page's overdue badge and its Tasks tab both ask on the same visit).
+    fetchForRelated (relatedType: TaskRelatedType, relatedId: number): Promise<Task[]> {
+      const key = `${relatedType}:${relatedId}`
+      const pending = relatedFetches.get(key)
+      if (pending) return pending
+      const request = (async () => {
+        const { $api } = useNuxtApp()
+        const response = await $api.get<ApiResponse<Task[]>>('/tasks', {
+          params: { related_type: relatedType, related_id: relatedId, per_page: 200, sort: 'due_date' },
+        })
+        const fetched = response.data.data.map(parseDates)
+        this.items = [
+          ...this.items.filter(task => !(task.related_type === relatedType && task.related_id === relatedId)),
+          ...fetched,
+        ]
+        return fetched
+      })().finally(() => relatedFetches.delete(key))
+      relatedFetches.set(key, request)
+      return request
     },
     async add (task: Omit<Task, 'id' | 'status' | 'created_at'>): Promise<Task> {
       const { $api } = useNuxtApp()

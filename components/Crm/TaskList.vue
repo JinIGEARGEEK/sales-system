@@ -144,12 +144,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggle: [id: number]
-  // Deprecated, never emitted: the list now deletes the task itself (see
-  // onConfirmRemove) so the success toast only shows once the API call has
-  // actually succeeded. Still declared so existing `@remove` listeners (the
-  // detail pages via useTaskList) stay inert instead of falling through to
-  // the root element — and aren't called a second time for the same id.
-  remove: [id: number]
   // Emitted after a successful delete, for a caller that must refresh a
   // server-paged list (the all-tasks page).
   removed: [id: number]

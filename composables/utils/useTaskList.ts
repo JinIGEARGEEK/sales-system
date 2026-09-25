@@ -19,6 +19,10 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
   const addTaskOpen = ref(false)
   const editingTask = ref<Task | null>(null)
   const tasks = computed(() => tasksStore.forRelated(relatedType, relatedId))
+  // Load this record's own tasks: the store's cache is no longer filled by
+  // the all-tasks page (it pages server-side now), so without this the tab
+  // would only show what some earlier page happened to cache.
+  tasksStore.fetchForRelated(relatedType, relatedId).catch(notifyApiError)
 
   const openAddTask = () => {
     editingTask.value = null
@@ -50,7 +54,6 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
   }
 
   const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
-  const onRemoveTask = (id: number) => tasksStore.remove(id).catch(notifyApiError)
 
-  return { tasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask }
+  return { tasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask }
 }
