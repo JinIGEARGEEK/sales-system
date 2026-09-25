@@ -13,8 +13,6 @@ export default {
     clearFilters: 'Clear filters',
     emptyTitle: 'No activities yet',
     emptyDescription: 'Log a call, email or meeting to start the timeline.',
-    emptyFilteredTitle: 'No activities match your filters',
-    emptyFilteredDescription: 'Try a different search or clear the filters to see every activity.',
     filterType: 'Type',
     allTypes: 'All Types',
     filterRelatedType: 'Record Type',

@@ -110,7 +110,7 @@
                     type="button"
                     class="flex cursor-pointer items-center gap-1 rounded focus-visible:outline-2 focus-visible:outline-(--color-primary)"
                     :data-cy="`sort-${col.field}`"
-                    @click="onSort(col.isSort, col.field)"
+                    @click="onSort(col.field)"
                   >
                     <b>{{ col.label }}</b>
                     <UIcon :name="sortIcon(col.field)" class="inline size-4" aria-hidden="true" />
@@ -171,11 +171,7 @@
                     />
                   </div>
                   <div v-else>
-                    <TableCardType
-                      :type="col.type"
-                      :item="row[col.field]"
-                      @print="emit('print', row)"
-                    />
+                    <TableCardType :type="col.type" :item="row[col.field]" />
                   </div>
                 </td>
               </tr>
@@ -332,7 +328,6 @@ const emit = defineEmits([
   'changePerPage',
   'sort',
   'update:selectValue',
-  'print',
   'viewDetail',
   'edit',
   'delete',
@@ -429,12 +424,10 @@ const getActionMenuItems = (col: TableDataColumn, row: TableRowData, _rowIndex: 
 const innerField = ref('')
 const innerSortBy = ref('desc')
 
-const onSort = (isSort: boolean | undefined, field: string) => {
-  if (isSort) {
-    innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'
-    innerField.value = field
-    emit('sort', field, innerSortBy.value)
-  }
+const onSort = (field: string) => {
+  innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'
+  innerField.value = field
+  emit('sort', field, innerSortBy.value)
 }
 
 // For the sortable <th>'s aria-sort — only the active sort column reports a

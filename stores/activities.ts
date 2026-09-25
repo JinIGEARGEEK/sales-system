@@ -34,10 +34,6 @@ export const useActivitiesStore = defineStore('activities', {
       .filter(a => a.related_type === relatedType && a.related_id === relatedId),
   },
   actions: {
-    // (The former fetchAll — one capped 200-row unfiltered pull the
-    // Activities page filtered/paged client-side — was replaced 2026-09-25
-    // by fetchFeed below, its only caller having moved to server paging.)
-    //
     // Server-paginated cross-entity feed for the /crm/activities page: real
     // Activities plus Deal stage-change history, interleaved, filtered,
     // sorted and paged server-side (GET /activities?include_stage_changes=true).

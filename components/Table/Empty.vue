@@ -11,38 +11,17 @@
     <p v-if="descriptionText" class="max-w-sm text-xs text-(--color-gray)">{{ descriptionText }}</p>
 
     <ButtonPrimary
-      v-if="filtered"
+      v-if="button"
       class="mt-2"
-      :label="t('global.table.empty.clearFilters')"
-      icon="material-symbols:filter-alt-off-outline"
-      outline
+      :label="button.label"
+      :icon="button.icon"
+      :to="button.to"
+      :outline="filtered"
       small
       fit-content
       :loading-auto="false"
       :data-cy="`table-empty-action${dataCySuffix}`"
-      @click="emit('clearFilters')"
-    />
-    <ButtonPrimary
-      v-else-if="actionLabel && actionTo"
-      class="mt-2"
-      :label="actionLabel"
-      :to="actionTo"
-      icon="material-symbols:add"
-      small
-      fit-content
-      :loading-auto="false"
-      :data-cy="`table-empty-action${dataCySuffix}`"
-    />
-    <ButtonPrimary
-      v-else-if="actionLabel"
-      class="mt-2"
-      :label="actionLabel"
-      icon="material-symbols:add"
-      small
-      fit-content
-      :loading-auto="false"
-      :data-cy="`table-empty-action${dataCySuffix}`"
-      @click="emit('action')"
+      @click="button.onClick"
     />
   </div>
 </template>
@@ -90,6 +69,21 @@ const iconName = computed(() => (props.filtered
 const titleText = computed(() => (props.filtered
   ? t('global.table.empty.filteredTitle')
   : props.title || t('global.noData')))
+
+// Clear filters when filtered, else the create CTA (a link when `actionTo`
+// is set, otherwise it emits `action`).
+const button = computed(() => {
+  if (props.filtered) {
+    return { label: t('global.table.empty.clearFilters'), icon: 'material-symbols:filter-alt-off-outline', to: undefined, onClick: () => emit('clearFilters') }
+  }
+  if (!props.actionLabel) return null
+  return {
+    label: props.actionLabel,
+    icon: 'material-symbols:add',
+    to: props.actionTo,
+    onClick: () => { if (!props.actionTo) emit('action') },
+  }
+})
 
 const descriptionText = computed(() => (props.filtered
   ? t('global.table.empty.filteredDescription')

@@ -13,8 +13,6 @@ export default {
     clearFilters: 'ล้างตัวกรอง',
     emptyTitle: 'ยังไม่มีกิจกรรม',
     emptyDescription: 'บันทึกการโทร อีเมล หรือการประชุม เพื่อเริ่มต้นไทม์ไลน์',
-    emptyFilteredTitle: 'ไม่พบกิจกรรมที่ตรงกับตัวกรอง',
-    emptyFilteredDescription: 'ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูกิจกรรมทั้งหมด',
     filterType: 'ประเภท',
     allTypes: 'ทุกประเภท',
     filterRelatedType: 'ประเภทรายการ',

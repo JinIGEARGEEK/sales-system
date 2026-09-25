@@ -168,10 +168,8 @@ const toggleSelectAll = () => {
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Task>()
 
-// The toast used to fire right after emit('remove'), before the caller's
-// API call had even started — so a failed delete showed "removed" and then
-// an error. Now the list awaits the delete itself: success toast only on
-// success, only the error toast on failure.
+// The list runs the delete itself so the success toast only shows once the
+// API call has succeeded.
 const onConfirmRemove = async () => {
   // ConfirmDeleteModal awaits this handler, so its button spins meanwhile.
   const task = target.value

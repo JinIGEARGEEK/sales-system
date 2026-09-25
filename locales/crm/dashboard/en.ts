@@ -110,8 +110,6 @@ export default {
   forecastTrend: 'Forecast Trend',
   forecastTrendHint: 'Probability-weighted value of open deals by expected close month, next 6 months. Deals without an expected close date aren\'t shown here, so this may total less than Forecasted Revenue above.',
   pipelineAnalytics: 'Pipeline Analytics',
-  pipelineByStage: 'Pipeline by Stage',
-  noPipelineStages: 'No pipeline stages configured yet.',
   previewBadge: 'Preview',
   noDataPreviewHint: 'No data yet — this is a preview of how it\'ll look once you have deals.',
   salesFunnel: 'Sales Funnel',

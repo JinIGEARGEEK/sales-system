@@ -49,8 +49,8 @@ const props = defineProps({
   },
 })
 
-// Default placeholder is translated ("วว/ดด/ปปปป" in Thai) and mirrors the
-// Buddhist-era DD/MM/BBBB format the field actually displays.
+// The default placeholder (global.input.date*Placeholder) mirrors the
+// Buddhist-era date the field shows.
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
 

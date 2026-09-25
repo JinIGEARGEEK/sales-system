@@ -54,8 +54,8 @@ const lang = {
     },
   },
   input: {
-    datePlaceholder: 'DD/MM/YYYY',
-    dateRangePlaceholder: 'DD/MM/YYYY - DD/MM/YYYY',
+    datePlaceholder: 'DD/MM/YYYY (B.E.)',
+    dateRangePlaceholder: 'DD/MM/YYYY - DD/MM/YYYY (B.E.)',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     searching: 'Searching...',
