@@ -25,6 +25,7 @@
             :label="t('admin.pipelineConfig.weeklyDigest.sendTest')"
             :loading="testLoading"
             :disabled="!smtpConfigured"
+            data-cy="weekly-digest-send-test"
             @click="sendTest"
           />
         </div>
