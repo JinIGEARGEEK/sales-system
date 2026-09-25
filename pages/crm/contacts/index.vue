@@ -168,14 +168,14 @@ const showImport = ref(false)
 
 // Company/tag collapse behind "More filters" below md (CrmMoreFilters) —
 // this badge count keeps an active hidden filter visible while collapsed.
-const secondaryFilterCount = computed(() => [companyFilter, tagFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  companyFilter.value = 'all'
-  tagFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter },
+    { ref: companyFilter, secondary: true },
+    { ref: tagFilter, secondary: true },
+  ],
+})
 
 const onExport = () => downloadCsvBlob('/contacts/export', 'contacts.csv')
 

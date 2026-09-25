@@ -190,14 +190,14 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 
 // Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
 // search + the status pill stay visible.
-const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  sourceFilter.value = 'all'
-  assigneeFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter },
+    { ref: sourceFilter, secondary: true },
+    { ref: assigneeFilter, secondary: true },
+  ],
+})
 
 // nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
 // with a blank name gets the "(Unnamed company)" placeholder instead.

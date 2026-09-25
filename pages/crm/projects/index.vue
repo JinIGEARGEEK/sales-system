@@ -206,11 +206,10 @@ const search = useQuerySyncedRef('search', '', 400)
 // so refresh/back-forward restore it too.
 const statusFilter = useQuerySyncedRef('status')
 
-const hasActiveProjectFilters = computed(() => search.value !== '' || statusFilter.value !== 'all')
-const clearProjectFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-}
+const { hasActive: hasActiveProjectFilters, clear: clearProjectFilters } = useListFilters({
+  search,
+  filters: [{ ref: statusFilter }],
+})
 
 const statusFilterOptions = computed(() => [
   { label: t('crm.projects.index.allStatuses'), value: 'all' },
@@ -330,11 +329,10 @@ const {
 const productSearch = useQuerySyncedRef('productSearch', '', 400)
 const productStatusFilter = useQuerySyncedRef('productStatus')
 
-const hasActiveProductFilters = computed(() => productSearch.value !== '' || productStatusFilter.value !== 'all')
-const clearProductFilters = () => {
-  productSearch.value = ''
-  productStatusFilter.value = 'all'
-}
+const { hasActive: hasActiveProductFilters, clear: clearProductFilters } = useListFilters({
+  search: productSearch,
+  filters: [{ ref: productStatusFilter }],
+})
 
 const productStatusFilterOptions = computed(() => [
   { label: t('admin.products.allStatuses'), value: 'all' },

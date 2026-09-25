@@ -85,12 +85,10 @@ const search = useQuerySyncedRef('search', '', 400)
 const categoryFilter = useQuerySyncedRef('category')
 const statusFilter = useQuerySyncedRef('status')
 
-const hasActiveFilters = computed(() => search.value !== '' || categoryFilter.value !== 'all' || statusFilter.value !== 'all')
-const clearFilters = () => {
-  search.value = ''
-  categoryFilter.value = 'all'
-  statusFilter.value = 'all'
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [{ ref: categoryFilter }, { ref: statusFilter }],
+})
 
 // Matches the backend's ApplySort allowlist for GET /tags (name/created_at only).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }

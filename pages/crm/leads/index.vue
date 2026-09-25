@@ -167,16 +167,14 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 // Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
 // search + the status pill stay visible. Active/Converted is a view switch,
 // not a filter, so neither counts nor gets reset by Clear filters.
-const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== ''
-  || (scopeFilter.value === 'active' && statusFilter.value !== 'all')
-  || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  sourceFilter.value = 'all'
-  assigneeFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter, enabled: () => scopeFilter.value === 'active' },
+    { ref: sourceFilter, secondary: true },
+    { ref: assigneeFilter, secondary: true },
+  ],
+})
 
 // Maps a TableData column field to the `sort` query param the backend
 // understands (see GET /leads: created_at/name plain columns, company_name

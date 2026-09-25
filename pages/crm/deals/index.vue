@@ -284,15 +284,15 @@ const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', hasDeepLinkFilter 
 
 // Business unit/channel/stage collapse behind "More filters" below md
 // (CrmMoreFilters); search + assignee stay visible.
-const secondaryFilterCount = computed(() => [businessUnitFilter, channelFilter, stageFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || assigneeFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  assigneeFilter.value = 'all'
-  businessUnitFilter.value = 'all'
-  channelFilter.value = 'all'
-  stageFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: assigneeFilter },
+    { ref: businessUnitFilter, secondary: true },
+    { ref: channelFilter, secondary: true },
+    { ref: stageFilter, secondary: true },
+  ],
+})
 
 // Kanban's own board fetch (fetchStageDeals) needs a re-fetch whenever
 // `search` changes while Kanban is showing (debounced, same 400ms as List
