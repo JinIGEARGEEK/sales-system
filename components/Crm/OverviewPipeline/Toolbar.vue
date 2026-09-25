@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MULTILINE_TOOLTIP_UI, OVERVIEW_ZONES } from '~/constants/ui'
-import { OVERVIEW_STALE_DAYS, zoneOpenTotals, type OverviewDateRange, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
+import { OVERVIEW_STALE_DAYS, staleDaysRange, zoneOpenTotals, type OverviewDateRange, type OverviewHighlight } from '~/composables/utils/usePipelineOverview'
 
 const props = defineProps<{
   zones: PipelineOverviewZone[]
@@ -96,7 +96,15 @@ const { t } = useI18n()
 const { numberFormat, dateFormat } = useFormatter()
 
 // One wording for each rule, shared by the button tooltips and the legend.
-const staleHint = computed(() => t('crm.overviewPipeline.highlight.staleHint', { days: OVERVIEW_STALE_DAYS }))
+// Each open lane carries its own stale_days (CRM Settings, per stage), so
+// quote the real spread on this board rather than a fixed default.
+const staleThreshold = computed(() => {
+  const range = staleDaysRange(props.zones) ?? { min: OVERVIEW_STALE_DAYS, max: OVERVIEW_STALE_DAYS }
+  return range.min === range.max
+    ? t('crm.overviewPipeline.highlight.staleThresholdSame', { days: range.min })
+    : t('crm.overviewPipeline.highlight.staleThresholdVaries', { min: range.min, max: range.max })
+})
+const staleHint = computed(() => t('crm.overviewPipeline.highlight.staleHint', { default: OVERVIEW_STALE_DAYS, threshold: staleThreshold.value }))
 const periodDates = computed(() => ({ from: dateFormat(props.period.date_from), to: dateFormat(props.period.date_to) }))
 const movedHint = computed(() => t('crm.overviewPipeline.highlight.movedHint', periodDates.value))
 const slippedHint = computed(() => t('crm.overviewPipeline.highlight.slippedHint', periodDates.value))

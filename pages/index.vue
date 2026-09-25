@@ -38,11 +38,10 @@
       meaning outside the sales pipeline — hidden from Marketing/Production
       (SALES_PIPELINE_ROLES), same restriction as the Leads/Deals/Companies/
       Contacts nav items and GlobalSearch results. -->
-      <DashboardRiskAlerts v-if="canViewRiskAlerts" :counts="riskAlertCounts" />
-
+      <!-- 2026-09-25 order: headline KPIs first (above the fold at 1440x900
+      and on a phone), then the signed-in user's own "My day", then team-wide
+      alerts and the rest. -->
       <template v-if="canViewSalesPipelineWidgets">
-        <DashboardLeadSummary :summary="leadSummary" />
-
         <DashboardPipelineOverview
           :open-pipeline-value="openPipelineValue"
           :forecasted-revenue="forecastedRevenue"
@@ -59,6 +58,24 @@
           :annual-revenue-actual="annualRevenueActual"
           :annual-revenue-goal="annualRevenueGoal"
         />
+      </template>
+
+      <DashboardMyDay
+        v-if="canViewMyDay"
+        :tasks="myDayTasks"
+        :overdue-total="myOverdueTotal"
+        :today-total="myTodayTotal"
+        :stale-deals="myStaleDeals"
+        :show-stale-deals="canViewSalesPipelineWidgets"
+        :loading="myDayLoading"
+      />
+
+      <DashboardRiskAlerts v-if="canViewRiskAlerts" :counts="riskAlertCounts" />
+
+      <template v-if="canViewSalesPipelineWidgets">
+        <DashboardOverviewPipelineLink />
+
+        <DashboardLeadSummary :summary="leadSummary" />
 
         <DashboardForecastBreakdown
           :commit="forecastByCategory.commit"
@@ -74,7 +91,6 @@
 
         <DashboardPipelineOpportunities
           v-model:upsell-min-stale-days="upsellMinStaleDays"
-          :stage-breakdown="stageBreakdown"
           :upsell-candidates="upsellCandidates"
           :upsell-stale-days-options="UPSELL_STALE_DAYS_OPTIONS"
           :funnel-stages="funnelStages"
@@ -95,6 +111,15 @@
     that used to sit here for Marketing is gone: Marketing now sees the full,
     clickable one on the Sales tab. -->
     <template v-if="activeDashboardTab === 'marketing' && canViewProspectSummary">
+      <DashboardMyDay
+        v-if="canViewMyDay"
+        :tasks="myDayTasks"
+        :overdue-total="myOverdueTotal"
+        :today-total="myTodayTotal"
+        :stale-deals="myStaleDeals"
+        :show-stale-deals="false"
+        :loading="myDayLoading"
+      />
       <DashboardMarketingSummary :summary="prospectSummary" />
     </template>
 
@@ -120,7 +145,9 @@ import {
   isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
-import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES } from '~/constants/roles'
+import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
+import { taskDueBucket, taskGroupQuery } from '~/composables/utils/useTaskGroups'
+import { OVERVIEW_STALE_DAYS, daysInStage, isStaleCard } from '~/composables/utils/usePipelineOverview'
 
 const { t } = useI18n()
 const { hasRole } = useRole()
@@ -401,6 +428,66 @@ const upcomingTasks = computed(() => {
     .sort((a, b) => a.due_date.getTime() - b.due_date.getTime())
     .slice(0, UPCOMING_TASKS_LIMIT)
 })
+
+// ── My day (2026-09-25) ─────────────────────────────────────────
+// The signed-in user's own overdue + due-today tasks (two exact server
+// queries on the same due-date boundaries as the Tasks page's groups) and
+// their stale open deals (same per-stage stale rule as the Overview
+// Pipeline's "Stale" highlight). Independent of the Deal filter bar above:
+// it's "what do I need to do today", not a pipeline metric.
+const userStore = useUserStore()
+const canViewMyDay = computed(() => hasRole(...TASK_ROLES) && userStore.id > 0)
+const MY_DAY_TASK_LIMIT = 6
+const myOverdue = ref<Task[]>([])
+const myToday = ref<Task[]>([])
+const myOverdueTotal = ref(0)
+const myTodayTotal = ref(0)
+const myOpenDeals = ref<Deal[]>([])
+const myDayLoading = ref(false)
+
+const fetchMyDay = async () => {
+  myDayLoading.value = true
+  const me = String(userStore.id)
+  try {
+    const [overdue, today, deals] = await Promise.all([
+      tasksStore.fetchList({ ...taskGroupQuery('overdue'), assigned_to: me, per_page: MY_DAY_TASK_LIMIT }),
+      tasksStore.fetchList({ ...taskGroupQuery('today'), assigned_to: me, per_page: MY_DAY_TASK_LIMIT }),
+      canViewSalesPipelineWidgets.value
+        ? dealsStore.fetchList({ assigned_to: me, status: 'open', per_page: 200 })
+        : Promise.resolve(null),
+    ])
+    myOverdue.value = overdue.items
+    myOverdueTotal.value = overdue.total
+    myToday.value = today.items
+    myTodayTotal.value = today.total
+    myOpenDeals.value = deals?.items ?? []
+  } catch (err) {
+    notifyFetchError(err)
+  } finally {
+    myDayLoading.value = false
+  }
+}
+// Role/user resolution can land after mount (hydrate-auth.client.ts).
+watch(canViewMyDay, (canView) => { if (canView) fetchMyDay() }, { immediate: true })
+
+const myDayTasks = computed(() => [...myOverdue.value, ...myToday.value]
+  .slice(0, MY_DAY_TASK_LIMIT)
+  .map(task => ({
+    ...task,
+    ...resolveRelated(task.related_type, task.related_id),
+    isOverdue: taskDueBucket(task) === 'overdue',
+  })))
+
+const myStaleDeals = computed(() => myOpenDeals.value
+  .map((deal) => {
+    const stage = pipelineStagesStore.byName(deal.stage)
+    if (stage?.is_won_stage || stage?.is_lost_stage) return null
+    const timing = { stage_entered_at: deal.stage_entered_at ?? null, created_at: deal.created_at.toISOString() }
+    if (!isStaleCard(timing, stage?.stale_days ?? OVERVIEW_STALE_DAYS)) return null
+    return { id: deal.id, title: deal.title, stage: deal.stage, days: daysInStage(timing) }
+  })
+  .filter((deal): deal is NonNullable<typeof deal> => deal !== null)
+  .sort((a, b) => b.days - a.days))
 
 // GET /dashboard/summary's upsell_opportunities (dormant-company/upsell
 // targeting, added 2026-09-04). **Updated 2026-09-09**: was always 3 fixed
