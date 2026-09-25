@@ -215,5 +215,6 @@ const submit = () => {
   })
 }
 
-defineExpose({ submit })
+// `form` lets a full-page host (new.vue) include these fields in its unsaved-changes guard.
+defineExpose({ submit, form })
 </script>

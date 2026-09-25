@@ -13,7 +13,7 @@
         </template>
       </PageHeader>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide" data-cy="deal-tab-strip">
         <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
       </div>
 
@@ -73,11 +73,17 @@ const activeTab = computed(() => {
   return last === String(dealId) ? 'overview' : last
 })
 
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
+
 const onTabChange = (value: string | number) => {
   navigateTo(value === 'overview' ? `/crm/deals/${dealId}` : `/crm/deals/${dealId}/${value}`)
 }
 
 const dealTasks = computed(() => tasksStore.forRelated('deal', dealId))
+// The overdue badge on the Tasks tab needs this Deal's tasks before that tab
+// is opened (the tab's own useTaskList shares the same request).
+tasksStore.fetchForRelated('deal', dealId).catch(notifyApiError)
 const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.overview'), value: 'overview' },

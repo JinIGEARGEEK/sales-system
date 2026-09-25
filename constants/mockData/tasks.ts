@@ -1,3 +1,5 @@
+import { taskDueBucket } from '~/composables/utils/useTaskGroups'
+
 export const TASK_STATUS_FILTER_OPTIONS: Select[] = [
   { label: 'All Statuses', value: 'all' },
   { label: 'Pending', value: 'pending' },
@@ -15,7 +17,8 @@ export const TASK_PRIORITY_OPTIONS: Select[] = [
 // overdue-ness rather than competing with priority for attention.
 export const taskPriorityColor = (priority: TaskPriority) => (priority === 'high' ? 'error' : 'neutral')
 
-// Shared by TaskList's per-row badge and the dashboard's upcoming-follow-ups widget —
-// `now` defaults to the current time but can be hoisted once by a caller looping over
-// many tasks (e.g. the dashboard) instead of calling Date.now() per task.
-export const isTaskOverdue = (task: Task, now: number = Date.now()) => task.status === 'pending' && task.due_date.getTime() < now
+// A pending task due before the viewer's local today — the same boundary as
+// the Tasks page's Overdue group (useTaskGroups' taskDueBucket), so a task due
+// today is never "overdue" on one screen and "today" on another.
+export const isTaskOverdue = (task: Pick<Task, 'status' | 'due_date'>, now: Date = new Date()) =>
+  taskDueBucket(task, now) === 'overdue'

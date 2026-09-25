@@ -1,15 +1,12 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ target ? t('admin.pipelineConfig.salesTargets.editTitle') : t('admin.pipelineConfig.salesTargets.addTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="target ? t('admin.pipelineConfig.salesTargets.editTitle') : t('admin.pipelineConfig.salesTargets.addTitle')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputText
-            v-model.number="form.year"
+            v-model.number="displayYear"
             type="number"
-            :label="t('admin.pipelineConfig.salesTargets.year')"
+            :label="t('admin.pipelineConfig.salesTargets.yearBuddhist')"
             name="year"
             rules="required"
           />
@@ -44,6 +41,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { buddhistYear, fromBuddhistYear } = useFormatter()
 
 const QUARTER_OPTIONS: Select[] = [
   { label: 'Q1', value: 1 },
@@ -72,6 +70,21 @@ const emptyForm = () => ({
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+
+// The year field shows/accepts the Buddhist-era year (2569), matching how
+// dates read everywhere else — but form.year (and the submitted payload)
+// always stays the Gregorian year the API stores.
+const displayYear = computed({
+  get: (): number | string => {
+    const year = form.year as number | string | null
+    return year === '' || year === null ? '' : buddhistYear(Number(year))
+  },
+  set: (value: number | string) => {
+    // Keep a cleared field empty (so `required` still fires) instead of
+    // turning '' into -543.
+    form.year = (value === '' || value === null ? value : fromBuddhistYear(Number(value))) as number
+  },
+})
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 

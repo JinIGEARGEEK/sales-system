@@ -14,7 +14,15 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.lostReasonModal.cancel')" cancel @click="emit('update:open', false)" />
-        <ButtonPrimary color="error" :label="t('crm.components.lostReasonModal.confirm')" :disabled="!reason" data-cy="lost-reason-confirm" @click="onConfirm" />
+        <ButtonPrimary
+          color="error"
+          :label="t('crm.components.lostReasonModal.confirm')"
+          :disabled="!reason"
+          :loading="loading"
+          :loading-auto="false"
+          data-cy="lost-reason-confirm"
+          @click="onConfirm"
+        />
       </div>
     </template>
   </UModal>
@@ -37,12 +45,16 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const emitConfirm = useAwaitableEmit<[LostReason]>('confirm')
 const reason = ref('')
 watch(() => props.open, (isOpen) => { if (isOpen) reason.value = '' })
 
-const onConfirm = () => {
+// Stays open with a spinner until the caller's @confirm (the actual stage
+// move) settles, ignoring re-clicks so a double click can't move twice.
+const { loading, guard } = useSubmitGuard()
+const onConfirm = guard(async () => {
   if (!reason.value) return
-  emit('confirm', reason.value as LostReason)
+  await emitConfirm(reason.value as LostReason)
   emit('update:open', false)
-}
+})
 </script>

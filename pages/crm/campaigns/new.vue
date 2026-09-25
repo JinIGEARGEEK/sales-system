@@ -1,9 +1,7 @@
 <template>
   <div class="p-5">
     <AccessGate :can-access="canAccess">
-      <div class="mb-4">
-        <h2 class="text-xl font-black">{{ t('crm.campaigns.new.heading') }}</h2>
-      </div>
+      <PageHeader :title="t('crm.campaigns.new.heading')" @back="goBack()" />
 
       <!-- Simple, non-interactive step indicator — this page is one
            continuously scrolling form rather than gated wizard steps, so
@@ -68,8 +66,8 @@
         />
       </ContainerTemplate>
 
-      <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.campaigns.new.cancel')" cancel @click="navigateTo('/crm/campaigns')" />
+      <div class="flex flex-wrap justify-end gap-3">
+        <ButtonPrimary :label="t('crm.campaigns.new.cancel')" cancel @click="goBack()" />
         <ButtonPrimary
           :label="t('crm.components.createCampaignModal.save')"
           :loading="submitting"
@@ -101,6 +99,7 @@ const contactsStore = useContactsStore()
 const campaignsStore = useCampaignsStore()
 const userStore = useUserStore()
 const { CONTACT_STALE_TIER_DAYS } = useLastContact()
+const goBack = useBackNavigation('/crm/campaigns')
 
 // --- Step 1: who to contact -------------------------------------------
 // Company keeps its own dedicated stale-days/won-deal filter (FR-CRM-108
@@ -194,14 +193,21 @@ const defaultDueDate = computed(() => {
 const defaultAssignedTo = computed(() => (userStore.id ? String(userStore.id) : ''))
 
 // --- Step 3: confirm -------------------------------------------------------
-const setupForm = ref<{ submit: () => void } | null>(null)
+const setupForm = ref<{ submit: () => void, form: unknown } | null>(null)
 const submitting = ref(false)
+
+const { markClean } = useUnsavedChangesGuard(() => [entityType.value, staleDays.value, hasWonDealOnly.value, entitySearch.value, setupForm.value?.form])
+// The setup form mounts after this snapshot is taken (and only once
+// AccessGate lets it render) — re-baseline once its ref resolves so its
+// prefilled defaults don't read as unsaved edits.
+watch(setupForm, () => markClean(), { flush: 'post' })
 
 const onSubmit = async (payload: CampaignTaskSetupSubmitPayload) => {
   submitting.value = true
   try {
     const campaign = await campaignsStore.submitCampaignTasks(matchedTargets.value, payload)
     success(t(payload.mode === 'existing' ? 'crm.campaigns.new.addSuccess' : 'crm.campaigns.new.createSuccess', { name: campaign.name, count: matchedTargets.value.length }))
+    markClean()
     await navigateTo('/crm/campaigns')
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

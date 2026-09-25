@@ -77,11 +77,13 @@ e2e/                         # Playwright smoke tests (*.e2e.ts), API mocked via
 - Props follow existing patterns: `v-model`, `label`, `placeholder`, `name`, `rules`
 - Use `data-cy` attributes for test selectors
 - Components are auto-imported by Nuxt from `components/`
+- Dialogs (`UModal`/`USlideover`) take their heading via the `title`/`description` props, never a custom `#header` slot (that leaves the dialog without an accessible name). Deletes, unsaved-changes guards, empty states, mobile filter collapse, status colours and dates follow `biz_spec/design-system.md` §5.7 — read it before adding any of those to a page
 
 ### Icons
 - Use **Material Symbols** format: `material-symbols:icon-name`
 - Examples: `material-symbols:add`, `material-symbols:delete-outline`, `material-symbols:search`
 - Reference: https://fonts.google.com/icons
+- Nuxt UI's own built-in icons are remapped to Material Symbols in `app.config.ts` (`ui.icons`) and served locally (`nuxt.config.ts` `icon.provider: 'server'`) — if a Nuxt UI upgrade adds an icon key, map it there too
 
 ### Styling
 - Design tokens are CSS custom properties in `assets/styles/global.css`
@@ -103,6 +105,7 @@ e2e/                         # Playwright smoke tests (*.e2e.ts), API mocked via
 ### Notifications
 - Use `useNotify()` composable: `.success()`, `.error()`, `.info()`, `.warning()`
 - Built on Nuxt UI's `useToast()`
+- Wording: English is the record + past tense with no "successfully" and no trailing period ("Task added", "Deal deleted"); Thai ends in "สำเร็จ". Show a success toast only after the API call resolves
 
 ## Commands
 

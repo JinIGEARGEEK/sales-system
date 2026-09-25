@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ task ? t('crm.components.addTaskModal.editTitle') : t('crm.components.addTaskModal.title') }}</h3>
-    </template>
+  <UModal :open="open" :title="task ? t('crm.components.addTaskModal.editTitle') : t('crm.components.addTaskModal.title')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef">
         <div class="grid grid-cols-1 gap-3">
@@ -26,7 +23,7 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addTaskModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addTaskModal.save')" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addTaskModal.save')" :loading="loading" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -72,11 +69,15 @@ const emptyForm = () => ({
   related_id: '',
 })
 
-const { form, formRef, validateThenSubmit } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = () => {
+// Awaits the caller's save, so `loading` spins Save until it lands and the
+// guard turns away a second click meanwhile.
+const emitSubmit = useAwaitableEmit('submit')
+const emitUpdate = useAwaitableEmit('update')
+const onSubmit = guard(async () => {
   const shared = {
     title: form.title,
     description: form.description,
@@ -85,9 +86,9 @@ const onSubmit = () => {
     assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
   }
   if (props.task) {
-    emit('update', shared)
+    await emitUpdate(shared)
   } else {
-    emit('submit', {
+    await emitSubmit({
       ...shared,
       ...(props.showRelatedPicker
         ? { related_type: form.related_type as TaskRelatedType, related_id: Number(form.related_id) }
@@ -95,7 +96,7 @@ const onSubmit = () => {
     })
   }
   onUpdateOpen(false)
-}
+})
 
 const onSave = () => validateThenSubmit(onSubmit)
 </script>

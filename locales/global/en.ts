@@ -21,7 +21,7 @@ const lang = {
   auth: {
     signIn: 'Sign in',
     forgotPassword: 'Forgot Password?',
-    loginSuccess: 'Logged in successfully',
+    loginSuccess: 'Logged in',
     loginFailed: 'Invalid email or password.',
     emailLabel: 'Email',
     emailPlaceholder: 'Email',
@@ -36,18 +36,26 @@ const lang = {
     confirmPasswordLabel: 'Confirm New Password',
     confirmPasswordPlaceholder: 'Confirm new password',
     updatePassword: 'Update Password',
-    changePasswordSuccess: 'Password changed successfully',
+    changePasswordSuccess: 'Password changed',
     changePasswordFailed: 'Could not change password',
   },
   table: {
     selectAll: 'Select All',
     actions: 'Actions',
+    empty: {
+      filteredTitle: 'No results match your filters',
+      filteredDescription: 'Try a different search, or clear the filters to see everything.',
+      clearFilters: 'Clear filters',
+    },
     pagination: {
       allItem: 'Total',
       rowPerPage: 'Rows per page',
+      goToPage: 'Go to page',
     },
   },
   input: {
+    datePlaceholder: 'DD/MM/YYYY (B.E.)',
+    dateRangePlaceholder: 'DD/MM/YYYY - DD/MM/YYYY (B.E.)',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     searching: 'Searching...',
@@ -55,6 +63,19 @@ const lang = {
   },
   sessionExpired: 'Your session has expired. Please sign in again.',
   unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
+  leaveConfirm: {
+    title: 'Discard unsaved changes?',
+    stay: 'Keep editing',
+    leave: 'Discard & leave',
+  },
+  undoDelete: {
+    deleted: '{name} moved to Trash',
+    undo: 'Undo',
+    restored: '{name} restored',
+  },
+  moreFilters: 'More filters',
+  unnamedCompany: '(Unnamed company)',
+  fewerFilters: 'Fewer filters',
   draftFound: 'We found a draft you didn\'t finish. Restore it?',
   draftRestore: 'Restore draft',
 }

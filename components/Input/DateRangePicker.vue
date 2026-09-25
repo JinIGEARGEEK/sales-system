@@ -13,7 +13,7 @@
         readonly
         v-bind="field"
         :data-cy="dataCy"
-        :placeholder="placeholder"
+        :placeholder="placeholder || t('global.input.dateRangePlaceholder')"
         :model-value="rangeLabel"
         :disabled="disable"
         :size="size"
@@ -28,7 +28,7 @@
         </template>
       </UInput>
       <template #content>
-        <UCalendar v-model="calendarValue" range class="p-2" />
+        <InputCalendar v-model="calendarValue" range class="p-2" />
       </template>
     </UPopover>
   </InputFormField>
@@ -43,7 +43,7 @@ const props = defineProps({
     type: Object as PropType<{ start: string; end: string } | null>,
     default: null,
   },
-  ...useInputBaseProps({ placeholder: 'DD/MM/YYYY - DD/MM/YYYY' }),
+  ...useInputBaseProps(),
   disable: {
     type: Boolean,
     default: false,
@@ -56,6 +56,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:model-value'])
 
+// The default placeholder (global.input.date*Placeholder) mirrors the
+// Buddhist-era date the field shows.
+const { t } = useI18n()
 const { dateFormat } = useFormatter()
 
 const rangeLabel = computed(() => {

@@ -50,9 +50,25 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
   ],
 
+  // Icons are served from this app's own Nitro server (`/api/_nuxt_icon`)
+  // out of the locally installed `@iconify-json/material-symbols` package —
+  // never fetched from api.iconify.design at runtime. Icons statically
+  // referenced in components are additionally inlined into the client
+  // bundle (`clientBundle.scan`), so most never hit the network at all.
+  // Nuxt UI's built-in icons are remapped to Material Symbols in
+  // app.config.ts (`ui.icons`), so no Lucide collection is needed.
   icon: {
-    provider: 'iconify',
-    collections: ['material-symbols'],
+    provider: 'server',
+    serverBundle: {
+      collections: ['material-symbols'],
+    },
+    fallbackToApi: false,
+    clientBundle: {
+      scan: {
+        globInclude: ['components/**/*.vue', 'pages/**/*.vue', 'layouts/**/*.vue', 'app.vue', 'app.config.ts', 'constants/**/*.ts'],
+      },
+      sizeLimitKb: 512,
+    },
   },
 
   colorMode: {

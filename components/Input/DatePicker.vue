@@ -14,7 +14,7 @@
         readonly
         v-bind="field"
         :data-cy="dataCy"
-        :placeholder="placeholder"
+        :placeholder="placeholder || t('global.input.datePlaceholder')"
         :model-value="dateOnlyFormat"
         :disabled="disable"
         :aria-invalid="errors.length > 0"
@@ -27,7 +27,7 @@
         </template>
       </UInput>
       <template #content>
-        <UCalendar v-model="calendarValue" class="p-2" />
+        <InputCalendar v-model="calendarValue" class="p-2" />
       </template>
     </UPopover>
   </InputFormField>
@@ -42,13 +42,16 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  ...useInputBaseProps({ placeholder: 'DD/MM/YYYY' }),
+  ...useInputBaseProps(),
   disable: {
     type: Boolean,
     default: false,
   },
 })
 
+// The default placeholder (global.input.date*Placeholder) mirrors the
+// Buddhist-era date the field shows.
+const { t } = useI18n()
 const { dateFormat } = useFormatter()
 
 const dateOnlyFormat = computed(() => {

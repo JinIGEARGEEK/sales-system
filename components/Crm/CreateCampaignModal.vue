@@ -1,12 +1,11 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ t('crm.components.createCampaignModal.title') }}</h3>
-    </template>
+  <UModal
+    :open="open"
+    :title="t('crm.components.createCampaignModal.title')"
+    :description="t('crm.components.createCampaignModal.description', { count: targets.length })"
+    @update:open="onUpdateOpen"
+  >
     <template #body>
-      <p class="mb-3 text-sm text-(--color-gray)">
-        {{ t('crm.components.createCampaignModal.description', { count: targets.length }) }}
-      </p>
       <CrmCampaignTaskSetupForm
         ref="setupForm"
         :active="open"
@@ -18,7 +17,13 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.createCampaignModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.createCampaignModal.save')" data-cy="campaign-save-button" @click="setupForm?.submit()" />
+        <ButtonPrimary
+          :label="t('crm.components.createCampaignModal.save')"
+          :loading="loading"
+          :loading-auto="false"
+          data-cy="campaign-save-button"
+          @click="setupForm?.submit()"
+        />
       </div>
     </template>
   </UModal>
@@ -28,6 +33,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const emitSubmit = useAwaitableEmit<[CampaignTaskSetupSubmitPayload]>('submit')
 
 defineProps<{
   open: boolean
@@ -51,8 +57,13 @@ const setupForm = ref<{ submit: () => void } | null>(null)
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-const onSubmit = (payload: CampaignTaskSetupSubmitPayload) => {
-  emit('submit', payload)
-  onUpdateOpen(false)
-}
+// Creating a campaign fans out into one Task per target, so Save spins until
+// the caller's @submit settles (a double click can't create the tasks twice),
+// and the modal stays open — keeping what was typed — if the handler reports
+// failure by returning `false`.
+const { loading, guard } = useSubmitGuard()
+const onSubmit = guard(async (payload: CampaignTaskSetupSubmitPayload) => {
+  const results = await emitSubmit(payload)
+  if (!results.includes(false)) onUpdateOpen(false)
+})
 </script>

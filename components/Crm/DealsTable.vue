@@ -21,6 +21,13 @@
       :per-page="perPage"
       :loading="loading"
       :is-show-select="isSelectMode"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
+      :empty-icon="emptyIcon"
+      :empty-action-label="emptyActionLabel"
+      :empty-action-to="emptyActionTo"
+      :filtered="filtered"
+      @clear-filters="emit('clearFilters')"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -42,6 +49,7 @@
     <CrmConfirmDeleteModal
       v-model:open="open"
       :name="target?.title || ''"
+      restorable
       @confirm="confirmDelete"
     />
   </div>
@@ -62,11 +70,27 @@ const props = defineProps<{
   businessUnitFilter: string
   channelFilter: string
   stageFilter?: string
+  // Empty-state copy/CTA forwarded straight to TableData — the parent owns
+  // them (it knows the create route and whether the viewer may create), and
+  // `filtered` (any search/filter active) flips TableData into its "no
+  // matches" state with a Clear filters button that emits `clearFilters`.
+  emptyTitle?: string
+  emptyDescription?: string
+  emptyIcon?: string
+  emptyActionLabel?: string
+  emptyActionTo?: string
+  filtered?: boolean
+}>()
+
+const emit = defineEmits<{
+  clearFilters: []
 }>()
 
 const { t } = useI18n()
 const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
+const { notifyDeletedWithUndo } = useUndoDelete()
+const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
@@ -144,7 +168,7 @@ watch(rows, (visibleDeals) => {
 
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
-  companyName: companiesStore.nameById(deal.company_id),
+  companyName: companyLabelById(deal.company_id),
   valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
@@ -185,8 +209,9 @@ const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Deal>()
 const confirmDelete = async () => {
   if (target.value) {
     try {
-      await dealsStore.remove(target.value.id)
-      success(t('crm.deals.table.deleteSuccess'))
+      const { id, title } = target.value
+      await dealsStore.remove(id)
+      notifyDeletedWithUndo({ id, name: title, restore: restoreId => dealsStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))

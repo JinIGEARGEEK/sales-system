@@ -39,12 +39,20 @@ export default {
   table: {
     selectAll: 'เลือกทั้งหมด',
     actions: 'การจัดการ',
+    empty: {
+      filteredTitle: 'ไม่พบรายการที่ตรงกับตัวกรอง',
+      filteredDescription: 'ลองค้นหาด้วยคำอื่น หรือล้างตัวกรองเพื่อดูรายการทั้งหมด',
+      clearFilters: 'ล้างตัวกรอง',
+    },
     pagination: {
       allItem: 'ทั้งหมด',
       rowPerPage: 'แถวต่อหน้า',
+      goToPage: 'ไปที่หน้า',
     },
   },
   input: {
+    datePlaceholder: 'วว/ดด/ปปปป',
+    dateRangePlaceholder: 'วว/ดด/ปปปป - วว/ดด/ปปปป',
     showPassword: 'แสดงรหัสผ่าน',
     hidePassword: 'ซ่อนรหัสผ่าน',
     searching: 'กำลังค้นหา...',
@@ -52,6 +60,19 @@ export default {
   },
   sessionExpired: 'เซสชันของคุณหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
   unsavedChangesConfirm: 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการออกจากหน้านี้และละทิ้งการเปลี่ยนแปลงหรือไม่?',
+  leaveConfirm: {
+    title: 'ละทิ้งการเปลี่ยนแปลงที่ยังไม่ได้บันทึก?',
+    stay: 'แก้ไขต่อ',
+    leave: 'ละทิ้งและออก',
+  },
+  undoDelete: {
+    deleted: 'ย้าย {name} ไปที่ถังขยะแล้ว',
+    undo: 'เลิกทำ',
+    restored: 'กู้คืน {name} แล้ว',
+  },
+  moreFilters: 'ตัวกรองเพิ่มเติม',
+  unnamedCompany: '(ไม่ระบุชื่อบริษัท)',
+  fewerFilters: 'ซ่อนตัวกรอง',
   draftFound: 'พบแบบร่างที่คุณยังทำไม่เสร็จ ต้องการกู้คืนหรือไม่?',
   draftRestore: 'กู้คืนแบบร่าง',
 }

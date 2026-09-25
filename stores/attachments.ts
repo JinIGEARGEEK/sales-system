@@ -18,7 +18,8 @@ export const useAttachmentsStore = defineStore('attachments', {
     async fetchForRelated (relatedType: AttachmentRelatedType, relatedId: number) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Attachment[]>>('/attachments', {
-        params: { related_type: relatedType, related_id: relatedId, per_page: 1000 },
+        // 200 is the backend max; utils.Pagination resets anything larger to 20.
+        params: { related_type: relatedType, related_id: relatedId, per_page: 200 },
       })
       const fetched = response.data.data.map(parseDates)
       this.items = [

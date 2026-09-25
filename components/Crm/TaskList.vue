@@ -3,8 +3,12 @@
     <div v-if="loading" class="flex flex-col gap-2">
       <USkeleton v-for="i in 5" :key="`task-skeleton-${i}`" class="h-14 w-full rounded-lg" />
     </div>
-    <div v-else-if="tasks.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-      {{ emptyMessage || t('crm.components.taskList.noTasks') }}
+    <div v-else-if="tasks.length === 0">
+      <slot name="empty">
+        <div class="py-6 text-center text-sm text-(--color-gray)">
+          {{ emptyMessage || t('crm.components.taskList.noTasks') }}
+        </div>
+      </slot>
     </div>
     <div v-else class="flex flex-col gap-2">
       <div v-if="selectable" class="flex items-center gap-3 px-4 py-1">
@@ -60,7 +64,7 @@
         <UBadge :color="taskPriorityColor(task.priority)" variant="subtle" class="shrink-0">
           {{ t(`crm.components.taskList.priority.${task.priority}`) }}
         </UBadge>
-        <UBadge :color="isTaskOverdue(task) ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
+        <UBadge :color="dueBadgeColor(task)" variant="subtle" class="shrink-0" data-cy="task-due-badge">
           {{ dateFormat(task.due_date) }}
         </UBadge>
         <UTooltip :text="t('crm.components.taskList.removeTask')" class="shrink-0">
@@ -95,13 +99,24 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue, taskPriorityColor } from '~/constants/mockData'
+import { taskPriorityColor } from '~/constants/mockData'
+import { taskDueBucket } from '~/composables/utils/useTaskGroups'
 
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
+const tasksStore = useTasksStore()
+
+// Red only once a pending task is past its due DAY (the same boundary as the
+// Tasks page's Overdue group), primary for due today, neutral otherwise.
+const dueBadgeColor = (task: Task) => {
+  const bucket = taskDueBucket(task)
+  if (bucket === 'overdue') return 'error'
+  if (bucket === 'today') return 'primary'
+  return 'neutral'
+}
 
 onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)
@@ -129,7 +144,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggle: [id: number]
-  remove: [id: number]
+  // Emitted after a successful delete, for a caller that must refresh a
+  // server-paged list (the all-tasks page).
+  removed: [id: number]
   edit: [task: Task]
   'update:selectedIds': [ids: number[]]
 }>()
@@ -151,12 +168,21 @@ const toggleSelectAll = () => {
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Task>()
 
-const onConfirmRemove = () => {
-  if (target.value) {
-    emit('remove', target.value.id)
+// The list runs the delete itself so the success toast only shows once the
+// API call has succeeded.
+const onConfirmRemove = async () => {
+  // ConfirmDeleteModal awaits this handler, so its button spins meanwhile.
+  const task = target.value
+  if (!task) return closeDelete()
+  try {
+    await tasksStore.remove(task.id)
     success(t('crm.components.taskList.removeSuccess'))
+    emit('removed', task.id)
+  } catch (err) {
+    notifyApiError(err)
+  } finally {
+    closeDelete()
   }
-  closeDelete()
 }
 
 // Only confirm the pending -> done transition — reverting a done task back to

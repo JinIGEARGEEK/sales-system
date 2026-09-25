@@ -23,7 +23,10 @@ export default {
     moved: 'Moved',
     slipped: 'Slipped back',
     allHint: 'Show every card normally, with nothing dimmed.',
-    staleHint: 'Open cards that have stayed in the same stage longer than that stage\'s limit — {days} days unless an Admin set a different one per stage in CRM Settings — counted from the day they entered it (not from when the record was created). Cards in closed columns (Won, Lost, Disqualified, Converted) are never stale.',
+    staleHint: 'Open cards that have stayed in the same stage longer than that stage\'s stale threshold, counted from the day they entered it (not from when the record was created). The threshold is set per stage in CRM Settings (default {default} days) — on this board it is {threshold}. Cards in closed columns (Won, Lost, Disqualified, Converted) are never stale.',
+    staleThresholdSame: '{days} days for every open stage',
+    staleThresholdVaries: 'varies by stage ({min}–{max} days)',
+    staleHintLane: 'This card has stayed in its stage longer than the stage\'s stale threshold of {days} days (set per stage in CRM Settings, default {default} days), counted from the day it entered the stage.',
     movedHint: 'Open cards that changed stage between {from} and {to} (the selected period), forward or backward. A record that was only created in this period, with no stage change after that, doesn\'t count.',
     slippedHint: 'Open cards that moved backward in their pipeline (e.g. Negotiation → Qualified) between {from} and {to}. Worth asking why.',
   },
@@ -99,6 +102,7 @@ export default {
     closedOn: 'Entered "{stage}" on {date}, inside the selected period.',
   },
   panel: {
+    dialogTitle: 'Record details',
     kind: {
       prospect: 'Prospect',
       lead: 'Lead',

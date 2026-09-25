@@ -2,36 +2,28 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
     <div v-if="prospect">
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex min-w-0 flex-wrap items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="goBack()"
-          />
-          <h2 class="max-w-full truncate text-xl font-black">{{ prospect.name }}</h2>
-          <UBadge :color="statusBadgeColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
-          <UBadge v-for="tag in prospect.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <ButtonPrimary
-            v-if="prospect.converted_lead_id"
-            :label="t('crm.prospects.detail.viewLead')"
-            icon="material-symbols:open-in-new"
-            @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
-          />
-          <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
+      <PageHeader :title="prospect.name" @back="goBack()">
+        <UBadge :color="statusBadgeColor(prospect.status)" variant="subtle">{{ prospect.status }}</UBadge>
+        <UBadge v-for="tag in prospect.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
+
+        <template #actions>
+          <div class="flex flex-wrap gap-2">
             <ButtonPrimary
-              :label="t('crm.prospects.detail.convertToLead')"
-              icon="material-symbols:swap-horiz"
-              @click="requestConvert"
+              v-if="prospect.converted_lead_id"
+              :label="t('crm.prospects.detail.viewLead')"
+              icon="material-symbols:open-in-new"
+              @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
             />
-          </UTooltip>
-        </div>
-      </div>
+            <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
+              <ButtonPrimary
+                :label="t('crm.prospects.detail.convertToLead')"
+                icon="material-symbols:swap-horiz"
+                @click="requestConvert"
+              />
+            </UTooltip>
+          </div>
+        </template>
+      </PageHeader>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div class="lg:col-span-3">
@@ -126,7 +118,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="prospectTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
+            <CrmTaskList :tasks="prospectTasks" @toggle="onToggleTask" @edit="openEditTask" />
           </UCard>
         </div>
       </div>
@@ -252,6 +244,10 @@ const form = reactive({
 // (re)populated once the record arrives instead of only at setup time.
 // `hydrating` suppresses the business_unit watcher below during this — same
 // pattern as pages/crm/deals/[id]/index.vue and pages/crm/leads/[id].vue.
+// The unsaved-changes guard is re-baselined (markClean) once hydration has
+// settled — in the same nextTick, i.e. after the suppressed business_unit
+// watcher has had its turn — so loading the record never reads as an edit.
+const { markClean } = useUnsavedChangesGuard(() => form)
 let hydrating = false
 watch(prospect, (value) => {
   if (!value) return
@@ -267,7 +263,10 @@ watch(prospect, (value) => {
   form.business_unit_item = value.business_unit_item || ''
   form.tags = value.tags?.join(', ') || ''
   form.notes = value.notes
-  nextTick(() => { hydrating = false })
+  nextTick(() => {
+    hydrating = false
+    markClean()
+  })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -295,6 +294,9 @@ const onSave = guard(async () => {
       tags: parseTags(form.tags),
       notes: form.notes,
     })
+    // Stays on the page after saving — re-baseline so the just-saved values
+    // aren't still treated as unsaved edits.
+    markClean()
     success(t('crm.prospects.detail.updateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -311,6 +313,9 @@ const onConvert = async () => {
     if (converted) converted.converted_lead_id = lead.id
     leadsStore.receiveConverted(lead)
     success(t('crm.prospects.detail.convertSuccess'))
+    // The conversion already happened server-side — a "leave without saving?"
+    // prompt at this point couldn't undo it, only strand the user here.
+    markClean()
     navigateTo(`/crm/leads/${lead.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -328,7 +333,6 @@ const {
   onSubmitTask,
   onUpdateTask,
   onToggleTask,
-  onRemoveTask,
 } = useTaskList('prospect', prospectId, 'crm.prospects.detail.addTaskSuccess', 'crm.prospects.detail.editTaskSuccess')
 const prospectOverdueTaskCount = computed(() => prospectTasks.value.filter(task => isTaskOverdue(task)).length)
 </script>

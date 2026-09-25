@@ -1,8 +1,5 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ stage ? t('admin.pipelineConfig.prospectStages.editTitle') : t('admin.pipelineConfig.prospectStages.addTitle') }}</h3>
-    </template>
+  <UModal :open="open" :title="stage ? t('admin.pipelineConfig.prospectStages.editTitle') : t('admin.pipelineConfig.prospectStages.addTitle')" @update:open="onUpdateOpen">
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">

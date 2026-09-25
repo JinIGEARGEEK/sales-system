@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีบริษัท',
+    emptyDescription: 'บริษัทคือบัญชีลูกค้าที่คุณขายให้ เพิ่มบริษัทใหม่ หรือนำเข้าไฟล์ CSV รายชื่อบริษัทและผู้ติดต่อ',
     pageTitle: 'บริษัท',
     heading: 'บริษัท',
     addCompany: 'เพิ่มบริษัท',
@@ -38,7 +40,6 @@ export default {
       addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบบริษัทสำเร็จ',
     entityLabel: 'บริษัท',
     campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
     campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',

@@ -8,7 +8,8 @@ export const useProductsStore = defineStore('products', {
     async fetchAll () {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Product[]>>('/products', {
-        params: { per_page: 1000 },
+        // 200 is the backend max; utils.Pagination resets anything larger to 20.
+        params: { per_page: 200 },
       })
       this.items = response.data.data
       return this.items

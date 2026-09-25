@@ -52,6 +52,13 @@
         :per-page="perPage"
         :loading="loading"
         :is-show-select="isSelectMode"
+        :empty-title="t('admin.users.index.emptyTitle')"
+        :empty-description="t('admin.users.index.emptyDescription')"
+        empty-icon="material-symbols:group-outline"
+        :empty-action-label="t('admin.users.index.addStaff')"
+        empty-action-to="/admin/users/create"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-detail="onViewDetail"
@@ -105,9 +112,16 @@ guardMounted(() => {
   if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
 })
 
-const search = ref('')
-const roleFilter = ref('all')
-const statusFilter = ref('all')
+// URL-synced so a search/filter survives refresh and a back-button return
+// from a user's detail page — see useQuerySyncedRef's own doc comment.
+const search = useQuerySyncedRef('search', '', 400)
+const roleFilter = useQuerySyncedRef('role')
+const statusFilter = useQuerySyncedRef('status')
+
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [{ ref: roleFilter }, { ref: statusFilter }],
+})
 
 const buildParams = () => ({
   search: search.value || undefined,

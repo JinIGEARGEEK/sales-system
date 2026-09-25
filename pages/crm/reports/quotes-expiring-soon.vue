@@ -161,11 +161,13 @@ const onExport = () => downloadCsvBlob('/reports/quotes-expiring-soon/export', '
 // feeding it "days already elapsed of the window" instead of days left.
 const daysLeft = (validityDate: string) => Math.ceil((new Date(validityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 
+const { companyName } = useCompanyName()
 const rows = computed(() => results.value.map((row) => {
   const left = daysLeft(row.validity_date)
   const elapsed = withinDays.value - left
   return {
     ...row,
+    company_name: companyName(row.company_name),
     validityDateBadge: toBadge(dateFormat(row.validity_date), severityColor(elapsed, Math.ceil(withinDays.value / 2), withinDays.value - 2)),
     totalValueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.total_value)}`,
   }

@@ -8,7 +8,7 @@
 // `modelValue` is deliberately NOT included here: its type/default differs per
 // wrapper (string, string|number, or an object for DateRangePicker), so each
 // component still declares its own.
-export function useInputBaseProps(options?: { placeholder?: string }) {
+export function useInputBaseProps() {
   return {
     name: {
       type: String,
@@ -28,7 +28,7 @@ export function useInputBaseProps(options?: { placeholder?: string }) {
     },
     placeholder: {
       type: String,
-      default: options?.placeholder ?? '',
+      default: '',
     },
   }
 }

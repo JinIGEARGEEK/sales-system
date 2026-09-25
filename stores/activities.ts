@@ -1,5 +1,25 @@
-// Real API-backed store. GET /activities requires related_type+related_id together;
-// items are cached per related record and merged into a single flat list.
+// Real API-backed store. `items` caches per-related-record timelines
+// (fetchForRelated), merged into a single flat list; the cross-entity
+// Activities page pages server-side through fetchFeed instead.
+
+// One row of GET /activities?include_stage_changes=true (the Activities
+// page's feed). `kind: 'stage_change'` rows are Deal stage-change audit
+// history (type 'stage_change', related_type 'deal', from/to stage); ids are
+// only unique per kind, so key rows by kind+id.
+export interface ActivityFeedItem {
+  id: number
+  kind: 'activity' | 'stage_change'
+  type: ActivityType | 'stage_change'
+  subject: string
+  notes: string
+  related_type: ActivityRelatedType
+  related_id: number
+  created_by: string
+  created_at: Date
+  from_stage?: string
+  to_stage?: string
+}
+
 const parseDates = (activity: Activity): Activity => ({
   ...activity,
   created_at: new Date(activity.created_at),
@@ -14,30 +34,23 @@ export const useActivitiesStore = defineStore('activities', {
       .filter(a => a.related_type === relatedType && a.related_id === relatedId),
   },
   actions: {
-    // Unfiltered GET /activities — omitting related_type/related_id (the
-    // backend requires them together, not that they're required at all)
-    // returns every activity across all related records, for the
-    // cross-entity Activities list page. Capped at 200 (the backend's real
-    // ceiling — utils.Pagination in sales-system-api silently resets
-    // anything outside 1..200 back to its 20-row default, it does not clamp
-    // up to 200, so asking for more than 200 here would silently return
-    // only the 20 most recent activities system-wide instead of "every
-    // activity"). Merges into `this.items` by id (like fetchForRelated
-    // below) rather than replacing it wholesale, so a slower fetchAll
-    // response landing after a detail page's own fetchForRelated doesn't
-    // clobber activities that call already merged in for a record outside
-    // this fetch's own 200-row window.
-    async fetchAll () {
+    // Server-paginated cross-entity feed for the /crm/activities page: real
+    // Activities plus Deal stage-change history, interleaved, filtered,
+    // sorted and paged server-side (GET /activities?include_stage_changes=true).
+    // Does NOT touch `items` — feed rows aren't all real Activities, and a
+    // filtered page merged into the cache would leak into detail-page
+    // timelines' `forRelated`.
+    async fetchFeed (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Activity[]>>('/activities', {
-        params: { per_page: 200, sort: '-created_at' },
+      const response = await $api.get<ApiResponse<ActivityFeedItem[]>>('/activities', {
+        params: { sort: '-created_at', ...params, include_stage_changes: true },
       })
-      const fetched = response.data.data.map(parseDates)
-      this.items = [
-        ...this.items.filter(existing => !fetched.some(f => f.id === existing.id)),
-        ...fetched,
-      ]
-      return fetched
+      return {
+        items: response.data.data.map(item => ({ ...item, created_at: new Date(item.created_at) })),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
     },
     async fetchForRelated (relatedType: ActivityRelatedType, relatedId: number) {
       const { $api } = useNuxtApp()

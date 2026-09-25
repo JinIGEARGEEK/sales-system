@@ -32,8 +32,7 @@ export const useCampaignsStore = defineStore('campaigns', {
     // whether campaignId is a campaign just created for this call or an
     // existing one already carrying Tasks (that's how "add to an existing
     // campaign" works, no separate action needed). The response isn't
-    // surfaced here (tasksStore.fetchAll should be re-run by the caller if
-    // it needs the newly-created Tasks reflected locally).
+    // surfaced here — a caller showing those Tasks refetches its own list.
     async bulkCreateTasks (campaignId: number, payload: { targets: { related_type: TaskRelatedType, related_id: number }[], title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }): Promise<Task[]> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Task[]>>(`/campaigns/${campaignId}/tasks`, payload)

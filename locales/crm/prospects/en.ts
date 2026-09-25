@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No prospects yet',
+    emptyDescription: 'Prospects are early contacts from marketing channels, before they become Leads. Add one to get started.',
     pageTitle: 'Prospects',
     heading: 'Prospects',
     addProspect: 'Add Prospect',
@@ -32,7 +34,6 @@ export default {
       viewLead: 'View Lead',
       delete: 'Delete',
     },
-    deleteSuccess: 'Prospect deleted successfully',
   },
   create: {
     pageTitle: 'Add Prospect',
@@ -60,7 +61,7 @@ export default {
     notesPlaceholder: 'Enter any additional notes',
     createProspect: 'Save Prospect',
     cancel: 'Cancel',
-    createSuccess: 'Prospect created successfully',
+    createSuccess: 'Prospect created',
     duplicateWarningTitle: 'Possible duplicate prospect',
     duplicateWarningBody: 'A prospect with this email or phone number already exists:',
   },
@@ -89,13 +90,13 @@ export default {
     saveChanges: 'Save Changes',
     viewCompany: 'View Company',
     prospectNotFound: 'Prospect not found.',
-    updateSuccess: 'Prospect updated successfully',
+    updateSuccess: 'Prospect updated',
     convertSuccess: 'Prospect converted to a Lead',
     activityTitle: 'Activity',
     tasksTitle: 'Follow-up Tasks',
     addTask: 'Add Task',
-    addTaskSuccess: 'Task added successfully',
-    editTaskSuccess: 'Task updated successfully',
+    addTaskSuccess: 'Task added',
+    editTaskSuccess: 'Task updated',
     overdueCount: '{count} overdue',
   },
 }

@@ -7,6 +7,9 @@ const parseDates = (task: Task): Task => ({
   created_at: new Date(task.created_at),
 })
 
+// In-flight fetchForRelated requests, keyed by related_type:related_id.
+const relatedFetches = new Map<string, Promise<Task[]>>()
+
 export const useTasksStore = defineStore('tasks', {
   state: () => ({
     items: [] as Task[],
@@ -15,16 +18,44 @@ export const useTasksStore = defineStore('tasks', {
     forRelated: state => (relatedType: TaskRelatedType, relatedId: number) => state.items
       .filter(task => task.related_type === relatedType && task.related_id === relatedId)
       .sort((a, b) => a.due_date.getTime() - b.due_date.getTime()),
-    pending: state => state.items.filter(task => task.status === 'pending'),
   },
   actions: {
-    async fetchAll (params?: Record<string, unknown>) {
+    // Server-paginated fetch (the all-tasks page's due-date groups, the
+    // dashboard's widgets). Doesn't touch `items`, which only caches the
+    // records whose Tasks tabs were opened (fetchForRelated).
+    async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Task[]>>('/tasks', {
-        params: { per_page: 1000, ...params },
-      })
-      this.items = response.data.data.map(parseDates)
-      return this.items
+      const response = await $api.get<ApiResponse<Task[]>>('/tasks', { params })
+      return {
+        items: response.data.data.map(parseDates),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
+    // One record's tasks (GET /tasks?related_type=&related_id=), merged into
+    // `items` so `forRelated` picks them up. For a detail page's Tasks tab,
+    // which otherwise only shows whatever an earlier visit happened to cache.
+    // Concurrent calls for the same record share one request (the Deal
+    // page's overdue badge and its Tasks tab both ask on the same visit).
+    fetchForRelated (relatedType: TaskRelatedType, relatedId: number): Promise<Task[]> {
+      const key = `${relatedType}:${relatedId}`
+      const pending = relatedFetches.get(key)
+      if (pending) return pending
+      const request = (async () => {
+        const { $api } = useNuxtApp()
+        const response = await $api.get<ApiResponse<Task[]>>('/tasks', {
+          params: { related_type: relatedType, related_id: relatedId, per_page: 200, sort: 'due_date' },
+        })
+        const fetched = response.data.data.map(parseDates)
+        this.items = [
+          ...this.items.filter(task => !(task.related_type === relatedType && task.related_id === relatedId)),
+          ...fetched,
+        ]
+        return fetched
+      })().finally(() => relatedFetches.delete(key))
+      relatedFetches.set(key, request)
+      return request
     },
     async add (task: Omit<Task, 'id' | 'status' | 'created_at'>): Promise<Task> {
       const { $api } = useNuxtApp()
@@ -46,12 +77,13 @@ export const useTasksStore = defineStore('tasks', {
       await $api.delete(`/tasks/${id}`)
       this.items = this.items.filter(task => task.id !== id)
     },
-    async toggleDone (id: number) {
+    async toggleDone (id: number): Promise<Task> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Task>>(`/tasks/${id}/toggle`)
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(t => t.id === id)
       if (index !== -1) this.items[index] = updated
+      return updated
     },
     // Bulk mark-done/reassign mirror stores/helpers.ts' createBulkResourceActions
     // pattern (update `items` locally instead of refetching) but are declared

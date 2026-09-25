@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No tags yet',
+    emptyDescription: 'Tags help you group and filter companies, contacts, leads, and deals.',
     pageTitle: 'Tags',
     heading: 'Tags',
     addTag: 'Add Tag',
@@ -22,7 +24,7 @@ export default {
       edit: 'Edit',
       delete: 'Delete',
     },
-    deleteSuccess: 'Tag deleted successfully',
+    deleteSuccess: 'Tag deleted',
   },
   create: {
     pageTitle: 'Add Tag',
@@ -38,7 +40,7 @@ export default {
     statusPlaceholder: 'Select status',
     createTag: 'Save Tag',
     cancel: 'Cancel',
-    createSuccess: 'Tag created successfully',
+    createSuccess: 'Tag created',
   },
   detail: {
     pageTitle: 'Tag Detail',
@@ -49,6 +51,6 @@ export default {
     description: 'Description',
     status: 'Status',
     tagNotFound: 'Tag not found.',
-    updateSuccess: 'Tag updated successfully',
+    updateSuccess: 'Tag updated',
   },
 }

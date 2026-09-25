@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <AccessGate :can-access="canAccess">
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="text-xl font-black">{{ t('crm.activities.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('crm.activities.index.subheading') }}</p>
@@ -14,39 +14,59 @@
       </div>
 
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <div class="flex-1">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div class="flex-1 sm:min-w-56">
             <InputText v-model="search" :placeholder="t('crm.activities.index.searchPlaceholder')" name="search" />
           </div>
-          <div class="w-full sm:w-48">
-            <InputSelect
-              v-model="typeFilter"
-              :options="typeFilterOptions"
-              :placeholder="t('crm.activities.index.filterType')"
-              name="typeFilter"
-            />
-          </div>
-          <div class="w-full sm:w-48">
-            <InputSelect
-              v-model="relatedTypeFilter"
-              :options="relatedTypeFilterOptions"
-              :placeholder="t('crm.activities.index.filterRelatedType')"
-              name="relatedTypeFilter"
-            />
-          </div>
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <div class="w-full sm:w-48">
+              <InputSelect
+                v-model="typeFilter"
+                :options="typeFilterOptions"
+                :placeholder="t('crm.activities.index.filterType')"
+                name="typeFilter"
+              />
+            </div>
+            <div class="w-full sm:w-48">
+              <InputSelect
+                v-model="relatedTypeFilter"
+                :options="relatedTypeFilterOptions"
+                :placeholder="t('crm.activities.index.filterRelatedType')"
+                name="relatedTypeFilter"
+              />
+            </div>
+          </CrmMoreFilters>
+          <UButton
+            v-if="hasActiveFilters"
+            class="self-start"
+            icon="material-symbols:filter-alt-off-outline"
+            variant="outline"
+            color="neutral"
+            :label="t('crm.activities.index.clearFilters')"
+            data-cy="activities-clear-filters"
+            @click="clearFilters"
+          />
         </div>
       </UCard>
 
       <TableData
         v-model:page="page"
+        server-paginated
         :columns="columns"
-        :rows="rows"
-        :total="filteredActivities.length"
+        :rows="displayRows"
+        :total="total"
         :total-page="totalPage"
         :per-page="perPage"
         :loading="loading"
+        :filtered="hasActiveFilters"
+        :empty-title="t('crm.activities.index.emptyTitle')"
+        :empty-description="t('crm.activities.index.emptyDescription')"
+        empty-icon="material-symbols:history"
+        :empty-action-label="t('crm.activities.index.addActivity')"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
+        @empty-action="addActivityOpen = true"
+        @clear-filters="clearFilters"
       />
 
       <CrmAddActivityModal
@@ -63,6 +83,7 @@ import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 import { GLASS_PANEL_UI } from '~/constants/ui'
+import type { ActivityFeedItem } from '~/stores/activities'
 
 const { t } = useI18n()
 
@@ -74,7 +95,6 @@ const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
 
 const { dateTimeFormat, toBadge } = useFormatter()
 const { activityTypeOptions, activityTypeLabel, activityTypeBadgeColor } = useActivityTypeMeta()
-const { fetchDealStageHistory } = useDealStageHistory()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const activitiesStore = useActivitiesStore()
@@ -85,32 +105,19 @@ const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const { resolveRelated } = useRelatedRecord()
 
-const loading = ref(false)
-// Deal pipeline stage-change history (audit log, read-only) — kept separate
-// from activitiesStore.items (real logged Activities) since it's a
-// different backend concept, then merged into one sorted/filtered/searched
-// list below (combinedRows) so it shows up as reference context here rather
-// than only in the Admin-only audit log viewer.
-const stageHistory = ref<DealStageChangeEntry[]>([])
-
-guardMounted(() => {
-  loading.value = true
-  activitiesStore.fetchAll().catch(notifyApiError).finally(() => { loading.value = false })
-  fetchDealStageHistory().then((entries) => { stageHistory.value = entries }).catch(notifyApiError)
-  // Preloaded so resolveRelated below can show a name instead of "-" for
-  // most rows on first render, same reasoning as pages/crm/tasks/index.vue.
-  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
-  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
-  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
-  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
-})
-
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
 const search = useQuerySyncedRef('search', '', 400)
 const typeFilter = useQuerySyncedRef('type')
 const relatedTypeFilter = useQuerySyncedRef('related_type')
+
+const secondaryFilterCount = computed(() => [typeFilter, relatedTypeFilter].filter(f => f.value !== 'all').length)
+const hasActiveFilters = computed(() => Boolean(search.value) || secondaryFilterCount.value > 0)
+const clearFilters = () => {
+  search.value = ''
+  typeFilter.value = 'all'
+  relatedTypeFilter.value = 'all'
+}
 
 const typeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.allTypes'), value: 'all' },
@@ -131,92 +138,72 @@ const relatedTypeFilterOptions = computed<Select[]>(() => [
   { label: t('crm.activities.index.relatedTypeContact'), value: 'contact' },
 ])
 
-// One shared row shape for both real Activities and stage-change entries —
-// letting them share the same search/filter/sort/pagination pipeline below
-// rather than running two independent ones and interleaving the results.
-// typeBadge is built here (per source), not branched again in `rows` below,
-// so a stage-change row's badge is never accidentally run through
-// activityTypeLabel/activityTypeBadgeColor (which only know real
-// ActivityType values) and `type` stays a plain filter-matching field.
-interface DisplayRow {
-  kind: 'activity' | 'stage_change'
-  type: ActivityType | 'stage_change'
-  subject: string
-  created_by: string
-  created_at: Date
-  related_type: ActivityRelatedType
-  relatedLabel: string
-  path: string
-  typeBadge: { title: string, color: string, isNoData: boolean }
+// Server-side paging/filtering/search (GET /activities?include_stage_changes=true):
+// real Activities and Deal stage-change history (audit log) come back as one
+// interleaved, newest-first feed — previously both were pulled whole (capped
+// at 200 each) and merged/filtered/paged client-side.
+const buildParams = () => ({
+  search: search.value || undefined,
+  type: typeFilter.value !== 'all' ? typeFilter.value : undefined,
+  related_type: relatedTypeFilter.value !== 'all' ? relatedTypeFilter.value : undefined,
+})
+
+const {
+  rows,
+  total,
+  totalPage,
+  page,
+  perPage,
+  loading,
+  fetch,
+  refetchFromStart,
+  refetchDebounced,
+  onChangePage,
+  onChangePerPage,
+} = useServerListPage<ActivityFeedItem>(params => activitiesStore.fetchFeed(params), buildParams)
+
+watch(search, () => refetchDebounced())
+watch([typeFilter, relatedTypeFilter], () => refetchFromStart())
+
+guardMounted(() => {
+  fetch()
+  // Preloaded so resolveRelated below can show a name instead of "-" for
+  // most rows on first render, same reasoning as pages/crm/tasks/index.vue.
+  if (dealsStore.items.length === 0) dealsStore.fetchAll().catch(notifyApiError)
+  if (contactsStore.items.length === 0) contactsStore.fetchAll().catch(notifyApiError)
+  if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
+  if (prospectsStore.items.length === 0) prospectsStore.fetchAll().catch(notifyApiError)
+  if (leadsStore.items.length === 0) leadsStore.fetchAll().catch(notifyApiError)
+})
+
+// A stage-change row with no known stage on either side (shouldn't happen
+// since the audit-log `action` fix, but older/foreign rows could) reads
+// "Stage changed" rather than a dangling "Stage set:" with nothing after it.
+const stageChangeSubject = (row: ActivityFeedItem) => {
+  if (row.from_stage && row.to_stage) return t('crm.activities.index.stageChangeSubject', { from: row.from_stage, to: row.to_stage })
+  if (row.to_stage) return t('crm.activities.index.stageChangeSubjectNoFrom', { to: row.to_stage })
+  return t('crm.activities.index.stageChangeSubjectUnknown')
 }
 
-const activityRows = computed<DisplayRow[]>(() => activitiesStore.items.map(activity => ({
-  kind: 'activity',
-  type: activity.type,
-  subject: activity.subject,
-  created_by: activity.created_by,
-  created_at: activity.created_at,
-  related_type: activity.related_type,
-  typeBadge: toBadge(activityTypeLabel(activity.type), activityTypeBadgeColor(activity.type)),
-  ...resolveRelated(activity.related_type, activity.related_id),
-})))
-
-// Distinct neutral "Stage Change" badge — never shares a color/label with a
-// real ActivityType — so these read as system-recorded history, not
-// something a rep logged, the visual distinction called out when this
-// feature was scoped.
-const stageChangeRows = computed<DisplayRow[]>(() => stageHistory.value.map((entry) => {
-  const deal = resolveRelated('deal', entry.dealId)
+const displayRows = computed(() => rows.value.map((row) => {
+  const related = resolveRelated(row.related_type, row.related_id)
+  const isStageChange = row.kind === 'stage_change'
   return {
-    kind: 'stage_change',
-    type: 'stage_change',
-    subject: entry.fromStage
-      ? t('crm.activities.index.stageChangeSubject', { from: entry.fromStage, to: entry.toStage })
-      : t('crm.activities.index.stageChangeSubjectNoFrom', { to: entry.toStage }),
-    created_by: entry.actorName,
-    created_at: entry.created_at,
-    related_type: 'deal',
-    typeBadge: toBadge(t('crm.activities.index.stageChangeType'), 'neutral'),
-    relatedLabel: deal.relatedLabel,
-    // resolveRelated's deal path always points at the Overview tab (shared
-    // with Tasks, which has its own reason to land there) — the "Pipeline
-    // History" this row actually describes lives on the Deal's Activity
-    // tab, so send the click straight there instead of making the rep find
-    // it themselves after an extra click.
-    path: `${deal.path}/activity`,
+    ...row,
+    subject: isStageChange ? stageChangeSubject(row) : row.subject,
+    // Distinct neutral "Stage Change" badge — never shares a color/label
+    // with a real ActivityType — so these read as system-recorded history.
+    typeBadge: isStageChange
+      ? toBadge(t('crm.activities.index.stageChangeType'), 'neutral')
+      : toBadge(activityTypeLabel(row.type as ActivityType), activityTypeBadgeColor(row.type as ActivityType)),
+    // A stage change's "Pipeline History" lives on the Deal's Activity tab.
+    relatedLink: { label: related.relatedLabel, path: isStageChange ? `${related.path}/activity` : related.path },
+    createdAtDisplay: dateTimeFormat(row.created_at.toISOString()),
   }
 }))
 
-const filteredActivities = computed(() => [...activityRows.value, ...stageChangeRows.value]
-  .filter((row) => {
-    const matchesSearch = !search.value
-      || row.subject.toLowerCase().includes(search.value.toLowerCase())
-      || row.relatedLabel.toLowerCase().includes(search.value.toLowerCase())
-    const matchesType = typeFilter.value === 'all' || row.type === typeFilter.value
-    const matchesRelatedType = relatedTypeFilter.value === 'all' || row.related_type === relatedTypeFilter.value
-    return matchesSearch && matchesType && matchesRelatedType
-  })
-  // fetchAll() sorts server-side (-created_at), but a newly logged activity
-  // is appended to activitiesStore.items by store.add() rather than
-  // re-sorted — sort client-side (same as CrmActivityTimeline) so it's not
-  // stuck at the bottom of the list until the next full reload.
-  .sort((a, b) => b.created_at.getTime() - a.created_at.getTime()))
-
-// useTablePagination's own watch(getTotal) already resets to page 1 whenever
-// a search/filter change alters filteredActivities.length — no separate
-// watch on the filters themselves needed.
-const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => filteredActivities.value.length)
-
-const rows = computed(() => filteredActivities.value.map(row => ({
-  ...row,
-  relatedLink: { label: row.relatedLabel, path: row.path },
-  createdAtDisplay: dateTimeFormat(row.created_at.toISOString()),
-})))
-
 // computed (not a plain const) so column labels stay correct across the
-// TH/EN switcher in the header, matching pages/crm/companies/index.vue —
-// not pages/admin/activity-log.vue's plain-const columns, which goes stale
-// on a locale switch until the page is reloaded.
+// TH/EN switcher in the header.
 const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.activities.index.columns.type'), align: 'left', field: 'typeBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('crm.activities.index.columns.subject'), align: 'left', field: 'subject' },
@@ -225,11 +212,8 @@ const columns = computed<TableDataColumn[]>(() => [
   { label: t('crm.activities.index.columns.createdAt'), align: 'left', field: 'createdAtDisplay' },
 ])
 
-// No single record already in context here (unlike the Company/Contact
-// detail pages' own Activity section, which use useActivityList instead) —
 // AddActivityModal's showRelatedPicker mode supplies related_type/related_id
-// itself, so this calls activitiesStore.add() directly rather than going
-// through that composable.
+// itself, so this calls activitiesStore.add() directly.
 const addActivityOpen = ref(false)
 const onSubmitActivity = async (payload: { type: ActivityType, subject: string, notes: string, created_at?: string, related_type?: ActivityRelatedType, related_id?: number }) => {
   if (!payload.related_type || !payload.related_id) return
@@ -243,6 +227,7 @@ const onSubmitActivity = async (payload: { type: ActivityType, subject: string, 
       related_id: payload.related_id,
     })
     success(t('crm.activities.index.addActivitySuccess'))
+    await fetch()
   } catch (err) {
     notifyApiError(err)
   }

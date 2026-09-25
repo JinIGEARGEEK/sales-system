@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีพนักงาน',
+    emptyDescription: 'เพิ่มบัญชีพนักงานเพื่อให้ทีมของคุณเข้าสู่ระบบได้',
     pageTitle: 'จัดการพนักงาน',
     heading: 'จัดการพนักงาน',
     addStaff: 'เพิ่มพนักงาน',

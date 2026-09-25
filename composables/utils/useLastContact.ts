@@ -8,10 +8,16 @@ const CONTACT_STALE_TIER_DAYS = {
 
 type ContactTier = 'fresh' | 'tier1' | 'tier2' | 'tier3'
 
-const TIER_COLOR: Record<ContactTier, string> = {
+export type LastContactColor = 'success' | 'warning' | 'error' | 'neutral'
+
+// Calm on purpose: most companies have never had a logged Activity, so
+// painting "never contacted" (and 90d+) red turned whole lists red — alarm
+// fatigue that hid the genuinely lapsed accounts. Never contacted is neutral
+// (no signal either way), 60–119 days amber, and only 120d+ (dormant) red.
+const TIER_COLOR: Record<ContactTier, LastContactColor> = {
   fresh: 'success',
   tier1: 'warning',
-  tier2: 'error',
+  tier2: 'warning',
   tier3: 'error',
 }
 
@@ -44,7 +50,7 @@ export const useLastContact = () => {
       tier,
       isStale: tier !== 'fresh',
       label: lastContactLabel(days),
-      color: TIER_COLOR[tier],
+      color: days === null ? 'neutral' : TIER_COLOR[tier],
     }
   }
 

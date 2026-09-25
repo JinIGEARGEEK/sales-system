@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No staff yet',
+    emptyDescription: 'Add staff accounts so your team can sign in.',
     pageTitle: 'Staff Management',
     heading: 'Staff Management',
     addStaff: 'Add Staff',
@@ -22,7 +24,7 @@ export default {
       edit: 'Edit',
       delete: 'Delete',
     },
-    deleteSuccess: 'Staff deleted successfully',
+    deleteSuccess: 'Staff deleted',
     bulkActionBar: {
       selectedCount: '{count} staff selected',
       activate: 'Activate',
@@ -65,13 +67,13 @@ export default {
     heading: 'Create New Staff',
     subheading: 'Fill in the details to create a new staff account.',
     createStaff: 'Save Staff',
-    createSuccess: 'Staff created successfully',
+    createSuccess: 'Staff created',
   },
   detail: {
     pageTitle: 'Edit Staff',
     heading: 'Edit Staff',
     saveChanges: 'Save Changes',
     staffNotFound: 'Staff not found.',
-    updateSuccess: 'Staff updated successfully',
+    updateSuccess: 'Staff updated',
   },
 }

@@ -345,6 +345,10 @@ const form = reactive({
   referred_by_id: lead.value?.referred_by_id ? String(lead.value.referred_by_id) : '',
 })
 
+// Re-baselined (markClean) once each loaded Lead has been hydrated into the
+// form below, and after every successful save/Mark SQL.
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 // Lead loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time. `hydrating` (a ref,
 // so it can also be passed reactively as CrmReferredByField's pause-clearing
@@ -368,7 +372,10 @@ watch(lead, (value) => {
   form.notes = value.notes
   form.referred_by_type = value.referred_by_type || ''
   form.referred_by_id = value.referred_by_id ? String(value.referred_by_id) : ''
-  nextTick(() => { hydrating.value = false })
+  nextTick(() => {
+    hydrating.value = false
+    markClean()
+  })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -396,6 +403,7 @@ const onSave = guard(async () => {
       notes: form.notes,
       ...toReferredByPayload(form),
     })
+    markClean()
     success(t('crm.leads.detail.updateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -423,6 +431,7 @@ const onMarkSql = async () => {
       ...toReferredByPayload(form),
       classification: 'sql',
     })
+    markClean()
     success(t('crm.leads.detail.markSqlSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

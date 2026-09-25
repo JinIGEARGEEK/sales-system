@@ -1,22 +1,14 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <div>
-          <h2 class="text-xl font-black">{{ t('crm.reports.outstandingBalance.heading') }}</h2>
-          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.outstandingBalance.subheading') }}</p>
-        </div>
-      </div>
-      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
-    </div>
+    <PageHeader
+      :title="t('crm.reports.outstandingBalance.heading')"
+      :subtitle="t('crm.reports.outstandingBalance.subheading')"
+      @back="goBack()"
+    >
+      <template #actions>
+        <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+      </template>
+    </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
@@ -87,6 +79,7 @@ const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { priceFormatCompact, toBadge } = useFormatter()
+const { companyName } = useCompanyName()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -156,6 +149,7 @@ const agingBadge = (row: OutstandingBalanceRow) => {
 
 const rows = computed(() => results.value.map(row => ({
   ...row,
+  company_name: companyName(row.company_name),
   dealValueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.deal_value)}`,
   paidAmountDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.paid_amount)}`,
   outstandingAmountDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.outstanding_amount)}`,

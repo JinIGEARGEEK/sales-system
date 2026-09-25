@@ -1,4 +1,6 @@
 export default {
+  emptyTitle: 'ยังไม่มีบันทึกกิจกรรม',
+  emptyDescription: 'การเปลี่ยนแปลงของดีล Lead โปรเจกต์ และการตั้งค่า จะถูกบันทึกไว้ที่นี่',
   title: 'บันทึกกิจกรรม',
   typePlaceholder: 'ประเภทข้อมูล',
   allTypes: 'ประเภทข้อมูลทั้งหมด',

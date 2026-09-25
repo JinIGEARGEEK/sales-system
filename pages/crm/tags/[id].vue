@@ -66,6 +66,11 @@ const form = reactive({
   description: tag.value?.description || '',
 })
 
+// Declared before the populate-watch below so its callback can re-baseline
+// the snapshot — otherwise the still-empty initial form would make the page
+// read as dirty the moment the record loads in.
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 // Tag loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time.
 watch(tag, (value) => {
@@ -74,6 +79,7 @@ watch(tag, (value) => {
   form.category = value.category
   form.status = value.status
   form.description = value.description
+  markClean()
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -88,6 +94,7 @@ const onSave = guard(async () => {
     })
   }
   success(t('crm.tags.detail.updateSuccess'))
+  markClean()
   navigateTo('/crm/tags')
 })
 </script>

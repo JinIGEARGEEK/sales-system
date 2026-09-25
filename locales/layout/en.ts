@@ -21,6 +21,7 @@ export default {
     trash: 'Trash',
     guideline: 'Guideline',
   },
+  navigationMenu: 'Navigation menu',
   openMenu: 'Open menu',
   logout: 'Logout',
   changePassword: 'Change Password',

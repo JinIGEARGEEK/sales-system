@@ -126,6 +126,25 @@ export const zoneOpenTotals = (zone: PipelineOverviewZone) => {
   return { count, value }
 }
 
+// The spread of stale thresholds across every open (non-terminal) lane on
+// the board — what the "Stale" tooltip quotes, since each stage can carry
+// its own CRM Settings value. A lane reporting 0/absent falls back to the
+// default, exactly as isStaleCard does. `null` when there are no open lanes
+// yet (e.g. before the first load), so the caller can quote the default.
+export const staleDaysRange = (zones: Pick<PipelineOverviewZone, 'lanes'>[]) => {
+  let min = Infinity
+  let max = -Infinity
+  for (const zone of zones) {
+    for (const lane of zone.lanes) {
+      if (lane.terminal) continue
+      const days = lane.stale_days || OVERVIEW_STALE_DAYS
+      if (days < min) min = days
+      if (days > max) max = days
+    }
+  }
+  return min === Infinity ? null : { min, max }
+}
+
 // The "other" catch-all lane (records whose stage isn't one of the zone's
 // lanes) has no stage name of its own, so labels come from these.
 type Translate = (key: string) => string

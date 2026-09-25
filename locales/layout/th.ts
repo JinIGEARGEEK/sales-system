@@ -21,6 +21,7 @@ export default {
     trash: 'ถังขยะ',
     guideline: 'คู่มือการใช้งาน',
   },
+  navigationMenu: 'เมนูนำทาง',
   openMenu: 'เปิดเมนู',
   logout: 'ออกจากระบบ',
   changePassword: 'เปลี่ยนรหัสผ่าน',

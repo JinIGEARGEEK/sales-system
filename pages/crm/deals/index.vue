@@ -33,15 +33,17 @@
         <div class="w-full sm:w-56">
           <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :placeholder="t('crm.deals.index.assigneePlaceholder')" name="assigneeFilter" />
         </div>
-        <div class="w-full sm:w-48">
-          <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
-        </div>
-        <div class="w-full sm:w-44">
-          <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
-        </div>
-        <div class="w-full sm:w-48">
-          <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
-        </div>
+        <CrmMoreFilters :count="secondaryFilterCount">
+          <div class="w-full sm:w-48">
+            <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :placeholder="t('crm.dashboard.filterBusinessUnit')" name="businessUnitFilter" />
+          </div>
+          <div class="w-full sm:w-44">
+            <InputSelect v-model="channelFilter" :options="channelFilterOptions" :placeholder="t('crm.dashboard.filterChannel')" name="channelFilter" />
+          </div>
+          <div class="w-full sm:w-48">
+            <InputSelect v-model="stageFilter" :options="stageFilterOptions" :placeholder="t('crm.dashboard.filterStage')" name="stageFilter" />
+          </div>
+        </CrmMoreFilters>
       </div>
     </UCard>
 
@@ -79,7 +81,7 @@
         <template v-if="item._type === 'deal'">
           <div>
             <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
             {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
@@ -103,7 +105,7 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companiesStore.nameById(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -120,6 +122,13 @@
       :business-unit-filter="businessUnitFilter"
       :channel-filter="channelFilter"
       :stage-filter="stageFilter"
+      :empty-title="t('crm.deals.index.emptyTitle')"
+      :empty-description="t('crm.deals.index.emptyDescription')"
+      empty-icon="material-symbols:handshake-outline"
+      :empty-action-label="t('crm.deals.index.addDeal')"
+      empty-action-to="/crm/deals/create"
+      :filtered="hasActiveFilters"
+      @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
   </div>
@@ -138,8 +147,8 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const route = useRoute()
 const { priceFormatCompact } = useFormatter()
+const { companyLabelById } = useCompanyName()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -256,22 +265,34 @@ onMounted(async () => {
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
 })
 
-// Deep-linked from dashboard cards/breakdown rows (e.g. Team Performance's
-// per-rep rows, Pipeline by Stage's bars) via a query param — seeded once at
-// setup so a bookmarked/shared URL behaves the same as clicking the card.
-// See useQueryFilter for the 'all'-fallback convention.
-const search = ref('')
-const assigneeFilter = useQueryFilter(route.query, 'assigned_to')
-const businessUnitFilter = useQueryFilter(route.query, 'business_unit')
-const channelFilter = useQueryFilter(route.query, 'channel')
-const stageFilter = useQueryFilter(route.query, 'stage')
+// URL-synced (useQuerySyncedRef): Dashboard cards/breakdown rows (e.g. Team
+// Performance's per-rep rows, Pipeline by Stage's bars) deep-link here via
+// these same query params, and a filter/search/view picked by hand is
+// written back so refresh and back/forward restore it too.
+const search = useQuerySyncedRef('search', '', 400)
+const assigneeFilter = useQuerySyncedRef('assigned_to')
+const businessUnitFilter = useQuerySyncedRef('business_unit')
+const channelFilter = useQuerySyncedRef('channel')
+const stageFilter = useQuerySyncedRef('stage')
 
-const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
 // The Kanban board shows every stage side by side, so a single-stage/assignee
-// deep link reads better landing on the List view, where the filter bar and
-// results are unambiguous — same reasoning as forcing Prospects into list
-// view for its own deep links (pages/crm/prospects/index.vue).
-const viewMode = ref<'kanban' | 'list'>(hasDeepLinkFilter ? 'list' : 'kanban')
+// deep link reads better landing on the List view. List becomes the *default*
+// then (not a one-off override), so a hand-picked Kanban is written to the URL
+// as ?view=kanban and survives a refresh.
+const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
+const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', hasDeepLinkFilter ? 'list' : 'kanban', 0, ['kanban', 'list'])
+
+// Business unit/channel/stage collapse behind "More filters" below md
+// (CrmMoreFilters); search + assignee stay visible.
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: assigneeFilter },
+    { ref: businessUnitFilter, secondary: true },
+    { ref: channelFilter, secondary: true },
+    { ref: stageFilter, secondary: true },
+  ],
+})
 
 // Kanban's own board fetch (fetchStageDeals) needs a re-fetch whenever
 // `search` changes while Kanban is showing (debounced, same 400ms as List

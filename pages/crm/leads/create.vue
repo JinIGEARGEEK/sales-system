@@ -1,19 +1,10 @@
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <div class="flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <h2 class="text-xl font-black">{{ t('crm.leads.create.heading') }}</h2>
-      </div>
-      <p class="text-sm text-(--color-gray)">{{ t('crm.leads.create.subheading') }}</p>
-    </div>
+    <PageHeader
+      :title="t('crm.leads.create.heading')"
+      :subtitle="t('crm.leads.create.subheading')"
+      @back="goBack()"
+    />
 
     <UAlert
       v-if="duplicateLeads.length > 0"

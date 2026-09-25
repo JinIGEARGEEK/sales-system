@@ -43,7 +43,7 @@ export default {
     wonBadge: 'Won',
     lostBadge: 'Lost',
     deactivateConfirm: 'Deactivate this stage? Existing Deals keep their stage, but it will no longer be selectable.',
-    saveSuccess: 'Pipeline stage saved successfully',
+    saveSuccess: 'Pipeline stage saved',
     deactivateSuccess: 'Pipeline stage deactivated',
   },
   sources: {
@@ -58,7 +58,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this source? Existing Leads/Deals keep it, but it will no longer be selectable.',
-    saveSuccess: 'Source saved successfully',
+    saveSuccess: 'Source saved',
     deactivateSuccess: 'Source deactivated',
   },
   prospectStages: {
@@ -79,7 +79,7 @@ export default {
     disqualifiedBadge: 'Disqualified',
     deactivateConfirm: 'Deactivate this stage? Existing Prospects keep their stage, but it will no longer be selectable. "Converted" is a reserved, system-set stage and can\'t be created here.',
     reservedNameError: '"Converted" is a reserved, system-set stage and can\'t be used here.',
-    saveSuccess: 'Prospect stage saved successfully',
+    saveSuccess: 'Prospect stage saved',
     deactivateSuccess: 'Prospect stage deactivated',
   },
   prospectSources: {
@@ -94,7 +94,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this source? Existing Prospects keep it, but it will no longer be selectable.',
-    saveSuccess: 'Source saved successfully',
+    saveSuccess: 'Source saved',
     deactivateSuccess: 'Source deactivated',
   },
   industries: {
@@ -109,7 +109,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this industry? Existing Companies keep it, but it will no longer be selectable.',
-    saveSuccess: 'Industry saved successfully',
+    saveSuccess: 'Industry saved',
     deactivateSuccess: 'Industry deactivated',
   },
   companySizes: {
@@ -124,7 +124,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this size? Existing Companies keep it, but it will no longer be selectable.',
-    saveSuccess: 'Company size saved successfully',
+    saveSuccess: 'Company size saved',
     deactivateSuccess: 'Company size deactivated',
   },
   revenueSizes: {
@@ -139,7 +139,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this revenue size? Existing Companies keep it, but it will no longer be selectable.',
-    saveSuccess: 'Revenue size saved successfully',
+    saveSuccess: 'Revenue size saved',
     deactivateSuccess: 'Revenue size deactivated',
   },
   jobTitles: {
@@ -154,7 +154,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this job title? Existing Contacts keep it, but it will no longer be selectable.',
-    saveSuccess: 'Job title saved successfully',
+    saveSuccess: 'Job title saved',
     deactivateSuccess: 'Job title deactivated',
   },
   productCategories: {
@@ -169,7 +169,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this category? Existing Products keep it, but it will no longer be selectable.',
-    saveSuccess: 'Product category saved successfully',
+    saveSuccess: 'Product category saved',
     deactivateSuccess: 'Product category deactivated',
   },
   weeklyDigest: {
@@ -195,12 +195,13 @@ export default {
     annualGoalLabel: 'Annual Revenue Goal',
     annualGoalHelp: 'Used to compute the Annual Revenue Goal progress on the Dashboard.',
     mqlThresholdLabel: 'MQL Score Threshold',
+    mqlThresholdHelpLabel: 'About the MQL threshold',
     mqlThresholdHelp: 'A Lead whose computed score reaches this value is classified as MQL.',
     requireSignedContractLabel: 'Require a Signed Contract before marking a Deal "Won"',
     requireSignedContractHelp: 'When enabled, a Deal can\'t move into Won (from the pipeline board or its detail page) unless it already has at least one Contract with status Signed. Off by default.',
     lastUpdated: 'Last updated {date}',
     save: 'Save',
-    saveSuccess: 'Sales quota saved successfully',
+    saveSuccess: 'Sales quota saved',
   },
   salesTargets: {
     heading: 'Quarterly Sales Targets',
@@ -209,6 +210,7 @@ export default {
     addTitle: 'Add Quarterly Target',
     editTitle: 'Edit Quarterly Target',
     year: 'Year',
+    yearBuddhist: 'Year (B.E.)',
     quarter: 'Quarter',
     targetValue: 'Target Value',
     columns: {
@@ -223,7 +225,7 @@ export default {
     deleteTitle: 'Delete Quarterly Target',
     deleteConfirm: 'Delete this target? The quarter will fall back to the Default Quarterly Sales Target above.',
     delete: 'Delete',
-    saveSuccess: 'Quarterly target saved successfully',
+    saveSuccess: 'Quarterly target saved',
     deleteSuccess: 'Quarterly target deleted',
   },
   leadScoring: {
@@ -250,7 +252,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this criterion? Existing Lead scores are unaffected, but it will no longer apply to future scoring.',
-    saveSuccess: 'Scoring criterion saved successfully',
+    saveSuccess: 'Scoring criterion saved',
     deactivateSuccess: 'Scoring criterion deactivated',
   },
   notifications: {
@@ -288,7 +290,7 @@ export default {
       action: 'Action',
     },
     deactivateConfirm: 'Deactivate this rule? It will no longer trigger notifications until reactivated.',
-    saveSuccess: 'Notification rule saved successfully',
+    saveSuccess: 'Notification rule saved',
     deactivateSuccess: 'Notification rule deactivated',
   },
   statusActive: 'Active',

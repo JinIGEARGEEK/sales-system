@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div v-if="company">
-      <PageHeader :title="company.name" @back="navigateTo('/crm/companies')">
+      <PageHeader :title="companyName(company.name)" @back="navigateTo('/crm/companies')">
         <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
           {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
         </UBadge>
@@ -9,12 +9,11 @@
         <template #actions>
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
-            <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
           </div>
         </template>
       </PageHeader>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
@@ -44,6 +43,13 @@
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.notes" :label="t('crm.companies.detail.notes')" name="notes" />
                 </div>
+              </div>
+              <!-- Bottom-of-form submit, same as every other detail page
+                   (contacts/leads/prospects/tags/users/deals) — it used to sit
+                   in the page header outside this <Form>, which also let it
+                   fire the PUT past every field's vee-validate rules. -->
+              <div class="mt-4 flex gap-3">
+                <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" type="submit" :loading="loading" data-cy="company-save" />
               </div>
             </Form>
           </ContainerTemplate>
@@ -275,7 +281,7 @@
               @click="openAddTask"
             />
           </div>
-          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @remove="onRemoveTask" @edit="openEditTask" />
+          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @edit="openEditTask" />
         </ContainerTemplate>
 
         <CrmAddTaskModal
@@ -424,7 +430,8 @@ const revenueSizeOptions = computed<Select[]>(() => {
 // (route-driven via child routes rather than a query param, since Deal's
 // tabs are separate page files; Company's tabs all live in this one file, so
 // a query param is the lighter-weight way to get the same result).
-const activeTab = useQuerySyncedRef('tab', 'overview')
+const COMPANY_TABS = ['overview', 'contacts', 'deals', 'quotesContracts', 'products', 'projects', 'activity', 'tasks', 'attachments']
+const activeTab = useQuerySyncedRef('tab', 'overview', 0, COMPANY_TABS)
 const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
@@ -480,7 +487,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
@@ -526,6 +533,11 @@ const {
   onSave: onSaveProject,
 } = useProjectModal(companyId, 'crm.companies.detail.addProjectSuccess', 'crm.companies.detail.updateProjectSuccess')
 
+const { companyName } = useCompanyName()
+
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
+
 const form = reactive({
   name: company.value?.name || '',
   industry: company.value?.industry || '',
@@ -539,6 +551,8 @@ const form = reactive({
   tax_id: company.value?.tax_id || '',
   notes: company.value?.notes || '',
 })
+
+const { markClean } = useUnsavedChangesGuard(() => form)
 
 // Company loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time.
@@ -555,6 +569,9 @@ watch(company, (value) => {
   form.address = value.address || ''
   form.tax_id = value.tax_id || ''
   form.notes = value.notes
+  // Re-baseline the unsaved-changes guard on every (re)load/save, so a
+  // freshly loaded or just-saved record doesn't read as dirty.
+  nextTick(markClean)
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -575,6 +592,7 @@ const onSave = guard(async () => {
       tax_id: form.tax_id || null,
       notes: form.notes,
     })
+    markClean()
     success(t('crm.companies.detail.updateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

@@ -17,57 +17,64 @@
           </div>
           <USeparator class="mb-2" />
         </div>
+        <!-- Compact card per row: a two-column grid of small-label-over-value
+        pairs (the first column — usually the record's name/link — spans the
+        full width), with the row's checkbox/action menu alongside instead of
+        taking a line of their own. Used to be one full-width label/value
+        table row per column, which made each card very tall. -->
         <div
           v-for="(row, rowIndex) in paginatedRows"
           :key="`row-${rowIndex}`"
-          class="border-b last:border-none border-(--color-gray) first:pt-0 pt-2 pb-2 last:pb-0"
+          class="flex items-start gap-2 border-b last:border-none border-(--color-light-gray-2) first:pt-0 py-2.5 last:pb-0"
         >
-          <table class="w-full">
-            <tbody>
-              <tr
-                v-for="(column, columnIndex) in prop.columns"
-                :key="`column-${columnIndex}`"
-              >
-                <td v-if="column.type === TABLE_CARD_TYPE.SELECTED">
-                  <UCheckbox
-                    v-model="selected"
-                    :value="row"
-                  />
-                </td>
-                <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION" :class="`py-1 ${prop.mobileColumnWidth}`">
-                  <span class="block truncate text-sm text-(--color-black) pr-5"><b>{{ column.label }}</b></span>
-                </td>
-                <td v-if="column.type === TABLE_CARD_TYPE.SELECTED" />
-                <td v-else-if="column.type !== TABLE_CARD_TYPE.ACTION">
-                  <TableCardType
-                    is-mobile
-                    :type="column.type"
-                    :item="row[column.field]"
-                  />
-                </td>
-                <td
-                  v-if="columnIndex === 0 && isColumnAction() && getColumAction().type === TABLE_CARD_TYPE.ACTION"
-                  class="w-4"
-                >
-                  <UDropdownMenu
-                    :items="getActionMenuItems(getColumAction(), row, rowIndex)"
-                  >
-                    <UButton
-                      data-cy="action-btn-mobile"
-                      icon="material-symbols:more-vert"
-                      variant="ghost"
-                      color="neutral"
-                      size="xs"
-                      :aria-label="t('global.table.actions')"
-                    />
-                  </UDropdownMenu>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <UCheckbox
+            v-if="hasSelectColumn"
+            v-model="selected"
+            :value="row"
+            class="pt-0.5"
+          />
+          <dl class="grid min-w-0 flex-1 grid-cols-2 gap-x-3 gap-y-1.5">
+            <div
+              v-for="(column, columnIndex) in mobileDataColumns"
+              :key="`column-${columnIndex}`"
+              :class="['min-w-0', { 'col-span-2': columnIndex === 0 || column.type === TABLE_CARD_TYPE.MULTI_LINE }]"
+            >
+              <dt class="truncate text-xs text-(--color-gray)">{{ column.label }}</dt>
+              <dd class="min-w-0 break-words text-sm text-(--color-black)">
+                <TableCardType
+                  is-mobile
+                  :type="column.type"
+                  :item="row[column.field]"
+                />
+              </dd>
+            </div>
+          </dl>
+          <UDropdownMenu
+            v-if="actionColumn"
+            :items="getActionMenuItems(actionColumn, row, rowIndex)"
+          >
+            <UButton
+              data-cy="action-btn-mobile"
+              icon="material-symbols:more-vert"
+              variant="ghost"
+              color="neutral"
+              size="xs"
+              :aria-label="t('global.table.actions')"
+            />
+          </UDropdownMenu>
         </div>
-        <div v-if="paginatedRows.length === 0" class="text-(--color-black) text-center pt-10">
-          {{ t('global.noData') }}
+        <div v-if="paginatedRows.length === 0">
+          <slot name="empty">
+            <!-- Both layouts are always in the DOM (CSS toggles which shows),
+            so the mobile copy gets suffixed data-cy hooks — like
+            action-btn-mobile/-desktop — to keep "table-empty" unique. -->
+            <TableEmpty
+              v-bind="emptyStateProps"
+              data-cy-suffix="-mobile"
+              @action="emit('emptyAction')"
+              @clear-filters="emit('clearFilters')"
+            />
+          </slot>
         </div>
       </div>
       <div v-else class="flex flex-col gap-2">
@@ -89,6 +96,7 @@
                   col.type === TABLE_CARD_TYPE.ACTION ? 'text-center' : 'text-left',
                 ]"
                 :style="columnStyle(col)"
+                :aria-sort="col.isSort ? ariaSort(col.field) : undefined"
               >
                 <div v-if="col.type === TABLE_CARD_TYPE.SELECTED">
                   <UCheckbox
@@ -96,14 +104,18 @@
                     @update:model-value="onSelectAll"
                   />
                 </div>
-                <div
-                  v-else
-                  class="flex items-center gap-1"
-                  :class="[{'cursor-pointer': col.isSort}]"
-                  @click="onSort(col.isSort, col.field)"
-                >
-                  <b>{{ col.label }}</b>
-                  <UIcon v-if="col.isSort" :name="sortIcon(col.field)" class="inline size-4" />
+                <div v-else class="flex items-center gap-1">
+                  <button
+                    v-if="col.isSort"
+                    type="button"
+                    class="flex cursor-pointer items-center gap-1 rounded focus-visible:outline-2 focus-visible:outline-(--color-primary)"
+                    :data-cy="`sort-${col.field}`"
+                    @click="onSort(col.field)"
+                  >
+                    <b>{{ col.label }}</b>
+                    <UIcon :name="sortIcon(col.field)" class="inline size-4" aria-hidden="true" />
+                  </button>
+                  <b v-else>{{ col.label }}</b>
                   <!-- Nuxt UI's Tooltip defaults to a fixed-height, single-line
                   (`truncate`/`nowrap`) content box, sized for short labels —
                   a longer explanation (e.g. classificationTooltip's MQL/SQL
@@ -159,11 +171,7 @@
                     />
                   </div>
                   <div v-else>
-                    <TableCardType
-                      :type="col.type"
-                      :item="row[col.field]"
-                      @print="emit('print', row)"
-                    />
+                    <TableCardType :type="col.type" :item="row[col.field]" />
                   </div>
                 </td>
               </tr>
@@ -177,9 +185,9 @@
             </template>
             <tr v-else-if="paginatedRows.length === 0">
               <td :colspan="prop.columns.length">
-                <div class="flex justify-center pt-10">
-                  {{ t('global.noData') }}
-                </div>
+                <slot name="empty">
+                  <TableEmpty v-bind="emptyStateProps" @action="emit('emptyAction')" @clear-filters="emit('clearFilters')" />
+                </slot>
               </td>
             </tr>
           </tbody>
@@ -202,6 +210,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { RouteLocationRaw } from 'vue-router'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const prop = defineProps({
@@ -233,10 +242,6 @@ const prop = defineProps({
     type: Number,
     default: 10,
   },
-  mobileColumnWidth: {
-    type: String,
-    default: 'w-28',
-  },
   selectValue: {
     type: Array,
     default: () => [],
@@ -255,6 +260,40 @@ const prop = defineProps({
   // the full dataset and this component does the page slicing itself, as
   // every existing client-side-paginated caller expects.
   serverPaginated: {
+    type: Boolean,
+    default: false,
+  },
+  // ── Empty state (shown on both the desktop table and mobile cards when
+  // there are no rows; a `#empty` slot replaces it entirely) ──
+  // Heading — defaults to the generic "No data".
+  emptyTitle: {
+    type: String,
+    default: undefined,
+  },
+  // Optional secondary line under the heading.
+  emptyDescription: {
+    type: String,
+    default: undefined,
+  },
+  // Material Symbols icon name, e.g. 'material-symbols:person-add-outline'.
+  emptyIcon: {
+    type: String,
+    default: undefined,
+  },
+  // Label of a call-to-action button (e.g. "Add Lead"). With `emptyActionTo`
+  // it's a link; without, clicking emits `empty-action`.
+  emptyActionLabel: {
+    type: String,
+    default: undefined,
+  },
+  emptyActionTo: {
+    type: [String, Object] as PropType<RouteLocationRaw>,
+    default: undefined,
+  },
+  // True while a search/filter is active: shows "No results match your
+  // filters" with a Clear filters button (emits `clear-filters`) instead of
+  // the title/description/CTA above.
+  filtered: {
     type: Boolean,
     default: false,
   },
@@ -289,7 +328,6 @@ const emit = defineEmits([
   'changePerPage',
   'sort',
   'update:selectValue',
-  'print',
   'viewDetail',
   'edit',
   'delete',
@@ -298,7 +336,20 @@ const emit = defineEmits([
   'restore',
   'addToCampaign',
   'revoke',
+  // Empty state: the CTA button (when no `emptyActionTo`), and the filtered
+  // variant's Clear filters button.
+  'emptyAction',
+  'clearFilters',
 ])
+
+const emptyStateProps = computed(() => ({
+  title: prop.emptyTitle,
+  description: prop.emptyDescription,
+  icon: prop.emptyIcon,
+  actionLabel: prop.emptyActionLabel,
+  actionTo: prop.emptyActionTo,
+  filtered: prop.filtered,
+}))
 
 watch(
   () => selected.value,
@@ -328,13 +379,11 @@ const toggleRowSelection = (row: TableRowData) => {
   }
 }
 
-const isColumnAction = ():boolean => {
-  return !!prop.columns.find(e => e.type === TABLE_CARD_TYPE.ACTION)
-}
-
-const getColumAction = ():TableDataColumn => {
-  return prop.columns.find(e => e.type === TABLE_CARD_TYPE.ACTION) as TableDataColumn
-}
+// Mobile cards render the selection checkbox and action menu beside the
+// field grid rather than as grid entries of their own.
+const actionColumn = computed(() => prop.columns.find(e => e.type === TABLE_CARD_TYPE.ACTION))
+const hasSelectColumn = computed(() => prop.columns.some(e => e.type === TABLE_CARD_TYPE.SELECTED))
+const mobileDataColumns = computed(() => prop.columns.filter(e => e.type !== TABLE_CARD_TYPE.ACTION && e.type !== TABLE_CARD_TYPE.SELECTED))
 
 // The Action column doesn't carry an explicit `width` on most pages — default
 // it to one fixed value so the meatball-menu column looks identical (not
@@ -375,12 +424,17 @@ const getActionMenuItems = (col: TableDataColumn, row: TableRowData, _rowIndex: 
 const innerField = ref('')
 const innerSortBy = ref('desc')
 
-const onSort = (isSort: boolean | undefined, field: string) => {
-  if (isSort) {
-    innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'
-    innerField.value = field
-    emit('sort', field, innerSortBy.value)
-  }
+const onSort = (field: string) => {
+  innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'
+  innerField.value = field
+  emit('sort', field, innerSortBy.value)
+}
+
+// For the sortable <th>'s aria-sort — only the active sort column reports a
+// direction; the other sortable columns are "none".
+const ariaSort = (field: string): 'ascending' | 'descending' | 'none' => {
+  if (innerField.value !== field) return 'none'
+  return innerSortBy.value === 'asc' ? 'ascending' : 'descending'
 }
 
 const sortIcon = (field: string): string => {

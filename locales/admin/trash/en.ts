@@ -1,9 +1,12 @@
 export default {
+  emptyTitle: 'Trash is empty',
+  emptyDescription: 'Deleted records of this type will appear here, ready to restore.',
   title: 'Trash',
   subtitle: 'Deleted or archived records — restore them here before they\'re gone for good.',
   searchPlaceholder: 'Search by name across all tabs...',
   tabs: {
     deals: 'Deals',
+    prospects: 'Prospects',
     leads: 'Leads',
     companies: 'Companies',
     contacts: 'Contacts',
@@ -13,6 +16,13 @@ export default {
       title: 'Title',
       company: 'Company',
       value: 'Value',
+      deletedAt: 'Deleted On',
+      action: 'Action',
+    },
+    prospects: {
+      name: 'Name',
+      company: 'Company',
+      source: 'Source',
       deletedAt: 'Deleted On',
       action: 'Action',
     },
@@ -42,6 +52,6 @@ export default {
   },
   confirmRestoreTitle: 'Restore record?',
   confirmRestoreBody: 'Restore "{name}"? It will reappear in its normal list.',
-  restoreSuccess: '{entity} restored successfully',
+  restoreSuccess: '{entity} restored',
   restoreError: 'Could not restore this record.',
 }

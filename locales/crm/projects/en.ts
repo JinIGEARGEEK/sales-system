@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No projects yet',
+    emptyDescription: 'Projects track custom software work for a company, from proposal to delivery.',
     pageTitle: 'Projects',
     heading: 'Projects & Products',
     tabs: {
@@ -11,8 +13,8 @@ export default {
     allStatuses: 'All Statuses',
     addProject: 'Add Project',
     exportCsv: 'Export CSV',
-    addProjectSuccess: 'Project added successfully',
-    updateProjectSuccess: 'Project updated successfully',
+    addProjectSuccess: 'Project added',
+    updateProjectSuccess: 'Project updated',
     columns: {
       name: 'Name',
       company: 'Company',

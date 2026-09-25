@@ -41,6 +41,13 @@
       :total-page="totalPage"
       :per-page="perPage"
       :loading="loading"
+      :empty-title="t('crm.tags.index.emptyTitle')"
+      :empty-description="t('crm.tags.index.emptyDescription')"
+      empty-icon="material-symbols:sell-outline"
+      :empty-action-label="t('crm.tags.index.addTag')"
+      empty-action-to="/crm/tags/create"
+      :filtered="hasActiveFilters"
+      @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
@@ -77,6 +84,11 @@ const tagsStore = useTagsStore()
 const search = useQuerySyncedRef('search', '', 400)
 const categoryFilter = useQuerySyncedRef('category')
 const statusFilter = useQuerySyncedRef('status')
+
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [{ ref: categoryFilter }, { ref: statusFilter }],
+})
 
 // Matches the backend's ApplySort allowlist for GET /tags (name/created_at only).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }

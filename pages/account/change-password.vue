@@ -51,5 +51,12 @@ const { state, loading, submit } = useChangePasswordForm(() => {
   state.currentPassword = ''
   state.newPassword = ''
   state.confirmPassword = ''
+  // The reset above already matches the (empty) initial snapshot, but
+  // re-baseline explicitly so a successful change can never prompt.
+  markClean()
 })
+
+// Stays on this page after a successful change (fields reset in place above,
+// no logout/redirect) — so only a half-typed, unsubmitted password prompts.
+const { markClean } = useUnsavedChangesGuard(() => state)
 </script>

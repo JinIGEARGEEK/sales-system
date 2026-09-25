@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มี Prospect',
+    emptyDescription: 'Prospect คือรายชื่อเบื้องต้นจากช่องทางการตลาด ก่อนจะกลายเป็น Lead เพิ่ม Prospect ใหม่เพื่อเริ่มต้น',
     pageTitle: 'Prospect',
     heading: 'Prospect',
     addProspect: 'เพิ่ม Prospect',
@@ -32,7 +34,6 @@ export default {
       viewLead: 'ดู Lead',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบ Prospect สำเร็จ',
   },
   create: {
     pageTitle: 'เพิ่ม Prospect',

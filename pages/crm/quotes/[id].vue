@@ -4,7 +4,7 @@
       <PageHeader :title="quote.number || `#${quote.id}`" @back="navigateTo(`/crm/deals/${deal.id}/quotes`)">
         <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
         <template #actions>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
             <ButtonPrimary
               :label="t('crm.quotes.detail.saveAsTemplate')"
@@ -78,7 +78,7 @@
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <p class="text-xs text-(--color-gray)">{{ t('crm.quotes.editor.company') }}</p>
-                  <p class="text-sm font-medium">{{ company?.name }}</p>
+                  <p v-if="company" class="text-sm font-medium" :class="{ 'italic text-(--color-gray)': isUnnamed(company.name) }">{{ companyName(company.name) }}</p>
                   <p v-if="company?.address" class="mt-1 whitespace-pre-wrap text-xs text-(--color-gray)">{{ company.address }}</p>
                 </div>
                 <div>
@@ -222,6 +222,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { priceFormat } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { companyName, isUnnamed } = useCompanyName()
 
 const quotesStore = useQuotesStore()
 const quoteTemplatesStore = useQuoteTemplatesStore()
@@ -304,6 +305,12 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 let nextItemKey = 0
 const items = ref<QuoteItemRow[]>([])
 
+// Tracks both the header fields and the line items. Re-baselined (markClean)
+// at the end of each populate below — the snapshot taken here is the still-
+// empty form — and after every successful in-place save/send, so neither
+// loading the Quote nor saving it ever reads as an unsaved edit.
+const { markClean } = useUnsavedChangesGuard(() => [form, items.value])
+
 // Populate the form/items from the loaded Quote exactly once it's
 // available — this is an edit page, not a create form, so there's no
 // "reset on open" concern (useModalForm's pattern doesn't apply here).
@@ -331,6 +338,7 @@ watch(quote, (value) => {
     kind: item.product_id ? 'product' : 'scope',
     discount_percent: item.discount_percent ?? 0,
   }))
+  markClean()
 }, { immediate: true })
 
 const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
@@ -356,6 +364,7 @@ const onSave = guard(async () => {
   if (!quote.value) return
   try {
     await quotesStore.update(quote.value.id, buildUpdatePayload())
+    markClean()
     success(t('crm.quotes.detail.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
@@ -402,6 +411,7 @@ const onConfirmSend = guard(async () => {
   try {
     await quotesStore.update(quote.value.id, buildUpdatePayload('sent'))
     form.status = 'sent'
+    markClean()
     success(t('crm.quotes.detail.sendSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

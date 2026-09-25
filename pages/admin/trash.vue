@@ -6,7 +6,7 @@
         <p class="text-sm text-(--color-gray)">{{ t('admin.trash.subtitle') }}</p>
       </div>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
@@ -26,9 +26,28 @@
           :per-page="dealsPerPage"
           :loading="dealsLoading"
           server-paginated
+          v-bind="emptyStateProps"
+          @clear-filters="search = ''"
           @change-page="onChangeDealsPage"
           @change-per-page="onChangeDealsPerPage"
           @restore="(row: Deal) => requestRestore({ entity: 'deal', row, name: row.title })"
+        />
+      </div>
+      <div v-else-if="activeTab === 'prospects'">
+        <TableData
+          v-model:page="prospectsPage"
+          :columns="prospectsColumns"
+          :rows="prospectsRows"
+          :total="prospectsStore.trashTotal"
+          :total-page="prospectsTotalPage"
+          :per-page="prospectsPerPage"
+          :loading="prospectsLoading"
+          server-paginated
+          v-bind="emptyStateProps"
+          @clear-filters="search = ''"
+          @change-page="onChangeProspectsPage"
+          @change-per-page="onChangeProspectsPerPage"
+          @restore="(row: Prospect) => requestRestore({ entity: 'prospect', row, name: row.name })"
         />
       </div>
       <div v-else-if="activeTab === 'leads'">
@@ -41,6 +60,8 @@
           :per-page="leadsPerPage"
           :loading="leadsLoading"
           server-paginated
+          v-bind="emptyStateProps"
+          @clear-filters="search = ''"
           @change-page="onChangeLeadsPage"
           @change-per-page="onChangeLeadsPerPage"
           @restore="(row: Lead) => requestRestore({ entity: 'lead', row, name: row.name })"
@@ -56,6 +77,8 @@
           :per-page="companiesPerPage"
           :loading="companiesLoading"
           server-paginated
+          v-bind="emptyStateProps"
+          @clear-filters="search = ''"
           @change-page="onChangeCompaniesPage"
           @change-per-page="onChangeCompaniesPerPage"
           @restore="(row: Company) => requestRestore({ entity: 'company', row, name: row.name })"
@@ -71,6 +94,8 @@
           :per-page="contactsPerPage"
           :loading="contactsLoading"
           server-paginated
+          v-bind="emptyStateProps"
+          @clear-filters="search = ''"
           @change-page="onChangeContactsPage"
           @change-per-page="onChangeContactsPerPage"
           @restore="(row: Contact) => requestRestore({ entity: 'contact', row, name: row.name })"
@@ -104,6 +129,7 @@ const { dateFormat, priceFormatCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
+const prospectsStore = useProspectsStore()
 const leadsStore = useLeadsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -111,17 +137,32 @@ const contactsStore = useContactsStore()
 // Trash is Admin/Sales Manager only, matching GET /deals/trash and /leads/trash RBAC.
 const { canAccess, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
-const activeTab = ref('deals')
-// One search box shared across all four tabs (rather than per-tab, since a
+// URL-synced (tab + search) so refresh and back/forward — e.g. returning
+// from a restored record — land on the same tab with the same search.
+const TRASH_TABS = ['deals', 'prospects', 'leads', 'companies', 'contacts']
+const activeTab = useQuerySyncedRef('tab', 'deals', 0, TRASH_TABS)
+// A refresh/back-forward onto a later tab would otherwise leave it scrolled
+// out of sight in this horizontally-scrolling strip on mobile.
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
+// One search box shared across all tabs (rather than per-tab, since a
 // rep hunting for a specific deleted record usually doesn't know which
 // entity type it was) — each fetchXTrash below reads this by closure.
-const search = ref('')
+const search = useQuerySyncedRef('search', '', 400)
 const tabItems = computed(() => [
   { label: t('admin.trash.tabs.deals'), value: 'deals' },
+  { label: t('admin.trash.tabs.prospects'), value: 'prospects' },
   { label: t('admin.trash.tabs.leads'), value: 'leads' },
   { label: t('admin.trash.tabs.companies'), value: 'companies' },
   { label: t('admin.trash.tabs.contacts'), value: 'contacts' },
 ])
+
+const emptyStateProps = computed(() => ({
+  emptyTitle: t('admin.trash.emptyTitle'),
+  emptyDescription: t('admin.trash.emptyDescription'),
+  emptyIcon: 'material-symbols:delete-outline',
+  filtered: search.value !== '',
+}))
 
 // Shared "one tab's trash pagination" plumbing — the Deals and Leads tabs are
 // identical here (server-paginated fetchTrash(page, perPage) + a loading flag
@@ -209,6 +250,50 @@ watch(() => dealsStore.trashItems, (items) => {
     }
   }
 })
+
+const {
+  loading: prospectsLoading,
+  page: prospectsPage,
+  perPage: prospectsPerPage,
+  totalPage: prospectsTotalPage,
+  fetch: fetchProspectsTrash,
+  onChangePage: onChangeProspectsPage,
+  onChangePerPage: onChangeProspectsPerPage,
+} = useTrashTab<Prospect>(
+  (page, perPage) => prospectsStore.fetchTrash(page, perPage, search.value),
+  () => prospectsStore.trashTotal,
+)
+
+const prospectsRows = computed(() => prospectsStore.trashItems.map(prospect => ({
+  ...prospect,
+  companyName: companiesStore.nameById(prospect.company_id),
+  deletedAtDisplay: prospect.deleted_at ? dateFormat(prospect.deleted_at) : '-',
+})))
+
+// Same fetchOne fallback as the Leads tab below (company_id is nullable here too).
+watch(() => prospectsStore.trashItems, (items) => {
+  for (const prospect of items) {
+    if (prospect.company_id && !companiesStore.items.some(c => c.id === prospect.company_id)) {
+      companiesStore.fetchOne(prospect.company_id).catch(notifyApiError)
+    }
+  }
+})
+
+const prospectsColumns = computed<TableDataColumn[]>(() => [
+  { label: t('admin.trash.columns.prospects.name'), align: 'left', field: 'name' },
+  { label: t('admin.trash.columns.prospects.company'), align: 'left', field: 'companyName' },
+  { label: t('admin.trash.columns.prospects.source'), align: 'left', field: 'source' },
+  { label: t('admin.trash.columns.prospects.deletedAt'), align: 'left', field: 'deletedAtDisplay' },
+  {
+    label: t('admin.trash.columns.prospects.action'),
+    align: 'left',
+    field: 'action',
+    type: TABLE_CARD_TYPE.ACTION,
+    actions: [
+      { label: t('admin.trash.actions.restore'), emitName: 'restore', isBorderBottom: false },
+    ],
+  },
+])
 
 const {
   loading: leadsLoading,
@@ -334,21 +419,22 @@ watch(() => contactsStore.trashItems, (items) => {
   }
 })
 
-type TrashEntity = 'deal' | 'lead' | 'company' | 'contact'
-type TrashRow = Deal | Lead | Company | Contact
+type TrashEntity = 'deal' | 'prospect' | 'lead' | 'company' | 'contact'
+type TrashRow = Deal | Prospect | Lead | Company | Contact
 type RestoreTarget = { entity: TrashEntity, row: TrashRow, name: string }
 
 const { open: restoreOpen, target: restoreTarget, requestDelete: requestRestore, closeDelete: closeRestore } = useDeleteConfirm<RestoreTarget>()
 
 const RESTORE_HANDLERS: Record<TrashEntity, (id: number) => Promise<unknown>> = {
   deal: id => dealsStore.restore(id),
+  prospect: id => prospectsStore.restore(id),
   lead: id => leadsStore.restore(id),
   company: id => companiesStore.restore(id),
   contact: id => contactsStore.restore(id),
 }
 
 // Every entity's trash tab is named by its plain plural except "company" —
-// the only one of the four whose plural isn't just "+s".
+// the only one whose plural isn't just "+s".
 const tabKeyForEntity = (entity: TrashEntity) => (entity === 'company' ? 'companies' : `${entity}s`)
 
 const onConfirmRestore = async () => {
@@ -367,23 +453,26 @@ const onConfirmRestore = async () => {
 guardMounted(() => {
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
   fetchDealsTrash()
+  fetchProspectsTrash()
   fetchLeadsTrash()
   fetchCompaniesTrash()
   fetchContactsTrash()
 })
 
-// Refetches all four tabs together (not just the active one) — each is a
-// small, cheap trash list, and doing all four keeps the other tabs from
+// Refetches every tab together (not just the active one) — each is a
+// small, cheap trash list, and doing them all keeps the other tabs from
 // showing stale results if the rep switches tabs right after searching.
 let searchDebounce: ReturnType<typeof setTimeout> | undefined
 watch(search, () => {
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
     dealsPage.value = 1
+    prospectsPage.value = 1
     leadsPage.value = 1
     companiesPage.value = 1
     contactsPage.value = 1
     fetchDealsTrash()
+    fetchProspectsTrash()
     fetchLeadsTrash()
     fetchCompaniesTrash()
     fetchContactsTrash()

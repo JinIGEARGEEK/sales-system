@@ -9,7 +9,7 @@
         icon="material-symbols:warning-outline"
         :title="t('crm.deals.detail.contractRequiredWarning')"
       />
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
         <div class="flex gap-2">
           <ButtonPrimary
@@ -33,17 +33,21 @@
       </div>
       <div v-else class="flex flex-col gap-3">
         <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <div class="mb-2 flex items-center justify-between">
+          <!-- Wraps below ~400px: the status select + linked-quote text +
+               download button don't fit one non-wrapping row on a phone. -->
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
             <InputSelect
+              :key="`contract-status-${contract.id}-${statusSelectResetKey}`"
               :model-value="contract.status"
               :options="CONTRACT_STATUS_OPTIONS"
               small
-              class="w-32"
+              class="w-32 shrink-0"
               :name="`contract-status-${contract.id}`"
-              @update:model-value="(value: string) => onUpdateContractStatus(contract, value as ContractStatus)"
+              :data-cy="`contract-status-${contract.id}`"
+              @update:model-value="(value: string) => requestContractStatusChange(contract, value as ContractStatus)"
             />
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-(--color-gray)">
+            <div class="flex min-w-0 items-center gap-3">
+              <span class="min-w-0 text-xs text-(--color-gray)">
                 {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
               </span>
               <UButton
@@ -85,6 +89,19 @@
         </div>
       </div>
     </ContainerTemplate>
+
+    <!-- Signed/Expired are the hard-to-reverse transitions (Signed feeds the
+         Deal's Won gate and the create-project prompt) — confirmed first;
+         cancelling re-renders the select back to the saved status. -->
+    <CrmConfirmDeleteModal
+      :open="pendingStatusChange !== null"
+      :title="t('crm.contracts.detail.confirmStatusTitle')"
+      :body="pendingStatusChange ? t('crm.contracts.detail.confirmStatusBody', { status: statusLabel(pendingStatusChange.status) }) : ''"
+      :confirm-label="t('crm.contracts.detail.confirmStatusConfirm')"
+      :confirm-color="pendingStatusChange?.status === 'expired' ? 'error' : 'primary'"
+      @update:open="(value: boolean) => { if (!value) cancelContractStatusChange() }"
+      @confirm="confirmContractStatusChange"
+    />
 
     <CrmAddContractModal
       v-model:open="addContractOpen"
@@ -195,13 +212,23 @@ const onContractFileSelected = async (event: Event) => {
 
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
 
-const onUpdateContractStatus = async (contract: Contract, status: ContractStatus) => {
-  try {
+const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['signed', 'expired']
+const statusLabel = (status: ContractStatus) => CONTRACT_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
+
+const {
+  pending: pendingStatusChange,
+  resetKey: statusSelectResetKey,
+  request: requestContractStatusChange,
+  cancel: cancelContractStatusChange,
+  confirm: confirmContractStatusChange,
+} = useConfirmedStatusChange<ContractStatus, Contract>({
+  confirmStatuses: CONFIRMED_CONTRACT_STATUSES,
+  save: async (contract, status) => {
+    // contractsStore.update is a real partial merge server-side (see
+    // CLAUDE.md's full-record-PUT note), so a status-only body is safe here.
     const updated = await contractsStore.update(contract.id, { status })
     success(t('crm.contracts.detail.updateStatusSuccess'))
     promptProjectIfSigned(updated)
-  } catch (err) {
-    notifyApiError(err)
-  }
-}
+  },
+})
 </script>

@@ -24,27 +24,11 @@
             <p v-if="activeTabMeta.hint" class="mt-1 text-xs text-(--color-gray)">{{ activeTabMeta.hint }}</p>
           </template>
 
-          <div v-if="activeTab === 'byStage'">
-            <div v-if="stageBreakdown.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-              {{ t('crm.dashboard.noPipelineStages') }}
-            </div>
-            <div v-else class="flex flex-col gap-3">
-              <CrmMetricBar
-                v-for="row in stageBreakdown"
-                :key="row.stage"
-                :label="row.stage"
-                :percent="row.percent"
-                :bar-class="row.barClass"
-                :tooltip="`${row.stage}: ${t('global.currencySymbol')}${priceFormatCompact(row.value)} · ${row.count} ${t('crm.dashboard.dealsUnit')}`"
-                :to="`/crm/deals?stage=${encodeURIComponent(row.stage)}`"
-              >
-                <span class="min-w-24 shrink-0 whitespace-nowrap text-right text-sm text-(--color-gray)">{{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}</span>
-                <span class="min-w-20 shrink-0 whitespace-nowrap text-right text-xs text-(--color-gray)">{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</span>
-              </CrmMetricBar>
-            </div>
-          </div>
-
-          <div v-else-if="activeTab === 'funnel'">
+          <!-- The "Pipeline by Stage" bar chart that used to be this card's
+          first tab was dropped 2026-09-25: it duplicated the Overview
+          Pipeline page (/crm/overview-pipeline), which the dashboard now
+          links to instead (DashboardOverviewPipelineLink). -->
+          <div v-if="activeTab === 'funnel'">
             <div v-if="funnelStages.every(stage => stage.value === 0)" class="relative">
               <UBadge color="neutral" variant="subtle" class="absolute inset-e-0 top-0 z-10">{{ t('crm.dashboard.previewBadge') }}</UBadge>
               <div class="opacity-50 grayscale-50">
@@ -131,7 +115,6 @@ const { t } = useI18n()
 const { priceFormatCompact } = useFormatter()
 
 defineProps<{
-  stageBreakdown: { stage: string, value: number, count: number, percent: number, barClass: string }[]
   upsellCandidates: { company: Company, contact: { color: string, label: string } }[]
   upsellStaleDaysOptions: Select[]
   funnelStages: { label: string, value: number, barClass?: string }[]
@@ -144,11 +127,10 @@ defineProps<{
 
 const upsellMinStaleDays = defineModel<number>('upsellMinStaleDays', { required: true })
 
-type AnalyticsTab = 'byStage' | 'funnel' | 'outcome'
-const activeTab = ref<AnalyticsTab>('byStage')
+type AnalyticsTab = 'funnel' | 'outcome'
+const activeTab = ref<AnalyticsTab>('funnel')
 
 const tabItems = computed(() => [
-  { label: t('crm.dashboard.pipelineByStage'), value: 'byStage' },
   { label: t('crm.dashboard.salesFunnel'), value: 'funnel' },
   { label: t('crm.dashboard.outcomeSplit'), value: 'outcome' },
 ])
@@ -157,16 +139,11 @@ const tabItems = computed(() => [
 // computeds — keeps each tab's presentation together instead of spread
 // across the file.
 const TAB_META: Record<AnalyticsTab, { icon: string, iconBg: string, iconColor: string, hint: string }> = {
-  byStage: { icon: 'material-symbols:stacked-bar-chart-outline', iconBg: 'bg-(--color-accent-green)/15', iconColor: 'text-(--color-accent-green)', hint: '' },
   funnel: { icon: 'material-symbols:filter-alt-outline', iconBg: 'bg-(--color-info-toast)/15', iconColor: 'text-(--color-info-toast)', hint: '' },
   outcome: { icon: 'material-symbols:donut-large-outline', iconBg: 'bg-(--color-success-toast)/15', iconColor: 'text-(--color-success-toast)', hint: '' },
 }
 const activeTabMeta = computed(() => ({
   ...TAB_META[activeTab.value],
-  hint: activeTab.value === 'funnel'
-    ? t('crm.dashboard.salesFunnelHint')
-    : activeTab.value === 'outcome'
-      ? t('crm.dashboard.outcomeSplitHint')
-      : '',
+  hint: activeTab.value === 'funnel' ? t('crm.dashboard.salesFunnelHint') : t('crm.dashboard.outcomeSplitHint'),
 }))
 </script>
