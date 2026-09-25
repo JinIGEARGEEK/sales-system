@@ -234,13 +234,23 @@ const pendingStatusChange = ref<{ contract: Contract, status: ContractStatus } |
 // change visibly reverts to the saved status instead of keeping the picked one.
 const statusSelectResetKey = ref(0)
 
-const requestContractStatusChange = (contract: Contract, status: ContractStatus) => {
-  if (status === contract.status) return
+// InputSelect can report one pick twice (its own USelect and the wrapping
+// vee-validate Field both emit update:model-value) — `inFlightStatus`
+// collapses that into a single PUT/confirm per pick.
+const inFlightStatus = new Map<number, ContractStatus>()
+
+const requestContractStatusChange = async (contract: Contract, status: ContractStatus) => {
+  if (status === contract.status || inFlightStatus.get(contract.id) === status) return
   if (CONFIRMED_CONTRACT_STATUSES.includes(status)) {
     pendingStatusChange.value = { contract, status }
     return
   }
-  onUpdateContractStatus(contract, status)
+  inFlightStatus.set(contract.id, status)
+  try {
+    await onUpdateContractStatus(contract, status)
+  } finally {
+    inFlightStatus.delete(contract.id)
+  }
 }
 
 const cancelContractStatusChange = () => {

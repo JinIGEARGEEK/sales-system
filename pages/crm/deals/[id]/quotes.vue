@@ -230,13 +230,23 @@ const pendingStatusChange = ref<{ quote: Quote, status: QuoteStatus } | null>(nu
 // change visibly reverts to the saved status instead of keeping the picked one.
 const statusSelectResetKey = ref(0)
 
-const requestQuoteStatusChange = (quote: Quote, status: QuoteStatus) => {
-  if (status === quote.status) return
+// InputSelect can report one pick twice (its own USelect and the wrapping
+// vee-validate Field both emit update:model-value) — `inFlightStatus`
+// collapses that into a single PUT/confirm per pick.
+const inFlightStatus = new Map<number, QuoteStatus>()
+
+const requestQuoteStatusChange = async (quote: Quote, status: QuoteStatus) => {
+  if (status === quote.status || inFlightStatus.get(quote.id) === status) return
   if (CONFIRMED_QUOTE_STATUSES.includes(status)) {
     pendingStatusChange.value = { quote, status }
     return
   }
-  onUpdateQuoteStatus(quote.id, status)
+  inFlightStatus.set(quote.id, status)
+  try {
+    await onUpdateQuoteStatus(quote.id, status)
+  } finally {
+    inFlightStatus.delete(quote.id)
+  }
 }
 
 const cancelQuoteStatusChange = () => {
