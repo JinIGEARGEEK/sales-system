@@ -118,12 +118,10 @@ const search = useQuerySyncedRef('search', '', 400)
 const roleFilter = useQuerySyncedRef('role')
 const statusFilter = useQuerySyncedRef('status')
 
-const hasActiveFilters = computed(() => search.value !== '' || roleFilter.value !== 'all' || statusFilter.value !== 'all')
-const clearFilters = () => {
-  search.value = ''
-  roleFilter.value = 'all'
-  statusFilter.value = 'all'
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [{ ref: roleFilter }, { ref: statusFilter }],
+})
 
 const buildParams = () => ({
   search: search.value || undefined,

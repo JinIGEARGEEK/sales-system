@@ -40,7 +40,6 @@ export default {
       addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบบริษัทสำเร็จ',
     entityLabel: 'บริษัท',
     campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
     campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',

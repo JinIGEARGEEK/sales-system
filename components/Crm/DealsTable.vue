@@ -90,7 +90,7 @@ const { t } = useI18n()
 const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const dealsStore = useDealsStore()
@@ -166,17 +166,9 @@ watch(rows, (visibleDeals) => {
   }
 })
 
-// nameById's own '-' stays for a Company not loaded yet; a loaded Company
-// with a blank name (created by converting a company-less Prospect) gets the
-// "(Unnamed company)" placeholder instead of an empty cell.
-const companyLabel = (id: number | null | undefined) => {
-  const company = companiesStore.items.find(c => c.id === id)
-  return company ? companyName(company.name) : '-'
-}
-
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
-  companyName: companyLabel(deal.company_id),
+  companyName: companyLabelById(deal.company_id),
   valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),

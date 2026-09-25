@@ -32,7 +32,6 @@ export default {
       addToCampaign: 'เพิ่มเข้าแคมเปญ',
       delete: 'ลบ',
     },
-    deleteSuccess: 'ลบผู้ติดต่อสำเร็จ',
     entityLabel: 'ผู้ติดต่อ',
     primaryBadge: 'ผู้ติดต่อหลัก',
     campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',

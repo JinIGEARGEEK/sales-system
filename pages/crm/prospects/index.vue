@@ -86,7 +86,7 @@
       <template #card="{ item }">
         <div>
           <p class="line-clamp-2 text-sm font-medium">{{ item.name }}</p>
-          <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
+          <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
         </div>
         <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
           <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -159,7 +159,7 @@ useHead({ title: t('crm.prospects.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 // Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
@@ -190,21 +190,14 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 
 // Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
 // search + the status pill stay visible.
-const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  sourceFilter.value = 'all'
-  assigneeFilter.value = 'all'
-}
-
-// nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
-// with a blank name gets the "(Unnamed company)" placeholder instead.
-const companyLabel = (id: number | null | undefined) => {
-  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
-  return company ? companyName(company.name) : '-'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter },
+    { ref: sourceFilter, secondary: true },
+    { ref: assigneeFilter, secondary: true },
+  ],
+})
 
 // Status/source/assignee filters are visible and functional in both views
 // now (CrmStatusPill above used to be List-only) — pipelineItems below is
@@ -335,7 +328,7 @@ const displayRows = computed(() => rows.value.map(prospect => ({
   statusBadge: toBadge(prospect.status, statusBadgeColor(prospect.status)),
   createdDate: dateFormat(prospect.created_at.toISOString()),
   assignedToName: teamMembersStore.nameById(prospect.assigned_to),
-  companyName: companyLabel(prospect.company_id),
+  companyName: companyLabelById(prospect.company_id),
 })))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode } = useBulkSelection<Prospect>()

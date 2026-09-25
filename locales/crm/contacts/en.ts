@@ -32,7 +32,6 @@ export default {
       addToCampaign: 'Add to Campaign',
       delete: 'Delete',
     },
-    deleteSuccess: 'Contact deleted',
     entityLabel: 'contacts',
     primaryBadge: 'Primary',
     campaignCreateSuccess: 'Campaign "{name}" created with {count} follow-up tasks',

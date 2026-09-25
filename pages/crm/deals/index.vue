@@ -81,7 +81,7 @@
         <template v-if="item._type === 'deal'">
           <div>
             <p class="line-clamp-2 text-sm font-medium">{{ item.title }}</p>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
             {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
@@ -105,7 +105,7 @@
                 {{ t('crm.leads.index.sqlBadge') }}
               </UBadge>
             </div>
-            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabel(item.company_id) }}</p>
+            <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -147,9 +147,8 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const route = useRoute()
 const { priceFormatCompact } = useFormatter()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
@@ -275,26 +274,25 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 const businessUnitFilter = useQuerySyncedRef('business_unit')
 const channelFilter = useQuerySyncedRef('channel')
 const stageFilter = useQuerySyncedRef('stage')
-const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', 'kanban', 0, ['kanban', 'list'])
 
 // The Kanban board shows every stage side by side, so a single-stage/assignee
-// deep link reads better landing on the List view, where the filter bar and
-// results are unambiguous. Only when the link doesn't name a view itself —
-// a refreshed/shared URL that already says ?view=kanban keeps it.
+// deep link reads better landing on the List view. List becomes the *default*
+// then (not a one-off override), so a hand-picked Kanban is written to the URL
+// as ?view=kanban and survives a refresh.
 const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
-if (hasDeepLinkFilter && route.query.view === undefined) viewMode.value = 'list'
+const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', hasDeepLinkFilter ? 'list' : 'kanban', 0, ['kanban', 'list'])
 
 // Business unit/channel/stage collapse behind "More filters" below md
 // (CrmMoreFilters); search + assignee stay visible.
-const secondaryFilterCount = computed(() => [businessUnitFilter, channelFilter, stageFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || assigneeFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  assigneeFilter.value = 'all'
-  businessUnitFilter.value = 'all'
-  channelFilter.value = 'all'
-  stageFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: assigneeFilter },
+    { ref: businessUnitFilter, secondary: true },
+    { ref: channelFilter, secondary: true },
+    { ref: stageFilter, secondary: true },
+  ],
+})
 
 // Kanban's own board fetch (fetchStageDeals) needs a re-fetch whenever
 // `search` changes while Kanban is showing (debounced, same 400ms as List
@@ -317,15 +315,6 @@ watch([search, viewMode], ([, mode], previous) => {
     }, 400)
   }
 })
-
-// nameById's own '-' stays for a Company not loaded yet (or no Company at
-// all — Lead cards); a loaded Company with a blank name (created by
-// converting a company-less Prospect) gets the "(Unnamed company)"
-// placeholder instead.
-const companyLabel = (id: number | null | undefined) => {
-  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
-  return company ? companyName(company.name) : '-'
-}
 
 const stageFilterOptions = computed(() => [
   { label: t('crm.dashboard.allStages'), value: 'all' },

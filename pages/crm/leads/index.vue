@@ -127,7 +127,7 @@ useHead({ title: t('crm.leads.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
-const { companyName } = useCompanyName()
+const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
@@ -167,16 +167,14 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 // Source/assignee collapse behind "More filters" below md (CrmMoreFilters);
 // search + the status pill stay visible. Active/Converted is a view switch,
 // not a filter, so neither counts nor gets reset by Clear filters.
-const secondaryFilterCount = computed(() => [sourceFilter, assigneeFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== ''
-  || (scopeFilter.value === 'active' && statusFilter.value !== 'all')
-  || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  sourceFilter.value = 'all'
-  assigneeFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter, enabled: () => scopeFilter.value === 'active' },
+    { ref: sourceFilter, secondary: true },
+    { ref: assigneeFilter, secondary: true },
+  ],
+})
 
 // Maps a TableData column field to the `sort` query param the backend
 // understands (see GET /leads: created_at/name plain columns, company_name
@@ -268,25 +266,17 @@ watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFr
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
-// nameById's own '-' stays for no/not-yet-loaded Company; a loaded Company
-// with a blank name (created by converting a company-less Prospect) gets the
-// "(Unnamed company)" placeholder instead of an empty cell.
-const companyLabel = (id: number | null | undefined) => {
-  const company = id ? companiesStore.items.find(c => c.id === id) : undefined
-  return company ? companyName(company.name) : '-'
-}
-
 // Lead Scoring is optional (FR-CRM-006) — with no active criteria every Lead
 // scores 0, and a column of "0" badges is just noise. Admins can read the
 // criteria list (GET /admin/lead-scoring-criteria is adminOnly), so for them
-// the column tracks whether any criterion is active; everyone else falls back
-// to "does any Lead on this page actually have a score".
+// the column also shows whenever any criterion is active. A Lead on this page
+// with a score or a manual MQL/SQL mark shows it regardless.
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
 const criteriaLoaded = ref(false)
-const showScoreColumn = computed(() => {
-  if (criteriaLoaded.value) return leadScoringCriteriaStore.items.some(c => c.is_active)
-  return rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql')
-})
+const showScoreColumn = computed(() =>
+  (criteriaLoaded.value && leadScoringCriteriaStore.items.some(c => c.is_active))
+  || rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql'),
+)
 
 const displayRows = computed(() => {
   const dealsById = new Map(dealsStore.items.map(deal => [deal.id, deal]))
@@ -296,7 +286,7 @@ const displayRows = computed(() => {
     classificationBadge: classificationBadge(lead),
     createdDate: dateFormat(lead.created_at.toISOString()),
     assignedToName: teamMembersStore.nameById(lead.assigned_to),
-    companyName: companyLabel(lead.company_id),
+    companyName: companyLabelById(lead.company_id),
   }))
 })
 

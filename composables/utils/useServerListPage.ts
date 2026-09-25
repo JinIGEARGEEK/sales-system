@@ -37,14 +37,23 @@ export const useServerListPage = <T>(
 
   // Any filter/search/sort change should snap back to page 1 — the previous
   // page number may no longer exist under the new filter.
+  let searchDebounce: ReturnType<typeof setTimeout> | undefined
+  let fetchedThisTick = false
   const refetchFromStart = () => {
+    // An immediate fetch already reads the current search, so it supersedes a
+    // debounced one pending or requested in the same tick (e.g. Clear filters).
+    clearTimeout(searchDebounce)
+    if (!fetchedThisTick) {
+      fetchedThisTick = true
+      nextTick(() => { fetchedThisTick = false })
+    }
     page.value = 1
     fetch()
   }
 
-  let searchDebounce: ReturnType<typeof setTimeout> | undefined
   const refetchDebounced = (delay = 400) => {
     clearTimeout(searchDebounce)
+    if (fetchedThisTick) return
     searchDebounce = setTimeout(refetchFromStart, delay)
   }
 

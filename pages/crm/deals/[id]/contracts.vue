@@ -212,56 +212,23 @@ const onContractFileSelected = async (event: Event) => {
 
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
 
-const onUpdateContractStatus = async (contract: Contract, status: ContractStatus) => {
-  try {
+const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['signed', 'expired']
+const statusLabel = (status: ContractStatus) => CONTRACT_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
+
+const {
+  pending: pendingStatusChange,
+  resetKey: statusSelectResetKey,
+  request: requestContractStatusChange,
+  cancel: cancelContractStatusChange,
+  confirm: confirmContractStatusChange,
+} = useConfirmedStatusChange<ContractStatus, Contract>({
+  confirmStatuses: CONFIRMED_CONTRACT_STATUSES,
+  save: async (contract, status) => {
     // contractsStore.update is a real partial merge server-side (see
     // CLAUDE.md's full-record-PUT note), so a status-only body is safe here.
     const updated = await contractsStore.update(contract.id, { status })
     success(t('crm.contracts.detail.updateStatusSuccess'))
     promptProjectIfSigned(updated)
-  } catch (err) {
-    notifyApiError(err)
-    // Snap the select back to the still-saved status on failure too.
-    statusSelectResetKey.value++
-  }
-}
-
-const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['signed', 'expired']
-const statusLabel = (status: ContractStatus) => CONTRACT_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
-
-const pendingStatusChange = ref<{ contract: Contract, status: ContractStatus } | null>(null)
-// Bumped to remount the inline selects (via :key) so a cancelled or failed
-// change visibly reverts to the saved status instead of keeping the picked one.
-const statusSelectResetKey = ref(0)
-
-// InputSelect can report one pick twice (its own USelect and the wrapping
-// vee-validate Field both emit update:model-value) — `inFlightStatus`
-// collapses that into a single PUT/confirm per pick.
-const inFlightStatus = new Map<number, ContractStatus>()
-
-const requestContractStatusChange = async (contract: Contract, status: ContractStatus) => {
-  if (status === contract.status || inFlightStatus.get(contract.id) === status) return
-  if (CONFIRMED_CONTRACT_STATUSES.includes(status)) {
-    pendingStatusChange.value = { contract, status }
-    return
-  }
-  inFlightStatus.set(contract.id, status)
-  try {
-    await onUpdateContractStatus(contract, status)
-  } finally {
-    inFlightStatus.delete(contract.id)
-  }
-}
-
-const cancelContractStatusChange = () => {
-  pendingStatusChange.value = null
-  statusSelectResetKey.value++
-}
-
-const confirmContractStatusChange = async () => {
-  const pending = pendingStatusChange.value
-  if (!pending) return
-  await onUpdateContractStatus(pending.contract, pending.status)
-  pendingStatusChange.value = null
-}
+  },
+})
 </script>

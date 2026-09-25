@@ -6,6 +6,7 @@ export default {
   searchPlaceholder: 'Search by name across all tabs...',
   tabs: {
     deals: 'Deals',
+    prospects: 'Prospects',
     leads: 'Leads',
     companies: 'Companies',
     contacts: 'Contacts',
@@ -15,6 +16,13 @@ export default {
       title: 'Title',
       company: 'Company',
       value: 'Value',
+      deletedAt: 'Deleted On',
+      action: 'Action',
+    },
+    prospects: {
+      name: 'Name',
+      company: 'Company',
+      source: 'Source',
       deletedAt: 'Deleted On',
       action: 'Action',
     },

@@ -139,7 +139,7 @@ useHead({ title: t('crm.contacts.index.pageTitle') })
 const { toBadge, phoneFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
-const { companyName } = useCompanyName()
+const { companyName, companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
@@ -168,14 +168,14 @@ const showImport = ref(false)
 
 // Company/tag collapse behind "More filters" below md (CrmMoreFilters) —
 // this badge count keeps an active hidden filter visible while collapsed.
-const secondaryFilterCount = computed(() => [companyFilter, tagFilter].filter(f => f.value !== 'all').length)
-const hasActiveFilters = computed(() => search.value !== '' || statusFilter.value !== 'all' || secondaryFilterCount.value > 0)
-const clearFilters = () => {
-  search.value = ''
-  statusFilter.value = 'all'
-  companyFilter.value = 'all'
-  tagFilter.value = 'all'
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  search,
+  filters: [
+    { ref: statusFilter },
+    { ref: companyFilter, secondary: true },
+    { ref: tagFilter, secondary: true },
+  ],
+})
 
 const onExport = () => downloadCsvBlob('/contacts/export', 'contacts.csv')
 
@@ -253,17 +253,9 @@ watch(rows, (visibleContacts) => {
   }
 })
 
-// nameById's own '-' stays for a Company not loaded yet; a loaded Company
-// with a blank name (created by converting a company-less Prospect) gets the
-// "(Unnamed company)" placeholder instead of an empty cell.
-const companyLabel = (id: number | null | undefined) => {
-  const company = companiesStore.items.find(c => c.id === id)
-  return company ? companyName(company.name) : '-'
-}
-
 const displayContacts = computed(() => rows.value.map(contact => ({
   ...contact,
-  companyName: companyLabel(contact.company_id),
+  companyName: companyLabelById(contact.company_id),
   phone: contact.phone ? phoneFormat(contact.phone) : contact.phone,
   statusBadge: contact.status === 'active'
     ? toBadge(t('crm.contacts.index.statusActive'), 'success')

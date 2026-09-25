@@ -40,7 +40,6 @@ export default {
       addToCampaign: 'Add to Campaign',
       delete: 'Delete',
     },
-    deleteSuccess: 'Company deleted',
     entityLabel: 'companies',
     campaignCreateSuccess: 'Campaign "{name}" created with {count} tasks',
     campaignAddSuccess: 'Added {count} tasks to "{name}"',

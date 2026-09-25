@@ -32,7 +32,8 @@ export const useProjectsStore = defineStore('projects', {
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Project[]>>('/projects', {
-        params: { per_page: 1000, ...params },
+        // 200 is the backend max; utils.Pagination resets anything larger to 20.
+        params: { per_page: 200, ...params },
       })
       this.items = response.data.data.map(parseDates)
       this.total = response.data.total

@@ -29,7 +29,8 @@ export const useUsersStore = defineStore('users', {
     async fetchAll (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<AdminUser[]>>('/users', {
-        params: { per_page: 1000, ...params },
+        // 200 is the backend max; utils.Pagination resets anything larger to 20.
+        params: { per_page: 200, ...params },
       })
       this.items = response.data.data.map(parseDates)
       return this.items
@@ -37,7 +38,7 @@ export const useUsersStore = defineStore('users', {
     // Server-paginated fetch used by the Users list page (search/filter/page
     // all round-trip to GET /users), same pattern as Leads/Companies/Contacts'
     // fetchList — deliberately doesn't touch `items` above (that cache stays
-    // the "up to 1000, everything" list the updated-by name lookup relies on).
+    // the "up to 200, everything" list the updated-by name lookup relies on).
     async fetchList (params?: Record<string, unknown>) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<AdminUser[]>>('/users', { params })
