@@ -1,4 +1,6 @@
 export default {
+  emptyTitle: 'ยังไม่มีสินค้า',
+  emptyDescription: 'สินค้าคือแพ็กเกจที่คุณขายและเรียกเก็บเงินผ่านสัญญา',
   addProduct: 'เพิ่มสินค้า',
   exportCsv: 'ส่งออก CSV',
   addSuccess: 'เพิ่มสินค้าสำเร็จ',

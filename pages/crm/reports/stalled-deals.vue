@@ -159,8 +159,10 @@ const onExport = () => downloadCsvBlob('/reports/stalled-deals/export', 'stalled
 // the current min_days threshold — every row already cleared min_days (the
 // query's own cutoff), so the badge communicates *how much* worse than the
 // bar it's cleared, not just that it cleared it.
+const { companyName } = useCompanyName()
 const displayRows = computed(() => results.value.map(row => ({
   ...row,
+  company_name: companyName(row.company_name),
   valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.value)}`,
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   lastActivityDisplay: dateFormat(row.last_activity_at),

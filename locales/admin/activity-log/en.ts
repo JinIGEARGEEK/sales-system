@@ -1,4 +1,6 @@
 export default {
+  emptyTitle: 'No activity recorded',
+  emptyDescription: 'Changes to deals, leads, projects, and settings will be logged here.',
   title: 'Activity Log',
   typePlaceholder: 'Entity Type',
   allTypes: 'All Types',

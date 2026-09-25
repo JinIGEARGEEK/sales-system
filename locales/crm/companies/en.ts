@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No companies yet',
+    emptyDescription: 'Companies are the accounts you sell to. Add one, or import a CSV of companies and contacts.',
     pageTitle: 'Companies',
     heading: 'Companies',
     addCompany: 'Add Company',

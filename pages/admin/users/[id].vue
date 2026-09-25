@@ -1,17 +1,7 @@
 <template>
   <div class="p-5">
     <AccessGate :can-access="canAccess">
-      <div class="mb-4 flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <h2 class="text-xl font-black">{{ user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading') }}</h2>
-      </div>
+      <PageHeader :title="user ? `${user.first_name} ${user.last_name}` : t('admin.users.detail.heading')" @back="goBack()" />
 
       <ContainerTemplate v-if="user">
         <Form @submit="onSubmit">
@@ -63,6 +53,11 @@ const form = reactive({
   password: '',
 })
 
+// Declared before the populate-watch below so its callback can re-baseline
+// the snapshot — otherwise the still-empty initial form would make the page
+// read as dirty the moment the record loads in.
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 // User loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time.
 watch(user, (value) => {
@@ -74,6 +69,7 @@ watch(user, (value) => {
   form.role = value.role
   form.status = value.is_active ? 'active' : 'inactive'
   form.notes = value.notes
+  markClean()
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -92,6 +88,7 @@ const onSubmit = guard(async () => {
     })
   }
   success(t('admin.users.detail.updateSuccess'))
+  markClean()
   navigateTo('/admin/users')
 })
 </script>

@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No staff yet',
+    emptyDescription: 'Add staff accounts so your team can sign in.',
     pageTitle: 'Staff Management',
     heading: 'Staff Management',
     addStaff: 'Add Staff',

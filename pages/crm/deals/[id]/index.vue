@@ -13,7 +13,7 @@
         <Form @submit="onSave">
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.title" :label="t('crm.deals.detail.dealTitle')" name="title" rules="required" />
-            <InputText v-model.number="form.value" :label="t('crm.deals.detail.dealValue')" type="number" name="value" rules="required" />
+            <InputText v-model="form.value" :label="t('crm.deals.detail.dealValue')" thousands name="value" rules="required" data-cy="deal-value-input" />
             <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.detail.stage')" name="stage" rules="required" />
             <div>
               <InputText
@@ -77,7 +77,7 @@
             class="-mx-2 flex items-center justify-between gap-2 rounded-md px-2 py-1 transition-colors hover:bg-(--color-light-gray-1)"
           >
             <span class="text-(--color-gray)">{{ t('crm.deals.detail.company') }}</span>
-            <span class="flex items-center gap-1 font-medium text-(--color-primary)">
+            <span class="flex items-center gap-1 font-medium text-(--color-primary)" :class="{ 'italic text-(--color-gray)': companyNameBlank }">
               {{ companyName }}
               <UIcon name="material-symbols:chevron-right" class="size-4" />
             </span>
@@ -178,10 +178,13 @@ const isLostStage = (stage: string) => pipelineStagesStore.byName(stage)?.is_los
 
 // Colors the Probability progress bar by simple magnitude thresholds — not
 // stage-derived like forecastCategoryColor, since a rep can freely override
-// this number away from its stage default.
-const probabilityColor = computed<'error' | 'warning' | 'success'>(() => {
-  if (form.probability < 33) return 'error'
-  if (form.probability < 66) return 'warning'
+// this number away from its stage default. A neutral→green scale, never red:
+// a low probability is an early-stage deal, not an error state.
+const probabilityColor = computed<'neutral' | 'info' | 'warning' | 'success'>(() => {
+  const probability = Number(form.probability) || 0
+  if (probability < 25) return 'neutral'
+  if (probability < 50) return 'info'
+  if (probability < 75) return 'warning'
   return 'success'
 })
 
@@ -252,7 +255,12 @@ watch(deal, (value) => {
   if (value) projectsStore.fetchForCompany(value.company_id).catch(notifyApiError)
 }, { immediate: true })
 
-const companyName = computed(() => deal.value ? companiesStore.nameById(deal.value.company_id) : '-')
+const { companyName: displayCompanyName, isUnnamed: isUnnamedCompany } = useCompanyName()
+const linkedCompany = computed(() => deal.value ? companiesStore.items.find(c => c.id === deal.value!.company_id) : undefined)
+// A Company converted from a Prospect with no linked company has an empty
+// name (backend convert.go) — show a muted placeholder instead of a blank link.
+const companyNameBlank = computed(() => Boolean(linkedCompany.value) && isUnnamedCompany(linkedCompany.value!.name))
+const companyName = computed(() => linkedCompany.value ? displayCompanyName(linkedCompany.value.name) : '-')
 const contactName = computed(() => deal.value ? contactsStore.items.find(c => c.id === deal.value!.contact_id)?.name || '-' : '-')
 
 const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)
@@ -269,6 +277,11 @@ const form = reactive({
   business_unit: (deal.value?.business_unit || '') as BusinessUnit | '',
   business_unit_item: deal.value?.business_unit_item || '',
 })
+
+// Re-baselined (markClean) once each loaded Deal has been hydrated into the
+// form below, and after every successful save — the snapshot taken here is
+// usually the still-empty pre-load form.
+const { markClean } = useUnsavedChangesGuard(() => form)
 
 // Deal loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time. `hydrating` suppresses
@@ -289,7 +302,10 @@ watch(deal, (value) => {
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
   form.business_unit = value.business_unit || ''
   form.business_unit_item = value.business_unit_item || ''
-  nextTick(() => { hydrating = false })
+  nextTick(() => {
+    hydrating = false
+    markClean()
+  })
 }, { immediate: true })
 
 const businessUnitItemOptions = useBusinessUnitItemOptions(
@@ -330,7 +346,7 @@ const onSave = guard(async () => {
       contact_id: deal.value.contact_id,
       channel: deal.value.channel,
       title: form.title,
-      value: form.value,
+      value: Number(form.value) || 0,
       stage: form.stage as DealStage,
       status: dealStatusForStage(form.stage as DealStage),
       probability: form.probability,
@@ -341,6 +357,7 @@ const onSave = guard(async () => {
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
     })
+    markClean()
     if (!wasWon && updated.status === 'won') createWonFollowUpTask()
     success(t('crm.deals.detail.updateSuccess'))
   } catch (err) {

@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No projects yet',
+    emptyDescription: 'Projects track custom software work for a company, from proposal to delivery.',
     pageTitle: 'Projects',
     heading: 'Projects & Products',
     tabs: {

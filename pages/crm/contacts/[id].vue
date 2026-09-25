@@ -279,6 +279,8 @@ const form = reactive({
   is_primary: contact.value?.is_primary ?? false,
 })
 
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 // Contact loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time.
 watch(contact, (value) => {
@@ -290,6 +292,9 @@ watch(contact, (value) => {
   form.phone = value.phone
   form.tags = value.tags?.join(', ') || ''
   form.is_primary = value.is_primary
+  // Re-baseline the unsaved-changes guard on every (re)load/save, so a
+  // freshly loaded or just-saved record doesn't read as dirty.
+  nextTick(markClean)
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -306,6 +311,7 @@ const onSave = guard(async () => {
       tags: parseTags(form.tags),
       is_primary: form.is_primary,
     })
+    markClean()
     success(t('crm.contacts.detail.updateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

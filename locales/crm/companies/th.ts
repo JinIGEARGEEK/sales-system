@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มีบริษัท',
+    emptyDescription: 'บริษัทคือบัญชีลูกค้าที่คุณขายให้ เพิ่มบริษัทใหม่ หรือนำเข้าไฟล์ CSV รายชื่อบริษัทและผู้ติดต่อ',
     pageTitle: 'บริษัท',
     heading: 'บริษัท',
     addCompany: 'เพิ่มบริษัท',

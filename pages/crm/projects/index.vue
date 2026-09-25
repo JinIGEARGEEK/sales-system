@@ -39,6 +39,13 @@
         :total-page="projectTotalPage"
         :per-page="projectPerPage"
         :loading="projectsLoading"
+        :empty-title="t('crm.projects.index.emptyTitle')"
+        :empty-description="t('crm.projects.index.emptyDescription')"
+        empty-icon="material-symbols:folder-open-outline"
+        :empty-action-label="canManageProjects ? t('crm.projects.index.addProject') : undefined"
+        :filtered="hasActiveProjectFilters"
+        @empty-action="openAddProject"
+        @clear-filters="clearProjectFilters"
         @change-page="onChangeProjectPage"
         @change-per-page="onChangeProjectPerPage"
         @sort="onSortProjects"
@@ -86,6 +93,13 @@
         :total-page="productTotalPage"
         :per-page="productPerPage"
         :loading="productsLoading"
+        :empty-title="t('admin.products.emptyTitle')"
+        :empty-description="t('admin.products.emptyDescription')"
+        empty-icon="material-symbols:inventory-2-outline"
+        :empty-action-label="t('admin.products.addProduct')"
+        :filtered="hasActiveProductFilters"
+        @empty-action="openAddProduct"
+        @clear-filters="clearProductFilters"
         @change-page="onChangeProductPage"
         @change-per-page="onChangeProductPerPage"
         @edit="openEditProduct"
@@ -124,6 +138,7 @@ useHead({ title: t('crm.projects.index.pageTitle') })
 const { dateFormat, toBadge } = useFormatter()
 const { projectStatusBadgeColor } = useProjectStatusColor()
 const { success, error } = useNotify()
+const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
@@ -186,11 +201,16 @@ const tabItems = computed(() => [
 // ── Projects tab ──────────────────────────────────────────────
 
 const search = useQuerySyncedRef('search', '', 400)
-// Seeded from ?status= (the Dashboard's own Production widget deep-links a
-// stat card here, e.g. ?status=Not+Started) — same useQueryFilter convention
-// as Deals'/Prospects' own dashboard deep-link seeding. Was a plain ref('all')
-// before, so that query param was silently ignored on arrival.
-const statusFilter = useQueryFilter(route.query, 'status')
+// URL-synced from ?status= (the Dashboard's own Production widget deep-links
+// a stat card here, e.g. ?status=Not+Started) and written back as it changes,
+// so refresh/back-forward restore it too.
+const statusFilter = useQuerySyncedRef('status')
+
+const hasActiveProjectFilters = computed(() => search.value !== '' || statusFilter.value !== 'all')
+const clearProjectFilters = () => {
+  search.value = ''
+  statusFilter.value = 'all'
+}
 
 const statusFilterOptions = computed(() => [
   { label: t('crm.projects.index.allStatuses'), value: 'all' },
@@ -240,6 +260,10 @@ const onSortProjects = (field: string, direction: 'asc' | 'desc') => {
 const projectRows = computed(() => {
   const rows = filteredProjects.value.map(project => ({
     ...project,
+    // Blank for a Company created by converting a company-less Prospect —
+    // the placeholder keeps the cell identifiable. (Absent entirely only
+    // when the endpoint didn't join it — left alone then.)
+    company_name: project.company_name === undefined ? undefined : companyName(project.company_name),
     statusBadge: toBadge(project.status, projectStatusBadgeColor(project.status)),
     targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
     expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
@@ -304,7 +328,13 @@ const {
 // ── Products tab ──────────────────────────────────────────────
 
 const productSearch = useQuerySyncedRef('productSearch', '', 400)
-const productStatusFilter = ref('all')
+const productStatusFilter = useQuerySyncedRef('productStatus')
+
+const hasActiveProductFilters = computed(() => productSearch.value !== '' || productStatusFilter.value !== 'all')
+const clearProductFilters = () => {
+  productSearch.value = ''
+  productStatusFilter.value = 'all'
+}
 
 const productStatusFilterOptions = computed(() => [
   { label: t('admin.products.allStatuses'), value: 'all' },

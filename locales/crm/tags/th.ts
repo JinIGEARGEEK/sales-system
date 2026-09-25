@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'ยังไม่มี Tag',
+    emptyDescription: 'Tag ช่วยจัดกลุ่มและกรองบริษัท ผู้ติดต่อ Lead และดีล',
     pageTitle: 'Tag',
     heading: 'Tag',
     addTag: 'เพิ่ม Tag',

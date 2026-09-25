@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div v-if="company">
-      <PageHeader :title="company.name" @back="navigateTo('/crm/companies')">
+      <PageHeader :title="companyName(company.name)" @back="navigateTo('/crm/companies')">
         <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
           {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
         </UBadge>
@@ -9,12 +9,11 @@
         <template #actions>
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
-            <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" icon="material-symbols:edit-outline" :loading="loading" @click="onSave" />
           </div>
         </template>
       </PageHeader>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide">
         <UTabs v-model="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" />
       </div>
 
@@ -44,6 +43,13 @@
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.notes" :label="t('crm.companies.detail.notes')" name="notes" />
                 </div>
+              </div>
+              <!-- Bottom-of-form submit, same as every other detail page
+                   (contacts/leads/prospects/tags/users/deals) — it used to sit
+                   in the page header outside this <Form>, which also let it
+                   fire the PUT past every field's vee-validate rules. -->
+              <div class="mt-4 flex gap-3">
+                <ButtonPrimary :label="t('crm.companies.detail.saveChanges')" type="submit" :loading="loading" data-cy="company-save" />
               </div>
             </Form>
           </ContainerTemplate>
@@ -477,7 +483,12 @@ const companyActivity = computed(() => activitiesStore.forRelated('company', com
 const lastContact = computed(() => {
   const dates = companyActivity.value.map(a => a.created_at)
   const latest = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null
-  return lastContactInfo(latest)
+  const info = lastContactInfo(latest)
+  // Calmer than useLastContact's own tier colors (same mapping as the
+  // Companies list): "never contacted" is neutral rather than red, amber past
+  // the stale threshold, red only once well overdue (tier3, 120+ days).
+  const color = info.days === null ? 'neutral' : info.tier === 'tier3' ? 'error' : info.tier === 'fresh' ? 'success' : 'warning'
+  return { ...info, color: color as 'neutral' | 'error' | 'success' | 'warning' }
 })
 
 const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
@@ -526,6 +537,11 @@ const {
   onSave: onSaveProject,
 } = useProjectModal(companyId, 'crm.companies.detail.addProjectSuccess', 'crm.companies.detail.updateProjectSuccess')
 
+const { companyName } = useCompanyName()
+
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
+
 const form = reactive({
   name: company.value?.name || '',
   industry: company.value?.industry || '',
@@ -539,6 +555,8 @@ const form = reactive({
   tax_id: company.value?.tax_id || '',
   notes: company.value?.notes || '',
 })
+
+const { markClean } = useUnsavedChangesGuard(() => form)
 
 // Company loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time.
@@ -555,6 +573,9 @@ watch(company, (value) => {
   form.address = value.address || ''
   form.tax_id = value.tax_id || ''
   form.notes = value.notes
+  // Re-baseline the unsaved-changes guard on every (re)load/save, so a
+  // freshly loaded or just-saved record doesn't read as dirty.
+  nextTick(markClean)
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
@@ -575,6 +596,7 @@ const onSave = guard(async () => {
       tax_id: form.tax_id || null,
       notes: form.notes,
     })
+    markClean()
     success(t('crm.companies.detail.updateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

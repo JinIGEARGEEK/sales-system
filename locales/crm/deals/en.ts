@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No deals yet',
+    emptyDescription: 'Deals track each sales opportunity from first conversation to won or lost. Add one, or convert a qualified Lead.',
     pageTitle: 'Deals Pipeline',
     heading: 'Deals Pipeline',
     addDeal: 'Add Deal',
@@ -115,6 +117,9 @@ export default {
     removeQuotationConfirmBody: 'Delete "{name}"? This cannot be undone.',
     removeQuotationSuccess: 'Quotation deleted successfully',
     updateQuoteStatusSuccess: 'Quote status updated successfully',
+    confirmQuoteStatusTitle: 'Change quote status?',
+    confirmQuoteStatusBody: 'Mark this quote as "{status}"? This records the customer\'s decision and is hard to reverse.',
+    confirmQuoteStatusConfirm: 'Change status',
     paymentsTitle: 'Payments',
     addPayment: 'Add Payment',
     noPayments: 'No payments recorded for this deal yet.',

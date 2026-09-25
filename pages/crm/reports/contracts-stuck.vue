@@ -153,8 +153,10 @@ watch(salesRepFilter, fetchReport)
 
 const onExport = () => downloadCsvBlob('/reports/contracts-stuck/export', 'contracts-stuck.csv', reportParams())
 
+const { companyName } = useCompanyName()
 const rows = computed(() => results.value.map(row => ({
   ...row,
+  company_name: companyName(row.company_name),
   statusBadge: toBadge(row.status, contractStatusBadgeColor(row.status)),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   daysInStatusBadge: toBadge(

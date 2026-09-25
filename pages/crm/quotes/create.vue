@@ -1,25 +1,17 @@
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <div class="flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <h2 class="text-xl font-black">{{ t('crm.quotes.create.heading') }}</h2>
-      </div>
-      <p v-if="deal" class="text-sm text-(--color-gray)">{{ t('crm.quotes.create.subheading', { title: deal.title }) }}</p>
-      <!-- This form only covers the line items/scope/status/validity date —
-      reference number, credit days, price type, VAT/WHT, discounts, and notes
-      all live on the full editor this redirects to right after creation. That
-      split isn't obvious from "Create Quote" alone, so spell it out rather
-      than letting a rep think the quote got cut off partway. -->
-      <p v-if="deal" class="mt-1 text-xs font-medium text-(--color-primary)">{{ t('crm.quotes.create.stepLabel') }}</p>
-    </div>
+    <PageHeader
+      :title="t('crm.quotes.create.heading')"
+      :subtitle="deal ? t('crm.quotes.create.subheading', { title: deal.title }) : undefined"
+      @back="goBack()"
+    />
+    <!-- This form only covers the line items/scope/status/validity date —
+    reference number, credit days, price type, VAT/WHT, discounts, and notes
+    all live on the full editor this redirects to right after creation. That
+    split isn't obvious from "Create Quote" alone, so spell it out rather
+    than letting a rep think the quote got cut off partway. Sits right under
+    PageHeader (pulled up into its bottom margin) so it reads as part of it. -->
+    <p v-if="deal" class="-mt-3 mb-4 text-xs font-medium text-(--color-primary)">{{ t('crm.quotes.create.stepLabel') }}</p>
 
     <div v-if="!deal" class="py-12 text-center text-(--color-gray)">
       {{ t('crm.quotes.create.missingDeal') }}

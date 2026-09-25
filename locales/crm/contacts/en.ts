@@ -1,5 +1,7 @@
 export default {
   index: {
+    emptyTitle: 'No contacts yet',
+    emptyDescription: 'Contacts are the people you talk to at each company. Add one, or import a CSV.',
     pageTitle: 'Contacts',
     heading: 'Contacts',
     addContact: 'Add Contact',
