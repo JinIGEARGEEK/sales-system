@@ -1,12 +1,13 @@
 <template>
-  <UModal :open="open" @update:open="onUpdateOpen">
-    <template #header>
-      <h3 class="text-lg font-medium">{{ jobTitle ? t('admin.pipelineConfig.jobTitles.editTitle') : t('admin.pipelineConfig.jobTitles.addTitle') }}</h3>
-    </template>
+  <UModal
+    :open="open"
+    :title="option ? t(`${i18nPrefix}.editTitle`) : t(`${i18nPrefix}.addTitle`)"
+    @update:open="onUpdateOpen"
+  >
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
-          <InputText v-model="form.name" :label="t('admin.pipelineConfig.jobTitles.name')" name="name" rules="required" />
+          <InputText v-model="form.name" :label="t(`${i18nPrefix}.name`)" name="name" rules="required" />
           <UCheckbox v-model="form.is_active" :label="t('admin.pipelineConfig.stages.isActive')" />
         </div>
       </Form>
@@ -23,12 +24,17 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
-
+// Generic add/edit modal for the Admin-configurable name + active lists
+// (Lead/Prospect sources, Industries, Company/Revenue sizes, Job titles,
+// Product categories) — they used to be seven copies of this file differing
+// only in i18n keys. `i18nPrefix` is the locale namespace holding that
+// list's `addTitle`/`editTitle`/`name` strings, e.g.
+// 'admin.pipelineConfig.companySizes'.
 const props = defineProps<{
   open: boolean
-  // Passing an existing JobTitleOption switches this into edit mode.
-  jobTitle?: JobTitleOption | null
+  i18nPrefix: string
+  // Passing an existing option switches this into edit mode.
+  option?: { name: string, is_active: boolean } | null
 }>()
 
 const emit = defineEmits<{
@@ -36,9 +42,11 @@ const emit = defineEmits<{
   submit: [payload: { name: string, is_active: boolean }]
 }>()
 
+const { t } = useI18n()
+
 const emptyForm = () => ({
-  name: props.jobTitle?.name ?? '',
-  is_active: props.jobTitle?.is_active ?? true,
+  name: props.option?.name ?? '',
+  is_active: props.option?.is_active ?? true,
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
