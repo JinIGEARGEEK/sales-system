@@ -483,12 +483,7 @@ const companyActivity = computed(() => activitiesStore.forRelated('company', com
 const lastContact = computed(() => {
   const dates = companyActivity.value.map(a => a.created_at)
   const latest = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null
-  const info = lastContactInfo(latest)
-  // Calmer than useLastContact's own tier colors (same mapping as the
-  // Companies list): "never contacted" is neutral rather than red, amber past
-  // the stale threshold, red only once well overdue (tier3, 120+ days).
-  const color = info.days === null ? 'neutral' : info.tier === 'tier3' ? 'error' : info.tier === 'fresh' ? 'success' : 'warning'
-  return { ...info, color: color as 'neutral' | 'error' | 'success' | 'warning' }
+  return lastContactInfo(latest)
 })
 
 const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask, onRemoveTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')

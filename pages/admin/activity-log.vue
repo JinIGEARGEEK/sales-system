@@ -56,10 +56,7 @@
         @view-detail="onViewDetail"
       />
 
-      <UModal v-model:open="detailOpen">
-        <template #header>
-          <h3 class="text-lg font-medium">{{ t('admin.activityLog.detail.title') }}</h3>
-        </template>
+      <UModal v-model:open="detailOpen" :title="t('admin.activityLog.detail.title')">
         <template #body>
           <div v-if="selectedEntry" class="flex flex-col gap-1 text-sm">
             <p v-if="changedFields.length === 0" class="text-(--color-gray)">

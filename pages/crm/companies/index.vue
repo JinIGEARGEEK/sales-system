@@ -255,18 +255,6 @@ watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilte
 // list page).
 watch([page, () => buildParams()], () => { selected.value = [] })
 
-// useLastContact's own palette paints "never contacted" and 90d+ red, which
-// on this list (where most companies have never had a logged Activity) turned
-// nearly every row red — alarm fatigue that hid the genuinely lapsed
-// accounts. Here: never contacted is neutral (no signal either way), 60–119d
-// is amber, and only 120d+ (the dormant tier) stays red.
-const lastContactColor = (days: number | null, tier: ReturnType<typeof lastContactInfo>['tier']) => {
-  if (days === null) return 'neutral'
-  if (tier === 'tier3') return 'error'
-  if (tier === 'tier1' || tier === 'tier2') return 'warning'
-  return 'success'
-}
-
 const displayCompanies = computed(() => rows.value.map((company) => {
   // Server-computed last_activity_at (most recent company-scoped Activity's
   // created_at, or null) — authoritative list-wide, unlike the previous
@@ -281,7 +269,7 @@ const displayCompanies = computed(() => rows.value.map((company) => {
       ? toBadge(t('crm.companies.index.statusActive'), 'success')
       : toBadge(t('crm.companies.index.statusArchived')),
     createdDate: dateFormat(company.created_at.toISOString()),
-    lastContactBadge: toBadge(contact.label, lastContactColor(contact.days, contact.tier)),
+    lastContactBadge: toBadge(contact.label, contact.color),
   }
 }))
 
