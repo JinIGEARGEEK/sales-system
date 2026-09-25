@@ -1,9 +1,9 @@
 <template>
   <div>
     <ContainerTemplate>
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h3 class="text-base font-semibold">{{ t('crm.deals.detail.quotesTitle') }}</h3>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.createQuote')"
             icon="material-symbols:add"
@@ -32,21 +32,25 @@
       </div>
       <div v-else class="flex flex-col gap-3">
         <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <div class="mb-2 flex items-center justify-between">
+          <!-- Wraps below ~400px: select + validity text + action icons don't
+               fit one non-wrapping row on a phone. -->
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
             <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
             <!-- Uploaded (PDF) quotes have no structured-items editor page of
             their own (pages/crm/quotes/[id].vue is items-only), so this is
             the only place their status can move past Draft. -->
             <InputSelect
               v-else
+              :key="`quote-status-${quote.id}-${statusSelectResetKey}`"
               :model-value="quote.status"
               :options="QUOTE_STATUS_OPTIONS"
               small
-              class="w-36"
+              class="w-36 shrink-0"
               :name="`quote-status-${quote.id}`"
-              @update:model-value="(value: string) => onUpdateQuoteStatus(quote.id, value as QuoteStatus)"
+              :data-cy="`quote-status-${quote.id}`"
+              @update:model-value="(value: string) => requestQuoteStatusChange(quote, value as QuoteStatus)"
             />
-            <div class="flex items-center gap-3">
+            <div class="flex min-w-0 flex-wrap items-center gap-3">
               <span class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
               <template v-if="!quote.file_name">
                 <UButton
@@ -117,6 +121,19 @@
         </div>
       </div>
     </ContainerTemplate>
+
+    <!-- Accepted/Rejected/Expired record the customer's decision and are hard
+         to walk back — confirmed first; cancelling re-renders the select back
+         to the saved status. -->
+    <CrmConfirmDeleteModal
+      :open="pendingStatusChange !== null"
+      :title="t('crm.deals.detail.confirmQuoteStatusTitle')"
+      :body="pendingStatusChange ? t('crm.deals.detail.confirmQuoteStatusBody', { status: quoteStatusLabel(pendingStatusChange.status) }) : ''"
+      :confirm-label="t('crm.deals.detail.confirmQuoteStatusConfirm')"
+      :confirm-color="pendingStatusChange?.status === 'accepted' ? 'primary' : 'error'"
+      @update:open="(value: boolean) => { if (!value) cancelQuoteStatusChange() }"
+      @confirm="confirmQuoteStatusChange"
+    />
 
     <CrmConfirmDeleteModal
       v-model:open="open"
@@ -195,11 +212,43 @@ const confirmRemoveQuote = async () => {
 
 const onUpdateQuoteStatus = async (id: number, status: QuoteStatus) => {
   try {
+    // updateStatus rebuilds the full PUT payload from the loaded Quote.
     await quotesStore.updateStatus(id, status)
     success(t('crm.deals.detail.updateQuoteStatusSuccess'))
   } catch (err) {
     notifyApiError(err)
+    // Snap the select back to the still-saved status on failure too.
+    statusSelectResetKey.value++
   }
+}
+
+const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
+const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
+
+const pendingStatusChange = ref<{ quote: Quote, status: QuoteStatus } | null>(null)
+// Bumped to remount the inline selects (via :key) so a cancelled or failed
+// change visibly reverts to the saved status instead of keeping the picked one.
+const statusSelectResetKey = ref(0)
+
+const requestQuoteStatusChange = (quote: Quote, status: QuoteStatus) => {
+  if (status === quote.status) return
+  if (CONFIRMED_QUOTE_STATUSES.includes(status)) {
+    pendingStatusChange.value = { quote, status }
+    return
+  }
+  onUpdateQuoteStatus(quote.id, status)
+}
+
+const cancelQuoteStatusChange = () => {
+  pendingStatusChange.value = null
+  statusSelectResetKey.value++
+}
+
+const confirmQuoteStatusChange = async () => {
+  const pending = pendingStatusChange.value
+  if (!pending) return
+  await onUpdateQuoteStatus(pending.quote.id, pending.status)
+  pendingStatusChange.value = null
 }
 
 const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)

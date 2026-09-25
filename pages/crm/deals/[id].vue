@@ -13,7 +13,7 @@
         </template>
       </PageHeader>
 
-      <div class="mb-4 overflow-x-auto scrollbar-hide">
+      <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide" data-cy="deal-tab-strip">
         <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
       </div>
 
@@ -72,6 +72,9 @@ const activeTab = computed(() => {
   const last = segments[segments.length - 1]
   return last === String(dealId) ? 'overview' : last
 })
+
+const tabStripRef = useTemplateRef<HTMLElement>('tabStripRef')
+useScrollActiveTabIntoView(tabStripRef, activeTab)
 
 const onTabChange = (value: string | number) => {
   navigateTo(value === 'overview' ? `/crm/deals/${dealId}` : `/crm/deals/${dealId}/${value}`)
