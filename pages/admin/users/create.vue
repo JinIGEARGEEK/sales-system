@@ -1,20 +1,11 @@
 <template>
   <div class="p-5">
     <AccessGate :can-access="canAccess">
-      <div class="mb-4">
-        <div class="flex items-center gap-3">
-          <UButton
-            icon="material-symbols:arrow-back"
-            variant="ghost"
-            color="neutral"
-            class="cursor-pointer p-0 hover:bg-transparent"
-            :aria-label="t('global.back')"
-            @click="goBack()"
-          />
-          <h2 class="text-xl font-black">{{ t('admin.users.create.heading') }}</h2>
-        </div>
-        <p class="text-sm text-(--color-gray)">{{ t('admin.users.create.subheading') }}</p>
-      </div>
+      <PageHeader
+        :title="t('admin.users.create.heading')"
+        :subtitle="t('admin.users.create.subheading')"
+        @back="goBack()"
+      />
 
       <ContainerTemplate>
         <Form @submit="onSubmit">
@@ -55,6 +46,8 @@ const form = reactive({
   password: '',
 })
 
+const { markClean } = useUnsavedChangesGuard(() => form)
+
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
@@ -69,6 +62,7 @@ const onSubmit = guard(async () => {
     password: form.password,
   })
   success(t('admin.users.create.createSuccess'))
+  markClean()
   navigateTo('/admin/users')
 })
 </script>

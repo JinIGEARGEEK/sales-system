@@ -1,22 +1,14 @@
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <UButton
-          icon="material-symbols:arrow-back"
-          variant="ghost"
-          color="neutral"
-          class="cursor-pointer p-0 hover:bg-transparent"
-          :aria-label="t('global.back')"
-          @click="goBack()"
-        />
-        <div>
-          <h2 class="text-xl font-black">{{ t('crm.reports.projectsAtRisk.heading') }}</h2>
-          <p class="text-sm text-(--color-gray)">{{ t('crm.reports.projectsAtRisk.subheading') }}</p>
-        </div>
-      </div>
-      <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
-    </div>
+    <PageHeader
+      :title="t('crm.reports.projectsAtRisk.heading')"
+      :subtitle="t('crm.reports.projectsAtRisk.subheading')"
+      @back="goBack()"
+    >
+      <template #actions>
+        <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+      </template>
+    </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
@@ -75,6 +67,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { dateFormat, toBadge, severityColor } = useFormatter()
+const { companyName } = useCompanyName()
 const { projectStatusBadgeColor } = useProjectStatusColor()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -118,6 +111,7 @@ const onExport = () => downloadCsvBlob('/reports/projects-at-risk/export', 'proj
 // instead.
 const rows = computed(() => results.value.map(row => ({
   ...row,
+  company_name: companyName(row.company_name),
   statusBadge: toBadge(row.status, projectStatusBadgeColor(row.status)),
   targetEndDateDisplay: dateFormat(row.target_end_date),
   daysOverdueBadge: toBadge(
