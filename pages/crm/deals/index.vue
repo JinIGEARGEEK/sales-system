@@ -147,7 +147,6 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const route = useRoute()
 const { priceFormatCompact } = useFormatter()
 const { companyName } = useCompanyName()
 const { success, error } = useNotify()
@@ -275,14 +274,13 @@ const assigneeFilter = useQuerySyncedRef('assigned_to')
 const businessUnitFilter = useQuerySyncedRef('business_unit')
 const channelFilter = useQuerySyncedRef('channel')
 const stageFilter = useQuerySyncedRef('stage')
-const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', 'kanban', 0, ['kanban', 'list'])
 
 // The Kanban board shows every stage side by side, so a single-stage/assignee
-// deep link reads better landing on the List view, where the filter bar and
-// results are unambiguous. Only when the link doesn't name a view itself —
-// a refreshed/shared URL that already says ?view=kanban keeps it.
+// deep link reads better landing on the List view. List becomes the *default*
+// then (not a one-off override), so a hand-picked Kanban is written to the URL
+// as ?view=kanban and survives a refresh.
 const hasDeepLinkFilter = assigneeFilter.value !== 'all' || businessUnitFilter.value !== 'all' || channelFilter.value !== 'all' || stageFilter.value !== 'all'
-if (hasDeepLinkFilter && route.query.view === undefined) viewMode.value = 'list'
+const viewMode = useQuerySyncedRef<'kanban' | 'list'>('view', hasDeepLinkFilter ? 'list' : 'kanban', 0, ['kanban', 'list'])
 
 // Business unit/channel/stage collapse behind "More filters" below md
 // (CrmMoreFilters); search + assignee stay visible.
