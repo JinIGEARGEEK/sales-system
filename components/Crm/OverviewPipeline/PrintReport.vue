@@ -40,10 +40,10 @@
               {{ overviewLaneLabel(lane, t) }}<span v-if="lane.terminal" class="text-(--color-dark-gray)"> ({{ t('crm.overviewPipeline.laneInPeriod') }})</span>
             </td>
             <td class="border border-(--color-light-gray-2) px-2 py-1 text-right tabular-nums">{{ numberFormat(lane.count) }}</td>
-            <td v-if="zone.key === 'deal'" class="border border-(--color-light-gray-2) px-2 py-1 text-right tabular-nums">{{ money(lane.value) }}</td>
+            <td v-if="zone.key === 'deal'" class="border border-(--color-light-gray-2) px-2 py-1 text-right tabular-nums">{{ currencyCompact(lane.value) }}</td>
             <td class="border border-(--color-light-gray-2) px-2 py-1">
               <span v-for="(card, index) in lane.cards.slice(0, 5)" :key="card.id">
-                {{ index > 0 ? ' · ' : '' }}{{ card.name || '—' }}<template v-if="zone.key === 'deal'"> ({{ money(card.value) }})</template>, {{ daysInStage(card) }}d
+                {{ index > 0 ? ' · ' : '' }}{{ card.name || '—' }}<template v-if="zone.key === 'deal'"> ({{ currencyCompact(card.value) }})</template>, {{ daysInStage(card) }}d
               </span>
               <span v-if="lane.count > 5" class="text-(--color-dark-gray)"> · +{{ numberFormat(lane.count - 5) }}</span>
             </td>
@@ -65,8 +65,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { numberFormat, priceFormatCompact, dateTimeFormat } = useFormatter()
-const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
+const { numberFormat, currencyCompact, dateTimeFormat } = useFormatter()
 
 const summaryItems = computed(() => {
   const s = props.data.summary
@@ -82,8 +81,8 @@ const summaryItems = computed(() => {
     { label: t('crm.overviewPipeline.summary.newProspects'), value: numberFormat(s.new_prospects.current), sub: withDelta(s.new_prospects) },
     { label: t('crm.overviewPipeline.summary.newLeads'), value: numberFormat(s.new_leads.current), sub: withDelta(s.new_leads) + cohort('cohortProspectToLead', s.conversion.prospect_to_lead) },
     { label: t('crm.overviewPipeline.summary.newDeals'), value: numberFormat(s.new_deals.current), sub: withDelta(s.new_deals) + cohort('cohortLeadToDeal', s.conversion.lead_to_deal) },
-    { label: t('crm.overviewPipeline.summary.won'), value: `${numberFormat(s.won.current)} · ${money(s.won.value)}`, sub: withDelta(s.won) + cohort('cohortDealToWon', s.conversion.deal_to_won) },
-    { label: t('crm.overviewPipeline.summary.openPipeline'), value: money(s.open_pipeline.value), sub: t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(s.open_pipeline.count), value: money(s.open_pipeline.weighted_value) }) },
+    { label: t('crm.overviewPipeline.summary.won'), value: `${numberFormat(s.won.current)} · ${currencyCompact(s.won.value)}`, sub: withDelta(s.won) + cohort('cohortDealToWon', s.conversion.deal_to_won) },
+    { label: t('crm.overviewPipeline.summary.openPipeline'), value: currencyCompact(s.open_pipeline.value), sub: t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(s.open_pipeline.count), value: currencyCompact(s.open_pipeline.weighted_value) }) },
   ]
 })
 </script>

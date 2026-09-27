@@ -2,7 +2,7 @@
   <CrmConfirmDeleteModal
     :open="pending !== null"
     :title="t('crm.deals.detail.dealValueUpdateTitle')"
-    :body="pending ? t('crm.deals.detail.dealValueUpdateBody', { from: `${t('global.currencySymbol')}${priceFormat(pending.from)}`, to: `${t('global.currencySymbol')}${priceFormat(pending.to)}` }) : ''"
+    :body="pending ? t('crm.deals.detail.dealValueUpdateBody', { from: currency(pending.from), to: currency(pending.to) }) : ''"
     :cancel-label="t('crm.deals.detail.dealValueUpdateDecline')"
     :confirm-label="t('crm.deals.detail.dealValueUpdateConfirm')"
     confirm-color="primary"
@@ -21,7 +21,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { priceFormat } = useFormatter()
+const { currency } = useFormatter()
 // Top-level bindings so the template unwraps the ref.
 const { pending, confirm, dismiss } = props.sync
 </script>

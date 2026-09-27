@@ -18,23 +18,23 @@
       <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-lg border border-(--color-light-gray-2) p-4">
           <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalPaid') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-paid">{{ t('global.currencySymbol') }}{{ priceFormat(totalPaid) }}</p>
+          <p class="text-lg font-semibold" data-cy="payments-total-paid">{{ currency(totalPaid) }}</p>
         </div>
         <div class="rounded-lg border border-(--color-light-gray-2) p-4">
           <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalWht') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-wht">{{ t('global.currencySymbol') }}{{ priceFormat(totalWht) }}</p>
+          <p class="text-lg font-semibold" data-cy="payments-total-wht">{{ currency(totalWht) }}</p>
         </div>
         <div class="rounded-lg border border-(--color-light-gray-2) p-4">
           <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalSettled') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-settled">{{ t('global.currencySymbol') }}{{ priceFormat(totalSettled) }}</p>
+          <p class="text-lg font-semibold" data-cy="payments-total-settled">{{ currency(totalSettled) }}</p>
         </div>
         <div class="rounded-lg border border-(--color-light-gray-2) p-4">
           <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.remainingBalance') }}</p>
           <p class="text-lg font-semibold">
-            {{ remainingBalance > 0 ? `${t('global.currencySymbol')}${priceFormat(remainingBalance)}` : t('crm.deals.detail.fullyPaid') }}
+            {{ remainingBalance > 0 ? currency(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
           </p>
           <p class="text-xs text-(--color-gray)" data-cy="payments-receivable-source">
-            {{ t('global.currencySymbol') }}{{ priceFormat(receivable.amount) }} ·
+            {{ currency(receivable.amount) }} ·
             {{ receivable.fromQuote ? t('crm.reports.outstandingBalance.receivableSource.quote') : t('crm.reports.outstandingBalance.receivableSource.dealValue') }}
           </p>
         </div>
@@ -60,10 +60,10 @@
           <tbody>
             <tr v-for="payment in dealPayments" :key="payment.id" class="border-b border-(--color-light-gray-2)" :data-cy="`payment-row-${payment.id}`">
               <td class="py-2 pr-3 whitespace-nowrap">{{ dateFormat(payment.paid_at) }}</td>
-              <td class="py-2 pr-3 whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(payment.amount) }}</td>
+              <td class="py-2 pr-3 whitespace-nowrap">{{ currency(payment.amount) }}</td>
               <td class="py-2 pr-3 whitespace-nowrap">
                 <template v-if="payment.wht_amount > 0">
-                  {{ t('global.currencySymbol') }}{{ priceFormat(payment.wht_amount) }}
+                  {{ currency(payment.wht_amount) }}
                   <UTooltip v-if="isWhtCertificatePending(payment)" :text="t('crm.deals.detail.whtCertificatePendingHint')">
                     <UBadge size="sm" color="warning" variant="subtle" class="ml-1" icon="material-symbols:pending-actions-outline" data-cy="payment-wht-pending">
                       {{ t('crm.deals.detail.whtCertificatePending') }}
@@ -145,7 +145,7 @@
           <tbody>
             <tr v-for="s in dealInstallments" :key="s.installment.id" class="border-b border-(--color-light-gray-2)">
               <td class="py-2 whitespace-nowrap">{{ dateFormat(s.installment.due_date) }}</td>
-              <td class="py-2 whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(s.installment.amount) }}</td>
+              <td class="py-2 whitespace-nowrap">{{ currency(s.installment.amount) }}</td>
               <td class="py-2 whitespace-nowrap">
                 <UBadge size="sm" :color="installmentStatusColor(s.status)" variant="subtle">{{ t(`crm.deals.detail.installmentStatus.${s.status}`) }}</UBadge>
               </td>
@@ -186,13 +186,13 @@
 
     <CrmConfirmDeleteModal
       v-model:open="open"
-      :body="target ? t('crm.deals.detail.removePaymentConfirmBody', { amount: `${t('global.currencySymbol')}${priceFormat(target.amount)}`, date: dateFormat(target.paid_at) }) : ''"
+      :body="target ? t('crm.deals.detail.removePaymentConfirmBody', { amount: currency(target.amount), date: dateFormat(target.paid_at) }) : ''"
       @confirm="confirmRemovePayment"
     />
 
     <CrmConfirmDeleteModal
       v-model:open="installmentDeleteOpen"
-      :body="installmentTarget ? t('crm.deals.detail.removeInstallmentConfirmBody', { amount: `${t('global.currencySymbol')}${priceFormat(installmentTarget.amount)}`, date: dateFormat(installmentTarget.due_date) }) : ''"
+      :body="installmentTarget ? t('crm.deals.detail.removeInstallmentConfirmBody', { amount: currency(installmentTarget.amount), date: dateFormat(installmentTarget.due_date) }) : ''"
       @confirm="confirmRemoveInstallment"
     />
   </div>
@@ -203,7 +203,7 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-const { priceFormat, dateFormat } = useFormatter()
+const { currency, dateFormat } = useFormatter()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const paymentsStore = usePaymentsStore()

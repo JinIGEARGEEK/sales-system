@@ -62,7 +62,7 @@
           <template v-if="selection.zone === 'deal'">
             <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.value') }}</dt>
             <dd class="tabular-nums">
-              <span class="font-semibold">{{ t('global.currencySymbol') }}{{ priceFormat(selection.card.value) }}</span>
+              <span class="font-semibold">{{ currency(selection.card.value) }}</span>
               <span v-if="selection.card.probability !== null" class="text-(--color-dark-gray)"> · {{ t('crm.overviewPipeline.panel.probability', { value: selection.card.probability }) }}</span>
             </dd>
           </template>
@@ -161,7 +161,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { priceFormat, dateTimeFormat } = useFormatter()
+const { currency, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
