@@ -1,5 +1,9 @@
 <template>
-  <UModal :open="open" :title="t('crm.contracts.components.addContractModal.title')" @update:open="onUpdateOpen">
+  <UModal
+    :open="open"
+    :title="record ? t('crm.contracts.components.addContractModal.editTitle') : t('crm.contracts.components.addContractModal.title')"
+    @update:open="onUpdateOpen"
+  >
     <template #body>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -11,18 +15,37 @@
             name="quote_id"
             :disable="quoteOptions.length === 0"
           />
+          <!-- Status only on create: an existing contract's status moves via
+               the card's confirmed status select (Signed/Expired ask first). -->
           <InputSelect
+            v-if="!record"
             v-model="form.status"
             :options="CONTRACT_STATUS_OPTIONS"
             :label="t('crm.contracts.components.addContractModal.status')"
             name="status"
             rules="required"
           />
+          <div :class="{ 'sm:col-span-2': !record }">
+            <InputDatePicker
+              v-model="form.end_date"
+              :label="t('crm.contracts.components.addContractModal.endDate')"
+              name="end_date"
+              data-cy="contract-end-date"
+            />
+            <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.contracts.components.addContractModal.endDateHint') }}</p>
+          </div>
         </div>
       </Form>
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
+        <ButtonPrimary
+          v-if="record && form.end_date"
+          :label="t('crm.contracts.components.addContractModal.clearEndDate')"
+          outline
+          class="mr-auto"
+          @click="form.end_date = ''"
+        />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel data-cy="contract-cancel" @click="onUpdateOpen(false)" />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" data-cy="contract-save" @click="onSave" />
       </div>
@@ -39,16 +62,22 @@ const { t } = useI18n()
 const props = defineProps<{
   open: boolean
   quotes?: Quote[]
+  // Passing an existing Contract switches this into edit mode (linked quote
+  // and end date; PUT /contracts/:id is a real partial merge).
+  record?: Contract | null
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [contract: { status: ContractStatus, quote_id?: number }]
+  submit: [contract: { status: ContractStatus, quote_id?: number, end_date: string | null }]
+  update: [changes: { quote_id?: number, end_date: string | null }]
 }>()
 
 const emptyForm = () => ({
-  quote_id: '' as number | '',
+  quote_id: (props.record?.quote_id ?? '') as number | '',
   status: 'draft' as ContractStatus,
+  // Date-only 'YYYY-MM-DD' — InputDatePicker's own v-model format, sent as-is.
+  end_date: props.record?.end_date ?? '',
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
@@ -62,7 +91,7 @@ const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => 
 // falling back to the most recent quote overall — still changeable via the
 // select, just not starting blank when there's an obvious default.
 watch(() => props.open, (value) => {
-  if (!value) return
+  if (!value || props.record) return
   const quotes = props.quotes ?? []
   const preferred = quotes.findLast(q => q.status === 'accepted') ?? quotes[quotes.length - 1]
   if (preferred) form.quote_id = preferred.id
@@ -74,11 +103,13 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
 const emitSubmit = useAwaitableEmit('submit')
+const emitUpdate = useAwaitableEmit('update')
 const onSubmit = guard(async () => {
-  const results = await emitSubmit({
-    status: form.status,
-    quote_id: form.quote_id === '' ? undefined : Number(form.quote_id),
-  })
+  const quoteId = form.quote_id === '' ? undefined : Number(form.quote_id)
+  const endDate = form.end_date || null
+  const results = props.record
+    ? await emitUpdate({ quote_id: quoteId, end_date: endDate })
+    : await emitSubmit({ status: form.status, quote_id: quoteId, end_date: endDate })
   if (!results.includes(false)) onUpdateOpen(false)
 })
 

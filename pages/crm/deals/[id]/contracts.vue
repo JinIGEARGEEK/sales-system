@@ -16,7 +16,7 @@
             :label="t('crm.contracts.detail.createContract')"
             icon="material-symbols:add"
             small
-            @click="addContractOpen = true"
+            @click="openAddContract"
           />
           <input
             ref="contractFileInputRef"
@@ -50,6 +50,27 @@
               <span class="min-w-0 text-xs text-(--color-gray)">
                 {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
               </span>
+              <span v-if="contract.end_date" class="text-xs text-(--color-gray)" :data-cy="`contract-end-date-${contract.id}`">
+                {{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}
+              </span>
+              <UBadge
+                v-if="expiryCountdown(contract)"
+                size="sm"
+                :color="countdownColor(expiryCountdown(contract)!.tone)"
+                variant="subtle"
+                icon="material-symbols:event-busy-outline"
+              >
+                {{ expiryLabel(expiryCountdown(contract)!.days) }}
+              </UBadge>
+              <UButton
+                icon="material-symbols:edit-outline"
+                variant="ghost"
+                color="neutral"
+                size="xs"
+                :aria-label="t('crm.contracts.detail.editContract')"
+                :data-cy="`contract-edit-${contract.id}`"
+                @click="openEditContract(contract)"
+              />
               <UButton
                 icon="material-symbols:download"
                 variant="ghost"
@@ -106,7 +127,9 @@
     <CrmAddContractModal
       v-model:open="addContractOpen"
       :quotes="dealQuotes"
+      :record="editingContract"
       @submit="onAddContract"
+      @update="onUpdateContract"
     />
 
     <!-- A signed contract usually means the deal is won — offer that next.
@@ -133,7 +156,7 @@ import { CONTRACT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
-const { dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
@@ -159,6 +182,36 @@ onMounted(() => {
 })
 
 const addContractOpen = ref(false)
+const editingContract = ref<Contract | null>(null)
+const openAddContract = () => {
+  editingContract.value = null
+  addContractOpen.value = true
+}
+const openEditContract = (contract: Contract) => {
+  editingContract.value = contract
+  addContractOpen.value = true
+}
+
+// Only a signed contract "ends" (that's also all the contract_expiry rule
+// watches); an expired one already has its own status.
+const expiryCountdown = (contract: Contract) => (contract.status === 'signed' ? dateOnlyCountdown(contract.end_date) : null)
+const expiryLabel = (days: number) => {
+  if (days < 0) return t('crm.contracts.detail.endedDaysAgo', { days: -days })
+  if (days === 0) return t('crm.contracts.detail.endsToday')
+  return t('crm.contracts.detail.endsInDays', { days })
+}
+
+const onUpdateContract = async (changes: { quote_id?: number, end_date: string | null }) => {
+  if (!editingContract.value) return
+  try {
+    // contractsStore.update is a real partial merge server-side.
+    await contractsStore.update(editingContract.value.id, changes)
+    success(t('crm.contracts.detail.updateSuccess'))
+  } catch (err) {
+    error(getApiErrorMessage(err, t('global.genericError')))
+    return false
+  }
+}
 
 // Signing a Contract is a real "we now have a customer engagement" moment
 // (FR-CRM-048). While the Deal is still open, ask to mark it Won first — the
@@ -188,7 +241,7 @@ const onDeclineMarkWon = () => {
   if (deal.value) promptCreateProject(deal.value)
 }
 
-const onAddContract = async (contract: { status: ContractStatus, quote_id?: number }) => {
+const onAddContract = async (contract: { status: ContractStatus, quote_id?: number, end_date: string | null }) => {
   try {
     const created = await contractsStore.add(dealId, contract)
     success(t('crm.contracts.detail.createSuccess'))
