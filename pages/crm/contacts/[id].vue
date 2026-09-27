@@ -126,6 +126,7 @@
       </div>
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.contacts.detail.contactNotFound')" back-to="/crm/contacts" />
 
     <CrmAddActivityModal
@@ -173,6 +174,7 @@ useHead({ title: t('crm.contacts.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { parseTags, dateFormat } = useFormatter()
 const { projectStatusBadgeColor } = useProjectStatusColor()
 const { hasRole } = useRole()
@@ -199,7 +201,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Contact, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a Contact past that cutoff would otherwise never load here at all.
-  if (!contactsStore.items.some(c => c.id === contactId)) contactsStore.fetchOne(contactId).catch(notifyApiError)
+  trackRecord(contactsStore.items.some(c => c.id === contactId) ? undefined : contactsStore.fetchOne(contactId).catch(notifyApiError))
   // Companies aren't preloaded here — InputCompanySelect below searches the
   // server as the rep types instead of filtering a capped preloaded list
   // (companiesStore.fetchAll() is capped at 200, newest-first, and can miss

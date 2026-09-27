@@ -186,6 +186,7 @@
       />
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.leads.detail.leadNotFound')" back-to="/crm/leads" />
   </div>
 </template>
@@ -203,6 +204,7 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
@@ -273,7 +275,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Lead, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a Lead past that cutoff would otherwise never load here at all.
-  if (!leadsStore.items.some(l => l.id === leadId)) leadsStore.fetchOne(leadId).catch(notifyApiError)
+  trackRecord(leadsStore.items.some(l => l.id === leadId) ? undefined : leadsStore.fetchOne(leadId).catch(notifyApiError))
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })

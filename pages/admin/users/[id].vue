@@ -14,6 +14,7 @@
         </Form>
       </ContainerTemplate>
 
+      <DetailSkeleton v-else-if="recordPending" :header="false" />
       <NotFoundState v-else :message="t('admin.users.detail.staffNotFound')" back-to="/admin/users" />
     </AccessGate>
   </div>
@@ -32,11 +33,12 @@ const { canAccess, guardMounted } = usePageAccess('Admin')
 const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const usersStore = useUsersStore()
 const goBack = useBackNavigation('/admin/users')
 
 guardMounted(() => {
-  if (usersStore.items.length === 0) usersStore.fetchAll().catch(notifyApiError)
+  trackRecord(usersStore.items.length === 0 ? usersStore.fetchAll().catch(notifyApiError) : undefined)
 })
 
 const userId = Number(route.params.id)

@@ -194,6 +194,7 @@
       />
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.quotes.detail.quoteNotFound')" back-to="/crm/deals" />
   </div>
 </template>
@@ -220,6 +221,7 @@ if (justCreated.value) {
 }
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending } = useRecordPending()
 const { priceFormat } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
@@ -250,6 +252,7 @@ onMounted(async () => {
     if (!quote.value) await quotesStore.fetchOne(quoteId)
   } catch (err) {
     notifyApiError(err)
+    recordPending.value = false
     return
   }
   // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket
@@ -260,6 +263,8 @@ onMounted(async () => {
   if (!dealsStore.items.some(d => d.id === quote.value!.deal_id)) {
     await dealsStore.fetchOne(quote.value!.deal_id).catch(notifyApiError)
   }
+  // The page renders once both the Quote and its Deal are in.
+  recordPending.value = false
   if (deal.value) {
     if (!companiesStore.items.some(c => c.id === deal.value!.company_id)) {
       companiesStore.fetchOne(deal.value.company_id).catch(notifyApiError)

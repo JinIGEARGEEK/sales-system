@@ -326,6 +326,7 @@
       />
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.companies.detail.companyNotFound')" back-to="/crm/companies" />
   </div>
 </template>
@@ -347,6 +348,7 @@ const { projectStatusBadgeColor } = useProjectStatusColor()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { hasRole } = useRole()
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager,
 // not Production) — internal/routes/routes.go's companies.Post("/:companyId/projects", ...).
@@ -387,7 +389,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Company, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a company past that cutoff would otherwise never load here at all.
-  if (!companiesStore.items.some(c => c.id === companyId)) companiesStore.fetchOne(companyId).catch(notifyApiError)
+  trackRecord(companiesStore.items.some(c => c.id === companyId) ? undefined : companiesStore.fetchOne(companyId).catch(notifyApiError))
   // Scoped fetches for this Company's own Contacts/Deals, not a blanket
   // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
   // newest-first system-wide (see stores/companies.ts's fetchAll doc), so an
