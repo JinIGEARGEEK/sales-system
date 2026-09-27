@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { WON_HANDOFF_QUERY } from '~/composables/utils/useDealWonHandoff'
 import { useI18n } from 'vue-i18n'
 import { isTaskOverdue } from '~/constants/mockData'
 
@@ -125,7 +126,29 @@ const tabItems = computed(() => [
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
 const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
-const { handoffDeal, projectModal, markWon, onCreateProject } = provideDealWonHandoff()
+const { handoffDeal, projectModal, markWon, onCreateProject, promptCreateProject } = provideDealWonHandoff()
+
+// A Lead dropped into Won on the board lands here with ?won_handoff=1 (the
+// board already created the follow-up task) — offer Create Project once.
+if (route.query[WON_HANDOFF_QUERY] === '1') {
+  // Stripped once mounted — a replace during setup races the navigation
+  // that's still landing here and gets dropped.
+  const router = useRouter()
+  onMounted(() => {
+    const { [WON_HANDOFF_QUERY]: _flag, ...rest } = route.query
+    router.replace({ query: rest })
+  })
+  const offerProject = (value: Deal | null | undefined) => {
+    if (!value) return false
+    if (value.status === 'won') promptCreateProject(value)
+    return true
+  }
+  if (!offerProject(deal.value)) {
+    const stop = watch(deal, (value) => {
+      if (offerProject(value)) stop()
+    })
+  }
+}
 const notifyStageChangeError = useStageChangeErrorNotifier()
 
 const markWonConfirmOpen = ref(false)

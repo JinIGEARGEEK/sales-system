@@ -143,6 +143,7 @@
 </template>
 
 <script setup lang="ts">
+import { WON_HANDOFF_QUERY } from '~/composables/utils/useDealWonHandoff'
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
 import {
@@ -547,6 +548,13 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     // the drag gesture. Land the rep straight on the new Deal's own edit page
     // right after, where value is a required field front and center, instead
     // of leaving a $0 Deal sitting unnoticed on the board.
+    // Dropped straight into Won: same hand-off as a Deal moved there — the
+    // follow-up task now, and Create Project on the Deal page it lands on.
+    if (deal.status === 'won') {
+      await onDealWon(deal, { promptProject: false })
+      navigateTo({ path: `/crm/deals/${deal.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
+      return
+    }
     navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

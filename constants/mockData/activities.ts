@@ -8,4 +8,5 @@ export const RELATED_TYPE_OPTIONS: Select[] = [
   { label: 'Contact', value: 'contact' },
   { label: 'Company', value: 'company' },
   { label: 'Prospect', value: 'prospect' },
+  { label: 'Lead', value: 'lead' },
 ]

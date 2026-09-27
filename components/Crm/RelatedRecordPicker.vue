@@ -45,6 +45,17 @@
     name="related_id"
     rules="required"
   />
+  <InputAsyncSelect
+    v-else-if="form.related_type === 'lead'"
+    v-model="relatedRecordId"
+    :search="searchLeads"
+    :resolve-selected="resolveLead"
+    :label="recordLabel"
+    :placeholder="recordPlaceholder"
+    name="related_id"
+    rules="required"
+    data-cy="related-record-lead"
+  />
 </template>
 
 <script setup lang="ts">
@@ -66,7 +77,7 @@ defineProps<{
   recordLabel: string
   recordPlaceholder: string
   // Only the 'company' branch above is creatable (InputCompanySelect) —
-  // Deal/Contact/Prospect are search-only (InputAsyncSelect, no create-item
+  // Deal/Contact/Prospect/Lead are search-only (InputAsyncSelect, no create-item
   // support). recordPlaceholder alone would either read select-only for
   // Company or falsely imply creatability for the other three, so this is a
   // separate, optional override applied only when related_type === 'company';
@@ -74,5 +85,5 @@ defineProps<{
   companyRecordPlaceholder?: string
 }>()
 
-const { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, relatedRecordId } = useRelatedRecordPicker(form.value)
+const { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, searchLeads, resolveLead, relatedRecordId } = useRelatedRecordPicker(form.value)
 </script>

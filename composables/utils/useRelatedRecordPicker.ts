@@ -5,7 +5,7 @@
 // search-as-you-type Deal/Contact/Prospect lookups plus the Company combobox.
 // Extracted here once a second modal needed the exact same ~40 lines.
 export const useRelatedRecordPicker = (form: { related_type: string, related_id: string }) => {
-  // None of Deal/Contact/Prospect are preloaded here — each branch searches
+  // None of Deal/Contact/Prospect/Lead are preloaded here — each branch searches
   // the server as the rep types instead of filtering a capped preloaded list
   // (fetchAll() is capped at 200 rows, newest-first, and can miss an older
   // record entirely — see stores/companies.ts's fetchAll doc for the full
@@ -14,10 +14,12 @@ export const useRelatedRecordPicker = (form: { related_type: string, related_id:
   const dealsStore = useDealsStore()
   const contactsStore = useContactsStore()
   const prospectsStore = useProspectsStore()
+  const leadsStore = useLeadsStore()
 
   const { search: searchDeals, resolve: resolveDeal } = useAsyncRecordPicker(dealsStore.fetchList, dealsStore.fetchOne, d => d.title, 'title')
   const { search: searchContacts, resolve: resolveContact } = useAsyncRecordPicker(contactsStore.fetchList, contactsStore.fetchOne, c => c.name, 'name')
   const { search: searchProspects, resolve: resolveProspect } = useAsyncRecordPicker(prospectsStore.fetchList, prospectsStore.fetchOne, p => p.name, 'name')
+  const { search: searchLeads, resolve: resolveLead } = useAsyncRecordPicker(leadsStore.fetchList, leadsStore.fetchOne, l => l.name, 'name')
 
   // Every branch above resolves to a number, but form.related_id stays a
   // plain string (matching every other InputSelect/InputAsyncSelect-bound
@@ -34,5 +36,5 @@ export const useRelatedRecordPicker = (form: { related_type: string, related_id:
     form.related_id = ''
   })
 
-  return { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, relatedRecordId }
+  return { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, searchLeads, resolveLead, relatedRecordId }
 }

@@ -52,11 +52,14 @@ export const useDealWonHandoff = () => {
 
   // Call once a Deal has actually moved into Won (pass the record the API
   // returned). `wasWon` skips the follow-up task for a Deal that was already
-  // Won before this save (e.g. re-saving an unrelated field).
-  const onDealWon = async (deal: Deal, { wasWon = false }: { wasWon?: boolean } = {}) => {
+  // Won before this save (e.g. re-saving an unrelated field). `promptProject:
+  // false` is for a caller that's about to navigate away — a Lead dropped
+  // into Won on the board lands on the new Deal's page, which offers Create
+  // Project itself (see WON_HANDOFF_QUERY).
+  const onDealWon = async (deal: Deal, { wasWon = false, promptProject = true }: { wasWon?: boolean, promptProject?: boolean } = {}) => {
     handoffDeal.value = deal
     if (!wasWon) createWonFollowUpTask(deal)
-    await promptCreateProject(deal)
+    if (promptProject) await promptCreateProject(deal)
   }
 
   // Moves the Deal into the configured Won stage through the narrow
@@ -91,6 +94,11 @@ export const useDealWonHandoff = () => {
 }
 
 export type DealWonHandoff = ReturnType<typeof useDealWonHandoff>
+
+// One-time query flag (`/crm/deals/:id?won_handoff=1`): the Deal detail page
+// opens Create Project on arrival, then strips the flag so a refresh or a
+// back-navigation doesn't prompt again.
+export const WON_HANDOFF_QUERY = 'won_handoff'
 
 const DEAL_WON_HANDOFF_KEY: InjectionKey<DealWonHandoff> = Symbol('dealWonHandoff')
 

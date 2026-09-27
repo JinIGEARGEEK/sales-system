@@ -14,13 +14,18 @@ const DEAL = {
   probability: 75, lost_reason: null, forecast_category: 'Commit', expected_close_date: null, created_at: new Date().toISOString(),
 }
 
+// What converting Lead 41 by a drop into Won returns.
+const WON_FROM_LEAD = { ...DEAL, id: 52, title: 'Walk-in Lead', value: 0, stage: 'Won', status: 'won', contact_id: null }
+
 test.describe('Deals Kanban', () => {
   let moves: Array<Record<string, unknown>>
   let tasks: Array<Record<string, unknown>>
+  let converts: Array<Record<string, unknown>>
 
   test.beforeEach(async ({ page }) => {
     moves = []
     tasks = []
+    converts = []
     await signIn(page)
     await mockApi(page, {
       'GET /auth/me': route => json(route, ADMIN),
@@ -34,6 +39,12 @@ test.describe('Deals Kanban', () => {
         moves.push(body)
         await json(route, { ...DEAL, stage: body.stage, status: body.stage === 'Won' ? 'won' : body.stage === 'Lost' ? 'lost' : 'open' })
       },
+      'POST /leads/41/convert': async (route) => {
+        const body = route.request().postDataJSON()
+        converts.push(body)
+        await json(route, { deal: WON_FROM_LEAD, company: { id: 1, name: 'Walk-in Co' }, contact: null })
+      },
+      'GET /deals/52': route => json(route, WON_FROM_LEAD),
       'POST /tasks': async (route) => {
         const body = route.request().postDataJSON()
         tasks.push(body)
@@ -76,6 +87,16 @@ test.describe('Deals Kanban', () => {
     expect(moves[0]).toMatchObject({ stage: 'Won' })
     await expect.poll(() => tasks.length).toBe(1)
     expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 31, title: 'Schedule kickoff call' })
+    await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
+  })
+
+  test('a Lead dropped into Won converts, creates the follow-up task, and offers Create Project on the new Deal', async ({ page }) => {
+    await page.getByTestId('pipeline-card-lead-41').dragTo(page.getByTestId('pipeline-column-Won'))
+    await expect.poll(() => converts.length).toBe(1)
+    expect(converts[0]).toMatchObject({ deal: { stage: 'Won' } })
+    await expect.poll(() => tasks.length).toBe(1)
+    expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 52, title: 'Schedule kickoff call' })
+    await expect(page).toHaveURL(/\/crm\/deals\/52$/)
     await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
   })
 })
