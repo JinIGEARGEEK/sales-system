@@ -37,6 +37,8 @@
                 />
                 <InputText v-model="form.legal_name" :label="t('crm.companies.detail.legalName')" name="legal_name" />
                 <InputText v-model="form.tax_id" :label="t('crm.companies.detail.taxId')" name="tax_id" />
+                <InputText v-model="form.branch_code" :label="t('crm.companies.detail.branchCode')" :placeholder="t('crm.companies.detail.branchCodePlaceholder')" name="branch_code" rules="digits:5" maxlength="5" data-cy="company-branch-code" />
+                <InputText v-model="form.postal_code" :label="t('crm.companies.detail.postalCode')" name="postal_code" rules="digits:5" maxlength="5" data-cy="company-postal-code" />
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.address" :label="t('crm.companies.detail.address')" name="address" />
                 </div>
@@ -549,6 +551,8 @@ const form = reactive({
   legal_name: company.value?.legal_name || '',
   address: company.value?.address || '',
   tax_id: company.value?.tax_id || '',
+  branch_code: company.value?.branch_code || '',
+  postal_code: company.value?.postal_code || '',
   notes: company.value?.notes || '',
 })
 
@@ -568,6 +572,8 @@ watch(company, (value) => {
   form.legal_name = value.legal_name || ''
   form.address = value.address || ''
   form.tax_id = value.tax_id || ''
+  form.branch_code = value.branch_code || ''
+  form.postal_code = value.postal_code || ''
   form.notes = value.notes
   // Re-baseline the unsaved-changes guard on every (re)load/save, so a
   // freshly loaded or just-saved record doesn't read as dirty.
@@ -590,6 +596,8 @@ const onSave = guard(async () => {
       legal_name: form.legal_name || null,
       address: form.address || null,
       tax_id: form.tax_id || null,
+      branch_code: form.branch_code || null,
+      postal_code: form.postal_code || null,
       notes: form.notes,
     })
     markClean()

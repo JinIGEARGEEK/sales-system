@@ -154,6 +154,8 @@ const onCreate = async (name: string) => {
       legal_name: null,
       address: null,
       tax_id: null,
+      branch_code: null,
+      postal_code: null,
       created_at: new Date(),
       updated_at: new Date(),
       last_activity_at: null,
