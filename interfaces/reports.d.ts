@@ -113,7 +113,8 @@ interface OutstandingBalanceRow {
   // Due date of the earliest past-due, not-fully-covered installment.
   oldest_overdue_due_date: string | null
   days_overdue: number
-  aging_bucket: 'current' | '1_30' | '31_60' | '61_90' | '90_plus'
+  // One source for the bucket union: useAgingSummary's AGING_BUCKETS.
+  aging_bucket: import('../composables/utils/useAgingSummary').AgingBucket
 }
 
 // GET /reports/source-performance (FR-CRM-005, added 2026-09-27) — Lead

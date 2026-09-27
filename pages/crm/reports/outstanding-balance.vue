@@ -128,9 +128,8 @@ const clearFilters = () => {
 
 // Client-side: the API has no bucket filter, and the summary tiles above
 // always show every bucket of the current server-side filter.
-type AgingBucketKey = OutstandingBalanceRow['aging_bucket']
-const bucketFilter = useQuerySyncedRef<AgingBucketKey | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
-const toggleBucket = (bucket: AgingBucketKey) => {
+const bucketFilter = useQuerySyncedRef<AgingBucket | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
+const toggleBucket = (bucket: AgingBucket) => {
   bucketFilter.value = bucketFilter.value === bucket ? 'all' : bucket
 }
 
