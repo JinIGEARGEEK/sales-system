@@ -107,9 +107,9 @@ const toCreatedAt = (value: string) => {
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const emitSubmit = useAwaitableEmit('submit')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
-  const results = await emitSubmit({
+  await submitAndClose({
     type: form.type,
     subject: form.subject,
     notes: form.notes,
@@ -121,7 +121,6 @@ const onSubmit = guard(async () => {
       ? { followUp: { title: form.follow_up_title.trim(), due_date: new Date(form.follow_up_due_date) } }
       : {}),
   })
-  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

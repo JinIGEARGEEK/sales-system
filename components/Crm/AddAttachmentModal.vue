@@ -109,19 +109,17 @@ const onFileChange = (event: Event) => {
 // Awaits the caller's upload: Save spins until it lands, the guard turns
 // away a second click, and the dialog stays open (form intact) if the
 // handler resolves `false` or throws.
-const emitSubmit = useAwaitableEmit('submit')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
-  let results: unknown[]
   if (mode.value === 'file') {
     if (!selectedFile.value) {
       fileError.value = t('crm.components.addAttachmentModal.fileRequired')
       return
     }
-    results = await emitSubmit({ category: form.category, file: selectedFile.value })
+    await submitAndClose({ category: form.category, file: selectedFile.value })
   } else {
-    results = await emitSubmit({ category: form.category, fileName: form.file_name, externalUrl: form.external_url })
+    await submitAndClose({ category: form.category, fileName: form.file_name, externalUrl: form.external_url })
   }
-  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

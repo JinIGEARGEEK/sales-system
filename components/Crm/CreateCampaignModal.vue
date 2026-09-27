@@ -33,7 +33,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const emitSubmit = useAwaitableEmit<[CampaignTaskSetupSubmitPayload]>('submit')
+const submitAndClose = useAwaitableSubmit<[CampaignTaskSetupSubmitPayload]>(() => onUpdateOpen(false))
 
 defineProps<{
   open: boolean
@@ -63,7 +63,6 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // failure by returning `false`.
 const { loading, guard } = useSubmitGuard()
 const onSubmit = guard(async (payload: CampaignTaskSetupSubmitPayload) => {
-  const results = await emitSubmit(payload)
-  if (!results.includes(false)) onUpdateOpen(false)
+  await submitAndClose(payload)
 })
 </script>

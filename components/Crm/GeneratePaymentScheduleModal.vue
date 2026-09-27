@@ -190,11 +190,10 @@ const addMilestone = () => {
 const removeMilestone = (index: number) => form.milestones.splice(index, 1)
 
 // Awaits the caller's save; stays open (form intact) if it resolves false.
-const emitSubmit = useAwaitableEmit('submit')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
   if (form.mode === 'percentage' && (!percentageValid.value || percentagePreview.value.length === 0)) return
-  const results = await emitSubmit(form.mode === 'percentage' ? percentagePreview.value : equalPreview.value)
-  if (!results.includes(false)) onUpdateOpen(false)
+  await submitAndClose(form.mode === 'percentage' ? percentagePreview.value : equalPreview.value)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)
