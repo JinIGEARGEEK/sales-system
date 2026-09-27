@@ -80,7 +80,7 @@ export default {
     chooseFile: 'Click to choose a file',
     acceptedFormats: 'CSV, XLS, or XLSX',
     previewSummary: '{rows} rows found.',
-    previewCompanies: '{count} new companies to create ({existing} already exist and will be skipped)',
+    previewCompanies: '{count} new companies to create ({existing} already exist — matched by Tax ID and branch, else by name; only their blank Tax ID, branch, postal code and address are filled in)',
     previewContacts: '{count} contact people to create',
     previewSkipped: '{count} rows skipped (no company name)',
     errorNoHeader: 'Could not find the expected header row (ชื่อธุรกิจ/ชื่อบุคคล). Please check the file format.',

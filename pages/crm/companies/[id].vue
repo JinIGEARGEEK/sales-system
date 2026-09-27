@@ -36,9 +36,12 @@
                   rules="required"
                 />
                 <InputText v-model="form.legal_name" :label="t('crm.companies.detail.legalName')" name="legal_name" />
-                <InputText v-model="form.tax_id" :label="t('crm.companies.detail.taxId')" name="tax_id" />
-                <InputText v-model="form.branch_code" :label="t('crm.companies.detail.branchCode')" :placeholder="t('crm.companies.detail.branchCodePlaceholder')" name="branch_code" rules="digits:5" maxlength="5" data-cy="company-branch-code" />
-                <InputText v-model="form.postal_code" :label="t('crm.companies.detail.postalCode')" name="postal_code" rules="digits:5" maxlength="5" data-cy="company-postal-code" />
+                <CrmCompanyTaxFields
+                  v-model:tax-id="form.tax_id"
+                  v-model:branch-code="form.branch_code"
+                  v-model:postal-code="form.postal_code"
+                  :exclude-id="companyId"
+                />
                 <div class="md:col-span-2">
                   <InputTextarea v-model="form.address" :label="t('crm.companies.detail.address')" name="address" />
                 </div>
@@ -595,7 +598,7 @@ const onSave = guard(async () => {
       status: form.status as ActiveArchivedStatus,
       legal_name: form.legal_name || null,
       address: form.address || null,
-      tax_id: form.tax_id || null,
+      tax_id: normalizeTaxId(form.tax_id) || null,
       branch_code: form.branch_code || null,
       postal_code: form.postal_code || null,
       notes: form.notes,
