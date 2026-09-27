@@ -28,6 +28,13 @@ export default {
   user: {
     defaultName: 'Admin User',
   },
+  quickAdd: {
+    trigger: 'Quick add',
+    logActivity: 'Log Activity',
+    addTask: 'Add Task',
+    activityLogged: 'Activity logged',
+    taskAdded: 'Task added',
+  },
   roleFocus: {
     trigger: 'Use as',
     triggerActiveLabel: 'Currently using the app as {role}. Click to change or exit.',
