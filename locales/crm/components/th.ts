@@ -241,6 +241,12 @@ export default {
     date: 'วันที่',
     cancel: 'ยกเลิก',
     save: 'บันทึกกิจกรรม',
+    createFollowUp: 'สร้างงานติดตามต่อ',
+    followUpTitle: 'ชื่องานติดตาม',
+    followUpDueDate: 'วันครบกำหนดงานติดตาม',
+    followUpTitleDefault: 'ติดตาม: {subject}',
+    loggedWithFollowUp: 'บันทึกกิจกรรมและเพิ่มงานติดตามสำเร็จ',
+    followUpFailed: 'บันทึกกิจกรรมแล้ว แต่เพิ่มงานติดตามไม่สำเร็จ',
   },
   createCampaignModal: {
     title: 'ตั้งค่าการติดตาม',

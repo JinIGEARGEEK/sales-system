@@ -95,8 +95,8 @@ const { canAccess, guardMounted } = usePageAccess(...SALES_PIPELINE_ROLES)
 
 const { dateTimeFormat, toBadge } = useFormatter()
 const { activityTypeOptions, activityTypeLabel, activityTypeBadgeColor } = useActivityTypeMeta()
-const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { logActivity } = useLogActivity()
 const activitiesStore = useActivitiesStore()
 const dealsStore = useDealsStore()
 const contactsStore = useContactsStore()
@@ -215,24 +215,12 @@ const columns = computed<TableDataColumn[]>(() => [
 // AddActivityModal's showRelatedPicker mode supplies related_type/related_id
 // itself, so this calls activitiesStore.add() directly.
 const addActivityOpen = ref(false)
-const onSubmitActivity = async (payload: { type: ActivityType, subject: string, notes: string, created_at?: string, related_type?: ActivityRelatedType, related_id?: number }) => {
-  if (!payload.related_type || !payload.related_id) return
-  try {
-    await activitiesStore.add({
-      type: payload.type,
-      subject: payload.subject,
-      notes: payload.notes,
-      created_at: payload.created_at,
-      related_type: payload.related_type,
-      related_id: payload.related_id,
-    })
-    success(t('crm.activities.index.addActivitySuccess'))
-  } catch (err) {
-    notifyApiError(err)
-    return false
-  }
+const onSubmitActivity = async (payload: ActivityFormSubmit) => {
+  if (!payload.related_type || !payload.related_id) return false
+  const saved = await logActivity(payload.related_type, payload.related_id, payload, t('crm.activities.index.addActivitySuccess'))
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).
-  await fetch().catch(notifyApiError)
+  if (saved) await fetch().catch(notifyApiError)
+  return saved
 }
 </script>

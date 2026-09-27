@@ -163,6 +163,7 @@ const { t } = useI18n()
 const { priceFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { logActivity } = useLogActivity()
 const teamMembersStore = useTeamMembersStore()
 const activitiesStore = useActivitiesStore()
 const tasksStore = useTasksStore()
@@ -294,21 +295,9 @@ const performMove = async (stage: string, reason?: LostReason) => {
 }
 
 const activityOpen = ref(false)
-const onSubmitActivity = async (payload: { type: ActivityType, subject: string, notes: string, created_at?: string }) => {
-  if (!props.selection) return
-  try {
-    await activitiesStore.add({
-      type: payload.type,
-      subject: payload.subject,
-      notes: payload.notes,
-      created_at: payload.created_at,
-      related_type: props.selection.zone,
-      related_id: props.selection.card.id,
-    })
-    success(t('crm.overviewPipeline.panel.activityLogged'))
-  } catch (err) {
-    notifyApiError(err)
-  }
+const onSubmitActivity = (payload: ActivityFormSubmit) => {
+  if (!props.selection) return false
+  return logActivity(props.selection.zone, props.selection.card.id, payload, t('crm.overviewPipeline.panel.activityLogged'))
 }
 
 const taskOpen = ref(false)
