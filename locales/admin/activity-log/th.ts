@@ -2,6 +2,7 @@ export default {
   emptyTitle: 'ยังไม่มีบันทึกกิจกรรม',
   emptyDescription: 'การเปลี่ยนแปลงของดีล Lead โปรเจกต์ และการตั้งค่า จะถูกบันทึกไว้ที่นี่',
   title: 'บันทึกกิจกรรม',
+  subtitle: 'ใครเปลี่ยนแปลงอะไรในดีล Lead โปรเจกต์ และการตั้งค่า เรียงจากล่าสุด',
   typePlaceholder: 'ประเภทข้อมูล',
   allTypes: 'ประเภทข้อมูลทั้งหมด',
   dateRangePlaceholder: 'ช่วงวันที่',

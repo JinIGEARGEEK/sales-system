@@ -23,8 +23,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel data-cy="contract-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" data-cy="contract-save" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -70,12 +70,16 @@ watch(() => props.open, (value) => {
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
-  emit('submit', {
+  const results = await emitSubmit({
     status: form.status,
     quote_id: form.quote_id === '' ? undefined : Number(form.quote_id),
   })
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

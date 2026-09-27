@@ -56,7 +56,7 @@ export default {
     useTemplate: 'เริ่มจากเทมเพลต',
     useTemplatePlaceholder: 'ใบเสนอราคาเปล่า',
     deleteTemplate: 'ลบเทมเพลตนี้',
-    deleteTemplateSuccess: 'ลบเทมเพลตใบเสนอราคาแล้ว',
+    deleteTemplateSuccess: 'ลบเทมเพลตใบเสนอราคาสำเร็จ',
     templateApplyFailed: 'สร้างใบเสนอราคาสำเร็จ แต่การใช้ค่าราคา/ภาษีจากเทมเพลตล้มเหลว — กรุณาตรวจสอบในหน้าถัดไป',
   },
   detail: {
@@ -67,7 +67,7 @@ export default {
     sendToCustomer: 'ส่งให้ลูกค้า',
     sendConfirmTitle: 'ยืนยันการส่งใบเสนอราคานี้หรือไม่?',
     sendConfirmBody: 'การดำเนินการนี้จะเปลี่ยนสถานะเป็น "ส่งแล้ว" กรุณาตรวจสอบว่าคุณได้ส่งไฟล์ให้ลูกค้าผ่านช่องทางปกติแล้ว ระบบนี้ไม่ได้ส่งอีเมลให้อัตโนมัติ',
-    sendSuccess: 'เปลี่ยนสถานะใบเสนอราคาเป็นส่งแล้ว',
+    sendSuccess: 'เปลี่ยนสถานะใบเสนอราคาเป็น "ส่งแล้ว" สำเร็จ',
     saveAsTemplate: 'บันทึกเป็นเทมเพลต',
     saveAsTemplateTitle: 'บันทึกเป็นเทมเพลตใบเสนอราคา',
     saveAsTemplateSuccess: 'บันทึกเทมเพลตใบเสนอราคาสำเร็จ',

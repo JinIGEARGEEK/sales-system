@@ -34,6 +34,7 @@
       </ContainerTemplate>
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.tags.detail.tagNotFound')" back-to="/crm/tags" />
   </div>
 </template>
@@ -49,11 +50,12 @@ useHead({ title: t('crm.tags.detail.pageTitle') })
 const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const tagsStore = useTagsStore()
 const goBack = useBackNavigation('/crm/tags')
 
 onMounted(() => {
-  if (tagsStore.items.length === 0) tagsStore.fetchAll().catch(notifyApiError)
+  trackRecord(tagsStore.items.length === 0 ? tagsStore.fetchAll().catch(notifyApiError) : undefined)
 })
 
 const tagId = Number(route.params.id)

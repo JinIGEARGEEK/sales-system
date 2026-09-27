@@ -5,11 +5,12 @@
         <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
         <template #actions>
           <div class="flex flex-wrap gap-2">
-            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
+            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
             <ButtonPrimary
               :label="t('crm.quotes.detail.saveAsTemplate')"
               outline
               icon="material-symbols:bookmark-add-outline"
+              data-cy="quote-save-template"
               @click="saveTemplateOpen = true"
             />
             <ButtonPrimary
@@ -17,6 +18,7 @@
               :label="t('crm.quotes.detail.sendToCustomer')"
               icon="material-symbols:send-outline"
               :loading="loading"
+              data-cy="quote-send"
               @click="onSendClick"
             />
           </div>
@@ -172,7 +174,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.attachments') }}</h3>
-                <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small @click="addAttachmentOpen = true" />
+                <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small data-cy="quote-add-attachment" @click="addAttachmentOpen = true" />
               </div>
             </template>
             <CrmAttachmentList :attachments="quoteAttachments" @remove="onRemoveAttachment" />
@@ -194,6 +196,7 @@
       />
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.quotes.detail.quoteNotFound')" back-to="/crm/deals" />
   </div>
 </template>
@@ -220,6 +223,7 @@ if (justCreated.value) {
 }
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending } = useRecordPending()
 const { priceFormat } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
@@ -250,6 +254,7 @@ onMounted(async () => {
     if (!quote.value) await quotesStore.fetchOne(quoteId)
   } catch (err) {
     notifyApiError(err)
+    recordPending.value = false
     return
   }
   // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket
@@ -260,6 +265,8 @@ onMounted(async () => {
   if (!dealsStore.items.some(d => d.id === quote.value!.deal_id)) {
     await dealsStore.fetchOne(quote.value!.deal_id).catch(notifyApiError)
   }
+  // The page renders once both the Quote and its Deal are in.
+  recordPending.value = false
   if (deal.value) {
     if (!companiesStore.items.some(c => c.id === deal.value!.company_id)) {
       companiesStore.fetchOne(deal.value.company_id).catch(notifyApiError)
@@ -391,6 +398,7 @@ const onSaveTemplate = async ({ name }: { name: string }) => {
     success(t('crm.quotes.detail.saveAsTemplateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 
@@ -433,6 +441,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.quotes.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

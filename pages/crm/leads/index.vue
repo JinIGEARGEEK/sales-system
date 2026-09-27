@@ -228,11 +228,6 @@ onMounted(() => {
   // 200-newest snapshot (or was created after this ran) still needs the
   // per-row fetchOne fallback below; see that watcher's own comment.
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
-  if (hasRole('Admin')) {
-    // Failure is non-fatal (the column just falls back to the row-based
-    // check), so no error toast for a config read the page doesn't need.
-    leadScoringCriteriaStore.fetchAll().then(() => { criteriaLoaded.value = true }).catch(() => {})
-  }
 })
 
 // The `fetchAll` seed above is a capped, point-in-time snapshot (see its own
@@ -266,17 +261,8 @@ watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFr
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
 
-// Lead Scoring is optional (FR-CRM-006) — with no active criteria every Lead
-// scores 0, and a column of "0" badges is just noise. Admins can read the
-// criteria list (GET /admin/lead-scoring-criteria is adminOnly), so for them
-// the column also shows whenever any criterion is active. A Lead on this page
-// with a score or a manual MQL/SQL mark shows it regardless.
-const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
-const criteriaLoaded = ref(false)
-const showScoreColumn = computed(() =>
-  (criteriaLoaded.value && leadScoringCriteriaStore.items.some(c => c.is_active))
-  || rows.value.some(lead => (lead.score ?? 0) > 0 || lead.classification === 'mql' || lead.classification === 'sql'),
-)
+// Hides the Classification column while Lead Scoring is unused.
+const { showScore: showScoreColumn } = useLeadScoreVisibility(() => rows.value)
 
 const displayRows = computed(() => {
   const dealsById = new Map(dealsStore.items.map(deal => [deal.id, deal]))

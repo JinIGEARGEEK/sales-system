@@ -22,8 +22,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addTaskModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addTaskModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addTaskModal.cancel')" cancel data-cy="task-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addTaskModal.save')" :loading="loading" data-cy="task-save" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -73,8 +73,9 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
-// Awaits the caller's save, so `loading` spins Save until it lands and the
-// guard turns away a second click meanwhile.
+// Awaits the caller's save, so `loading` spins Save until it lands, the
+// guard turns away a second click meanwhile, and a failed save (handler
+// resolves `false` or throws) keeps the dialog open.
 const emitSubmit = useAwaitableEmit('submit')
 const emitUpdate = useAwaitableEmit('update')
 const onSubmit = guard(async () => {
@@ -85,17 +86,20 @@ const onSubmit = guard(async () => {
     priority: form.priority as TaskPriority,
     assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
   }
+  let results: unknown[]
   if (props.task) {
-    await emitUpdate(shared)
+    results = await emitUpdate(shared)
   } else {
-    await emitSubmit({
+    results = await emitSubmit({
       ...shared,
       ...(props.showRelatedPicker
         ? { related_type: form.related_type as TaskRelatedType, related_id: Number(form.related_id) }
         : {}),
     })
   }
-  onUpdateOpen(false)
+  // A handler resolves `false` when its save failed (it has already shown
+  // the error), so the dialog stays open with the form intact.
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

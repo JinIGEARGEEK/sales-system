@@ -12,12 +12,14 @@
               v-if="prospect.converted_lead_id"
               :label="t('crm.prospects.detail.viewLead')"
               icon="material-symbols:open-in-new"
+              data-cy="prospect-view-lead"
               @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
             />
             <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
               <ButtonPrimary
                 :label="t('crm.prospects.detail.convertToLead')"
                 icon="material-symbols:swap-horiz"
+                data-cy="prospect-convert"
                 @click="requestConvert"
               />
             </UTooltip>
@@ -66,12 +68,13 @@
                 </div>
               </div>
               <div class="mt-4 flex gap-3">
-                <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" />
+                <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" data-cy="prospect-save" />
                 <ButtonPrimary
                   v-if="prospect.company_id"
                   :label="t('crm.prospects.detail.viewCompany')"
                   outline
                   type="button"
+                  data-cy="prospect-view-company"
                   @click="companyPreviewOpen = true"
                 />
               </div>
@@ -86,6 +89,7 @@
                 :label="t('crm.leads.detail.addAttachment')"
                 icon="material-symbols:add"
                 small
+                data-cy="prospect-add-attachment"
                 @click="addAttachmentOpen = true"
               />
             </div>
@@ -114,6 +118,7 @@
                   :label="t('crm.prospects.detail.addTask')"
                   icon="material-symbols:add"
                   small
+                  data-cy="prospect-add-task"
                   @click="openAddTask"
                 />
               </div>
@@ -124,6 +129,7 @@
       </div>
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.prospects.detail.prospectNotFound')" back-to="/crm/prospects" />
 
     <CrmAddTaskModal
@@ -167,6 +173,7 @@ useHead({ title: t('crm.prospects.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 // Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
 // /prospects* — same reasoning as pages/crm/prospects/index.vue.
 const { canAccess, guardMounted } = usePageAccess(...PROSPECT_ROLES)
@@ -191,7 +198,7 @@ const prospect = computed(() => prospectsStore.items.find(p => p.id === prospect
 guardMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Prospect, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely.
-  if (!prospectsStore.items.some(p => p.id === prospectId)) prospectsStore.fetchOne(prospectId).catch(notifyApiError)
+  trackRecord(prospectsStore.items.some(p => p.id === prospectId) ? undefined : prospectsStore.fetchOne(prospectId).catch(notifyApiError))
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)
@@ -214,6 +221,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.leads.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

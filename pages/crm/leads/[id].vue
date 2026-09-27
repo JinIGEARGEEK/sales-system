@@ -9,7 +9,7 @@
           the info icon reads as an affordance on the score, not a fourth
           unrelated header item — same size as the status badge above so
           neither reads as more/less important than the other. -->
-          <div class="flex items-center gap-1">
+          <div v-if="showScore" class="flex items-center gap-1">
             <UBadge v-if="lead.classification === 'mql'" size="sm" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
             <UBadge v-else-if="lead.classification === 'sql'" size="sm" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
             <UBadge v-else size="sm" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
@@ -186,6 +186,7 @@
       />
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.leads.detail.leadNotFound')" back-to="/crm/leads" />
   </div>
 </template>
@@ -203,6 +204,7 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
@@ -219,6 +221,9 @@ const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
+// Same rule as the Leads list's Classification column: no "0" badge while
+// Lead Scoring is unused.
+const { showScore } = useLeadScoreVisibility(() => (lead.value ? [lead.value] : []))
 
 // FR-CRM-007's "how is this calculated" breakdown — fetched lazily on first
 // open (not on page mount) since it's an extra request most visits never
@@ -273,7 +278,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Lead, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a Lead past that cutoff would otherwise never load here at all.
-  if (!leadsStore.items.some(l => l.id === leadId)) leadsStore.fetchOne(leadId).catch(notifyApiError)
+  trackRecord(leadsStore.items.some(l => l.id === leadId) ? undefined : leadsStore.fetchOne(leadId).catch(notifyApiError))
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })
@@ -318,6 +323,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.leads.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

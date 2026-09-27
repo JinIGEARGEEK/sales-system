@@ -33,8 +33,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addAttachmentModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addAttachmentModal.cancel')" cancel data-cy="attachment-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" :loading="loading" data-cy="attachment-save" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -106,17 +106,22 @@ const onFileChange = (event: Event) => {
   fileName.value = file.name
 }
 
+// Awaits the caller's upload: Save spins until it lands, the guard turns
+// away a second click, and the dialog stays open (form intact) if the
+// handler resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
+  let results: unknown[]
   if (mode.value === 'file') {
     if (!selectedFile.value) {
       fileError.value = t('crm.components.addAttachmentModal.fileRequired')
       return
     }
-    emit('submit', { category: form.category, file: selectedFile.value })
+    results = await emitSubmit({ category: form.category, file: selectedFile.value })
   } else {
-    emit('submit', { category: form.category, fileName: form.file_name, externalUrl: form.external_url })
+    results = await emitSubmit({ category: form.category, fileName: form.file_name, externalUrl: form.external_url })
   }
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

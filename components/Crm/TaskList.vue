@@ -64,8 +64,15 @@
         <UBadge :color="taskPriorityColor(task.priority)" variant="subtle" class="shrink-0">
           {{ t(`crm.components.taskList.priority.${task.priority}`) }}
         </UBadge>
-        <UBadge :color="dueBadgeColor(task)" variant="subtle" class="shrink-0" data-cy="task-due-badge">
-          {{ dateFormat(task.due_date) }}
+        <!-- Overdue carries an icon and the word too, not only the red colour. -->
+        <UBadge
+          :color="dueBadgeColor(task)"
+          variant="subtle"
+          class="shrink-0"
+          :icon="taskDueBucket(task) === 'overdue' ? 'material-symbols:schedule-outline' : undefined"
+          data-cy="task-due-badge"
+        >
+          <template v-if="taskDueBucket(task) === 'overdue'">{{ t('crm.tasks.index.groups.overdue') }} · </template>{{ dateFormat(task.due_date) }}
         </UBadge>
         <UTooltip :text="t('crm.components.taskList.removeTask')" class="shrink-0">
           <UButton

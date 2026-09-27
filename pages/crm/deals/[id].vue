@@ -20,6 +20,7 @@
       <NuxtPage />
     </div>
 
+    <DetailSkeleton v-else-if="dealPending" />
     <NotFoundState v-else :message="t('crm.deals.detail.dealNotFound')" back-to="/crm/deals" />
 
     <CrmAddProjectModal
@@ -48,7 +49,7 @@ const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
-const { dealId, deal } = useCurrentDeal()
+const { dealId, deal, dealPending } = useCurrentDeal()
 
 // Always back to the Deals list, not useBackNavigation's "return to actual
 // previous page" behavior — every tab under this detail page (overview,

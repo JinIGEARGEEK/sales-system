@@ -41,8 +41,8 @@ export default {
       delete: 'ลบ',
     },
     entityLabel: 'บริษัท',
-    campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
-    campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',
+    campaignCreateSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการสำเร็จ',
+    campaignAddSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" สำเร็จ',
   },
   create: {
     pageTitle: 'เพิ่มบริษัท',

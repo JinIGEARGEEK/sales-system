@@ -241,6 +241,12 @@ export default {
     date: 'Date',
     cancel: 'Cancel',
     save: 'Save Activity',
+    createFollowUp: 'Create follow-up task',
+    followUpTitle: 'Follow-up task title',
+    followUpDueDate: 'Follow-up due date',
+    followUpTitleDefault: 'Follow up: {subject}',
+    loggedWithFollowUp: 'Activity logged and follow-up task added',
+    followUpFailed: "Activity logged, but the follow-up task couldn't be added",
   },
   // Shared by components/Crm/CampaignTaskSetupForm.vue — used both inside
   // this modal (Companies-list bulk-select path) and inline on

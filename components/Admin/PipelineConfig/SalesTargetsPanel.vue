@@ -86,6 +86,7 @@ const onSubmitTarget = async (payload: { year: number, quarter: number, target_v
     success(t('admin.pipelineConfig.salesTargets.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

@@ -45,7 +45,7 @@ export default {
       noMatches: 'ยังไม่พบรายการที่ตรงเงื่อนไข ลองเปลี่ยนตัวกรอง',
     },
     cancel: 'ยกเลิก',
-    createSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการแล้ว',
-    addSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" แล้ว',
+    createSuccess: 'สร้างแคมเปญ "{name}" พร้อมงานติดตาม {count} รายการสำเร็จ',
+    addSuccess: 'เพิ่มงานติดตาม {count} รายการเข้า "{name}" สำเร็จ',
   },
 }

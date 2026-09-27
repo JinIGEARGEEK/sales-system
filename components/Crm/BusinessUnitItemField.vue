@@ -86,6 +86,7 @@ const onSubmitProject = async (payload: {
   deal_id?: number | null
 }) => {
   const created = await onSaveProject(payload)
-  if (created) emit('update:modelValue', created.name)
+  if (!created) return false
+  emit('update:modelValue', created.name)
 }
 </script>

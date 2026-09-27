@@ -81,6 +81,7 @@ const onSubmitRule = async (payload: { name: string, entity_type: NotificationEn
     success(t('admin.pipelineConfig.notificationRules.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

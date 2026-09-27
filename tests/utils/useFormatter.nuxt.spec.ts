@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 describe('useFormatter', () => {
   const { dateFormat, dateTimeFormat, buddhistYear, fromBuddhistYear, phoneFormat, priceFormat, numberFormat, severityColor, parseTags, toDateInputValue } = useFormatter()
@@ -85,6 +85,33 @@ describe('useFormatter', () => {
   describe('toDateInputValue', () => {
     it('converts a Date to a YYYY-MM-DD string', () => {
       expect(toDateInputValue(new Date('2026-08-25T10:30:00.000Z'))).toBe('2026-08-25')
+    })
+
+    // The team works in Bangkok (UTC+7): before 07:00 local, UTC is still
+    // on the previous day, which is exactly when a toISOString()-based
+    // default used to show yesterday.
+    describe('in Asia/Bangkok', () => {
+      let originalTz: string | undefined
+      beforeEach(() => {
+        originalTz = process.env.TZ
+        process.env.TZ = 'Asia/Bangkok'
+        vi.useFakeTimers()
+      })
+      afterEach(() => {
+        vi.useRealTimers()
+        process.env.TZ = originalTz
+      })
+
+      it('uses the local calendar day before 07:00 local time', () => {
+        // 2026-09-27T23:30Z is 06:30 on 28 Sep in Bangkok.
+        vi.setSystemTime(new Date('2026-09-27T23:30:00.000Z'))
+        expect(new Date().getHours()).toBe(6)
+        expect(toDateInputValue(new Date())).toBe('2026-09-28')
+      })
+
+      it('keeps a stored 00:00 UTC date on the same calendar day', () => {
+        expect(toDateInputValue('2026-09-30T00:00:00.000Z')).toBe('2026-09-30')
+      })
     })
   })
 })

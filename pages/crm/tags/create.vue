@@ -44,8 +44,8 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel @click="goBack()" />
+          <ButtonPrimary :label="t('crm.tags.create.createTag')" type="submit" :loading="loading" data-cy="tag-create-submit" />
+          <ButtonPrimary :label="t('crm.tags.create.cancel')" cancel data-cy="tag-create-cancel" @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>

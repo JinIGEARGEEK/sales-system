@@ -41,8 +41,9 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
   // Returns the created/updated Project so a caller that opened this modal
   // to fill an unrelated "pick a Project" field elsewhere (e.g. Deal/Lead/
   // Prospect's Business Unit item select) can select it immediately —
-  // undefined on failure, since the toast already covers that case.
-  const onSave = async (payload: ProjectSavePayload): Promise<Project | undefined> => {
+  // `false` on failure (the toast already covers it), which also tells
+  // CrmAddProjectModal (via useAwaitableEmit) to stay open.
+  const onSave = async (payload: ProjectSavePayload): Promise<Project | false> => {
     try {
       if (editing.value) {
         // A Production-role edit only carries status/production_reference
@@ -69,7 +70,7 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
       }
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
-      return undefined
+      return false
     }
   }
 

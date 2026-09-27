@@ -48,8 +48,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addCustomerProductModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addCustomerProductModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addCustomerProductModal.cancel')" cancel data-cy="customer-product-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addCustomerProductModal.save')" :loading="loading" data-cy="customer-product-save" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -118,21 +118,26 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
+const emitUpdate = useAwaitableEmit('update')
 const onSubmit = guard(async () => {
   if (props.record) {
-    emit('update', { status: form.status, end_date: form.end_date ? new Date(form.end_date) : null })
-    onUpdateOpen(false)
+    const results = await emitUpdate({ status: form.status, end_date: form.end_date ? new Date(form.end_date) : null })
+    if (!results.includes(false)) onUpdateOpen(false)
     return
   }
   const product = props.products.find(p => p.id === Number(form.product_id))
   if (!product) return
-  emit('submit', {
+  const results = await emitSubmit({
     product_id: product.id,
     status: form.status,
     start_date: form.start_date ? new Date(form.start_date) : null,
     source_deal_id: form.source_deal_id ? Number(form.source_deal_id) : null,
   }, product)
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

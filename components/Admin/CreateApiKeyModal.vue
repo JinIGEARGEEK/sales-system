@@ -59,9 +59,13 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
-  emit('submit', { name: form.name, owner_user_id: Number(form.owner_user_id) })
-  onUpdateOpen(false)
+  const results = await emitSubmit({ name: form.name, owner_user_id: Number(form.owner_user_id) })
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

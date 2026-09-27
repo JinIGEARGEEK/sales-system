@@ -9,6 +9,7 @@
             :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
             icon="material-symbols:campaign-outline"
             outline
+            data-cy="contact-add-to-campaign"
             @click="openCampaignModal"
           />
         </template>
@@ -28,11 +29,12 @@
                 <UCheckbox v-model="form.is_primary" :label="t('crm.contacts.detail.isPrimary')" />
               </div>
               <div class="mt-4 flex gap-3">
-                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" />
+                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" data-cy="contact-save" />
                 <ButtonPrimary
                   :label="t('crm.contacts.detail.viewCompany')"
                   outline
                   type="button"
+                  data-cy="contact-view-company"
                   @click="companyPreviewOpen = true"
                 />
               </div>
@@ -63,6 +65,7 @@
                   :label="t('crm.contacts.detail.addProject')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-project"
                   @click="openAddProject"
                 />
               </div>
@@ -97,6 +100,7 @@
                   :label="t('crm.contacts.detail.addActivity')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-activity"
                   @click="openAddActivity"
                 />
               </div>
@@ -116,6 +120,7 @@
                   :label="t('crm.contacts.detail.addTask')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-task"
                   @click="openAddTask"
                 />
               </div>
@@ -126,6 +131,7 @@
       </div>
     </div>
 
+    <DetailSkeleton v-else-if="recordPending" />
     <NotFoundState v-else :message="t('crm.contacts.detail.contactNotFound')" back-to="/crm/contacts" />
 
     <CrmAddActivityModal
@@ -173,6 +179,7 @@ useHead({ title: t('crm.contacts.detail.pageTitle') })
 const route = useRoute()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { parseTags, dateFormat } = useFormatter()
 const { projectStatusBadgeColor } = useProjectStatusColor()
 const { hasRole } = useRole()
@@ -199,7 +206,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Contact, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a Contact past that cutoff would otherwise never load here at all.
-  if (!contactsStore.items.some(c => c.id === contactId)) contactsStore.fetchOne(contactId).catch(notifyApiError)
+  trackRecord(contactsStore.items.some(c => c.id === contactId) ? undefined : contactsStore.fetchOne(contactId).catch(notifyApiError))
   // Companies aren't preloaded here — InputCompanySelect below searches the
   // server as the rep types instead of filtering a capped preloaded list
   // (companiesStore.fetchAll() is capped at 200, newest-first, and can miss

@@ -66,9 +66,9 @@ export default {
     leave: 'ละทิ้งและออก',
   },
   undoDelete: {
-    deleted: 'ย้าย {name} ไปที่ถังขยะแล้ว',
+    deleted: 'ย้าย {name} ไปที่ถังขยะสำเร็จ',
     undo: 'เลิกทำ',
-    restored: 'กู้คืน {name} แล้ว',
+    restored: 'กู้คืน {name} สำเร็จ',
   },
   moreFilters: 'ตัวกรองเพิ่มเติม',
   unnamedCompany: '(ไม่ระบุชื่อบริษัท)',

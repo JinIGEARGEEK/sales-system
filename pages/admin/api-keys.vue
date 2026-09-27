@@ -146,10 +146,13 @@ const onCreate = async (payload: { name: string, owner_user_id: number }) => {
     revealedKey.value = key
     revealModalOpen.value = true
     success(t('admin.apiKeys.index.createSuccess'))
-    await fetch()
   } catch (err) {
     notifyApiError(err)
+    return false
   }
+  // Saved already — a failed reload must not keep the dialog open
+  // (a second Save would create a duplicate).
+  await fetch().catch(notifyApiError)
 }
 
 const { open: revokeOpen, target: revokeTarget, requestDelete: requestRevoke, closeDelete: closeRevoke } = useDeleteConfirm<APIKey>()

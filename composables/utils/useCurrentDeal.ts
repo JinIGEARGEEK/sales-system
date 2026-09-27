@@ -10,8 +10,9 @@
 // every call to useCurrentDeal() for the life of the app, not just within
 // one component — the layout and its currently-active child route each call
 // this composable independently for the same dealId on every page load, and
-// without this both would fire their own GET /deals/:id at once.
-const pendingDealFetches = new Set<number>()
+// without this both would fire their own GET /deals/:id at once. Reactive so
+// `dealPending` can drive the layout's loading skeleton.
+const pendingDealFetches = reactive(new Set<number>())
 
 export const useCurrentDeal = () => {
   const route = useRoute()
@@ -32,5 +33,9 @@ export const useCurrentDeal = () => {
     dealsStore.fetchOne(dealId).catch(notifyApiError).finally(() => pendingDealFetches.delete(dealId))
   }
 
-  return { dealId, deal }
+  // True while this Deal's own GET is still in flight — the layout shows
+  // DetailSkeleton instead of "Deal not found" until it settles.
+  const dealPending = computed(() => pendingDealFetches.has(dealId))
+
+  return { dealId, deal, dealPending }
 }

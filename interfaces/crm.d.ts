@@ -514,6 +514,20 @@ interface Activity {
   created_at: Date
 }
 
+// What CrmAddActivityModal emits on submit. related_type/related_id are set
+// only in its showRelatedPicker mode (the /crm/activities page); followUp only
+// when "Create follow-up task" is ticked — useLogActivity then creates that
+// Task on the same record after the activity is saved.
+interface ActivityFormSubmit {
+  type: ActivityType
+  subject: string
+  notes: string
+  created_at?: string
+  related_type?: ActivityRelatedType
+  related_id?: number
+  followUp?: { title: string, due_date: Date }
+}
+
 // Frontend-only shape composables/utils/useDealStageHistory.ts maps a raw
 // AuditLogEntry (entity_type=deal, action=stage_changed) into — not a real
 // backend model. Deliberately kept separate from Activity: a stage change is

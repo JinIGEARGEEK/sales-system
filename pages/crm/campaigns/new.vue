@@ -93,6 +93,7 @@ const { canAccess } = usePageAccess(...TASK_ROLES)
 
 const { notifyApiError } = useApiErrorNotifier()
 const { success, error } = useNotify()
+const { buddhistYear, toDateInputValue } = useFormatter()
 const companiesStore = useCompaniesStore()
 const leadsStore = useLeadsStore()
 const contactsStore = useContactsStore()
@@ -183,12 +184,12 @@ watch(entitySearch, () => {
 const now = new Date()
 const defaultCampaignName = computed(() => {
   const monthName = new Intl.DateTimeFormat(locale.value === 'th' ? 'th-TH' : 'en-US', { month: 'long' }).format(now)
-  return `${t(`crm.campaigns.index.type.${typeOptions.value[0]}`)} – ${monthName} ${now.getFullYear()}`
+  return `${t(`crm.campaigns.index.type.${typeOptions.value[0]}`)} – ${monthName} ${buddhistYear(now.getFullYear())}`
 })
 const defaultDueDate = computed(() => {
   const due = new Date()
   due.setDate(due.getDate() + 7)
-  return due.toISOString().slice(0, 10)
+  return toDateInputValue(due)
 })
 const defaultAssignedTo = computed(() => (userStore.id ? String(userStore.id) : ''))
 

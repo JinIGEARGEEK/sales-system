@@ -51,8 +51,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addProjectModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addProjectModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addProjectModal.cancel')" cancel data-cy="project-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addProjectModal.save')" :loading="loading" data-cy="project-save" @click="onSave" />
       </div>
     </template>
   </UModal>
@@ -206,17 +206,21 @@ watch(() => form.company_id, () => {
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
   if (productionEditor.value) {
-    emit('submit', {
+    const results = await emitSubmit({
       status: form.status,
       production_reference: form.production_reference || null,
     })
-    onUpdateOpen(false)
+    if (!results.includes(false)) onUpdateOpen(false)
     return
   }
 
-  emit('submit', {
+  const results = await emitSubmit({
     name: form.name,
     status: form.status,
     production_reference: form.production_reference || null,
@@ -227,7 +231,7 @@ const onSubmit = guard(async () => {
     ...(props.showCompanyPicker && !props.project ? { company_id: form.company_id ?? undefined } : {}),
     ...(!props.project ? { deal_id: form.deal_id ? Number(form.deal_id) : null } : {}),
   })
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

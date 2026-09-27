@@ -80,6 +80,7 @@ const onSubmitStage = async (payload: { name: string, sort_order: number, is_act
     success(t('admin.pipelineConfig.stages.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

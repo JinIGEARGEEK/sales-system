@@ -62,8 +62,8 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.quotes.create.save')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.quotes.editor.cancel')" cancel @click="goBack()" />
+          <ButtonPrimary :label="t('crm.quotes.create.save')" type="submit" :loading="loading" data-cy="quote-create-submit" />
+          <ButtonPrimary :label="t('crm.quotes.editor.cancel')" cancel data-cy="quote-create-cancel" @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>
