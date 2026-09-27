@@ -353,7 +353,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
 
@@ -460,7 +460,6 @@ const revenueSizeOptions = computed<Select[]>(() => {
 // a query param is the lighter-weight way to get the same result).
 const COMPANY_TABS = ['overview', 'contacts', 'deals', 'quotesContracts', 'products', 'projects', 'activity', 'tasks', 'attachments']
 const activeTab = useQuerySyncedRef('tab', 'overview', 0, COMPANY_TABS)
-const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.companies.detail.tabs.contacts'), value: 'contacts' },
@@ -515,7 +514,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, overdueCount: companyOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))

@@ -1,4 +1,5 @@
 import { useI18n } from 'vue-i18n'
+import { isTaskOverdue } from '~/constants/mockData'
 
 interface TaskFormPayload {
   title: string
@@ -23,6 +24,8 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
   // the all-tasks page (it pages server-side now), so without this the tab
   // would only show what some earlier page happened to cache.
   tasksStore.fetchForRelated(relatedType, relatedId).catch(notifyApiError)
+  // For the detail pages' overdue badge on their Tasks tab / section.
+  const overdueCount = computed(() => tasks.value.filter(task => isTaskOverdue(task)).length)
 
   const openAddTask = () => {
     editingTask.value = null
@@ -57,5 +60,5 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
 
   const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
 
-  return { tasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask }
+  return { tasks, overdueCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask }
 }

@@ -56,7 +56,6 @@
 <script setup lang="ts">
 import { WON_HANDOFF_QUERY } from '~/composables/utils/useDealWonHandoff'
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -66,7 +65,6 @@ const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
-const tasksStore = useTasksStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal, dealPending } = useCurrentDeal()
@@ -101,11 +99,9 @@ const onTabChange = (value: string | number) => {
   navigateTo(value === 'overview' ? `/crm/deals/${dealId}` : `/crm/deals/${dealId}/${value}`)
 }
 
-const dealTasks = computed(() => tasksStore.forRelated('deal', dealId))
 // The overdue badge on the Tasks tab needs this Deal's tasks before that tab
 // is opened (the tab's own useTaskList shares the same request).
-tasksStore.fetchForRelated('deal', dealId).catch(notifyApiError)
-const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
+const { overdueCount: dealOverdueTaskCount } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
 const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.deals.detail.tabs.quotes'), value: 'quotes' },

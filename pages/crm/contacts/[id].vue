@@ -179,7 +179,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -284,9 +283,8 @@ const {
   'crm.contacts.detail.updateProjectSuccess',
 )
 
-const { tasks: contactTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const { tasks: contactTasks, overdueCount: contactOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('contact', contactId, 'crm.contacts.detail.addActivitySuccess')
-const contactOverdueTaskCount = computed(() => contactTasks.value.filter(task => isTaskOverdue(task)).length)
 
 const form = reactive({
   name: contact.value?.name || '',
