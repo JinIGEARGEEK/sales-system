@@ -115,11 +115,22 @@ interface ParsedRow {
   mobile: string
   officePhone: string
   fax: string
+  // Validated values for the Company's own tax_id/branch_code/postal_code
+  // columns ('' when the file's value is missing or malformed — that raw
+  // value then goes to notes instead, so nothing is lost and the API's
+  // 5-digit checks can't reject the whole row).
+  validTaxId: string
+  validBranchCode: string
+  validPostalCode: string
 }
 
 const fileName = ref('')
 const error = ref('')
 const parsedRows = ref<ParsedRow[]>([])
+// Existing Company per normalized tax_id|branch_code key found on the
+// server at preview time (null = looked up, none found).
+const taxIdMatches = ref(new Map<string, Company | null>())
+let latestParseId = 0
 const preview = ref<{ totalRows: number, newCompanies: number, existingCompanies: number, newContacts: number, skipped: number } | null>(null)
 
 const onUpdateOpen = (value: boolean) => {
@@ -127,6 +138,7 @@ const onUpdateOpen = (value: boolean) => {
     fileName.value = ''
     error.value = ''
     parsedRows.value = []
+    taxIdMatches.value = new Map()
     preview.value = null
   }
   emit('update:open', value)
@@ -137,6 +149,66 @@ const cell = (row: unknown[], headerIndex: Record<string, number>, key: string) 
   if (index === undefined) return ''
   const value = row[index]
   return value === undefined || value === null ? '' : String(value).trim()
+}
+
+const HEAD_OFFICE_LABEL = 'สำนักงานใหญ่'
+
+const taxFields = (row: unknown[], headerIndex: Record<string, number>) => {
+  const taxId = normalizeTaxId(cell(row, headerIndex, 'taxId'))
+  // Spreadsheets drop leading zeros from numeric-looking cells, so a head
+  // office "00000" can arrive as "0"; FlowAccount also leaves the code
+  // blank for a head office it only names.
+  let branchCode = cell(row, headerIndex, 'branchCode')
+  if (/^\d{1,5}$/.test(branchCode)) branchCode = branchCode.padStart(5, '0')
+  else if (!branchCode && cell(row, headerIndex, 'branchName').includes(HEAD_OFFICE_LABEL)) branchCode = HEAD_OFFICE_BRANCH_CODE
+  const postalCode = cell(row, headerIndex, 'postalCode')
+  const validTaxId = isValidThaiTaxId(taxId) ? taxId : ''
+  return {
+    validTaxId,
+    // A branch only means something alongside a tax ID.
+    validBranchCode: validTaxId && isFiveDigitCode(branchCode) ? branchCode : '',
+    validPostalCode: isFiveDigitCode(postalCode) ? postalCode : '',
+  }
+}
+
+const joinAddress = (row: ParsedRow) => [row.address1, row.address2, row.address3].filter(Boolean).join(' ')
+
+const taxIdKey = (row: ParsedRow) => `${row.validTaxId}|${row.validBranchCode}`
+const companyKey = (row: ParsedRow) => row.validTaxId ? `tax:${taxIdKey(row)}` : `name:${row.name.trim().toLowerCase()}`
+
+// Tax ID + branch identifies the buyer even when the name is spelled
+// differently ("บจก. …" vs "บริษัท … จำกัด"), so it wins over the name match.
+const findExistingCompany = (row: ParsedRow) =>
+  (row.validTaxId ? taxIdMatches.value.get(taxIdKey(row)) : null) ?? companiesStore.findByName(row.name) ?? null
+
+const lookupTaxIdMatches = async (rows: ParsedRow[]) => {
+  const matches = new Map<string, Company | null>()
+  const pending = [...new Set(rows.filter(r => r.validTaxId).map(taxIdKey))]
+  // A few requests at a time rather than one per row all at once.
+  const worker = async () => {
+    for (let key = pending.shift(); key !== undefined; key = pending.shift()) {
+      const [taxId, branchCode] = key.split('|')
+      try {
+        matches.set(key, await companiesStore.findByTaxId(taxId!, branchCode || undefined))
+      } catch {
+        // Falls back to the name match for this row.
+        matches.set(key, null)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: 4 }, worker))
+  return matches
+}
+
+// The Company fields an existing record is missing that this row can fill.
+const backfillFor = (company: Company, row: ParsedRow) => {
+  const changes: Partial<Company> = {}
+  const address = joinAddress(row)
+  if (!company.tax_id && row.validTaxId) changes.tax_id = row.validTaxId
+  if (!company.branch_code && row.validBranchCode) changes.branch_code = row.validBranchCode
+  if (!company.postal_code && row.validPostalCode) changes.postal_code = row.validPostalCode
+  if (!company.address && address) changes.address = address
+  return changes
 }
 
 const onFileChange = async (event: Event) => {
@@ -191,6 +263,7 @@ const onFileChange = async (event: Event) => {
         taxId: cell(row, headerIndex, 'taxId'),
         branchCode: cell(row, headerIndex, 'branchCode'),
         branchName: cell(row, headerIndex, 'branchName'),
+        ...taxFields(row, headerIndex),
         contactName: cell(row, headerIndex, 'contactName'),
         email: cell(row, headerIndex, 'email'),
         mobile: cell(row, headerIndex, 'mobile'),
@@ -204,16 +277,29 @@ const onFileChange = async (event: Event) => {
       return
     }
 
+    // Tax ID lookups hit the server (not the capped companies cache), so a
+    // second file picked while they run must not overwrite this one's preview.
+    const parseId = ++latestParseId
+    const matches = await lookupTaxIdMatches(result)
+    if (parseId !== latestParseId) return
+    taxIdMatches.value = matches
     parsedRows.value = result
 
+    // Counted per distinct company (tax ID + branch, else name), so a
+    // company repeated across rows — one per contact — counts once.
+    const seen = new Set<string>()
     let newCompanies = 0
     let existingCompanies = 0
     let newContacts = 0
     for (const row of result) {
-      if (companiesStore.findByName(row.name)) {
-        existingCompanies += 1
-      } else {
-        newCompanies += 1
+      const key = companyKey(row)
+      if (!seen.has(key)) {
+        seen.add(key)
+        if (findExistingCompany(row)) {
+          existingCompanies += 1
+        } else {
+          newCompanies += 1
+        }
       }
       if (row.contactName) newContacts += 1
     }
@@ -232,11 +318,12 @@ const onFileChange = async (event: Event) => {
 
 const buildNotes = (row: ParsedRow) => {
   const lines: string[] = []
-  const address = [row.address1, row.address2, row.address3].filter(Boolean).join(' ')
-  if (address) lines.push(`ที่อยู่: ${address}`)
-  if (row.postalCode) lines.push(`รหัสไปรษณีย์: ${row.postalCode}`)
-  if (row.taxId) lines.push(`เลขผู้เสียภาษี: ${row.taxId}`)
-  if (row.branchName) lines.push(`สำนักงาน/สาขา: ${row.branchName}${row.branchCode ? ` (${row.branchCode})` : ''}`)
+  // Only what didn't land in a Company field of its own.
+  if (row.postalCode && !row.validPostalCode) lines.push(`รหัสไปรษณีย์: ${row.postalCode}`)
+  if (row.taxId && !row.validTaxId) lines.push(`เลขผู้เสียภาษี: ${row.taxId}`)
+  if (row.branchName && !(row.validBranchCode === HEAD_OFFICE_BRANCH_CODE && row.branchName.includes(HEAD_OFFICE_LABEL))) {
+    lines.push(`สำนักงาน/สาขา: ${row.branchName}${row.branchCode ? ` (${row.branchCode})` : ''}`)
+  }
   if (row.officePhone) lines.push(`เบอร์สำนักงาน: ${row.officePhone}`)
   if (row.fax) lines.push(`เบอร์โทรสาร: ${row.fax}`)
   lines.push('นำเข้าจาก FlowAccount')
@@ -259,24 +346,43 @@ const onConfirm = async () => {
     for (const row of parsedRows.value) {
       const tag = RECORD_TYPE_TAG[row.recordType] || row.recordType
 
-      let company = companiesStore.findByName(row.name)
+      let company = findExistingCompany(row)
       if (!company) {
         company = await companiesStore.add({
           name: row.name,
           industry: '',
           size: '',
+          revenue_size: '',
           website: '',
           tags: tag ? [tag] : [],
           notes: buildNotes(row),
           status: 'active',
+          legal_name: null,
+          address: joinAddress(row) || null,
+          tax_id: row.validTaxId || null,
+          branch_code: row.validBranchCode || null,
+          postal_code: row.validPostalCode || null,
           created_at: new Date(),
           updated_at: new Date(),
           last_activity_at: null,
         })
         companiesCreated += 1
-      } else if (tag) {
-        companiesStore.addTag(company.id, tag)
+      } else {
+        const changes = backfillFor(company, row)
+        if (Object.keys(changes).length > 0) {
+          try {
+            // Full-record PUT (the API overwrites every field): resend the
+            // whole Company with only the blanks filled in.
+            company = await companiesStore.update(company.id, { ...company, ...changes })
+          } catch {
+            // Best-effort — e.g. a size option since deactivated fails the
+            // PUT's validation; keep importing the rest.
+          }
+        }
+        if (tag) companiesStore.addTag(company.id, tag)
       }
+      // Later rows for the same tax ID + branch reuse this Company.
+      if (row.validTaxId) taxIdMatches.value.set(taxIdKey(row), company)
 
       if (row.contactName && company) {
         const alreadyLinked = contactsStore.items.some(
