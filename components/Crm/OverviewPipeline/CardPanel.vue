@@ -163,6 +163,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { priceFormat, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const { logActivity } = useLogActivity()
 const teamMembersStore = useTeamMembersStore()
@@ -298,11 +299,7 @@ const performMove = async (stage: string, reason?: LostReason) => {
           },
         })
   } catch (err) {
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   } finally {
     moving.value = false
   }

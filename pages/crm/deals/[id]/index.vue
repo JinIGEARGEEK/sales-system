@@ -149,7 +149,8 @@ import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, 
 
 const { t } = useI18n()
 
-const { success, error } = useNotify()
+const { success } = useNotify()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
@@ -355,11 +356,7 @@ const onSave = guard(async () => {
     success(t('crm.deals.detail.updateSuccess'))
     if (!wasWon && updated.status === 'won') await onDealWon(updated)
   } catch (err) {
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   }
 })
 </script>
