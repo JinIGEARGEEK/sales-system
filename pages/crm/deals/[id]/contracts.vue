@@ -109,13 +109,19 @@
       @submit="onAddContract"
     />
 
-    <CrmAddProjectModal
-      v-model:open="projectModal"
-      :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="deal?.title"
-      :default-target-end-date="deal?.expected_close_date"
-      :description="t('crm.deals.detail.createProjectModalBody')"
-      @submit="onCreateProject"
+    <!-- A signed contract usually means the deal is won — offer that next.
+         Yes runs the full Won hand-off (which includes Create Project); No
+         still offers Create Project on its own (FR-CRM-048), so either way
+         the rep sees exactly one Project prompt. -->
+    <CrmConfirmDeleteModal
+      :open="markWonPromptOpen"
+      :title="t('crm.contracts.detail.markDealWonTitle')"
+      :body="t('crm.contracts.detail.markDealWonBody', { title: deal?.title || '' })"
+      :cancel-label="t('crm.contracts.detail.markDealWonDecline')"
+      :confirm-label="t('crm.deals.detail.markWon')"
+      confirm-color="success"
+      @update:open="(value: boolean) => { if (!value) onDeclineMarkWon() }"
+      @confirm="onConfirmMarkWon"
     />
   </div>
 </template>
@@ -154,13 +160,32 @@ onMounted(() => {
 
 const addContractOpen = ref(false)
 
-// Mirrors the existing Deal-Won -> Create Project prompt (pages/crm/deals/[id].vue,
-// same composable): signing a Contract is just as much a real "we now have a
-// customer engagement" moment, so it gets the same auto-open-the-project-modal
-// treatment (FR-CRM-048).
-const { projectModal, promptCreateProject, onCreateProject } = useCreateProjectFromDeal(deal)
+// Signing a Contract is a real "we now have a customer engagement" moment
+// (FR-CRM-048). While the Deal is still open, ask to mark it Won first — the
+// Won hand-off (follow-up task + Create Project) is the layout's shared
+// instance, so its one Create Project modal is reused rather than a second
+// copy opening here. An already-Won (or Lost) Deal just gets Create Project.
+const { markWon, promptCreateProject } = injectDealWonHandoff()
+const notifyStageChangeError = useStageChangeErrorNotifier()
+const markWonPromptOpen = ref(false)
 const promptProjectIfSigned = (contract: { status: ContractStatus }) => {
-  if (contract.status === 'signed') promptCreateProject()
+  if (contract.status !== 'signed' || !deal.value) return
+  if (deal.value.status === 'open') markWonPromptOpen.value = true
+  else promptCreateProject(deal.value)
+}
+const onConfirmMarkWon = async () => {
+  if (!deal.value) return
+  try {
+    await markWon(deal.value)
+  } catch (err) {
+    notifyStageChangeError(err)
+  } finally {
+    markWonPromptOpen.value = false
+  }
+}
+const onDeclineMarkWon = () => {
+  markWonPromptOpen.value = false
+  if (deal.value) promptCreateProject(deal.value)
 }
 
 const onAddContract = async (contract: { status: ContractStatus, quote_id?: number }) => {

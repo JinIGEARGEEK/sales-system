@@ -263,7 +263,10 @@ const companyNameBlank = computed(() => Boolean(linkedCompany.value) && isUnname
 const companyName = computed(() => companyLabelById(deal.value?.company_id))
 const contactName = computed(() => deal.value ? contactsStore.items.find(c => c.id === deal.value!.contact_id)?.name || '-' : '-')
 
-const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)
+// Provided by the detail layout (pages/crm/deals/[id].vue), which owns the
+// Create Project modal — saving Stage = Won here runs the same hand-off as
+// the header's Mark Won.
+const { onDealWon } = injectDealWonHandoff()
 
 const form = reactive({
   title: deal.value?.title || '',
@@ -358,8 +361,8 @@ const onSave = guard(async () => {
       business_unit_item: form.business_unit_item || null,
     })
     markClean()
-    if (!wasWon && updated.status === 'won') createWonFollowUpTask()
     success(t('crm.deals.detail.updateSuccess'))
+    if (!wasWon && updated.status === 'won') await onDealWon(updated)
   } catch (err) {
     if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
       error(t('crm.deals.detail.contractRequiredToast'))
