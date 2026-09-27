@@ -6,6 +6,7 @@
     name="tax_id"
     rules="tax_id"
     maxlength="17"
+    inputmode="numeric"
     data-cy="company-tax-id"
   />
   <InputText
@@ -15,6 +16,7 @@
     name="branch_code"
     rules="digits:5"
     maxlength="5"
+    inputmode="numeric"
     data-cy="company-branch-code"
   >
     <template v-if="branchLabel" #label-suffix>
@@ -28,20 +30,22 @@
     name="postal_code"
     rules="digits:5"
     maxlength="5"
+    inputmode="numeric"
     data-cy="company-postal-code"
   />
   <UAlert
     v-if="duplicate"
     class="md:col-span-2"
-    color="warning"
+    :color="duplicateBlocksSave ? 'error' : 'warning'"
     variant="subtle"
-    icon="material-symbols:warning-outline"
+    :icon="duplicateBlocksSave ? 'material-symbols:error-outline' : 'material-symbols:warning-outline'"
     :title="branchCode ? t('crm.companies.taxFields.duplicateBranchTitle') : t('crm.companies.taxFields.duplicateTitle')"
     data-cy="company-tax-id-duplicate"
   >
     <template #description>
       <NuxtLink :to="`/crm/companies/${duplicate.id}`" class="font-medium underline">{{ companyName(duplicate.name) }}</NuxtLink>
       <span v-if="duplicate.branch_code"> · {{ branchName(duplicate.branch_code) }}</span>
+      <p v-if="duplicateBlocksSave" class="mt-1" data-cy="company-tax-id-duplicate-blocked">{{ t('crm.companies.taxFields.duplicateBlocked') }}</p>
     </template>
   </UAlert>
 </template>
@@ -81,5 +85,5 @@ watch(taxId, (value) => {
   }
 })
 
-const { duplicate } = useCompanyTaxIdDuplicate(taxId, branchCode, props.excludeId)
+const { duplicate, blocksSave: duplicateBlocksSave } = useCompanyTaxIdDuplicate(taxId, branchCode, props.excludeId)
 </script>

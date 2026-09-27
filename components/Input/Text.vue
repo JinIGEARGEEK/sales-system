@@ -19,7 +19,7 @@
         :data-cy="props.dataCy"
         :placeholder="props.placeholder"
         :type="props.thousands ? 'text' : props.type"
-        :inputmode="props.thousands ? (props.decimals > 0 ? 'decimal' : 'numeric') : undefined"
+        :inputmode="props.thousands ? (props.decimals > 0 ? 'decimal' : 'numeric') : (props.inputmode || undefined)"
         :disabled="props.disable"
         :maxlength="props.maxlength"
         :size="props.size"
@@ -69,6 +69,13 @@ const props = defineProps({
   },
   maxlength: {
     type: String,
+    default: '',
+  },
+  // Native inputmode hint for the on-screen keyboard, e.g. "numeric" for a
+  // digit code that must stay a string (type="number" would drop a branch
+  // code's leading zeros). Ignored in `thousands` mode, which sets its own.
+  inputmode: {
+    type: String as PropType<'' | 'text' | 'numeric' | 'decimal' | 'tel' | 'email' | 'url' | 'search'>,
     default: '',
   },
   isThOnly: {

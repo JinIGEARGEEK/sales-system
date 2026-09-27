@@ -8,7 +8,7 @@ export default {
     exportCsv: 'Export CSV',
     import: 'Import',
     importSuccess: 'Imported {companies} companies and {contacts} contacts',
-    searchPlaceholder: 'Search by name or website...',
+    searchPlaceholder: 'Search by name, website or Tax ID...',
     allIndustries: 'All Industries',
     industryPlaceholder: 'Industry',
     statusPlaceholder: 'Status',
@@ -90,6 +90,7 @@ export default {
     branchNumber: 'Branch {code}',
     duplicateTitle: 'A company with this Tax ID already exists',
     duplicateBranchTitle: 'A company with this Tax ID and branch already exists',
+    duplicateBlocked: 'Saving will be rejected. Change the Tax ID or branch, or edit the existing company instead.',
   },
   detail: {
     pageTitle: 'Company Detail',
