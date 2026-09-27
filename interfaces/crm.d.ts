@@ -272,6 +272,12 @@ interface Prospect {
 // `tags` back, not omit the key.
 type ProspectUpdatePayload = Required<Pick<Prospect, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'tags' | 'notes'>>
 
+// stores/deals.ts's update() parameter type — same reasoning as
+// LeadUpdatePayload: PUT /deals/:id overwrites every field of the API's
+// dealForm, so all 14 are required. Build one with fullDealUpdatePayload()
+// (stores/deals.ts) from the current record rather than by hand.
+type DealUpdatePayload = Required<Pick<Deal, 'company_id' | 'contact_id' | 'title' | 'value' | 'stage' | 'status' | 'expected_close_date' | 'assigned_to' | 'channel' | 'business_unit' | 'business_unit_item' | 'probability' | 'lost_reason' | 'forecast_category'>>
+
 interface Deal {
   id: number
   company_id: number

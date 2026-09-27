@@ -67,9 +67,9 @@ describe('stores/deals', () => {
     const updated = makeDeal({ id: 1, title: 'New title' })
     mockApi.put.mockResolvedValueOnce(apiResponse(updated))
 
-    const result = await store.update(1, { title: 'New title' })
+    const result = await store.update(1, fullDealUpdatePayload(makeDeal({ id: 1 }), { title: 'New title' }))
 
-    expect(mockApi.put).toHaveBeenCalledWith('/deals/1', { title: 'New title' })
+    expect(mockApi.put).toHaveBeenCalledWith('/deals/1', expect.objectContaining({ title: 'New title' }))
     expect(result.title).toBe('New title')
     expect(store.items).toHaveLength(1)
     expect(store.items[0].title).toBe('New title')
@@ -81,10 +81,30 @@ describe('stores/deals', () => {
     const updated = makeDeal({ id: 99, title: 'Untracked' })
     mockApi.put.mockResolvedValueOnce(apiResponse(updated))
 
-    await store.update(99, { title: 'Untracked' })
+    await store.update(99, fullDealUpdatePayload(makeDeal({ id: 99 }), { title: 'Untracked' }))
 
     expect(store.items).toHaveLength(1)
     expect(store.items[0].id).toBe(1)
+  })
+
+  it('fullDealUpdatePayload carries every PUT field from the record, with changes swapped in', () => {
+    const deal = makeDeal({ id: 7, title: 'ERP', value: 500, probability: 40, business_unit_item: 'x' })
+    expect(fullDealUpdatePayload(deal, { value: 900 })).toEqual({
+      company_id: 1,
+      contact_id: 1,
+      title: 'ERP',
+      value: 900,
+      stage: 'Lead',
+      status: 'open',
+      probability: 40,
+      lost_reason: null,
+      forecast_category: null,
+      expected_close_date: null,
+      assigned_to: null,
+      channel: 'Referral',
+      business_unit: null,
+      business_unit_item: 'x',
+    })
   })
 
   it('updateStage PATCHes /deals/:id/stage with the new stage and replaces the item in place', async () => {
