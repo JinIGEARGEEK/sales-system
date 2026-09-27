@@ -96,7 +96,16 @@
         <div class="lg:col-span-2">
           <UCard class="mb-4">
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.prospects.detail.activityTitle') }}</h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">{{ t('crm.prospects.detail.activityTitle') }}</h3>
+                <ButtonPrimary
+                  :label="t('crm.prospects.detail.addActivity')"
+                  icon="material-symbols:add"
+                  small
+                  data-cy="prospect-log-activity"
+                  @click="openAddActivity"
+                />
+              </div>
             </template>
             <CrmActivityTimeline :items="prospectActivity" />
           </UCard>
@@ -125,6 +134,11 @@
     </div>
 
     <NotFoundState v-else :message="t('crm.prospects.detail.prospectNotFound')" back-to="/crm/prospects" />
+
+    <CrmAddActivityModal
+      v-model:open="addActivityOpen"
+      @submit="onSubmitActivity"
+    />
 
     <CrmAddTaskModal
       v-model:open="addTaskOpen"
@@ -199,6 +213,7 @@ guardMounted(() => {
 })
 
 const prospectActivity = computed(() => activitiesStore.forRelated('prospect', prospectId))
+const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('prospect', prospectId, 'crm.prospects.detail.addActivitySuccess')
 
 const prospectAttachments = computed(() => attachmentsStore.forRelated('prospect', prospectId))
 const addAttachmentOpen = ref(false)

@@ -164,6 +164,60 @@
         <CrmAttachmentList :attachments="leadAttachments" @remove="onRemoveAttachment" />
       </ContainerTemplate>
 
+      <!-- Same Activity + Tasks pair as Contact/Prospect detail, so the calls
+           and follow-ups worked on a Lead before it converts live on it. -->
+      <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-semibold">{{ t('crm.leads.detail.activityTitle') }}</h3>
+              <ButtonPrimary
+                v-if="canManageLead"
+                :label="t('crm.leads.detail.addActivity')"
+                icon="material-symbols:add"
+                small
+                data-cy="lead-log-activity"
+                @click="openAddActivity"
+              />
+            </div>
+          </template>
+          <CrmActivityTimeline :items="leadActivity" />
+        </UCard>
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-semibold">{{ t('crm.leads.detail.tasksTitle') }}</h3>
+                <UBadge v-if="leadOverdueTaskCount > 0" color="error" variant="subtle">
+                  {{ t('crm.leads.detail.overdueCount', { count: leadOverdueTaskCount }) }}
+                </UBadge>
+              </div>
+              <ButtonPrimary
+                v-if="canManageLead"
+                :label="t('crm.leads.detail.addTask')"
+                icon="material-symbols:add"
+                small
+                data-cy="lead-add-task"
+                @click="openAddTask"
+              />
+            </div>
+          </template>
+          <CrmTaskList :tasks="leadTasks" @toggle="onToggleTask" @edit="openEditTask" />
+        </UCard>
+      </div>
+
+      <CrmAddActivityModal
+        v-model:open="addActivityOpen"
+        @submit="onSubmitActivity"
+      />
+
+      <CrmAddTaskModal
+        v-model:open="addTaskOpen"
+        :task="editingTask"
+        @submit="onSubmitTask"
+        @update="onUpdateTask"
+      />
+
       <CrmAddAttachmentModal
         v-model:open="addAttachmentOpen"
         @submit="onAddAttachment"
@@ -192,7 +246,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS, isTaskOverdue } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -206,6 +260,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
 const attachmentsStore = useAttachmentsStore()
+const activitiesStore = useActivitiesStore()
 const leadSourcesStore = useLeadSourcesStore()
 const goBack = useBackNavigation('/crm/leads')
 
@@ -276,6 +331,7 @@ onMounted(() => {
   if (!leadsStore.items.some(l => l.id === leadId)) leadsStore.fetchOne(leadId).catch(notifyApiError)
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
+  activitiesStore.fetchForRelated('lead', leadId).catch(notifyApiError)
 })
 
 // A Lead converted from a Prospect (POST /prospects/:id/convert) may carry a
@@ -291,6 +347,11 @@ const sourceOptions = computed<Select[]>(() => {
 })
 
 const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadId))
+
+const leadActivity = computed(() => activitiesStore.forRelated('lead', leadId))
+const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('lead', leadId, 'crm.leads.detail.addActivitySuccess')
+const { tasks: leadTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
+const leadOverdueTaskCount = computed(() => leadTasks.value.filter(task => isTaskOverdue(task)).length)
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
 

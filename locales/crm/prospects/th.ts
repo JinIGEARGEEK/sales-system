@@ -93,6 +93,8 @@ export default {
     updateSuccess: 'แก้ไข Prospect สำเร็จ',
     convertSuccess: 'แปลง Prospect เป็น Lead แล้ว',
     activityTitle: 'กิจกรรม',
+    addActivity: 'เพิ่มกิจกรรม',
+    addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',
     tasksTitle: 'งานติดตาม',
     addTask: 'เพิ่มงาน',
     addTaskSuccess: 'เพิ่มงานสำเร็จ',

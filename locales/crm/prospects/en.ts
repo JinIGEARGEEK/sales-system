@@ -93,6 +93,8 @@ export default {
     updateSuccess: 'Prospect updated',
     convertSuccess: 'Prospect converted to a Lead',
     activityTitle: 'Activity',
+    addActivity: 'Log Activity',
+    addActivitySuccess: 'Activity logged',
     tasksTitle: 'Follow-up Tasks',
     addTask: 'Add Task',
     addTaskSuccess: 'Task added',
