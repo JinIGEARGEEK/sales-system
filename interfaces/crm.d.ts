@@ -16,7 +16,9 @@ type LeadScoringCriterionField = 'source' | 'has_company_name' | 'has_phone'
 // Company with no Activity logged directly against it in at least
 // threshold_days (FR-CRM-108, mirrors the backend's NotificationRule.EntityType
 // validation).
-type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company' | 'payment_installment'
+// 'customer_product_renewal' and 'contract_expiry' added 2026-09-27 (date-based:
+// an Active CustomerProduct's renewal_date / a signed Contract's end_date).
+type NotificationEntityType = 'deal' | 'quote' | 'contract' | 'prospect' | 'company' | 'payment_installment' | 'customer_product_renewal' | 'contract_expiry'
 type NotificationRecipientRole = 'owner' | 'owner_and_managers'
 // Shared by Lead.source and Deal.channel — both describe the same acquisition channel.
 type LeadSource = 'Referral' | 'Website' | 'Event' | 'Ads' | 'Other'
@@ -81,6 +83,7 @@ type ForecastCategory = 'Commit' | 'Best Case' | 'Pipeline'
 type BusinessUnit = 'Project' | 'Product'
 type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled'
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
+type CustomerProductBillingCycle = 'monthly' | 'yearly' | 'one_time'
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
 // Deliberately broader than ActivityRelatedType (which excludes Lead) — attachments
 // are useful before a Lead ever converts to a Deal. 'quote' added 2026-08-23 for the
@@ -449,6 +452,9 @@ interface NotificationRule {
   threshold_days: number
   recipient_role: NotificationRecipientRole
   is_active: boolean
+  // Added 2026-09-27, default true: each firing also creates a Task for the
+  // record's owner — the main alert channel, since email (SMTP) is optional.
+  create_task: boolean
   created_at: Date
 }
 
@@ -653,6 +659,10 @@ interface Contract {
   status: ContractStatus
   signed_file_url: string | null
   signed_date: Date | null
+  // Date-only (added 2026-09-27): kept as the API's 'YYYY-MM-DD' prefix
+  // string, never a Date, so it can't shift a day through local time.
+  // Feeds the contract_expiry notification rule (signed contracts only).
+  end_date: string | null
   created_at: Date
 }
 
@@ -677,6 +687,11 @@ interface CustomerProduct {
   start_date: Date
   end_date: Date | null
   source_deal_id: number | null
+  // Renewal fields (added 2026-09-27), informational only — invoicing stays
+  // in FlowAccount. renewal_date is date-only, kept as 'YYYY-MM-DD'.
+  renewal_date: string | null
+  billing_cycle: CustomerProductBillingCycle | null
+  price: number | null
   product: Product
 }
 
@@ -706,6 +721,11 @@ interface Project {
 // A single installment paid against a Deal. A Deal's `value` is the total contract
 // value — revenue actually collected is the sum of its Payments, which can span
 // multiple partial payments over the life of a project or product sale.
+// Added 2026-09-27: `amount` is the cash actually received, net of the
+// withholding tax the customer deducted (`wht_amount`, which also counts as
+// settled). `document_number` is the FlowAccount receipt/tax-invoice number;
+// `installment_id` optionally links the payment to one PaymentInstallment on
+// the same Deal (that installment is settled first).
 interface Payment {
   id: number
   deal_id: number
@@ -713,6 +733,23 @@ interface Payment {
   paid_at: Date
   method: PaymentMethod
   note: string
+  wht_amount: number
+  wht_certificate_received: boolean
+  document_number: string | null
+  installment_id: number | null
+}
+
+// Body for POST /deals/:dealId/payments and PUT /payments/:id (a real
+// partial merge — the modal still sends every field).
+interface PaymentPayload {
+  amount: number
+  paid_at: Date
+  method: PaymentMethod
+  note: string
+  wht_amount: number
+  wht_certificate_received: boolean
+  document_number: string | null
+  installment_id: number | null
 }
 
 // A planned installment on a Deal's payment schedule, defined before money

@@ -90,19 +90,44 @@ interface StalledDealRow {
   days_stalled: number
 }
 
-// GET /reports/outstanding-balance — Won Deals whose Payments sum to less
-// than the Deal's value (FR-CRM-095). Not date-bucketed aging — Payment has
-// no due_date field, only paid_at (when actually received).
+// GET /reports/outstanding-balance — Won Deals that still owe money
+// (FR-CRM-095). Changed 2026-09-27: the receivable is the most recent Accepted
+// Quote's taxable_amount + VAT (after discounts, before WHT), falling back to
+// deal_value when there's no Accepted Quote; WHT deducted by the customer
+// counts as settled, and rows carry date-bucketed aging from the Deal's
+// payment schedule.
 interface OutstandingBalanceRow {
   deal_id: number
   deal_title: string
   company_name: string
   deal_value: number
+  receivable_amount: number
+  receivable_source: 'quote' | 'deal_value'
   paid_amount: number
+  wht_amount: number
+  // receivable_amount − paid_amount − wht_amount (> 0.005 to appear at all).
   outstanding_amount: number
   // "overdue"/"upcoming" when the Deal has a PaymentInstallment schedule
-  // defined, "none" otherwise (today's pre-schedule behavior, unchanged).
+  // defined, "none" otherwise.
   aging: 'overdue' | 'upcoming' | 'none'
+  // Due date of the earliest past-due, not-fully-covered installment.
+  oldest_overdue_due_date: string | null
+  days_overdue: number
+  aging_bucket: 'current' | '1_30' | '31_60' | '61_90' | '90_plus'
+}
+
+// GET /reports/source-performance (FR-CRM-005, added 2026-09-27) — Lead
+// source through to Won revenue. `direct_*` counts Won Deals with no
+// originating Lead, grouped by the Deal's channel (the row's `source`).
+interface SourcePerformanceRow {
+  source: string
+  leads: number
+  qualified: number
+  deals_won: number
+  won_value: number
+  win_rate: number
+  direct_deals_won: number
+  direct_won_value: number
 }
 
 // GET /reports/quotes-expiring-soon — Sent quotes whose validity_date falls
@@ -180,6 +205,11 @@ interface NotificationFiring {
   company_id?: number
   company_name?: string
   notified_at: Date
+  // Added 2026-09-27: the raw id of the rule's entity and its dedupe context
+  // (a stage, a tier, or a 'YYYY-MM-DD' date for the renewal / contract-
+  // expiry / installment rules).
+  entity_id?: number
+  context?: string
 }
 
 // GET /pipeline/overview (FR-CRM-123) — the Overview Pipeline page's whole
