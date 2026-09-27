@@ -4,7 +4,7 @@
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-xl font-black">{{ t('admin.activityLog.title') }}</h2>
-          <p class="text-sm text-(--color-gray)">{{ dateFormat(new Date().toISOString()) }}</p>
+          <p class="text-sm text-(--color-gray)">{{ t('admin.activityLog.subtitle') }}</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.activityLog.title') })
 
-const { dateFormat, dateTimeFormat, toBadge } = useFormatter()
+const { dateTimeFormat, toBadge } = useFormatter()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const auditLogStore = useAuditLogStore()
@@ -104,18 +104,28 @@ const { canAccess, guardMounted } = usePageAccess('Admin')
 // settings.go): deal, lead, project, customer_product, settings.
 const KNOWN_ENTITY_TYPES = ['deal', 'lead', 'project', 'customer_product', 'settings']
 
-const entityTypeFilter = ref('all')
+// URL-synced like every other list page (design-system.md §5.4/§5.7), so a
+// refresh or back-button return keeps the filtered view.
+const entityTypeFilter = useQuerySyncedRef('entity_type')
 const entityTypeOptions = computed(() => [
   { label: t('admin.activityLog.allTypes'), value: 'all' },
   ...KNOWN_ENTITY_TYPES.map(type => ({ label: type, value: type })),
 ])
-const dateRange = ref<{ start: string, end: string } | null>(null)
+// The range lives in the URL as two plain dates; InputDateRangePicker only
+// ever emits a complete range, so both are set (or cleared) together.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
 
-const hasActiveFilters = computed(() => entityTypeFilter.value !== 'all' || Boolean(dateRange.value))
-const clearFilters = () => {
-  entityTypeFilter.value = 'all'
-  dateRange.value = null
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: entityTypeFilter }, { ref: dateFrom, default: '' }, { ref: dateTo, default: '' }],
+})
 
 const loading = ref(false)
 const { page, perPage, totalPage, onChangePage: onChangePageBase, onChangePerPage: onChangePerPageBase } = useTablePagination(() => auditLogStore.total)
@@ -154,7 +164,7 @@ guardMounted(() => {
   fetchEntries()
 })
 
-watch([entityTypeFilter, dateRange], () => {
+watch([entityTypeFilter, dateFrom, dateTo], () => {
   page.value = 1
   fetchEntries()
 })

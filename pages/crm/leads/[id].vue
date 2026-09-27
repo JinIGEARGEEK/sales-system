@@ -9,7 +9,7 @@
           the info icon reads as an affordance on the score, not a fourth
           unrelated header item — same size as the status badge above so
           neither reads as more/less important than the other. -->
-          <div class="flex items-center gap-1">
+          <div v-if="showScore" class="flex items-center gap-1">
             <UBadge v-if="lead.classification === 'mql'" size="sm" color="info" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.mqlBadge') }}</UBadge>
             <UBadge v-else-if="lead.classification === 'sql'" size="sm" color="success" variant="subtle">{{ lead.score }} · {{ t('crm.leads.index.sqlBadge') }}</UBadge>
             <UBadge v-else size="sm" color="neutral" variant="subtle">{{ lead.score }}</UBadge>
@@ -221,6 +221,9 @@ const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 const leadId = Number(route.params.id)
 const lead = computed(() => leadsStore.items.find(l => l.id === leadId))
+// Same rule as the Leads list's Classification column: no "0" badge while
+// Lead Scoring is unused.
+const { showScore } = useLeadScoreVisibility(() => (lead.value ? [lead.value] : []))
 
 // FR-CRM-007's "how is this calculated" breakdown — fetched lazily on first
 // open (not on page mount) since it's an extra request most visits never
