@@ -138,6 +138,14 @@
     @confirm="onConfirmConvertProspect"
   />
   <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLost" />
+  <CrmAddProjectModal
+    v-model:open="projectModal"
+    :title="t('crm.deals.detail.createProjectModalTitle')"
+    :default-name="handoffDeal?.title"
+    :default-target-end-date="handoffDeal?.expected_close_date"
+    :description="t('crm.deals.detail.createProjectModalBody')"
+    @submit="onCreateProject"
+  />
 </template>
 
 <script setup lang="ts">
@@ -231,11 +239,17 @@ watch(() => [props.open, props.selection?.zone, props.selection?.card.id] as con
 }, { immediate: true })
 
 const moving = ref(false)
-const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason) => {
-  if (zone === 'deal') await dealsStore.updateStage(id, stage as DealStage, undefined, lostReason)
-  else if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)
+// Returns the moved Deal (for the Won hand-off below); Lead/Prospect moves return nothing.
+const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null> => {
+  if (zone === 'deal') return dealsStore.updateStage(id, stage as DealStage, undefined, lostReason)
+  if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)
   else await prospectsStore.updateStatus(id, stage)
+  return null
 }
+
+// Moving a Deal into Won from here runs the same hand-off as the Deals board
+// and the detail page's Mark Won (follow-up task + Create Project prompt).
+const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
 
 // Moving a Deal into a Lost stage asks why first — the reason is what a
 // review wants to know about a loss, and the quick-move wouldn't otherwise
@@ -268,8 +282,9 @@ const performMove = async (stage: string, reason?: LostReason) => {
   const from = isOtherLane(current.lane) ? null : current.lane.name
   moving.value = true
   try {
-    await moveTo(zone, card.id, stage, reason)
+    const moved = await moveTo(zone, card.id, stage, reason)
     emit('changed')
+    if (moved?.status === 'won' && current.lane.kind !== 'won') onDealWon(moved)
     success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null
       ? undefined
       : {

@@ -180,6 +180,9 @@
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
         </div>
+        <div class="relative shrink-0">
+          <CrmQuickAdd />
+        </div>
         <div class="relative ml-auto flex shrink-0 items-center gap-3">
           <Transition
             enter-active-class="transition duration-200 ease-out"

@@ -42,13 +42,15 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// Awaits the caller's save; stays open (form intact) if it resolves false.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
-  emit('submit', {
+  const results = await emitSubmit({
     amount: form.amount,
     due_date: new Date(form.due_date),
     note: form.note,
   })
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

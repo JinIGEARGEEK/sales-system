@@ -81,5 +81,7 @@ test.describe('Deal detail', () => {
     await page.getByRole('option', { name: 'Signed' }).click()
     await page.getByRole('dialog').filter({ hasText: 'Change contract status?' }).getByRole('button', { name: 'Change status' }).click()
     await expect.poll(() => contractPuts).toEqual([{ status: 'signed' }])
+    // The deal is still open, so signing offers to mark it Won next.
+    await expect(page.getByRole('dialog', { name: 'Mark this deal as Won?' })).toBeVisible()
   })
 })

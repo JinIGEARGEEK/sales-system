@@ -131,6 +131,14 @@
       @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
+    <CrmAddProjectModal
+      v-model:open="projectModal"
+      :title="t('crm.deals.detail.createProjectModalTitle')"
+      :default-name="handoffDeal?.title"
+      :default-target-end-date="handoffDeal?.expected_close_date"
+      :description="t('crm.deals.detail.createProjectModalBody')"
+      @submit="onCreateProject"
+    />
   </div>
 </template>
 
@@ -431,6 +439,8 @@ const columnCounts = computed(() => {
 // first, same as the Overview Pipeline's side panel; the move only happens
 // once a reason is chosen, and cancelling leaves the card where it was.
 const lostReasonOpen = ref(false)
+const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const pendingLostMove = ref<{ item: Deal & { _type: 'deal' }, newStage: string, position?: number } | null>(null)
 const onConfirmLostReason = (reason: LostReason) => {
   const pending = pendingLostMove.value
@@ -456,7 +466,7 @@ const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, positi
   const stageChanged = originStage !== newStage
   if (!stageChanged && position === undefined) return
   try {
-    await dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason)
+    const updated = await dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason)
     // A same-stage drop is just a within-lane reorder — no stage actually
     // changed, so skip the "moved to X" toast (misleading when nothing
     // moved between columns) and only refetch the one affected bucket.
@@ -467,6 +477,12 @@ const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, positi
     // than hand-splice the moved card between local arrays. Origin and
     // destination may be the same bucket in edge cases (e.g. two rapid
     // drops), Promise.all still resolves both fine.
+    // A drop into Won runs the same hand-off as the detail page's Mark Won
+    // (follow-up task + Create Project prompt) — keyed off the status the
+    // API resolved, so a renamed Won stage still counts. Not awaited: it
+    // reports its own errors, and the board refresh below shouldn't wait on
+    // (or be skipped by) it.
+    if (item.status !== 'won' && updated.status === 'won') onDealWon(updated)
     await Promise.all([
       refetchStageDeals(originStage),
       refetchStageDeals(newStage),
@@ -474,11 +490,7 @@ const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, positi
   } catch (err) {
     // Nothing was mutated optimistically, so there's nothing to roll back —
     // the card simply stays put in its origin column.
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   }
 }
 

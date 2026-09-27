@@ -214,6 +214,7 @@ const onAddInstallment = async (installment: { amount: number, due_date: Date, n
     success(t('crm.deals.detail.addInstallmentSuccess'))
   } catch (err) {
     notifyApiError(err)
+    return false
   }
 }
 
@@ -225,6 +226,7 @@ const onGenerateSchedule = async (installments: { amount: number, due_date: Date
     success(t('crm.deals.detail.generateScheduleSuccess', { count: installments.length }))
   } catch (err) {
     notifyApiError(err)
+    return false
   }
 }
 

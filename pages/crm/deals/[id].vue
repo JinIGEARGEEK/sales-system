@@ -4,12 +4,22 @@
       <PageHeader :title="deal.title" @back="goBack()">
         <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
         <template #actions>
-          <ButtonPrimary
-            v-if="deal.status === 'open'"
-            :label="t('crm.deals.detail.markWon')"
-            icon="material-symbols:check-circle-outline"
-            @click="onMarkWon"
-          />
+          <div v-if="deal.status === 'open'" class="flex flex-wrap gap-2">
+            <ButtonPrimary
+              :label="t('crm.deals.detail.markLost')"
+              icon="material-symbols:cancel-outline"
+              color="error"
+              outline
+              data-cy="deal-mark-lost"
+              @click="markLostOpen = true"
+            />
+            <ButtonPrimary
+              :label="t('crm.deals.detail.markWon')"
+              icon="material-symbols:check-circle-outline"
+              data-cy="deal-mark-won"
+              @click="markWonConfirmOpen = true"
+            />
+          </div>
         </template>
       </PageHeader>
 
@@ -23,11 +33,27 @@
     <DetailSkeleton v-else-if="dealPending" />
     <NotFoundState v-else :message="t('crm.deals.detail.dealNotFound')" back-to="/crm/deals" />
 
+    <!-- Winning triggers the follow-up task and the Create Project prompt and
+         isn't a one-click undo — ask first (§5.7). -->
+    <CrmConfirmDeleteModal
+      v-model:open="markWonConfirmOpen"
+      :title="t('crm.deals.detail.markWonConfirmTitle')"
+      :body="t('crm.deals.detail.markWonConfirmBody', { title: deal?.title || '' })"
+      :confirm-label="t('crm.deals.detail.markWon')"
+      confirm-color="success"
+      @confirm="onMarkWon"
+    />
+
+    <CrmLostReasonModal v-model:open="markLostOpen" @confirm="onMarkLost" />
+
+    <!-- The one Create Project prompt for this Deal — the Overview save and
+         the Contracts tab's signed-contract flow reach it through the
+         injected useDealWonHandoff instance, so it never opens twice. -->
     <CrmAddProjectModal
       v-model:open="projectModal"
       :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="deal?.title"
-      :default-target-end-date="deal?.expected_close_date"
+      :default-name="handoffDeal?.title ?? deal?.title"
+      :default-target-end-date="handoffDeal?.expected_close_date ?? deal?.expected_close_date"
       :description="t('crm.deals.detail.createProjectModalBody')"
       @submit="onCreateProject"
     />
@@ -43,7 +69,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.deals.detail.pageTitle') })
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
 const tasksStore = useTasksStore()
@@ -99,19 +125,31 @@ const tabItems = computed(() => [
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
 const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
-const { createWonFollowUpTask } = useWonFollowUpTask(dealId, deal)
-const { projectModal, promptCreateProject, onCreateProject } = useCreateProjectFromDeal(deal)
+const { handoffDeal, projectModal, markWon, onCreateProject } = provideDealWonHandoff()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 
+const markWonConfirmOpen = ref(false)
 const onMarkWon = async () => {
   if (!deal.value) return
-  const wasWon = deal.value.status === 'won'
   try {
-    await dealsStore.updateStage(deal.value.id, pipelineStagesStore.wonStageName as DealStage)
-    if (!wasWon) createWonFollowUpTask()
-    success(t('crm.deals.detail.markWonSuccess'))
-    promptCreateProject()
+    await markWon(deal.value)
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    notifyStageChangeError(err)
+  } finally {
+    markWonConfirmOpen.value = false
+  }
+}
+
+// Same PATCH /deals/:id/stage + lost_reason the Kanban board's drop into
+// Lost sends, so a loss recorded here reads the same in reports.
+const markLostOpen = ref(false)
+const onMarkLost = async (reason: LostReason) => {
+  if (!deal.value) return
+  try {
+    await dealsStore.updateStage(deal.value.id, pipelineStagesStore.lostStageName as DealStage, undefined, reason)
+    success(t('crm.deals.detail.markLostSuccess'))
+  } catch (err) {
+    notifyStageChangeError(err)
   }
 }
 </script>

@@ -65,6 +65,15 @@ export default {
   detail: {
     pageTitle: 'Deal Detail',
     markWon: 'Mark Won',
+    markLost: 'Mark Lost',
+    markLostSuccess: 'Deal marked as Lost',
+    markWonConfirmTitle: 'Mark this deal as Won?',
+    markWonConfirmBody: '"{title}" moves to the Won stage. A kickoff follow-up task is created, and you\'ll be offered a Project for it.',
+    dealValueUpdateTitle: 'Update deal value?',
+    dealValueUpdateBody: 'The accepted quote comes to {to} before VAT. Update the deal value from {from} to {to}?',
+    dealValueUpdateConfirm: 'Update value',
+    dealValueUpdateDecline: 'Keep current value',
+    dealValueUpdated: 'Deal value updated',
     tabs: {
       overview: 'Overview',
       quotes: 'Quotes',
