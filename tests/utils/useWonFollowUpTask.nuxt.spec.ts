@@ -25,26 +25,15 @@ describe('useWonFollowUpTask', () => {
     vi.useRealTimers()
   })
 
-  it('does nothing when the deal ref is null', () => {
-    const postSpy = mockPost()
-    const dealRef = ref<Deal | null>(null)
-    const { createWonFollowUpTask } = useWonFollowUpTask(1, dealRef)
-
-    createWonFollowUpTask()
-
-    expect(postSpy).not.toHaveBeenCalled()
-  })
-
   it('creates a task related to the deal, due 3 days out, assigned to the deal owner', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-06-01T00:00:00.000Z'))
     const deal = makeDeal({ id: 42, assigned_to: 7 })
-    const dealRef = ref<Deal | null>(deal)
     const createdTask = { id: 1, related_type: 'deal', related_id: 42, title: 'crm.deals.detail.wonFollowUpTaskTitle', description: '', due_date: new Date('2026-06-04'), status: 'pending', priority: 'medium', assigned_to: 7, created_at: new Date() } as Task
     const postSpy = mockPost().mockResolvedValueOnce(apiResponse(createdTask) as never)
 
-    const { createWonFollowUpTask } = useWonFollowUpTask(42, dealRef)
-    createWonFollowUpTask()
+    const { createWonFollowUpTask } = useWonFollowUpTask()
+    createWonFollowUpTask(deal)
 
     expect(postSpy).toHaveBeenCalledWith('/tasks', expect.objectContaining({
       related_type: 'deal',

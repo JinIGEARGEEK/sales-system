@@ -33,7 +33,7 @@ export const useDealWonHandoff = () => {
   // defaults (name, target end date) read from it.
   const handoffDeal = ref<Deal | null>(null)
   const projectModal = ref(false)
-  const { createWonFollowUpTask } = useWonFollowUpTask(0, handoffDeal)
+  const { createWonFollowUpTask } = useWonFollowUpTask()
 
   // Opens Create Project unless the Deal already has one — Project supports
   // at most one per Deal (projectsStore.forDeal). Re-fetches the company's
