@@ -136,6 +136,17 @@
     />
 
     <CrmConfirmDeleteModal
+      :open="pendingDealValue !== null"
+      :title="t('crm.deals.detail.dealValueUpdateTitle')"
+      :body="pendingDealValue ? t('crm.deals.detail.dealValueUpdateBody', { from: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.from)}`, to: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.to)}` }) : ''"
+      :cancel-label="t('crm.deals.detail.dealValueUpdateDecline')"
+      :confirm-label="t('crm.deals.detail.dealValueUpdateConfirm')"
+      confirm-color="primary"
+      @update:open="(value: boolean) => { if (!value) dismissDealValue() }"
+      @confirm="confirmDealValue"
+    />
+
+    <CrmConfirmDeleteModal
       v-model:open="open"
       :body="target ? t('crm.deals.detail.removeQuotationConfirmBody', { name: target.file_name || target.number || `#${target.id}` }) : ''"
       @confirm="confirmRemoveQuote"
@@ -157,7 +168,7 @@ const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 
-const { dealId } = useCurrentDeal()
+const { dealId, deal } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 onMounted(() => {
@@ -213,6 +224,10 @@ const confirmRemoveQuote = async () => {
 const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
 const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
 
+// Accepting a quote offers to update the Deal's value to match it (pre-VAT —
+// see quoteRevenueAmount).
+const { pending: pendingDealValue, offer: offerDealValue, confirm: confirmDealValue, dismiss: dismissDealValue } = useQuoteDealValueSync()
+
 const {
   pending: pendingStatusChange,
   resetKey: statusSelectResetKey,
@@ -223,8 +238,9 @@ const {
   confirmStatuses: CONFIRMED_QUOTE_STATUSES,
   save: async (quote, status) => {
     // updateStatus rebuilds the full PUT payload from the loaded Quote.
-    await quotesStore.updateStatus(quote.id, status)
+    const updated = await quotesStore.updateStatus(quote.id, status)
     success(t('crm.deals.detail.updateQuoteStatusSuccess'))
+    if (updated.status === 'accepted') offerDealValue(updated, deal.value)
   },
 })
 
