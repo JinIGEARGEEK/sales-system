@@ -7,6 +7,12 @@ export default {
     uploadSignedDocument: 'อัปโหลดเอกสารที่ลงนามแล้ว',
     uploadSuccess: 'อัปโหลดเอกสารที่ลงนามแล้วสำเร็จ',
     updateStatusSuccess: 'อัปเดตสถานะสัญญาสำเร็จ',
+    updateSuccess: 'แก้ไขสัญญาสำเร็จ',
+    editContract: 'แก้ไขสัญญา',
+    endsOn: 'สิ้นสุด {date}',
+    endsInDays: 'สิ้นสุดในอีก {days} วัน',
+    endsToday: 'สิ้นสุดวันนี้',
+    endedDaysAgo: 'สิ้นสุดแล้ว {days} วัน',
     confirmStatusTitle: 'เปลี่ยนสถานะสัญญา?',
     confirmStatusBody: 'ต้องการเปลี่ยนสถานะสัญญานี้เป็น "{status}" หรือไม่? การเปลี่ยนนี้ย้อนกลับได้ยาก และอาจมีผลต่อการปิดดีลและขั้นตอนถัดไป',
     confirmStatusConfirm: 'เปลี่ยนสถานะ',
@@ -24,6 +30,10 @@ export default {
   components: {
     addContractModal: {
       title: 'สร้างสัญญา',
+      editTitle: 'แก้ไขสัญญา',
+      endDate: 'วันสิ้นสุดสัญญา (ไม่บังคับ)',
+      endDateHint: 'สำหรับสัญญาที่ลงนามแล้ว ผู้รับผิดชอบจะได้รับงานแจ้งเตือนก่อนสัญญาสิ้นสุด',
+      clearEndDate: 'ล้างวันสิ้นสุด',
       quote: 'ใบเสนอราคาที่เชื่อมโยง (ไม่บังคับ)',
       quotePlaceholder: 'เลือกใบเสนอราคาที่จะเชื่อมโยง',
       noQuote: 'ไม่มีใบเสนอราคา',

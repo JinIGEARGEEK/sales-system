@@ -148,4 +148,17 @@ describe('stores/quotes', () => {
     expect(result.id).toBe(7)
     expect(store.items.map(q => q.id).sort()).toEqual([2, 7])
   })
+
+  it('duplicate POSTs /quotes/:id/duplicate and adds the new draft to the deal\'s quotes', async () => {
+    const store = useQuotesStore()
+    store.items = [makeQuote({ id: 1, status: 'accepted' })]
+    mockApi.post.mockResolvedValueOnce(apiResponse(makeQuote({ id: 2, status: 'draft', issue_date: '2026-09-27' as unknown as Date })))
+
+    const created = await store.duplicate(1)
+
+    expect(mockApi.post).toHaveBeenCalledWith('/quotes/1/duplicate')
+    expect(created.id).toBe(2)
+    expect(created.issue_date).toBeInstanceOf(Date)
+    expect(store.forDeal(1).map(q => q.id)).toEqual([1, 2])
+  })
 })

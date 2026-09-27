@@ -12,7 +12,7 @@
       <UInput
         :id="fieldId"
         readonly
-        v-bind="field"
+        v-bind="omitFieldValue(field)"
         :data-cy="dataCy"
         :placeholder="placeholder || t('global.input.datePlaceholder')"
         :model-value="dateOnlyFormat"
@@ -62,6 +62,17 @@ const dateOnlyFormat = computed(() => {
 })
 
 const emit = defineEmits(['update:model-value'])
+
+// Same fix as InputText's: vee-validate's `field.value` (the raw
+// 'YYYY-MM-DD') would otherwise fall through onto the native <input> and win
+// over the Buddhist-era `dateOnlyFormat` shown via :model-value, so a
+// prefilled date (an edit modal, a "today" default) read "2026-09-27"
+// instead of "27/09/2569".
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const omitFieldValue = (field: any) => {
+  const { value: _value, ...rest } = field
+  return rest
+}
 
 const calendarValue = computed({
   get: () => {

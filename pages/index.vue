@@ -237,14 +237,12 @@ onMounted(() => {
   notificationLogStore.fetchRecent().catch(notifyFetchError)
 })
 
-// This widget only ever rendered Deal-linked firings (a "prospect" firing
-// has no deal_id/deal_title at all, added 2026-09-03 alongside that entity
-// type, FR-CRM-107) — filter+narrow here rather than loosening the prop
-// type, since this Sales-pipeline widget has nothing sensible to link a
-// Prospect alert to anyway. "company" firings (added 2026-09-04, FR-CRM-108)
-// are admitted alongside deal ones since a dormant Company is exactly the
-// kind of pipeline-relevant alert this widget already exists for; prospect/
-// quote/contract rows stay excluded exactly as before.
+// Deal-linked firings (deal/quote/contract/payment_installment/
+// contract_expiry) and Company-linked ones (company/customer_product_renewal)
+// — the Sales-pipeline alerts this widget exists for. Prospect firings
+// (FR-CRM-107) stay out: they're Marketing's, with nothing here to act on.
+// Each row links to the Deal tab / Company tab the alert is about
+// (notificationAlertPath).
 const recentAlerts = computed(() => notificationLogStore.items.filter(
   (item): item is typeof item & ({ deal_id: number, deal_title: string } | { company_id: number, company_name: string }) =>
     item.deal_id !== undefined || item.company_id !== undefined,

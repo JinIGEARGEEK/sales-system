@@ -5,6 +5,7 @@
 // that locally instead of splicing the record out.
 const parseDates = (rule: NotificationRule): NotificationRule => ({
   ...rule,
+  create_task: rule.create_task ?? true,
   created_at: new Date(rule.created_at),
 })
 
@@ -19,14 +20,14 @@ export const useNotificationRulesStore = defineStore('notificationRules', {
       this.items = response.data.data.map(parseDates)
       return this.items
     },
-    async add (rule: Omit<NotificationRule, 'id' | 'created_at'>): Promise<NotificationRule> {
+    async add (rule: NotificationRulePayload): Promise<NotificationRule> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<NotificationRule>>('/admin/notification-rules', rule)
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<NotificationRule, 'id' | 'created_at'>>): Promise<NotificationRule> {
+    async update (id: number, changes: NotificationRulePayload): Promise<NotificationRule> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<NotificationRule>>(`/admin/notification-rules/${id}`, changes)
       const updated = parseDates(response.data.data)

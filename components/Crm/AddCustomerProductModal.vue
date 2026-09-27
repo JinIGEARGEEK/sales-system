@@ -43,6 +43,40 @@
                api-system-spec.md §8.2 doesn't accept it on the create endpoint, so showing
                it during create would silently discard whatever the rep typed in. -->
           <InputDatePicker v-if="record" v-model="form.end_date" :label="t('crm.components.addCustomerProductModal.endDate')" name="end_date" />
+          <!-- Renewal (informational — invoicing stays in FlowAccount, charged
+               via a Contract). An Active record with a renewal date feeds the
+               "Product renewal coming up" notification rule. -->
+          <div class="rounded-lg border border-sky-300 bg-sky-50 p-3">
+            <p class="mb-2 text-xs text-(--color-dark-gray)">{{ t('crm.components.addCustomerProductModal.renewalHint') }}</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <InputDatePicker
+                  v-model="form.renewal_date"
+                  :label="t('crm.components.addCustomerProductModal.renewalDate')"
+                  name="renewal_date"
+                  data-cy="customer-product-renewal-date"
+                />
+                <UButton v-if="form.renewal_date" class="mt-1 px-0" variant="link" size="xs" @click="form.renewal_date = ''">
+                  {{ t('crm.components.addCustomerProductModal.clearRenewalDate') }}
+                </UButton>
+              </div>
+              <InputSelect
+                v-model="form.billing_cycle"
+                :options="billingCycleOptions"
+                :label="t('crm.components.addCustomerProductModal.billingCycle')"
+                name="billing_cycle"
+                data-cy="customer-product-billing-cycle"
+              />
+              <InputText
+                v-model="form.price"
+                :label="t('crm.components.addCustomerProductModal.price')"
+                thousands
+                :decimals="2"
+                name="price"
+                data-cy="customer-product-price"
+              />
+            </div>
+          </div>
         </div>
       </Form>
     </template>
@@ -58,6 +92,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { CUSTOMER_PRODUCT_STATUS_OPTIONS } from '~/constants/mockData'
+import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
 
 const { t } = useI18n()
 const { toDateInputValue } = useFormatter()
@@ -78,9 +113,18 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { product_id: number, status: CustomerProductStatus, start_date: Date | null, source_deal_id: number | null }, product: Product]
-  update: [payload: { status: CustomerProductStatus, end_date: Date | null }]
+  submit: [payload: { product_id: number, status: CustomerProductStatus, start_date: Date | null, source_deal_id: number | null } & CustomerProductRenewalFields, product: Product]
+  update: [payload: { status: CustomerProductStatus, end_date: Date | null } & CustomerProductRenewalFields]
 }>()
+
+// InputSelect can't carry an empty-string value (Reka's SelectItem rejects it).
+const NO_BILLING_CYCLE = 'none'
+const billingCycleOptions = computed<Select[]>(() => [
+  { label: t('crm.components.addCustomerProductModal.billingCycleNone'), value: NO_BILLING_CYCLE },
+  { label: t('crm.components.addCustomerProductModal.billingCycleOptions.monthly'), value: 'monthly' },
+  { label: t('crm.components.addCustomerProductModal.billingCycleOptions.yearly'), value: 'yearly' },
+  { label: t('crm.components.addCustomerProductModal.billingCycleOptions.one_time'), value: 'one_time' },
+])
 
 const productOptions = computed(() => props.products.map(p => ({ label: p.name, value: String(p.id) })))
 
@@ -112,6 +156,17 @@ const emptyForm = () => ({
   source_deal_id: '',
   start_date: toDateInputValue(new Date()),
   end_date: props.record?.end_date ? toDateInputValue(props.record.end_date) : '',
+  // Already 'YYYY-MM-DD' (date-only) — InputDatePicker's own v-model format.
+  renewal_date: props.record?.renewal_date ?? '',
+  billing_cycle: props.record?.billing_cycle ?? NO_BILLING_CYCLE,
+  // '' = blank (the thousands input itself emits null when cleared).
+  price: (props.record?.price ?? '') as number | '',
+})
+
+const renewalPayload = (): CustomerProductRenewalFields => ({
+  renewal_date: form.renewal_date || null,
+  billing_cycle: form.billing_cycle === NO_BILLING_CYCLE ? null : form.billing_cycle as CustomerProductBillingCycle,
+  price: form.price === '' || (form.price as unknown) === null ? null : Number(form.price),
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
@@ -125,7 +180,7 @@ const emitSubmit = useAwaitableEmit('submit')
 const emitUpdate = useAwaitableEmit('update')
 const onSubmit = guard(async () => {
   if (props.record) {
-    const results = await emitUpdate({ status: form.status, end_date: form.end_date ? new Date(form.end_date) : null })
+    const results = await emitUpdate({ status: form.status, end_date: form.end_date ? new Date(form.end_date) : null, ...renewalPayload() })
     if (!results.includes(false)) onUpdateOpen(false)
     return
   }
@@ -136,6 +191,7 @@ const onSubmit = guard(async () => {
     status: form.status,
     start_date: form.start_date ? new Date(form.start_date) : null,
     source_deal_id: form.source_deal_id ? Number(form.source_deal_id) : null,
+    ...renewalPayload(),
   }, product)
   if (!results.includes(false)) onUpdateOpen(false)
 })

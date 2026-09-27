@@ -7,6 +7,12 @@ export default {
     uploadSignedDocument: 'Upload Signed Document',
     uploadSuccess: 'Signed document uploaded',
     updateStatusSuccess: 'Contract status updated',
+    updateSuccess: 'Contract updated',
+    editContract: 'Edit contract',
+    endsOn: 'Ends {date}',
+    endsInDays: 'Ends in {days} days',
+    endsToday: 'Ends today',
+    endedDaysAgo: 'Ended {days} days ago',
     confirmStatusTitle: 'Change contract status?',
     confirmStatusBody: 'Mark this contract as "{status}"? This is hard to reverse and may affect the deal\'s Won gate and follow-up steps.',
     confirmStatusConfirm: 'Change status',
@@ -24,6 +30,10 @@ export default {
   components: {
     addContractModal: {
       title: 'Create Contract',
+      editTitle: 'Edit Contract',
+      endDate: 'End Date (optional)',
+      endDateHint: 'For a signed contract, the owner gets a reminder task before it ends.',
+      clearEndDate: 'Clear end date',
       quote: 'Linked Quote (optional)',
       quotePlaceholder: 'Select a quote to link',
       noQuote: 'No quote',

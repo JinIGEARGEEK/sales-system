@@ -103,6 +103,17 @@ export const useQuotesStore = defineStore('quotes', {
         internal_notes: quote.internal_notes ?? null,
       })
     },
+    // POST /quotes/:id/duplicate — a new Draft on the same Deal with the
+    // original's items/terms, a fresh QT number and today's issue date
+    // (validity shifted by the original's gap). Pushed into `items` so the
+    // Deal's quote list already has it.
+    async duplicate (id: number): Promise<Quote> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<Quote>>(`/quotes/${id}/duplicate`)
+      const created = parseDates(response.data.data)
+      this.items = [...this.items.filter(q => q.id !== created.id), created]
+      return created
+    },
     // Loads a single Quote by id directly (not scoped to a known Deal) —
     // used by pages/crm/quotes/[id].vue, reached by URL/link rather than
     // via a Deal's already-fetched quote list.

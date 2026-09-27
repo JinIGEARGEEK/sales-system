@@ -91,4 +91,24 @@ describe('stores/contracts', () => {
     expect(result.signed_file_url).toBe('/files/contract.pdf')
     expect(store.items[0].signed_file_url).toBe('/files/contract.pdf')
   })
+
+  it('keeps end_date as the date-only YYYY-MM-DD prefix, never a Date', async () => {
+    const store = useContractsStore()
+    mockApi.get.mockResolvedValueOnce(apiResponse([makeContract({ id: 1, end_date: '2027-03-31T00:00:00Z' })]))
+
+    await store.fetchForDeal(1)
+
+    expect(store.items[0]!.end_date).toBe('2027-03-31')
+  })
+
+  it('update sends end_date as given (null clears it)', async () => {
+    const store = useContractsStore()
+    store.items = [makeContract({ id: 1, end_date: '2027-03-31' })]
+    mockApi.put.mockResolvedValueOnce(apiResponse(makeContract({ id: 1, end_date: null })))
+
+    const result = await store.update(1, { end_date: null })
+
+    expect(mockApi.put).toHaveBeenCalledWith('/contracts/1', { end_date: null })
+    expect(result.end_date).toBeNull()
+  })
 })

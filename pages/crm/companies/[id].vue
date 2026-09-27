@@ -173,6 +173,7 @@
               <div>
                 <p class="text-sm font-medium">{{ t('crm.companies.detail.fromDeal', { title: dealTitleById(contract.deal_id) }) }}</p>
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
+                <p v-if="contract.end_date" class="text-xs text-(--color-gray)">{{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}</p>
               </div>
               <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contract.status }}</UBadge>
             </NuxtLink>
@@ -197,11 +198,30 @@
               class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
               @click="openEditCustomerProduct(record)"
             >
-              <div>
+              <div class="min-w-0">
                 <p class="text-sm font-medium">{{ record.product.name }}</p>
-                <p class="text-xs text-(--color-gray)">{{ record.product.category || '-' }}</p>
+                <p class="text-xs text-(--color-gray)">
+                  {{ record.product.category || '-' }}
+                  <template v-if="record.price !== null || record.billing_cycle">
+                    · {{ customerProductPriceLabel(record) }}
+                  </template>
+                </p>
+                <p v-if="record.renewal_date" class="text-xs text-(--color-gray)" :data-cy="`customer-product-renewal-${record.id}`">
+                  {{ t('crm.companies.detail.renewsOn', { date: dateFormat(record.renewal_date) }) }}
+                </p>
               </div>
-              <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
+              <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                <UBadge
+                  v-if="renewalCountdown(record)"
+                  :color="countdownColor(renewalCountdown(record)!.tone)"
+                  variant="subtle"
+                  icon="material-symbols:event-repeat-outline"
+                  :data-cy="`customer-product-renewal-badge-${record.id}`"
+                >
+                  {{ countdownLabel(renewalCountdown(record)!.days) }}
+                </UBadge>
+                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
+              </div>
             </button>
           </div>
         </ContainerTemplate>
@@ -335,13 +355,14 @@
 import { useI18n } from 'vue-i18n'
 import { COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormatCompact, parseTags, dateFormat } = useFormatter()
+const { priceFormat, priceFormatCompact, parseTags, dateFormat } = useFormatter()
 const { contractStatusBadgeColor } = useContractStatusColor()
 const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
 const { projectStatusBadgeColor } = useProjectStatusColor()
@@ -512,7 +533,21 @@ const openEditCustomerProduct = (record: CustomerProduct) => {
   addCustomerProductOpen.value = true
 }
 
-const onAddCustomerProduct = async (payload: { product_id: number, status: CustomerProductStatus, start_date: Date | null, source_deal_id: number | null }, product: Product) => {
+// Only Active products renew (that's also all the renewal rule watches), so
+// a Churned/Trial record's stale date doesn't raise a countdown badge.
+const renewalCountdown = (record: CustomerProduct) => (record.status === 'Active' ? dateOnlyCountdown(record.renewal_date) : null)
+const countdownLabel = (days: number) => {
+  if (days < 0) return t('crm.companies.detail.renewalOverdue', { days: -days })
+  if (days === 0) return t('crm.companies.detail.renewsToday')
+  return t('crm.companies.detail.renewsInDays', { days })
+}
+const customerProductPriceLabel = (record: CustomerProduct) => {
+  const price = record.price !== null ? `${t('global.currencySymbol')}${priceFormat(record.price)}` : ''
+  const cycle = record.billing_cycle ? t(`crm.components.addCustomerProductModal.billingCycleOptions.${record.billing_cycle}`) : ''
+  return [price, cycle].filter(Boolean).join(' / ')
+}
+
+const onAddCustomerProduct = async (payload: { product_id: number, status: CustomerProductStatus, start_date: Date | null, source_deal_id: number | null } & CustomerProductRenewalFields, product: Product) => {
   try {
     await customerProductsStore.add(companyId, payload, product)
     success(t('crm.companies.detail.addProductSuccess'))
@@ -522,7 +557,7 @@ const onAddCustomerProduct = async (payload: { product_id: number, status: Custo
   }
 }
 
-const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus, end_date: Date | null }) => {
+const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus, end_date: Date | null } & CustomerProductRenewalFields) => {
   if (!editingCustomerProduct.value) return
   try {
     await customerProductsStore.update(editingCustomerProduct.value.id, payload)

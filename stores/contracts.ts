@@ -4,6 +4,8 @@
 const parseDates = (contract: Contract): Contract => ({
   ...contract,
   signed_date: contract.signed_date ? new Date(contract.signed_date) : null,
+  // Date-only (added 2026-09-27): keep the 'YYYY-MM-DD' prefix, never a Date.
+  end_date: toDateOnly(contract.end_date),
   created_at: new Date(contract.created_at),
 })
 
@@ -22,14 +24,15 @@ export const useContractsStore = defineStore('contracts', {
       this.items = [...this.items.filter(c => c.deal_id !== dealId), ...fetched]
       return fetched
     },
-    async add (dealId: number, contract: { status?: ContractStatus, quote_id?: number | null }): Promise<Contract> {
+    // end_date is 'YYYY-MM-DD'; on update, omitting it keeps it and null clears it.
+    async add (dealId: number, contract: { status?: ContractStatus, quote_id?: number | null, end_date?: string | null }): Promise<Contract> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Contract>>(`/deals/${dealId}/contracts`, contract)
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: { status?: ContractStatus, quote_id?: number | null }): Promise<Contract> {
+    async update (id: number, changes: { status?: ContractStatus, quote_id?: number | null, end_date?: string | null }): Promise<Contract> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Contract>>(`/contracts/${id}`, changes)
       const updated = parseDates(response.data.data)
