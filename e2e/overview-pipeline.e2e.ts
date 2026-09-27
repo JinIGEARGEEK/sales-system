@@ -1,6 +1,12 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { ADMIN, json, mockApi, signIn } from './support'
 import { overviewFixture } from './fixtures/overview'
+
+// The toast's Undo action. Not getByRole: while the panel (a modal
+// slideover) is open, everything outside it — the toaster included — is
+// aria-hidden, so a role query would never find it and a "no Undo"
+// assertion would pass vacuously.
+const undoButton = (page: Page) => page.locator('button', { hasText: /^Undo$/ })
 
 // Smoke test for the Overview Pipeline page (FR-CRM-123): it renders every
 // lane kind from the API, uses the API's exact highlight counts, highlights
@@ -72,6 +78,8 @@ test.describe('Overview Pipeline', () => {
 
     await expect.poll(() => stageMoves.length).toBe(1)
     expect(stageMoves[0]!.body).toMatchObject({ stage: 'Lost', lost_reason: 'competitor' })
+    // An ordinary move can be undone (unlike a move into Won, below).
+    await expect(undoButton(page)).toBeVisible()
   })
 
   // The hand-off (kickoff task + Create Project) can't be unwound by moving
@@ -86,8 +94,8 @@ test.describe('Overview Pipeline', () => {
     await expect.poll(() => tasks.length).toBe(1)
     expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 21, title: 'Schedule kickoff call' })
     await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
-    await expect(page.getByText('Moved to Won')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Undo' })).toHaveCount(0)
+    await expect(page.getByText('Moved to Won', { exact: true })).toBeVisible()
+    await expect(undoButton(page)).toHaveCount(0)
   })
 
   test('an "other" lane card opens with a stage picker and an explanation', async ({ page }) => {
