@@ -3,7 +3,8 @@ import { ADMIN, json, mockApi, signIn } from './support'
 
 // Deals Kanban: dragging a Deal into Lost asks for the loss reason first
 // (shared CrmLostReasonModal), sends it with the stage move, and cancelling
-// leaves the Deal where it was.
+// leaves the Deal where it was. Dropping into Won runs the same hand-off as
+// the detail page's Mark Won: follow-up task + Create Project prompt.
 const STAGES = ['Discovery', 'Qualified', 'Negotiation', 'Won', 'Lost'].map((name, i) => ({
   id: i + 1, name, sort_order: i, is_active: true, is_won_stage: name === 'Won', is_lost_stage: name === 'Lost', stale_days: null, created_at: null,
 }))
@@ -15,9 +16,11 @@ const DEAL = {
 
 test.describe('Deals Kanban', () => {
   let moves: Array<Record<string, unknown>>
+  let tasks: Array<Record<string, unknown>>
 
   test.beforeEach(async ({ page }) => {
     moves = []
+    tasks = []
     await signIn(page)
     await mockApi(page, {
       'GET /auth/me': route => json(route, ADMIN),
@@ -27,8 +30,14 @@ test.describe('Deals Kanban', () => {
       // "Discovery" — not in a lane literally named "Lead".
       'GET /leads': route => json(route, [{ id: 41, name: 'Walk-in Lead', status: 'New', source: 'Website', company_id: null, assigned_to: null, tags: [], position: 1, classification: 'none', score: 0, created_at: new Date().toISOString() }]),
       'PATCH /deals/31/stage': async (route) => {
-        moves.push(route.request().postDataJSON())
-        await json(route, { ...DEAL, stage: 'Lost', status: 'lost' })
+        const body = route.request().postDataJSON()
+        moves.push(body)
+        await json(route, { ...DEAL, stage: body.stage, status: body.stage === 'Won' ? 'won' : body.stage === 'Lost' ? 'lost' : 'open' })
+      },
+      'POST /tasks': async (route) => {
+        const body = route.request().postDataJSON()
+        tasks.push(body)
+        await json(route, { id: 77, status: 'pending', created_at: new Date().toISOString(), ...body })
       },
     })
     await page.goto('/crm/deals')
@@ -59,5 +68,14 @@ test.describe('Deals Kanban', () => {
     await expect(dialog).toBeHidden()
     expect(moves).toHaveLength(0)
     await expect(page.getByTestId('pipeline-column-Negotiation').getByTestId('pipeline-card-deal-31')).toBeVisible()
+  })
+
+  test('dropping into Won creates the follow-up task and offers Create Project', async ({ page }) => {
+    await page.getByTestId('pipeline-card-deal-31').dragTo(page.getByTestId('pipeline-column-Won'))
+    await expect.poll(() => moves.length).toBe(1)
+    expect(moves[0]).toMatchObject({ stage: 'Won' })
+    await expect.poll(() => tasks.length).toBe(1)
+    expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 31, title: 'Schedule kickoff call' })
+    await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
   })
 })

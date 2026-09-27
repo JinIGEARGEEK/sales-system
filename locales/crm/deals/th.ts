@@ -65,6 +65,15 @@ export default {
   detail: {
     pageTitle: 'รายละเอียด Deal',
     markWon: 'ปิดสำเร็จ',
+    markLost: 'ปิดไม่สำเร็จ',
+    markLostSuccess: 'บันทึก Deal เป็น Lost สำเร็จ',
+    markWonConfirmTitle: 'ปิด Deal นี้เป็น Won หรือไม่?',
+    markWonConfirmBody: '"{title}" จะถูกย้ายไปสถานะ Won ระบบจะสร้างงานติดตาม Kickoff และเสนอให้สร้าง Project ต่อ',
+    dealValueUpdateTitle: 'อัปเดตมูลค่า Deal หรือไม่?',
+    dealValueUpdateBody: 'ใบเสนอราคาที่ลูกค้ายอมรับมียอด {to} (ก่อน VAT) ต้องการอัปเดตมูลค่า Deal จาก {from} เป็น {to} หรือไม่?',
+    dealValueUpdateConfirm: 'อัปเดตมูลค่า',
+    dealValueUpdateDecline: 'ใช้มูลค่าเดิม',
+    dealValueUpdated: 'อัปเดตมูลค่า Deal สำเร็จ',
     tabs: {
       overview: 'ภาพรวม',
       quotes: 'ใบเสนอราคา',

@@ -28,6 +28,13 @@ export default {
   user: {
     defaultName: 'ผู้ดูแลระบบ',
   },
+  quickAdd: {
+    trigger: 'เพิ่มด่วน',
+    logActivity: 'บันทึกกิจกรรม',
+    addTask: 'เพิ่มงานติดตาม',
+    activityLogged: 'บันทึกกิจกรรมสำเร็จ',
+    taskAdded: 'เพิ่มงานติดตามสำเร็จ',
+  },
   roleFocus: {
     trigger: 'ใช้งานในบทบาท',
     triggerActiveLabel: 'กำลังใช้งานในบทบาท {role} คลิกเพื่อเปลี่ยนหรือออกจากโหมดนี้',
