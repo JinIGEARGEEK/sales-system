@@ -159,13 +159,14 @@ const emptyForm = () => ({
   // Already 'YYYY-MM-DD' (date-only) — InputDatePicker's own v-model format.
   renewal_date: props.record?.renewal_date ?? '',
   billing_cycle: props.record?.billing_cycle ?? NO_BILLING_CYCLE,
-  price: props.record?.price ?? null as number | null,
+  // '' = blank (the thousands input itself emits null when cleared).
+  price: (props.record?.price ?? '') as number | '',
 })
 
 const renewalPayload = (): CustomerProductRenewalFields => ({
   renewal_date: form.renewal_date || null,
   billing_cycle: form.billing_cycle === NO_BILLING_CYCLE ? null : form.billing_cycle as CustomerProductBillingCycle,
-  price: form.price === null || (form.price as unknown) === '' ? null : Number(form.price),
+  price: form.price === '' || (form.price as unknown) === null ? null : Number(form.price),
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)

@@ -14,10 +14,10 @@
             thousands
             :decimals="2"
             name="amount"
-            rules="required|min_value:0.01"
+            rules="required"
             data-cy="payment-amount"
           />
-          <InputDatePicker v-model="form.paid_at" :label="t('crm.components.addPaymentModal.paidOn')" name="paid_at" rules="required" />
+          <InputDatePicker v-model="form.paid_at" :label="t('crm.components.addPaymentModal.paidOn')" name="paid_at" rules="required" data-cy="payment-paid-at" />
           <div>
             <InputText
               v-model="form.wht_amount"
@@ -25,7 +25,6 @@
               thousands
               :decimals="2"
               name="wht_amount"
-              rules="min_value:0"
               data-cy="payment-wht-amount"
             />
             <UButton
@@ -105,7 +104,8 @@ const NO_INSTALLMENT = 'none'
 
 const emptyForm = () => ({
   amount: props.record?.amount ?? 0,
-  paid_at: props.record ? toDateInputValue(props.record.paid_at) : '',
+  // Defaults to today — most payments are recorded the day they arrive.
+  paid_at: toDateInputValue(props.record ? props.record.paid_at : new Date()),
   method: props.record?.method ?? ('transfer' as PaymentMethod),
   note: props.record?.note ?? '',
   wht_amount: props.record?.wht_amount ?? 0,
