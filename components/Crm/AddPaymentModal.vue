@@ -12,8 +12,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addPaymentModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addPaymentModal.cancel')" cancel data-cy="payment-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" :loading="loading" data-cy="payment-save" @click="onSave" />
       </div>
     </template>
   </UModal>

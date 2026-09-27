@@ -5,11 +5,12 @@
         <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
         <template #actions>
           <div class="flex flex-wrap gap-2">
-            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" @click="onSaveClick" />
+            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
             <ButtonPrimary
               :label="t('crm.quotes.detail.saveAsTemplate')"
               outline
               icon="material-symbols:bookmark-add-outline"
+              data-cy="quote-save-template"
               @click="saveTemplateOpen = true"
             />
             <ButtonPrimary
@@ -17,6 +18,7 @@
               :label="t('crm.quotes.detail.sendToCustomer')"
               icon="material-symbols:send-outline"
               :loading="loading"
+              data-cy="quote-send"
               @click="onSendClick"
             />
           </div>
@@ -172,7 +174,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.attachments') }}</h3>
-                <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small @click="addAttachmentOpen = true" />
+                <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small data-cy="quote-add-attachment" @click="addAttachmentOpen = true" />
               </div>
             </template>
             <CrmAttachmentList :attachments="quoteAttachments" @remove="onRemoveAttachment" />

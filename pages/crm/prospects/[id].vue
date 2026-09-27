@@ -12,12 +12,14 @@
               v-if="prospect.converted_lead_id"
               :label="t('crm.prospects.detail.viewLead')"
               icon="material-symbols:open-in-new"
+              data-cy="prospect-view-lead"
               @click="navigateTo(`/crm/leads/${prospect.converted_lead_id}`)"
             />
             <UTooltip v-else-if="prospect.status !== prospectStagesStore.disqualifiedStageName" :text="t('crm.prospects.detail.convertToLeadHint')">
               <ButtonPrimary
                 :label="t('crm.prospects.detail.convertToLead')"
                 icon="material-symbols:swap-horiz"
+                data-cy="prospect-convert"
                 @click="requestConvert"
               />
             </UTooltip>
@@ -66,12 +68,13 @@
                 </div>
               </div>
               <div class="mt-4 flex gap-3">
-                <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" />
+                <ButtonPrimary :label="t('crm.prospects.detail.saveChanges')" type="submit" :loading="loading" data-cy="prospect-save" />
                 <ButtonPrimary
                   v-if="prospect.company_id"
                   :label="t('crm.prospects.detail.viewCompany')"
                   outline
                   type="button"
+                  data-cy="prospect-view-company"
                   @click="companyPreviewOpen = true"
                 />
               </div>
@@ -86,6 +89,7 @@
                 :label="t('crm.leads.detail.addAttachment')"
                 icon="material-symbols:add"
                 small
+                data-cy="prospect-add-attachment"
                 @click="addAttachmentOpen = true"
               />
             </div>
@@ -114,6 +118,7 @@
                   :label="t('crm.prospects.detail.addTask')"
                   icon="material-symbols:add"
                   small
+                  data-cy="prospect-add-task"
                   @click="openAddTask"
                 />
               </div>

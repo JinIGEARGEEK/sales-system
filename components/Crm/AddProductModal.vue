@@ -18,8 +18,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addProductModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addProductModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addProductModal.cancel')" cancel data-cy="product-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addProductModal.save')" :loading="loading" data-cy="product-save" @click="onSave" />
       </div>
     </template>
   </UModal>

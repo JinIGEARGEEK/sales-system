@@ -9,6 +9,7 @@
             :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
             icon="material-symbols:campaign-outline"
             outline
+            data-cy="contact-add-to-campaign"
             @click="openCampaignModal"
           />
         </template>
@@ -28,11 +29,12 @@
                 <UCheckbox v-model="form.is_primary" :label="t('crm.contacts.detail.isPrimary')" />
               </div>
               <div class="mt-4 flex gap-3">
-                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" />
+                <ButtonPrimary :label="t('crm.contacts.detail.saveChanges')" type="submit" :loading="loading" data-cy="contact-save" />
                 <ButtonPrimary
                   :label="t('crm.contacts.detail.viewCompany')"
                   outline
                   type="button"
+                  data-cy="contact-view-company"
                   @click="companyPreviewOpen = true"
                 />
               </div>
@@ -63,6 +65,7 @@
                   :label="t('crm.contacts.detail.addProject')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-project"
                   @click="openAddProject"
                 />
               </div>
@@ -97,6 +100,7 @@
                   :label="t('crm.contacts.detail.addActivity')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-activity"
                   @click="openAddActivity"
                 />
               </div>
@@ -116,6 +120,7 @@
                   :label="t('crm.contacts.detail.addTask')"
                   icon="material-symbols:add"
                   small
+                  data-cy="contact-add-task"
                   @click="openAddTask"
                 />
               </div>

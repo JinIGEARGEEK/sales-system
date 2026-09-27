@@ -146,8 +146,8 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.companies.create.createCompany')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.companies.create.cancel')" cancel @click="goBack()" />
+          <ButtonPrimary :label="t('crm.companies.create.createCompany')" type="submit" :loading="loading" data-cy="company-create-submit" />
+          <ButtonPrimary :label="t('crm.companies.create.cancel')" cancel data-cy="company-create-cancel" @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>

@@ -33,8 +33,8 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.addAttachmentModal.cancel')" cancel @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" :loading="loading" @click="onSave" />
+        <ButtonPrimary :label="t('crm.components.addAttachmentModal.cancel')" cancel data-cy="attachment-cancel" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="t('crm.components.addAttachmentModal.save')" :loading="loading" data-cy="attachment-save" @click="onSave" />
       </div>
     </template>
   </UModal>

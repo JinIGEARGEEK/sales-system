@@ -74,8 +74,8 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-          <ButtonPrimary :label="t('crm.prospects.create.createProspect')" type="submit" :loading="loading" />
-          <ButtonPrimary :label="t('crm.prospects.create.cancel')" cancel @click="goBack()" />
+          <ButtonPrimary :label="t('crm.prospects.create.createProspect')" type="submit" :loading="loading" data-cy="prospect-create-submit" />
+          <ButtonPrimary :label="t('crm.prospects.create.cancel')" cancel data-cy="prospect-create-cancel" @click="goBack()" />
         </div>
       </Form>
     </ContainerTemplate>

@@ -12,8 +12,8 @@
           <AdminUserForm v-model:form="form" />
 
           <div class="mt-4 flex gap-3">
-            <ButtonPrimary :label="t('admin.users.create.createStaff')" type="submit" :loading="loading" />
-            <ButtonPrimary :label="t('admin.users.form.cancel')" cancel @click="goBack()" />
+            <ButtonPrimary :label="t('admin.users.create.createStaff')" type="submit" :loading="loading" data-cy="user-create-submit" />
+            <ButtonPrimary :label="t('admin.users.form.cancel')" cancel data-cy="user-create-cancel" @click="goBack()" />
           </div>
         </Form>
       </ContainerTemplate>
