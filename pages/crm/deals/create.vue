@@ -120,10 +120,14 @@ const originatingLead = computed(() => leadOriginId.value
 // it loads) rather than hardcoded.
 const initialStage = typeof route.query.stage === 'string' ? route.query.stage : pipelineStagesStore.firstOpenStageName
 
+// Pre-filled from Contact detail's "Add Deal" (?contact_id=&company_id=) or
+// Company detail's (?company_id=) — both optional.
+const queryContactId = typeof route.query.contact_id === 'string' && Number(route.query.contact_id) > 0 ? route.query.contact_id : ''
+
 const form = reactive({
   title: '',
   company_id: route.query.company_id ? Number(route.query.company_id) : null as number | null,
-  contact_id: '',
+  contact_id: queryContactId,
   value: 0,
   stage: initialStage,
   forecast_category: stageDefaultForecastCategory(initialStage) as ForecastCategory | '',
@@ -148,6 +152,20 @@ watch(() => pipelineStagesStore.firstOpenStageName, (first) => {
 // pre-fill settles — otherwise a Deal created from a Lead link would read as
 // "dirty" the instant the page loads, before the rep has touched anything.
 const { markClean } = useUnsavedChangesGuard(() => form)
+
+// A bare ?contact_id= (no company) resolves the Contact's own Company first.
+// Setting company_id trips the clear-contact watcher below, so the contact is
+// put back once that has run.
+if (queryContactId && !form.company_id) {
+  contactsStore.fetchOne(Number(queryContactId)).then((contact) => {
+    if (form.company_id || !contact.company_id) return
+    form.company_id = contact.company_id
+    nextTick(() => {
+      form.contact_id = queryContactId
+      markClean()
+    })
+  }).catch(notifyApiError)
+}
 
 // Scoped to the currently-picked Company, not the global contactsStore/
 // dealsStore caches — see the onMounted comment above. useScopedFetch
@@ -237,7 +255,7 @@ watch(() => form.stage, (newStage) => {
 // unit/owner, so a stale draft left over from a *different* Lead (or a
 // standalone create) must never be offered here — restoring it would
 // silently overwrite the correct pre-filled data with unrelated one.
-const { discardDraft, offerRestoreIfFound } = useDraftAutosave(`crm-deal-create:${leadOriginId.value ?? 'new'}`, () => form, saved => Object.assign(form, saved))
+const { discardDraft, offerRestoreIfFound } = useDraftAutosave(`crm-deal-create:${leadOriginId.value ?? (queryContactId ? `contact-${queryContactId}` : 'new')}`, () => form, saved => Object.assign(form, saved))
 onMounted(offerRestoreIfFound)
 
 const { loading, guard } = useSubmitGuard()

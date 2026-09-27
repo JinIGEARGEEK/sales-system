@@ -73,6 +73,7 @@ export default {
     viewCompany: 'View Company',
     linkedDeals: 'Linked Deals',
     noLinkedDeals: 'No linked deals.',
+    addDeal: 'Add Deal',
     linkedProjects: 'Company Projects',
     noLinkedProjects: 'No projects for this contact\'s company yet.',
     addProject: 'Add Project',

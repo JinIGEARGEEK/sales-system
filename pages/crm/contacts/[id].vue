@@ -43,7 +43,17 @@
         <div class="lg:col-span-2">
           <UCard class="mb-4">
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
+                <ButtonPrimary
+                  v-if="canManageProjects"
+                  :label="t('crm.contacts.detail.addDeal')"
+                  icon="material-symbols:add"
+                  small
+                  data-cy="contact-add-deal"
+                  @click="navigateTo({ path: '/crm/deals/create', query: { contact_id: contact.id, company_id: contact.company_id } })"
+                />
+              </div>
             </template>
             <div v-if="linkedDeals.length === 0" class="text-sm text-(--color-gray)">{{ t('crm.contacts.detail.noLinkedDeals') }}</div>
             <div v-else class="flex flex-col gap-2">
@@ -249,7 +259,9 @@ const dealTitleById = (dealId: number) => companyDeals.value.find(d => d.id === 
 const contactActivity = computed(() => activitiesStore.forRelated('contact', contactId))
 
 // Matches the backend's Project Create RBAC (Admin/Sales Rep/Sales Manager, not
-// Production) — same role set as SALES_PIPELINE_ROLES, so reuse it.
+// Production) — same role set as SALES_PIPELINE_ROLES, so reuse it. Deal
+// create is gated to the same roles, so it also shows the Linked Deals card's
+// "Add Deal" button.
 const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const contactCompanyProjects = computed(() => contact.value ? projectsStore.forCompany(contact.value.company_id) : [])
 
