@@ -32,6 +32,12 @@
               name="end_date"
               data-cy="contract-end-date"
             />
+            <!-- Beside the field it clears, like the Customer Product
+                 renewal date — the footer holds only Cancel + Save
+                 (ux-ui-guidelines/modal.md). -->
+            <UButton v-if="form.end_date" class="mt-1 px-0" variant="link" size="xs" data-cy="contract-clear-end-date" @click="form.end_date = ''">
+              {{ t('crm.contracts.components.addContractModal.clearEndDate') }}
+            </UButton>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.contracts.components.addContractModal.endDateHint') }}</p>
           </div>
         </div>
@@ -39,13 +45,6 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary
-          v-if="record && form.end_date"
-          :label="t('crm.contracts.components.addContractModal.clearEndDate')"
-          outline
-          class="mr-auto"
-          @click="form.end_date = ''"
-        />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel data-cy="contract-cancel" @click="onUpdateOpen(false)" />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" data-cy="contract-save" @click="onSave" />
       </div>
