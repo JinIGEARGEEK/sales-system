@@ -13,7 +13,9 @@ type ProjectFormPayload = {
 
 // The one hand-off every path into Won runs (FR-CRM-068/048): the Deal detail
 // header's Mark Won, the Overview tab's Stage save, a drop into the Won lane on
-// the Kanban board, and "Mark this deal as Won?" after a Contract is signed.
+// the Kanban board (a Deal, or a Lead that converts on the way), a stage change
+// to Won in the Overview Pipeline panel, and "Mark this deal as Won?" after a
+// Contract is signed.
 // Each of them used to wire the follow-up task and the Create Project prompt
 // by hand (the board did neither) — now they all call onDealWon()/markWon().
 //
