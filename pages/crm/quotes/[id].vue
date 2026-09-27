@@ -203,16 +203,7 @@
         @confirm="onConfirmSend"
       />
 
-      <CrmConfirmDeleteModal
-        :open="pendingDealValue !== null"
-        :title="t('crm.deals.detail.dealValueUpdateTitle')"
-        :body="pendingDealValue ? t('crm.deals.detail.dealValueUpdateBody', { from: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.from)}`, to: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.to)}` }) : ''"
-        :cancel-label="t('crm.deals.detail.dealValueUpdateDecline')"
-        :confirm-label="t('crm.deals.detail.dealValueUpdateConfirm')"
-        confirm-color="primary"
-        @update:open="(value: boolean) => { if (!value) dismissDealValue() }"
-        @confirm="confirmDealValue"
-      />
+      <CrmDealValueSyncModal :sync="dealValueSync" />
     </div>
 
     <DetailSkeleton v-else-if="recordPending" />
@@ -388,7 +379,7 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
 
 // Moving the Quote to Accepted offers to update the Deal's value to match it
 // (pre-VAT — see quoteRevenueAmount).
-const { pending: pendingDealValue, offer: offerDealValue, confirm: confirmDealValue, dismiss: dismissDealValue } = useQuoteDealValueSync()
+const dealValueSync = useQuoteDealValueSync()
 
 const onSave = guard(async () => {
   if (!quote.value) return
@@ -397,7 +388,7 @@ const onSave = guard(async () => {
     const updated = await quotesStore.update(quote.value.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
-    if (!wasAccepted && updated.status === 'accepted') offerDealValue(updated, deal.value)
+    if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

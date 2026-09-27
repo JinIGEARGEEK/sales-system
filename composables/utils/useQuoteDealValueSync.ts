@@ -52,3 +52,5 @@ export const useQuoteDealValueSync = () => {
 
   return { pending, offer, confirm, dismiss }
 }
+
+export type QuoteDealValueSync = ReturnType<typeof useQuoteDealValueSync>
