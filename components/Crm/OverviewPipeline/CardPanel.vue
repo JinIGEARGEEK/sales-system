@@ -138,14 +138,7 @@
     @confirm="onConfirmConvertProspect"
   />
   <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLost" />
-  <CrmAddProjectModal
-    v-model:open="projectModal"
-    :title="t('crm.deals.detail.createProjectModalTitle')"
-    :default-name="handoffDeal?.title"
-    :default-target-end-date="handoffDeal?.expected_close_date"
-    :description="t('crm.deals.detail.createProjectModalBody')"
-    @submit="onCreateProject"
-  />
+  <CrmWonHandoffProjectModal :handoff="wonHandoff" />
 </template>
 
 <script setup lang="ts">
@@ -249,7 +242,8 @@ const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, 
 
 // Moving a Deal into Won from here runs the same hand-off as the Deals board
 // and the detail page's Mark Won (follow-up task + Create Project prompt).
-const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
+const wonHandoff = useDealWonHandoff()
+const { onDealWon } = wonHandoff
 
 // Moving a Deal into a Lost stage asks why first — the reason is what a
 // review wants to know about a loss, and the quick-move wouldn't otherwise

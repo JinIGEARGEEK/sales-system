@@ -131,14 +131,7 @@
       @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
-    <CrmAddProjectModal
-      v-model:open="projectModal"
-      :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="handoffDeal?.title"
-      :default-target-end-date="handoffDeal?.expected_close_date"
-      :description="t('crm.deals.detail.createProjectModalBody')"
-      @submit="onCreateProject"
-    />
+    <CrmWonHandoffProjectModal :handoff="wonHandoff" />
   </div>
 </template>
 
@@ -440,7 +433,8 @@ const columnCounts = computed(() => {
 // first, same as the Overview Pipeline's side panel; the move only happens
 // once a reason is chosen, and cancelling leaves the card where it was.
 const lostReasonOpen = ref(false)
-const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
+const wonHandoff = useDealWonHandoff()
+const { onDealWon } = wonHandoff
 const notifyStageChangeError = useStageChangeErrorNotifier()
 const pendingLostMove = ref<{ item: Deal & { _type: 'deal' }, newStage: string, position?: number } | null>(null)
 const onConfirmLostReason = (reason: LostReason) => {

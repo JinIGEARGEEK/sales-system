@@ -17,8 +17,8 @@ type ProjectFormPayload = {
 // Each of them used to wire the follow-up task and the Create Project prompt
 // by hand (the board did neither) — now they all call onDealWon()/markWon().
 //
-// The caller renders CrmAddProjectModal bound to `projectModal`/`handoffDeal`/
-// `onCreateProject`. On the Deal detail page the layout owns that one modal and
+// The caller renders <CrmWonHandoffProjectModal :handoff="..."> with this
+// instance. On the Deal detail page the layout owns that one modal and
 // provides this instance to its tabs (provideDealWonHandoff/injectDealWonHandoff),
 // so the Contracts tab and the Overview save never open a second copy.
 export const useDealWonHandoff = () => {

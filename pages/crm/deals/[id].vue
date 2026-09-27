@@ -49,14 +49,7 @@
     <!-- The one Create Project prompt for this Deal — the Overview save and
          the Contracts tab's signed-contract flow reach it through the
          injected useDealWonHandoff instance, so it never opens twice. -->
-    <CrmAddProjectModal
-      v-model:open="projectModal"
-      :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="handoffDeal?.title ?? deal?.title"
-      :default-target-end-date="handoffDeal?.expected_close_date ?? deal?.expected_close_date"
-      :description="t('crm.deals.detail.createProjectModalBody')"
-      @submit="onCreateProject"
-    />
+    <CrmWonHandoffProjectModal :handoff="wonHandoff" />
   </div>
 </template>
 
@@ -126,7 +119,8 @@ const tabItems = computed(() => [
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
 const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
-const { handoffDeal, projectModal, markWon, onCreateProject, promptCreateProject } = provideDealWonHandoff()
+const wonHandoff = provideDealWonHandoff()
+const { markWon, promptCreateProject } = wonHandoff
 
 // A Lead dropped into Won on the board lands here with ?won_handoff=1 (the
 // board already created the follow-up task) — offer Create Project once.
