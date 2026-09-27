@@ -6,9 +6,10 @@ import type { Ref } from 'vue'
 
 export const HEAD_OFFICE_BRANCH_CODE = '00000'
 
-// Tax IDs are often written grouped ("0-1055-12345-67-8"); stored as digits
-// only so the API's exact tax_id filter matches however it was typed.
-export const normalizeTaxId = (value: string) => value.replace(/[\s-]/g, '')
+// Tax IDs are often written grouped ("0-1055-12345-67-8"); spaces and any
+// dash (pasted values carry en dashes / non-breaking spaces) are dropped,
+// the same as the API's utils.NormalizeTaxID.
+export const normalizeTaxId = (value: string) => value.replace(/[\s\p{Pd}]/gu, '')
 
 export const isValidThaiTaxId = (value: string) => {
   const digits = normalizeTaxId(value)

@@ -18,6 +18,7 @@ describe('Thai tax ID helpers', () => {
 
   it('normalizes a tax ID to digits only', () => {
     expect(normalizeTaxId(' 0-1055-12345-67-1 ')).toBe('0105512345671')
+    expect(normalizeTaxId('0\u20131055\u00a012345\u201367\u20131')).toBe('0105512345671')
   })
 
   it('checks five-digit branch/postal codes', () => {
