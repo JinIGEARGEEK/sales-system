@@ -71,3 +71,21 @@ describe('addDays', () => {
     expect(start.getDate()).toBe(1)
   })
 })
+
+describe('countdownLabel / countdownBadge', () => {
+  const keys = { past: 'past', today: 'today', future: 'future' }
+  const t = (key: string, params?: Record<string, unknown>) => (params ? `${key}:${params.days}` : key)
+
+  it('picks the phrasing by sign, always passing a positive day count', () => {
+    expect(countdownLabel(-3, keys, t)).toBe('past:3')
+    expect(countdownLabel(0, keys, t)).toBe('today')
+    expect(countdownLabel(12, keys, t)).toBe('future:12')
+  })
+
+  it('builds the badge colour and label from the date-only value', () => {
+    expect(countdownBadge('2026-09-25T00:00:00Z', keys, t, today)).toEqual({ color: 'error', label: 'past:2' })
+    expect(countdownBadge('2026-10-07', keys, t, today)).toEqual({ color: 'warning', label: 'future:10' })
+    expect(countdownBadge('2027-01-01', keys, t, today)).toEqual({ color: 'neutral', label: 'future:96' })
+    expect(countdownBadge(null, keys, t, today)).toBeNull()
+  })
+})

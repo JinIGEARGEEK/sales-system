@@ -51,8 +51,32 @@ export const dateOnlyCountdown = (value: string | null | undefined, today: Date 
   return { days, tone: days <= soonDays ? 'soon' : 'later' }
 }
 
+// i18n keys for a countdown badge's three phrasings; `past` and `future`
+// get a positive `{days}` param.
+export interface CountdownLabelKeys {
+  past: string
+  today: string
+  future: string
+}
+
+type Translate = (key: string, params?: Record<string, unknown>) => string
+
+export const countdownLabel = (days: number, keys: CountdownLabelKeys, t: Translate): string => {
+  if (days < 0) return t(keys.past, { days: -days })
+  if (days === 0) return t(keys.today)
+  return t(keys.future, { days })
+}
+
 export const countdownColor = (tone: RenewalTone) => {
   if (tone === 'overdue') return 'error' as const
   if (tone === 'today' || tone === 'soon') return 'warning' as const
   return 'neutral' as const
+}
+
+// Everything a countdown badge renders, worked out once per row: null when
+// there's no date to count down to.
+export const countdownBadge = (value: string | null | undefined, keys: CountdownLabelKeys, t: Translate, today: Date = new Date()) => {
+  const countdown = dateOnlyCountdown(value, today)
+  if (!countdown) return null
+  return { color: countdownColor(countdown.tone), label: countdownLabel(countdown.days, keys, t) }
 }

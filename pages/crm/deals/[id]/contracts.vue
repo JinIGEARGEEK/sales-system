@@ -32,7 +32,7 @@
         {{ t('crm.contracts.detail.noContracts') }}
       </div>
       <div v-else class="flex flex-col gap-3">
-        <div v-for="contract in dealContracts" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
+        <div v-for="{ contract, expiry } in contractRows" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <!-- Wraps below ~400px: the status select + linked-quote text +
                download button don't fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -54,13 +54,13 @@
                 {{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}
               </span>
               <UBadge
-                v-if="expiryCountdown(contract)"
+                v-if="expiry"
                 size="sm"
-                :color="countdownColor(expiryCountdown(contract)!.tone)"
+                :color="expiry.color"
                 variant="subtle"
                 icon="material-symbols:event-busy-outline"
               >
-                {{ expiryLabel(expiryCountdown(contract)!.days) }}
+                {{ expiry.label }}
               </UBadge>
               <UButton
                 icon="material-symbols:edit-outline"
@@ -194,12 +194,11 @@ const openEditContract = (contract: Contract) => {
 
 // Only a signed contract "ends" (that's also all the contract_expiry rule
 // watches); an expired one already has its own status.
-const expiryCountdown = (contract: Contract) => (contract.status === 'signed' ? dateOnlyCountdown(contract.end_date) : null)
-const expiryLabel = (days: number) => {
-  if (days < 0) return t('crm.contracts.detail.endedDaysAgo', { days: -days })
-  if (days === 0) return t('crm.contracts.detail.endsToday')
-  return t('crm.contracts.detail.endsInDays', { days })
-}
+const EXPIRY_LABEL_KEYS = { past: 'crm.contracts.detail.endedDaysAgo', today: 'crm.contracts.detail.endsToday', future: 'crm.contracts.detail.endsInDays' }
+const contractRows = computed(() => dealContracts.value.map(contract => ({
+  contract,
+  expiry: contract.status === 'signed' ? countdownBadge(contract.end_date, EXPIRY_LABEL_KEYS, t) : null,
+})))
 
 const onUpdateContract = async (changes: { quote_id?: number, end_date: string | null }) => {
   if (!editingContract.value) return
