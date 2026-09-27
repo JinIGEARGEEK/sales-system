@@ -71,7 +71,7 @@ const onEditRule = (row: NotificationRule) => {
   ruleModalOpen.value = true
 }
 
-const onSubmitRule = async (payload: { name: string, entity_type: NotificationEntityType, threshold_days: number, recipient_role: NotificationRecipientRole, is_active: boolean }) => {
+const onSubmitRule = async (payload: NotificationRulePayload) => {
   try {
     if (editingRule.value) {
       await notificationRulesStore.update(editingRule.value.id, payload)
@@ -98,10 +98,11 @@ const confirmDeactivateRule = async () => {
   closeDeactivateRule()
 }
 
-// recipient_role's snake_case value doesn't match its camelCase i18n key
-// (owner_and_managers -> ownerAndManagers), so that one still needs a lookup
-// table; entity_type's values (deal/quote/contract) already match their i18n
-// keys exactly, so no equivalent map is needed there.
+// recipient_role's and entity_type's snake_case values don't match their
+// camelCase i18n keys (owner_and_managers -> ownerAndManagers,
+// payment_installment -> paymentInstallment), so both go through a lookup
+// (entity types via useNotificationEntityType).
+const { entityTypeLabel } = useNotificationEntityType()
 const RULE_RECIPIENT_ROLE_LABEL_KEY: Record<NotificationRecipientRole, string> = {
   owner: 'owner',
   owner_and_managers: 'ownerAndManagers',
@@ -109,7 +110,10 @@ const RULE_RECIPIENT_ROLE_LABEL_KEY: Record<NotificationRecipientRole, string> =
 
 const ruleRows = computed(() => notificationRulesStore.items.map(rule => ({
   ...rule,
-  entityTypeLabel: t(`admin.pipelineConfig.notificationRules.entityTypeOptions.${rule.entity_type}`),
+  entityTypeLabel: entityTypeLabel(rule.entity_type),
+  createTaskBadge: rule.create_task
+    ? toBadge(t('admin.pipelineConfig.notificationRules.createTaskOn'), 'primary')
+    : toBadge(t('admin.pipelineConfig.notificationRules.createTaskOff')),
   recipientRoleLabel: t(`admin.pipelineConfig.notificationRules.recipientRoleOptions.${RULE_RECIPIENT_ROLE_LABEL_KEY[rule.recipient_role]}`),
   statusBadge: rule.is_active
     ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
@@ -121,6 +125,7 @@ const ruleColumns = computed<TableDataColumn[]>(() => [
   { label: t('admin.pipelineConfig.notificationRules.columns.entityType'), align: 'left', field: 'entityTypeLabel' },
   { label: t('admin.pipelineConfig.notificationRules.columns.thresholdDays'), align: 'left', field: 'threshold_days' },
   { label: t('admin.pipelineConfig.notificationRules.columns.recipientRole'), align: 'left', field: 'recipientRoleLabel' },
+  { label: t('admin.pipelineConfig.notificationRules.columns.createTask'), align: 'left', field: 'createTaskBadge', type: TABLE_CARD_TYPE.STATUS },
   { label: t('admin.pipelineConfig.notificationRules.columns.status'), align: 'left', field: 'statusBadge', type: TABLE_CARD_TYPE.STATUS },
   {
     label: t('admin.pipelineConfig.notificationRules.columns.action'),

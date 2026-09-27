@@ -458,6 +458,10 @@ interface NotificationRule {
   created_at: Date
 }
 
+// POST /admin/notification-rules and PATCH /:id (PATCH still requires name,
+// entity_type, threshold_days and recipient_role).
+type NotificationRulePayload = Omit<NotificationRule, 'id' | 'created_at'>
+
 // The Admin-configurable app-wide settings singleton — GET/PATCH /admin/settings.
 // Holds the quarterly sales quota (FR-CRM-058) and the annual revenue goal
 // (FR-CRM-091), both previously hardcoded in the dashboard summary handler.

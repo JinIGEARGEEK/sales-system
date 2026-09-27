@@ -4,9 +4,27 @@
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3">
           <InputText v-model="form.name" :label="t('admin.pipelineConfig.notificationRules.name')" name="name" rules="required" />
-          <InputSelect v-model="form.entity_type" :label="t('admin.pipelineConfig.notificationRules.entityType')" name="entity_type" :options="entityTypeOptions" rules="required" />
+          <div>
+            <InputSelect
+              v-model="form.entity_type"
+              :label="t('admin.pipelineConfig.notificationRules.entityType')"
+              name="entity_type"
+              :options="entityTypeOptions"
+              rules="required"
+              data-cy="notification-rule-entity-type"
+            />
+            <p v-if="entityTypeHelp(form.entity_type)" class="mt-1 text-xs text-(--color-gray)" data-cy="notification-rule-entity-help">
+              {{ entityTypeHelp(form.entity_type) }}
+            </p>
+          </div>
           <InputText v-model.number="form.threshold_days" type="number" :label="t('admin.pipelineConfig.notificationRules.thresholdDays')" name="threshold_days" rules="required|min_value:1" />
           <InputSelect v-model="form.recipient_role" :label="t('admin.pipelineConfig.notificationRules.recipientRole')" name="recipient_role" :options="recipientRoleOptions" rules="required" />
+          <UCheckbox
+            v-model="form.create_task"
+            :label="t('admin.pipelineConfig.notificationRules.createTask')"
+            :description="t('admin.pipelineConfig.notificationRules.createTaskHint')"
+            data-cy="notification-rule-create-task"
+          />
           <UCheckbox v-if="rule" v-model="form.is_active" :label="t('admin.pipelineConfig.stages.isActive')" />
         </div>
       </Form>
@@ -33,19 +51,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: { name: string, entity_type: NotificationEntityType, threshold_days: number, recipient_role: NotificationRecipientRole, is_active: boolean }]
+  submit: [payload: NotificationRulePayload]
 }>()
 
 // Small closed set (mirrors the backend's NotificationRule.EntityType
 // validation) — not worth an Admin-configurable list of its own.
-const entityTypeOptions: Select[] = [
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.deal'), value: 'deal' },
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.quote'), value: 'quote' },
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.contract'), value: 'contract' },
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.prospect'), value: 'prospect' },
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.company'), value: 'company' },
-  { label: t('admin.pipelineConfig.notificationRules.entityTypeOptions.paymentInstallment'), value: 'payment_installment' },
-]
+const { entityTypeLabel, entityTypeHelp } = useNotificationEntityType()
+const entityTypeOptions = computed<Select[]>(() => NOTIFICATION_ENTITY_TYPES.map(type => ({ label: entityTypeLabel(type), value: type })))
 
 // Small closed set (mirrors the backend's NotificationRule.RecipientRole
 // validation) — not worth an Admin-configurable list of its own.
@@ -60,6 +72,9 @@ const emptyForm = () => ({
   threshold_days: props.rule?.threshold_days ?? 0,
   recipient_role: props.rule?.recipient_role ?? 'owner' as NotificationRecipientRole,
   is_active: props.rule?.is_active ?? true,
+  // Default on: Tasks (plus the dashboard's Recent Alerts) are the main alert
+  // channel — email only goes out when SMTP is configured.
+  create_task: props.rule?.create_task ?? true,
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)

@@ -59,15 +59,19 @@
     </div>
 
     <div v-else-if="activeTab === 'notifications'">
+      <!-- Email is optional: alerts always land as Tasks for the owner and in
+           the dashboard's Recent Alerts, so "no SMTP" is neutral info, not a
+           warning. -->
       <UAlert
         v-if="appSettingsStore.settings"
         class="mb-4"
-        :color="appSettingsStore.settings.smtp_configured ? 'success' : 'warning'"
+        :color="appSettingsStore.settings.smtp_configured ? 'success' : 'info'"
         variant="subtle"
-        :icon="appSettingsStore.settings.smtp_configured ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
+        :icon="appSettingsStore.settings.smtp_configured ? 'material-symbols:mark-email-read-outline' : 'material-symbols:info-outline'"
         :title="appSettingsStore.settings.smtp_configured
           ? t('admin.pipelineConfig.notifications.smtpConfigured')
           : t('admin.pipelineConfig.notifications.smtpNotConfigured')"
+        data-cy="notifications-email-status"
       />
       <AdminPipelineConfigNotificationRulesPanel :loading="rulesLoading" />
     </div>

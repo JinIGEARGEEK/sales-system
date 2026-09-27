@@ -53,12 +53,13 @@
           <NuxtLink
             v-for="alert in recentAlerts"
             :key="alert.id"
-            :to="alert.deal_id !== undefined ? `/crm/deals/${alert.deal_id}` : `/crm/companies/${alert.company_id}`"
+            :to="notificationAlertPath(alert) ?? '/'"
             class="flex items-center justify-between gap-3 rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
+            :data-cy="`recent-alert-${alert.id}`"
           >
             <div class="min-w-0">
               <p class="truncate text-sm font-medium" :title="alertTitle(alert)">{{ alertTitle(alert) }}</p>
-              <p class="truncate text-xs text-(--color-gray)" :title="alert.rule_name">{{ alert.rule_name }}</p>
+              <p class="truncate text-xs text-(--color-gray)" :title="alertSubtitle(alert)">{{ alertSubtitle(alert) }}</p>
             </div>
             <UBadge color="neutral" variant="subtle" class="shrink-0">
               {{ dateTimeFormat(alert.notified_at.toISOString()) }}
@@ -159,11 +160,13 @@ defineProps<{
   recentAlerts: {
     id: number
     rule_name: string
+    entity_type: NotificationEntityType
     notified_at: Date
     deal_id?: number
     deal_title?: string
     company_id?: number
     company_name?: string
+    context?: string
   }[]
   industryBreakdown: { industry: string, wonCount: number, winRate: number, barClass: string }[]
   teamPerformance: { id: number, name: string, initials: string, wonCount: number, wonValue: number, winRate: number, activityCount: number }[]
@@ -171,4 +174,13 @@ defineProps<{
 
 const alertTitle = (alert: { deal_id?: number, deal_title?: string, company_name?: string }) =>
   alert.deal_id !== undefined ? alert.deal_title : alert.company_name
+
+// "Product Renewal · 15/01/2570 · <rule name>" — the entity type says what
+// kind of alert it is (the rule name is Admin free text), and the date-based
+// rules carry the date they're about in their dedupe context.
+const { entityTypeLabel } = useNotificationEntityType()
+const alertSubtitle = (alert: { entity_type: NotificationEntityType, rule_name: string, context?: string }) => {
+  const date = notificationAlertDate(alert)
+  return [entityTypeLabel(alert.entity_type), date ? dateFormat(date) : '', alert.rule_name].filter(Boolean).join(' · ')
+}
 </script>
