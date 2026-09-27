@@ -9,7 +9,7 @@ type QuoteAmounts = Pick<Quote, 'items' | 'discount_total'>
 // taxableAmount (and so the backend's ComputeQuoteTotals), rounded to satang.
 export const quoteRevenueAmount = (quote: QuoteAmounts) => {
   const { taxableAmount } = useQuoteTotals(quote.items ?? [], quote.discount_total ?? 0, false, false, 0)
-  return Math.round(taxableAmount * 100) / 100
+  return roundSatang(taxableAmount)
 }
 
 // PUT /deals/:id replaces every mapped field (CLAUDE.md, design-system.md §8),

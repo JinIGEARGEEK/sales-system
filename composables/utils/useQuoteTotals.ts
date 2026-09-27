@@ -6,7 +6,13 @@
 //   vat           = vatEnabled ? taxable * 0.07 : 0
 //   wht           = whtEnabled ? taxable * whtRate/100 : 0
 //   grandTotal    = taxable + vat - wht
-const QUOTE_VAT_RATE = 0.07
+// Explicit import: unimport's identifier scan doesn't recognise a name
+// followed by `/` (it can't tell division from a regex literal), so
+// `VAT_PERCENT / 100` would never be auto-imported.
+import { VAT_PERCENT } from './useMoney'
+
+// VAT_PERCENT / 100 is bit-for-bit the literal 0.07.
+const QUOTE_VAT_RATE = VAT_PERCENT / 100
 
 export interface QuoteTotals {
   subtotal: number
