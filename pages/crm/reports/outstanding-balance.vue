@@ -182,26 +182,30 @@ const money = (value: number) => `${t('global.currencySymbol')}${priceFormatComp
 
 const rows = computed(() => results.value
   .filter(row => bucketFilter.value === 'all' || row.aging_bucket === bucketFilter.value)
-  .map(row => ({
-    ...row,
-    company_name: companyName(row.company_name),
-    dealValueDisplay: money(row.deal_value),
-    // Receivable incl. VAT from the latest Accepted Quote, else the (pre-VAT)
-    // deal value — the second line says which, since they aren't comparable.
-    receivableCell: {
-      title: money(row.receivable_amount ?? row.deal_value),
-      description: row.receivable_source === 'quote'
-        ? t('crm.reports.outstandingBalance.receivableSource.quote')
-        : t('crm.reports.outstandingBalance.receivableSource.dealValue'),
-    },
-    paidAmountDisplay: money(row.paid_amount),
-    whtAmountDisplay: row.wht_amount ? money(row.wht_amount) : '-',
-    outstandingAmountDisplay: money(row.outstanding_amount),
-    oldestOverdueDisplay: row.oldest_overdue_due_date ? dateFormat(row.oldest_overdue_due_date.slice(0, 10)) : '-',
-    daysOverdueDisplay: row.days_overdue > 0 ? t('crm.reports.outstandingBalance.daysOverdueValue', { days: row.days_overdue }) : '-',
-    agingBucketBadge: toBadge(t(`crm.reports.outstandingBalance.agingBucket.${row.aging_bucket ?? 'current'}`), agingBucketColor(row.aging_bucket ?? 'current')),
-    agingBadge: agingBadge(row),
-  })))
+  .map((row) => {
+    // A date-only field — dateFormat on the bare YYYY-MM-DD can't shift the day.
+    const oldestOverdue = toDateOnly(row.oldest_overdue_due_date)
+    return {
+      ...row,
+      company_name: companyName(row.company_name),
+      dealValueDisplay: money(row.deal_value),
+      // Receivable incl. VAT from the latest Accepted Quote, else the (pre-VAT)
+      // deal value — the second line says which, since they aren't comparable.
+      receivableCell: {
+        title: money(row.receivable_amount ?? row.deal_value),
+        description: row.receivable_source === 'quote'
+          ? t('crm.reports.outstandingBalance.receivableSource.quote')
+          : t('crm.reports.outstandingBalance.receivableSource.dealValue'),
+      },
+      paidAmountDisplay: money(row.paid_amount),
+      whtAmountDisplay: row.wht_amount ? money(row.wht_amount) : '-',
+      outstandingAmountDisplay: money(row.outstanding_amount),
+      oldestOverdueDisplay: oldestOverdue ? dateFormat(oldestOverdue) : '-',
+      daysOverdueDisplay: row.days_overdue > 0 ? t('crm.reports.outstandingBalance.daysOverdueValue', { days: row.days_overdue }) : '-',
+      agingBucketBadge: toBadge(t(`crm.reports.outstandingBalance.agingBucket.${row.aging_bucket ?? 'current'}`), agingBucketColor(row.aging_bucket ?? 'current')),
+      agingBadge: agingBadge(row),
+    }
+  }))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)
 

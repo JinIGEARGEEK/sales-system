@@ -12,6 +12,23 @@ export const toDateOnly = (value: string | null | undefined): string | null => {
   return match ? match[0] : null
 }
 
+// A date-input value ("YYYY-MM-DD") as local noon: "sometime that day", and
+// safe from slipping to a neighbouring day in any timezone within ±12h —
+// unlike new Date('YYYY-MM-DD'), which is 00:00 UTC (07:00 in Bangkok).
+export const dateOnlyToLocalNoon = (value: string): Date => {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+  return new Date(year!, month! - 1, day!, 12)
+}
+
+// `date` plus `days` calendar days, same local time of day — through
+// setDate, so a DST change in between doesn't shift it (unlike adding
+// days × 24h of milliseconds). Doesn't mutate `date`.
+export const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
 const dayNumber = (year: number, month: number, day: number) => Date.UTC(year, month - 1, day) / 86_400_000
 
 // Whole calendar days from `today` (its LOCAL date) to the date-only value:

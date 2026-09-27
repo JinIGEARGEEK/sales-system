@@ -80,7 +80,7 @@ const emptyForm = () => ({
   related_id: '',
   follow_up: false,
   follow_up_title: followUpTitleFor(''),
-  follow_up_due_date: toDateInputValue(new Date(Date.now() + FOLLOW_UP_DUE_DAYS * 24 * 60 * 60 * 1000)),
+  follow_up_due_date: toDateInputValue(addDays(new Date(), FOLLOW_UP_DUE_DAYS)),
 })
 
 const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
@@ -96,13 +96,9 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // A date input only carries a calendar day, and `new Date('YYYY-MM-DD')` is
 // 00:00 UTC — 07:00 in Bangkok — so every activity used to show 07:00.
 // Today's date means "just now", so it gets the current time; a backdated
-// day gets local noon, which reads as "sometime that day" and can't slip to
-// a neighbouring day in any timezone within ±12h.
-const toCreatedAt = (value: string) => {
-  if (value === toDateInputValue(new Date())) return new Date().toISOString()
-  const [year, month, day] = value.split('-').map(Number)
-  return new Date(year!, month! - 1, day!, 12).toISOString()
-}
+// day gets local noon (dateOnlyToLocalNoon), "sometime that day".
+const toCreatedAt = (value: string) =>
+  (value === toDateInputValue(new Date()) ? new Date() : dateOnlyToLocalNoon(value)).toISOString()
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
