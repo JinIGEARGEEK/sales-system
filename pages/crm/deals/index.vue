@@ -136,7 +136,6 @@
 </template>
 
 <script setup lang="ts">
-import { WON_HANDOFF_QUERY } from '~/composables/utils/useDealWonHandoff'
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
 import {

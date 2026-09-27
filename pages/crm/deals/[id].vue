@@ -54,7 +54,6 @@
 </template>
 
 <script setup lang="ts">
-import { WON_HANDOFF_QUERY } from '~/composables/utils/useDealWonHandoff'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -125,8 +124,11 @@ if (route.query[WON_HANDOFF_QUERY] === '1') {
   // that's still landing here and gets dropped.
   const router = useRouter()
   onMounted(() => {
-    const { [WON_HANDOFF_QUERY]: _flag, ...rest } = route.query
-    router.replace({ query: rest })
+    // A filter, not `const { [WON_HANDOFF_QUERY]: _, ...rest }`: unimport
+    // reads any name inside a `const {…}` pattern as a local declaration, so
+    // that destructure would stop WON_HANDOFF_QUERY being auto-imported at all.
+    const query = Object.fromEntries(Object.entries(route.query).filter(([key]) => key !== WON_HANDOFF_QUERY))
+    router.replace({ query })
   })
   const offerProject = (value: Deal | null | undefined) => {
     if (!value) return false
