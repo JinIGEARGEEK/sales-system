@@ -3,7 +3,8 @@ import { ADMIN, json, mockApi, signIn } from './support'
 
 // Company Tax ID / Branch Code / Postal Code (CrmCompanyTaxFields): tax ID
 // check-digit validation, the head-office label and autofill, the duplicate
-// warning (exact tax_id + branch_code lookup), and the detail save sending
+// warning (exact tax_id + branch_code lookup; shown as an error when the API
+// would reject the save), the numeric keypad hint, and the detail save sending
 // the whole record (a full PUT) with the tax ID stored as digits only.
 const VALID_TAX_ID = '0105512345671'
 const COMPANY = {
@@ -23,7 +24,12 @@ test.describe('Company tax fields', () => {
     await mockApi(page, {
       'GET /auth/me': route => json(route, ADMIN),
       'GET /companies/1': route => json(route, COMPANY),
-      'GET /companies': (route, url) => json(route, url.searchParams.get('tax_id') === VALID_TAX_ID ? [OTHER] : []),
+      // Honors branch_code like the real ?tax_id=&branch_code= filter.
+      'GET /companies': (route, url) => {
+        const branch = url.searchParams.get('branch_code')
+        const match = url.searchParams.get('tax_id') === VALID_TAX_ID && (!branch || branch === OTHER.branch_code)
+        return json(route, match ? [OTHER] : [])
+      },
       'PUT /companies/1': async (route) => {
         const body = route.request().postDataJSON()
         puts.push(body)
@@ -43,10 +49,13 @@ test.describe('Company tax fields', () => {
     expect(puts).toHaveLength(0)
 
     await taxId.fill('0-1055-12345-67-1')
+    await page.getByLabel('Branch Code').fill('00001')
+    await expect(page.getByTestId('company-tax-id-duplicate')).toHaveCount(0)
     await page.getByLabel('Branch Code').fill('00000')
     await expect(page.getByTestId('company-branch-label')).toHaveText('Head office')
     const warning = page.getByTestId('company-tax-id-duplicate')
     await expect(warning).toContainText('A company with this Tax ID and branch already exists')
+    await expect(page.getByTestId('company-tax-id-duplicate-blocked')).toContainText('Saving will be rejected')
     await expect(warning.getByRole('link', { name: 'Acme Holdings' })).toHaveAttribute('href', '/crm/companies/2')
 
     await page.getByLabel('Postal Code').fill('10500')
@@ -63,6 +72,9 @@ test.describe('Company tax fields', () => {
     await page.goto('/crm/companies/create')
     const branch = page.getByLabel('Branch Code')
     await expect(branch).toHaveValue('')
+    for (const label of ['Tax ID', 'Branch Code', 'Postal Code']) {
+      await expect(page.getByLabel(label)).toHaveAttribute('inputmode', 'numeric')
+    }
     await page.getByLabel('Tax ID').fill('0107537000017')
     await expect(branch).toHaveValue('00000')
     await expect(page.getByTestId('company-branch-label')).toHaveText('Head office')

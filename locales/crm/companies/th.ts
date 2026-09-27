@@ -8,7 +8,7 @@ export default {
     exportCsv: 'ส่งออก CSV',
     import: 'นำเข้าข้อมูล',
     importSuccess: 'นำเข้าบริษัท {companies} รายการ และผู้ติดต่อ {contacts} รายการสำเร็จ',
-    searchPlaceholder: 'ค้นหาด้วยชื่อหรือเว็บไซต์...',
+    searchPlaceholder: 'ค้นหาด้วยชื่อ เว็บไซต์ หรือเลขประจำตัวผู้เสียภาษี...',
     allIndustries: 'อุตสาหกรรมทั้งหมด',
     industryPlaceholder: 'อุตสาหกรรม',
     statusPlaceholder: 'สถานะ',
@@ -90,6 +90,7 @@ export default {
     branchNumber: 'สาขาที่ {code}',
     duplicateTitle: 'มีบริษัทที่ใช้เลขประจำตัวผู้เสียภาษีนี้อยู่แล้ว',
     duplicateBranchTitle: 'มีบริษัทที่ใช้เลขประจำตัวผู้เสียภาษีและสาขานี้อยู่แล้ว',
+    duplicateBlocked: 'ระบบจะไม่ให้บันทึก ให้แก้เลขประจำตัวผู้เสียภาษีหรือสาขา หรือไปแก้ไขบริษัทที่มีอยู่แทน',
   },
   detail: {
     pageTitle: 'รายละเอียดบริษัท',

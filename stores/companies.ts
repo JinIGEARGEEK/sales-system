@@ -83,10 +83,15 @@ export const useCompaniesStore = defineStore('companies', {
     },
     // Exact tax_id (+ branch_code, when given) match on the server — not the
     // capped `items` cache — for duplicate warnings and the import's dedupe.
-    // excludeId skips one Company (the one being edited).
+    // excludeId skips one Company (the one being edited). With no branch, a
+    // Company that also has no branch wins over one that has a branch: that's
+    // the pair the API treats as the same buyer (409), so it mustn't be
+    // missed behind another branch. The page size covers every branch of one
+    // tax ID in practice.
     async findByTaxId (taxId: string, branchCode?: string, excludeId?: number): Promise<Company | null> {
-      const { items } = await this.fetchList({ tax_id: taxId, branch_code: branchCode, per_page: 2 })
-      return items.find(c => c.id !== excludeId) ?? null
+      const { items } = await this.fetchList({ tax_id: taxId, branch_code: branchCode, per_page: 50 })
+      const others = items.filter(c => c.id !== excludeId)
+      return (branchCode ? null : others.find(c => !c.branch_code)) ?? others[0] ?? null
     },
     async add (company: Omit<Company, 'id'>): Promise<Company> {
       const { $api } = useNuxtApp()

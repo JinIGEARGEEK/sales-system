@@ -21,14 +21,23 @@ export const isValidThaiTaxId = (value: string) => {
 
 export const isFiveDigitCode = (value: string) => /^\d{5}$/.test(value)
 
-// Warns (never blocks) when another Company already has the typed tax_id
-// and branch_code — the same buyer entered twice. Different branches of one
-// tax ID are legitimately separate Companies, so with a branch typed only
-// that exact branch counts; with no branch, any Company with the tax ID does.
+// Looks up another Company with the typed tax_id and branch_code — the same
+// buyer entered twice. Different branches of one tax ID are legitimately
+// separate Companies, so with a branch typed only that exact branch counts;
+// with no branch, any Company with the tax ID does (a softer hint), though
+// findByTaxId returns a branchless one first so a blocking match isn't missed.
 // excludeId skips the Company being edited.
+//
+// blocksSave is true when the match has exactly this pair (a blank branch
+// matching a blank one): the API rejects that save with 409, so the form
+// shows it as an error rather than a warning. Otherwise it's advisory. The
+// API only checks a pair that changed, so a record that already shared its
+// pair still saves; this warning can't tell, so it errs on the side of
+// showing it.
 export function useCompanyTaxIdDuplicate (taxId: Ref<string>, branchCode: Ref<string>, excludeId?: number) {
   const companiesStore = useCompaniesStore()
   const duplicate = ref<Company | null>(null)
+  const blocksSave = computed(() => !!duplicate.value && (duplicate.value.branch_code || '') === (branchCode.value || ''))
   let requestId = 0
   let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -52,5 +61,5 @@ export function useCompanyTaxIdDuplicate (taxId: Ref<string>, branchCode: Ref<st
 
   onScopeDispose(() => clearTimeout(timer))
 
-  return { duplicate }
+  return { duplicate, blocksSave }
 }
