@@ -400,6 +400,11 @@ interface Company {
   legal_name?: string | null
   address?: string | null
   tax_id?: string | null
+  // Added 2026-09-27 (accounting sync): each exactly 5 digits when set
+  // (branch_code "00000" = head office). A PUT that omits either key keeps
+  // the saved value; explicit null/"" clears it.
+  branch_code?: string | null
+  postal_code?: string | null
   created_at: string
   updated_at: string
   // Server-computed (FR-CRM-108, added 2026-09-04): MAX(activities.created_at)
@@ -413,10 +418,10 @@ interface Company {
 
 | Method | Path | Status | Description |
 |---|---|---|---|
-| `GET` | `/companies` | 🟢 | Filters: `status`, `tag`, `industry`, `search` (name). Backs `pages/crm/companies/index.vue`. |
+| `GET` | `/companies` | 🟢 | Filters: `status`, `tag`, `industry`, `search` (name), `tax_id` / `branch_code` (exact match, added 2026-09-27). Backs `pages/crm/companies/index.vue`. |
 | `POST` | `/companies` | 🟢 | Create. |
 | `GET` | `/companies/:id` | 🟢 | Single company — `pages/crm/companies/[id].vue`'s Overview tab. |
-| `PUT` | `/companies/:id` | 🟢 | Update. |
+| `PUT` | `/companies/:id` | 🟢 | Update (full replace, so resend every field). Exception, added 2026-09-27: `branch_code`/`postal_code` keep their saved value when the key is absent; `null`/`""` clears. The Company forms send both anyway. |
 | `DELETE` | `/companies/:id` | 🟢 | Soft-delete (sets `deleted_at`/`deleted_by`, same pattern as Leads/Deals, §1.6) — never a hard delete, since Deals/Contacts/Payments reference `company_id`. Note this is distinct from the `status: 'active' \| 'archived'` field above, which is untouched by Delete and still exists as its own toggle — recoverable via `/trash` + `/:id/restore` below. |
 | `GET` | `/companies/trash` | 🟢 | Admin/Sales Manager only. Paginated list of soft-deleted Companies (same envelope as `GET /companies`). Backs `pages/admin/trash.vue`. **Added 2026-09-10**: `?search=` (case-insensitive ILIKE, matches `name`) — `utils.GenericTrash` (`internal/utils/trash.go`), shared by every `/*/trash` endpoint, now takes optional `searchColumns` naming which column(s) the param matches against; Deal passes `"title"`, Lead/Company/Contact pass `"name"`. Omitted entirely on Prospect/User's own `Trash` callers (no search box for those on the frontend yet), leaving `search` a no-op there exactly as before this param existed. Frontend: one shared search box across all four tabs on `pages/admin/trash.vue`, via each store's `fetchTrash(page, perPage, search?)` (`stores/helpers.ts`'s `createTrashActions`). |
 | `POST` | `/companies/:id/restore` | 🟢 | Admin/Sales Manager only. Clears `deleted_at`/`deleted_by`. |

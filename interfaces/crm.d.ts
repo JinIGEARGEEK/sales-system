@@ -108,6 +108,12 @@ interface Company {
   legal_name?: string | null
   address?: string | null
   tax_id?: string | null
+  // Buyer branch ("00000" = head office) and postal code, each 5 digits —
+  // needed on full tax invoices (added 2026-09-27 for the accounting sync).
+  // The backend keeps both when a PUT omits them, but the forms send them
+  // anyway, like every other field.
+  branch_code?: string | null
+  postal_code?: string | null
   // Present only on trash-listing responses (GET /companies/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date

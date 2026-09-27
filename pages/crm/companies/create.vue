@@ -70,6 +70,24 @@
             :placeholder="t('crm.companies.create.taxIdPlaceholder')"
             name="tax_id"
           />
+          <InputText
+            v-model="form.branch_code"
+            :label="t('crm.companies.create.branchCode')"
+            :placeholder="t('crm.companies.create.branchCodePlaceholder')"
+            name="branch_code"
+            rules="digits:5"
+            maxlength="5"
+            data-cy="company-branch-code"
+          />
+          <InputText
+            v-model="form.postal_code"
+            :label="t('crm.companies.create.postalCode')"
+            :placeholder="t('crm.companies.create.postalCodePlaceholder')"
+            name="postal_code"
+            rules="digits:5"
+            maxlength="5"
+            data-cy="company-postal-code"
+          />
           <div class="md:col-span-2">
             <InputTextarea
               v-model="form.address"
@@ -189,6 +207,8 @@ const form = reactive({
   legal_name: '',
   address: '',
   tax_id: '',
+  branch_code: '',
+  postal_code: '',
   notes: '',
 })
 
@@ -221,6 +241,8 @@ const onSubmit = guard(async () => {
       legal_name: form.legal_name || null,
       address: form.address || null,
       tax_id: form.tax_id || null,
+      branch_code: form.branch_code || null,
+      postal_code: form.postal_code || null,
       created_at: new Date(),
       updated_at: new Date(),
       last_activity_at: null,
