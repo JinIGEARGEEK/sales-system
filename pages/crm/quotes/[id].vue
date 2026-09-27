@@ -7,6 +7,14 @@
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
             <ButtonPrimary
+              :label="t('crm.quotes.detail.duplicate')"
+              outline
+              icon="material-symbols:content-copy-outline"
+              :loading="duplicatingId !== null"
+              data-cy="quote-duplicate"
+              @click="duplicateQuote(quote.id)"
+            />
+            <ButtonPrimary
               :label="t('crm.quotes.detail.saveAsTemplate')"
               outline
               icon="material-symbols:bookmark-add-outline"
@@ -396,6 +404,10 @@ const onSave = guard(async () => {
 })
 
 const onSaveClick = () => validateThenSubmit(onSave)
+
+// Copies the SAVED quote — unsaved edits here stay behind (the leave guard
+// still asks before navigating to the copy).
+const { duplicatingId, duplicateQuote } = useDuplicateQuote()
 
 const saveTemplateOpen = ref(false)
 

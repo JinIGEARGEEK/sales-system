@@ -73,6 +73,8 @@ export default {
     sendConfirmBody: 'This marks the quote as Sent. Make sure you\'ve delivered it to the customer through your usual channel — this app doesn\'t email it for you.',
     sendSuccess: 'Quote marked as sent',
     saveAsTemplate: 'Save as Template',
+    duplicate: 'Duplicate',
+    duplicateSuccess: 'Quote duplicated as {number}',
     saveAsTemplateTitle: 'Save as Quote Template',
     saveAsTemplateSuccess: 'Quote template saved',
     templateName: 'Template Name',

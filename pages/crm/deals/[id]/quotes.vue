@@ -62,6 +62,17 @@
                   @click="navigateTo(`/crm/quotes/${quote.id}`)"
                 />
                 <UButton
+                  icon="material-symbols:content-copy-outline"
+                  variant="ghost"
+                  color="neutral"
+                  size="xs"
+                  :aria-label="t('crm.quotes.detail.duplicate')"
+                  :loading="duplicatingId === quote.id"
+                  :disabled="duplicatingId !== null"
+                  :data-cy="`quote-duplicate-${quote.id}`"
+                  @click="onDuplicateQuote(quote.id)"
+                />
+                <UButton
                   icon="material-symbols:download"
                   variant="ghost"
                   color="neutral"
@@ -243,6 +254,8 @@ const {
     if (updated.status === 'accepted') offerDealValue(updated, deal.value)
   },
 })
+
+const { duplicatingId, duplicateQuote: onDuplicateQuote } = useDuplicateQuote()
 
 const onExportQuotePdf = (quoteId: number) => downloadPdfBlob(`/quotes/${quoteId}/export-pdf`, `quote-${quoteId}.pdf`)
 </script>
