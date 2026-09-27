@@ -4,8 +4,8 @@
 // identical shapes (only the per-test `overrides` differed) — import from
 // here instead of re-declaring a local copy. Add a new shared builder here
 // only once a shape is actually reused by a second spec file; a one-off
-// factory used by a single spec should stay local to it (e.g. `makeQuote`,
-// `makePayment`, `makeEntry` in their respective spec files today).
+// factory used by a single spec should stay local to it (e.g. `makePayment`,
+// `makeEntry` in their respective spec files today).
 
 export const makeDeal = (overrides: Partial<Deal> = {}): Deal => ({
   id: 1,
@@ -39,6 +39,26 @@ export const makeContract = (overrides: Partial<Contract> = {}): Contract => ({
   created_at: new Date('2026-01-01T00:00:00.000Z'),
   ...overrides,
 } as Contract)
+
+export const makeQuote = (overrides: Partial<Quote> = {}): Quote => ({
+  id: 1,
+  deal_id: 1,
+  items: [{ description: 'Item', qty: 1, price: 100 }],
+  scope_of_work: '',
+  validity_date: null,
+  status: 'draft',
+  reference_number: null,
+  issue_date: null,
+  credit_days: 0,
+  price_type: 'excl_tax',
+  vat_enabled: false,
+  wht_enabled: false,
+  wht_rate: 0,
+  discount_total: 0,
+  notes: null,
+  internal_notes: null,
+  ...overrides,
+} as Quote)
 
 // Wraps `data` in the API's standard paginated envelope, as an Axios-shaped
 // `{ data }` response — pass `extra` to override any envelope field (e.g. a

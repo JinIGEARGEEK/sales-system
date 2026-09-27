@@ -247,7 +247,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -355,8 +355,7 @@ const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadI
 
 const leadActivity = computed(() => activitiesStore.forRelated('lead', leadId))
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('lead', leadId, 'crm.leads.detail.addActivitySuccess')
-const { tasks: leadTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
-const leadOverdueTaskCount = computed(() => leadTasks.value.filter(task => isTaskOverdue(task)).length)
+const { tasks: leadTasks, overdueCount: leadOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
 

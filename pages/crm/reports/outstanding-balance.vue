@@ -42,7 +42,7 @@
             />
           </div>
           <span v-if="results.length > 0" class="ml-auto text-xs text-(--color-gray)">
-            {{ t('crm.reports.outstandingBalance.totalOutstanding', { amount: `${t('global.currencySymbol')}${priceFormatCompact(totalOutstanding)}` }) }}
+            {{ t('crm.reports.outstandingBalance.totalOutstanding', { amount: currencyCompact(totalOutstanding) }) }}
           </span>
         </div>
       </UCard>
@@ -64,7 +64,7 @@
             <UBadge size="sm" :color="agingBucketColor(bucket.bucket)" variant="subtle">{{ t(`crm.reports.outstandingBalance.agingBucket.${bucket.bucket}`) }}</UBadge>
             <span class="text-xs text-(--color-gray)">{{ t('crm.reports.outstandingBalance.dealCount', { count: bucket.count }) }}</span>
           </div>
-          <p class="mt-2 text-lg font-semibold" :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.outstanding) }}</p>
+          <p class="mt-2 text-lg font-semibold" :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ currencyCompact(bucket.outstanding) }}</p>
         </button>
       </div>
 
@@ -99,7 +99,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, toBadge, dateFormat } = useFormatter()
+const { currencyCompact, toBadge, dateFormat } = useFormatter()
 const { companyName } = useCompanyName()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
@@ -128,9 +128,8 @@ const clearFilters = () => {
 
 // Client-side: the API has no bucket filter, and the summary tiles above
 // always show every bucket of the current server-side filter.
-type AgingBucketKey = OutstandingBalanceRow['aging_bucket']
-const bucketFilter = useQuerySyncedRef<AgingBucketKey | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
-const toggleBucket = (bucket: AgingBucketKey) => {
+const bucketFilter = useQuerySyncedRef<AgingBucket | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
+const toggleBucket = (bucket: AgingBucket) => {
   bucketFilter.value = bucketFilter.value === bucket ? 'all' : bucket
 }
 
@@ -178,30 +177,33 @@ const agingBadge = (row: OutstandingBalanceRow) => {
   return toBadge(t('crm.reports.outstandingBalance.aging.none'), 'neutral')
 }
 
-const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
 
 const rows = computed(() => results.value
   .filter(row => bucketFilter.value === 'all' || row.aging_bucket === bucketFilter.value)
-  .map(row => ({
-    ...row,
-    company_name: companyName(row.company_name),
-    dealValueDisplay: money(row.deal_value),
-    // Receivable incl. VAT from the latest Accepted Quote, else the (pre-VAT)
-    // deal value — the second line says which, since they aren't comparable.
-    receivableCell: {
-      title: money(row.receivable_amount ?? row.deal_value),
-      description: row.receivable_source === 'quote'
-        ? t('crm.reports.outstandingBalance.receivableSource.quote')
-        : t('crm.reports.outstandingBalance.receivableSource.dealValue'),
-    },
-    paidAmountDisplay: money(row.paid_amount),
-    whtAmountDisplay: row.wht_amount ? money(row.wht_amount) : '-',
-    outstandingAmountDisplay: money(row.outstanding_amount),
-    oldestOverdueDisplay: row.oldest_overdue_due_date ? dateFormat(row.oldest_overdue_due_date.slice(0, 10)) : '-',
-    daysOverdueDisplay: row.days_overdue > 0 ? t('crm.reports.outstandingBalance.daysOverdueValue', { days: row.days_overdue }) : '-',
-    agingBucketBadge: toBadge(t(`crm.reports.outstandingBalance.agingBucket.${row.aging_bucket ?? 'current'}`), agingBucketColor(row.aging_bucket ?? 'current')),
-    agingBadge: agingBadge(row),
-  })))
+  .map((row) => {
+    // A date-only field — dateFormat on the bare YYYY-MM-DD can't shift the day.
+    const oldestOverdue = toDateOnly(row.oldest_overdue_due_date)
+    return {
+      ...row,
+      company_name: companyName(row.company_name),
+      dealValueDisplay: currencyCompact(row.deal_value),
+      // Receivable incl. VAT from the latest Accepted Quote, else the (pre-VAT)
+      // deal value — the second line says which, since they aren't comparable.
+      receivableCell: {
+        title: currencyCompact(row.receivable_amount ?? row.deal_value),
+        description: row.receivable_source === 'quote'
+          ? t('crm.reports.outstandingBalance.receivableSource.quote')
+          : t('crm.reports.outstandingBalance.receivableSource.dealValue'),
+      },
+      paidAmountDisplay: currencyCompact(row.paid_amount),
+      whtAmountDisplay: row.wht_amount ? currencyCompact(row.wht_amount) : '-',
+      outstandingAmountDisplay: currencyCompact(row.outstanding_amount),
+      oldestOverdueDisplay: oldestOverdue ? dateFormat(oldestOverdue) : '-',
+      daysOverdueDisplay: row.days_overdue > 0 ? t('crm.reports.outstandingBalance.daysOverdueValue', { days: row.days_overdue }) : '-',
+      agingBucketBadge: toBadge(t(`crm.reports.outstandingBalance.agingBucket.${row.aging_bucket ?? 'current'}`), agingBucketColor(row.aging_bucket ?? 'current')),
+      agingBadge: agingBadge(row),
+    }
+  }))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)
 

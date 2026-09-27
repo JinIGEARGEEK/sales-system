@@ -9,29 +9,8 @@ type QuoteAmounts = Pick<Quote, 'items' | 'discount_total'>
 // taxableAmount (and so the backend's ComputeQuoteTotals), rounded to satang.
 export const quoteRevenueAmount = (quote: QuoteAmounts) => {
   const { taxableAmount } = useQuoteTotals(quote.items ?? [], quote.discount_total ?? 0, false, false, 0)
-  return Math.round(taxableAmount * 100) / 100
+  return roundSatang(taxableAmount)
 }
-
-// PUT /deals/:id replaces every mapped field (CLAUDE.md, design-system.md §8),
-// and Deal has no narrow "value only" endpoint — so a value change resends the
-// whole current record with just `value` swapped.
-export const fullDealUpdatePayload = (deal: Deal, changes: Partial<Deal> = {}): Partial<Omit<Deal, 'id'>> => ({
-  company_id: deal.company_id,
-  contact_id: deal.contact_id,
-  title: deal.title,
-  value: deal.value,
-  stage: deal.stage,
-  status: deal.status,
-  probability: deal.probability,
-  lost_reason: deal.lost_reason,
-  forecast_category: deal.forecast_category,
-  expected_close_date: deal.expected_close_date,
-  assigned_to: deal.assigned_to,
-  channel: deal.channel,
-  business_unit: deal.business_unit,
-  business_unit_item: deal.business_unit_item,
-  ...changes,
-})
 
 // After a Quote moves to Accepted (quote editor Save, or the Deal's Quotes
 // tab), offer to bring the Deal's value in line with it. Bind `pending` to a
@@ -73,3 +52,5 @@ export const useQuoteDealValueSync = () => {
 
   return { pending, offer, confirm, dismiss }
 }
+
+export type QuoteDealValueSync = ReturnType<typeof useQuoteDealValueSync>

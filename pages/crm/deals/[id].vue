@@ -49,20 +49,12 @@
     <!-- The one Create Project prompt for this Deal — the Overview save and
          the Contracts tab's signed-contract flow reach it through the
          injected useDealWonHandoff instance, so it never opens twice. -->
-    <CrmAddProjectModal
-      v-model:open="projectModal"
-      :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="handoffDeal?.title ?? deal?.title"
-      :default-target-end-date="handoffDeal?.expected_close_date ?? deal?.expected_close_date"
-      :description="t('crm.deals.detail.createProjectModalBody')"
-      @submit="onCreateProject"
-    />
+    <CrmWonHandoffProjectModal :handoff="wonHandoff" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -72,7 +64,6 @@ const route = useRoute()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
-const tasksStore = useTasksStore()
 const pipelineStagesStore = usePipelineStagesStore()
 
 const { dealId, deal, dealPending } = useCurrentDeal()
@@ -107,11 +98,9 @@ const onTabChange = (value: string | number) => {
   navigateTo(value === 'overview' ? `/crm/deals/${dealId}` : `/crm/deals/${dealId}/${value}`)
 }
 
-const dealTasks = computed(() => tasksStore.forRelated('deal', dealId))
 // The overdue badge on the Tasks tab needs this Deal's tasks before that tab
 // is opened (the tab's own useTaskList shares the same request).
-tasksStore.fetchForRelated('deal', dealId).catch(notifyApiError)
-const dealOverdueTaskCount = computed(() => dealTasks.value.filter(task => isTaskOverdue(task)).length)
+const { overdueCount: dealOverdueTaskCount } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
 const tabItems = computed(() => [
   { label: t('crm.deals.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.deals.detail.tabs.quotes'), value: 'quotes' },
@@ -125,7 +114,33 @@ const tabItems = computed(() => [
 const { stageBadgeColor: stageColorFor } = useDealStageColor()
 const stageBadgeColor = computed(() => deal.value ? stageColorFor(deal.value.stage) : 'neutral')
 
-const { handoffDeal, projectModal, markWon, onCreateProject } = provideDealWonHandoff()
+const wonHandoff = provideDealWonHandoff()
+const { markWon, promptCreateProject } = wonHandoff
+
+// A Lead dropped into Won on the board lands here with ?won_handoff=1 (the
+// board already created the follow-up task) — offer Create Project once.
+if (route.query[WON_HANDOFF_QUERY] === '1') {
+  // Stripped once mounted — a replace during setup races the navigation
+  // that's still landing here and gets dropped.
+  const router = useRouter()
+  onMounted(() => {
+    // A filter, not `const { [WON_HANDOFF_QUERY]: _, ...rest }`: unimport
+    // reads any name inside a `const {…}` pattern as a local declaration, so
+    // that destructure would stop WON_HANDOFF_QUERY being auto-imported at all.
+    const query = Object.fromEntries(Object.entries(route.query).filter(([key]) => key !== WON_HANDOFF_QUERY))
+    router.replace({ query })
+  })
+  const offerProject = (value: Deal | null | undefined) => {
+    if (!value) return false
+    if (value.status === 'won') promptCreateProject(value)
+    return true
+  }
+  if (!offerProject(deal.value)) {
+    const stop = watch(deal, (value) => {
+      if (offerProject(value)) stop()
+    })
+  }
+}
 const notifyStageChangeError = useStageChangeErrorNotifier()
 
 const markWonConfirmOpen = ref(false)

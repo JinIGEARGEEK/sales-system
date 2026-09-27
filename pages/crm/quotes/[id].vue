@@ -203,16 +203,7 @@
         @confirm="onConfirmSend"
       />
 
-      <CrmConfirmDeleteModal
-        :open="pendingDealValue !== null"
-        :title="t('crm.deals.detail.dealValueUpdateTitle')"
-        :body="pendingDealValue ? t('crm.deals.detail.dealValueUpdateBody', { from: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.from)}`, to: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.to)}` }) : ''"
-        :cancel-label="t('crm.deals.detail.dealValueUpdateDecline')"
-        :confirm-label="t('crm.deals.detail.dealValueUpdateConfirm')"
-        confirm-color="primary"
-        @update:open="(value: boolean) => { if (!value) dismissDealValue() }"
-        @confirm="confirmDealValue"
-      />
+      <CrmDealValueSyncModal :sync="dealValueSync" />
     </div>
 
     <DetailSkeleton v-else-if="recordPending" />
@@ -242,7 +233,7 @@ if (justCreated.value) {
 }
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { pending: recordPending } = useRecordPending()
+const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { priceFormat } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
@@ -268,13 +259,14 @@ const contact = computed(() => deal.value ? contactsStore.items.find(c => c.id =
 // pick in, and adding one wasn't part of this rebuild's scope.
 const dealProject = computed(() => deal.value ? projectsStore.items.find(p => p.deal_id === deal.value!.id) ?? null : null)
 
-onMounted(async () => {
+// The page renders once both the Quote and its Deal are in. Resolves false
+// when the Quote itself couldn't be loaded.
+const loadQuoteAndDeal = async () => {
   try {
     if (!quote.value) await quotesStore.fetchOne(quoteId)
   } catch (err) {
     notifyApiError(err)
-    recordPending.value = false
-    return
+    return false
   }
   // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket
   // fetchAll() — those stores' fetchAll caches are capped at 200 rows,
@@ -284,8 +276,13 @@ onMounted(async () => {
   if (!dealsStore.items.some(d => d.id === quote.value!.deal_id)) {
     await dealsStore.fetchOne(quote.value!.deal_id).catch(notifyApiError)
   }
-  // The page renders once both the Quote and its Deal are in.
-  recordPending.value = false
+  return true
+}
+
+onMounted(async () => {
+  const loaded = loadQuoteAndDeal()
+  trackRecord(loaded)
+  if (!(await loaded)) return
   if (deal.value) {
     if (!companiesStore.items.some(c => c.id === deal.value!.company_id)) {
       companiesStore.fetchOne(deal.value.company_id).catch(notifyApiError)
@@ -388,7 +385,7 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
 
 // Moving the Quote to Accepted offers to update the Deal's value to match it
 // (pre-VAT — see quoteRevenueAmount).
-const { pending: pendingDealValue, offer: offerDealValue, confirm: confirmDealValue, dismiss: dismissDealValue } = useQuoteDealValueSync()
+const dealValueSync = useQuoteDealValueSync()
 
 const onSave = guard(async () => {
   if (!quote.value) return
@@ -397,7 +394,7 @@ const onSave = guard(async () => {
     const updated = await quotesStore.update(quote.value.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
-    if (!wasAccepted && updated.status === 'accepted') offerDealValue(updated, deal.value)
+    if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

@@ -76,8 +76,8 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // Awaits the caller's save, so `loading` spins Save until it lands, the
 // guard turns away a second click meanwhile, and a failed save (handler
 // resolves `false` or throws) keeps the dialog open.
-const emitSubmit = useAwaitableEmit('submit')
-const emitUpdate = useAwaitableEmit('update')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update')
 const onSubmit = guard(async () => {
   const shared = {
     title: form.title,
@@ -86,20 +86,18 @@ const onSubmit = guard(async () => {
     priority: form.priority as TaskPriority,
     assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
   }
-  let results: unknown[]
+  // A handler resolves `false` when its save failed (it has already shown
+  // the error), so the dialog stays open with the form intact.
   if (props.task) {
-    results = await emitUpdate(shared)
+    await updateAndClose(shared)
   } else {
-    results = await emitSubmit({
+    await submitAndClose({
       ...shared,
       ...(props.showRelatedPicker
         ? { related_type: form.related_type as TaskRelatedType, related_id: Number(form.related_id) }
         : {}),
     })
   }
-  // A handler resolves `false` when its save failed (it has already shown
-  // the error), so the dialog stays open with the form intact.
-  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

@@ -40,8 +40,8 @@
         {{ t('crm.overviewPipeline.summary.openPipeline') }}
       </p>
       <p class="flex flex-wrap items-baseline gap-x-2">
-        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ money(summary.open_pipeline.value) }}</span>
-        <span class="text-xs text-(--color-gray) tabular-nums">{{ t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(summary.open_pipeline.count), value: money(summary.open_pipeline.weighted_value) }) }}</span>
+        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ currencyCompact(summary.open_pipeline.value) }}</span>
+        <span class="text-xs text-(--color-gray) tabular-nums">{{ t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(summary.open_pipeline.count), value: currencyCompact(summary.open_pipeline.weighted_value) }) }}</span>
       </p>
       <UTooltip :text="t('crm.overviewPipeline.summary.weightedShare')">
         <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-(--color-light-gray-2)" role="presentation">
@@ -62,8 +62,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { numberFormat, priceFormatCompact } = useFormatter()
-const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
+const { numberFormat, currencyCompact } = useFormatter()
 
 // Each step after the first says how the previous step's new records
 // converted into it — a cohort figure, so it can't exceed 100%.
@@ -76,7 +75,7 @@ const steps = computed<Step[]>(() => {
     { key: 'prospect', label: t('crm.overviewPipeline.summary.newProspects'), color: OVERVIEW_ZONES.prospect.color, icon: OVERVIEW_ZONES.prospect.icon, ...props.summary.new_prospects, extra: '' },
     { key: 'lead', label: t('crm.overviewPipeline.summary.newLeads'), color: OVERVIEW_ZONES.lead.color, icon: OVERVIEW_ZONES.lead.icon, ...props.summary.new_leads, extra: '', cohort: { key: 'cohortProspectToLead', ...conversion.prospect_to_lead } },
     { key: 'deal', label: t('crm.overviewPipeline.summary.newDeals'), color: OVERVIEW_ZONES.deal.color, icon: OVERVIEW_ZONES.deal.icon, ...props.summary.new_deals, extra: '', cohort: { key: 'cohortLeadToDeal', ...conversion.lead_to_deal } },
-    { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', icon: 'material-symbols:trophy-outline', current: props.summary.won.current, previous: props.summary.won.previous, extra: money(props.summary.won.value), cohort: { key: 'cohortDealToWon', ...conversion.deal_to_won } },
+    { key: 'won', label: t('crm.overviewPipeline.summary.won'), color: 'var(--color-success-toast)', icon: 'material-symbols:trophy-outline', current: props.summary.won.current, previous: props.summary.won.previous, extra: currencyCompact(props.summary.won.value), cohort: { key: 'cohortDealToWon', ...conversion.deal_to_won } },
   ]
 })
 

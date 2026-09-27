@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { apiResponse } from '../factories'
+import { apiResponse, makeQuote } from '../factories'
 
 // stores/quotes.ts calls useNuxtApp().$api directly — same mocking approach as
 // tests/stores/deals.nuxt.spec.ts.
@@ -11,26 +11,6 @@ const mockApi = {
   delete: vi.fn(),
 }
 mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
-
-const makeQuote = (overrides: Partial<Quote> = {}): Quote => ({
-  id: 1,
-  deal_id: 1,
-  items: [{ description: 'Item', qty: 1, price: 100 }],
-  scope_of_work: '',
-  validity_date: null,
-  status: 'draft',
-  reference_number: null,
-  issue_date: null,
-  credit_days: 0,
-  price_type: 'excl_tax',
-  vat_enabled: false,
-  wht_enabled: false,
-  wht_rate: 0,
-  discount_total: 0,
-  notes: null,
-  internal_notes: null,
-  ...overrides,
-} as Quote)
 
 describe('stores/quotes', () => {
   beforeEach(() => {

@@ -146,16 +146,7 @@
       @confirm="confirmQuoteStatusChange"
     />
 
-    <CrmConfirmDeleteModal
-      :open="pendingDealValue !== null"
-      :title="t('crm.deals.detail.dealValueUpdateTitle')"
-      :body="pendingDealValue ? t('crm.deals.detail.dealValueUpdateBody', { from: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.from)}`, to: `${t('global.currencySymbol')}${priceFormat(pendingDealValue.to)}` }) : ''"
-      :cancel-label="t('crm.deals.detail.dealValueUpdateDecline')"
-      :confirm-label="t('crm.deals.detail.dealValueUpdateConfirm')"
-      confirm-color="primary"
-      @update:open="(value: boolean) => { if (!value) dismissDealValue() }"
-      @confirm="confirmDealValue"
-    />
+    <CrmDealValueSyncModal :sync="dealValueSync" />
 
     <CrmConfirmDeleteModal
       v-model:open="open"
@@ -237,7 +228,7 @@ const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o =>
 
 // Accepting a quote offers to update the Deal's value to match it (pre-VAT —
 // see quoteRevenueAmount).
-const { pending: pendingDealValue, offer: offerDealValue, confirm: confirmDealValue, dismiss: dismissDealValue } = useQuoteDealValueSync()
+const dealValueSync = useQuoteDealValueSync()
 
 const {
   pending: pendingStatusChange,
@@ -251,7 +242,7 @@ const {
     // updateStatus rebuilds the full PUT payload from the loaded Quote.
     const updated = await quotesStore.updateStatus(quote.id, status)
     success(t('crm.deals.detail.updateQuoteStatusSuccess'))
-    if (updated.status === 'accepted') offerDealValue(updated, deal.value)
+    if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
   },
 })
 

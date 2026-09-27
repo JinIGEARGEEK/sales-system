@@ -177,7 +177,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { isTaskOverdue, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -349,6 +349,7 @@ const onConvert = async () => {
 
 const {
   tasks: prospectTasks,
+  overdueCount: prospectOverdueTaskCount,
   addTaskOpen,
   editingTask,
   openAddTask,
@@ -357,5 +358,4 @@ const {
   onUpdateTask,
   onToggleTask,
 } = useTaskList('prospect', prospectId, 'crm.prospects.detail.addTaskSuccess', 'crm.prospects.detail.editTaskSuccess')
-const prospectOverdueTaskCount = computed(() => prospectTasks.value.filter(task => isTaskOverdue(task)).length)
 </script>

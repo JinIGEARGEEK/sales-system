@@ -32,6 +32,12 @@
               name="end_date"
               data-cy="contract-end-date"
             />
+            <!-- Beside the field it clears, like the Customer Product
+                 renewal date — the footer holds only Cancel + Save
+                 (ux-ui-guidelines/modal.md). -->
+            <UButton v-if="form.end_date" class="mt-1 px-0" variant="link" size="xs" data-cy="contract-clear-end-date" @click="form.end_date = ''">
+              {{ t('crm.contracts.components.addContractModal.clearEndDate') }}
+            </UButton>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.contracts.components.addContractModal.endDateHint') }}</p>
           </div>
         </div>
@@ -39,13 +45,6 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary
-          v-if="record && form.end_date"
-          :label="t('crm.contracts.components.addContractModal.clearEndDate')"
-          outline
-          class="mr-auto"
-          @click="form.end_date = ''"
-        />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.cancel')" cancel data-cy="contract-cancel" @click="onUpdateOpen(false)" />
         <ButtonPrimary :label="t('crm.contracts.components.addContractModal.save')" :loading="loading" data-cy="contract-save" @click="onSave" />
       </div>
@@ -102,15 +101,13 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const emitSubmit = useAwaitableEmit('submit')
-const emitUpdate = useAwaitableEmit('update')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update')
 const onSubmit = guard(async () => {
   const quoteId = form.quote_id === '' ? undefined : Number(form.quote_id)
   const endDate = form.end_date || null
-  const results = props.record
-    ? await emitUpdate({ quote_id: quoteId, end_date: endDate })
-    : await emitSubmit({ status: form.status, quote_id: quoteId, end_date: endDate })
-  if (!results.includes(false)) onUpdateOpen(false)
+  if (props.record) await updateAndClose({ quote_id: quoteId, end_date: endDate })
+  else await submitAndClose({ status: form.status, quote_id: quoteId, end_date: endDate })
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

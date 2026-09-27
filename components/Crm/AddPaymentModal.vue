@@ -142,11 +142,11 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const emitSubmit = useAwaitableEmit('submit')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
   const wht = Number(form.wht_amount) || 0
   const documentNumber = form.document_number.trim()
-  const results = await emitSubmit({
+  await submitAndClose({
     amount: Number(form.amount),
     paid_at: new Date(form.paid_at),
     method: form.method,
@@ -156,7 +156,6 @@ const onSubmit = guard(async () => {
     document_number: documentNumber || null,
     installment_id: form.installment_id === NO_INSTALLMENT ? null : Number(form.installment_id),
   })
-  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

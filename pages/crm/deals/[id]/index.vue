@@ -149,7 +149,8 @@ import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, 
 
 const { t } = useI18n()
 
-const { success, error } = useNotify()
+const { success } = useNotify()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
@@ -336,18 +337,9 @@ const onSave = guard(async () => {
   if (!deal.value) return
   const wasWon = deal.value.status === 'won'
   try {
-    const updated = await dealsStore.update(deal.value.id, {
-      // Company/Contact/Channel aren't editable on this form (Company/Contact
-      // are fixed at creation, shown read-only in the Linked Records card;
-      // Channel has no field here either) — but the Update endpoint replaces
-      // every field from the request body (it isn't a true partial update,
-      // same as Lead's own onMarkSql note), and company_id/contact_id are
-      // hard-required server-side. Omitting them here previously made every
-      // save on this page 422 outright, and omitting channel silently wiped
-      // it back to empty on every successful save.
-      company_id: deal.value.company_id,
-      contact_id: deal.value.contact_id,
-      channel: deal.value.channel,
+    // Company/Contact/Channel aren't editable here but the full-record PUT
+    // needs them, so they come from the current record.
+    const updated = await dealsStore.update(deal.value.id, fullDealUpdatePayload(deal.value, {
       title: form.title,
       value: Number(form.value) || 0,
       stage: form.stage as DealStage,
@@ -359,16 +351,12 @@ const onSave = guard(async () => {
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-    })
+    }))
     markClean()
     success(t('crm.deals.detail.updateSuccess'))
     if (!wasWon && updated.status === 'won') await onDealWon(updated)
   } catch (err) {
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   }
 })
 </script>

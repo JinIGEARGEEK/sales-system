@@ -62,7 +62,7 @@
           <template v-if="selection.zone === 'deal'">
             <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.value') }}</dt>
             <dd class="tabular-nums">
-              <span class="font-semibold">{{ t('global.currencySymbol') }}{{ priceFormat(selection.card.value) }}</span>
+              <span class="font-semibold">{{ currency(selection.card.value) }}</span>
               <span v-if="selection.card.probability !== null" class="text-(--color-dark-gray)"> · {{ t('crm.overviewPipeline.panel.probability', { value: selection.card.probability }) }}</span>
             </dd>
           </template>
@@ -138,14 +138,7 @@
     @confirm="onConfirmConvertProspect"
   />
   <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLost" />
-  <CrmAddProjectModal
-    v-model:open="projectModal"
-    :title="t('crm.deals.detail.createProjectModalTitle')"
-    :default-name="handoffDeal?.title"
-    :default-target-end-date="handoffDeal?.expected_close_date"
-    :description="t('crm.deals.detail.createProjectModalBody')"
-    @submit="onCreateProject"
-  />
+  <CrmWonHandoffProjectModal :handoff="wonHandoff" />
 </template>
 
 <script setup lang="ts">
@@ -168,8 +161,9 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { priceFormat, dateTimeFormat } = useFormatter()
+const { currency, dateTimeFormat } = useFormatter()
 const { success, error } = useNotify()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const { logActivity } = useLogActivity()
 const teamMembersStore = useTeamMembersStore()
@@ -249,7 +243,8 @@ const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, 
 
 // Moving a Deal into Won from here runs the same hand-off as the Deals board
 // and the detail page's Mark Won (follow-up task + Create Project prompt).
-const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
+const wonHandoff = useDealWonHandoff()
+const { onDealWon } = wonHandoff
 
 // Moving a Deal into a Lost stage asks why first — the reason is what a
 // review wants to know about a loss, and the quick-move wouldn't otherwise
@@ -284,8 +279,13 @@ const performMove = async (stage: string, reason?: LostReason) => {
   try {
     const moved = await moveTo(zone, card.id, stage, reason)
     emit('changed')
-    if (moved?.status === 'won' && current.lane.kind !== 'won') onDealWon(moved)
-    success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null
+    const wonHandoff = moved?.status === 'won' && current.lane.kind !== 'won'
+    if (wonHandoff) onDealWon(moved)
+    // No Undo for a move into Won: the hand-off has already created the
+    // kickoff task and opened Create Project, and moving the stage back
+    // wouldn't unwind either — same as a drop into Won on the Deals board,
+    // which never offers Undo. Moving it back is a deliberate stage change.
+    success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null || wonHandoff
       ? undefined
       : {
           label: t('crm.overviewPipeline.panel.undo'),
@@ -299,11 +299,7 @@ const performMove = async (stage: string, reason?: LostReason) => {
           },
         })
   } catch (err) {
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   } finally {
     moving.value = false
   }

@@ -1,7 +1,7 @@
 // Real API-backed store. Payments are hard-deleted server-side (no soft-delete status).
 // `amount` is cash received net of withholding tax; `wht_amount` also counts
-// as settled (GET /deals/:dealId/payments returns total_paid / total_wht /
-// total_settled = paid + WHT).
+// as settled (GET /deals/:dealId/payments returns total_paid / total_wht; its
+// total_settled = paid + WHT is derived here instead, as settledForDeal).
 const parseDates = (payment: Payment): Payment => ({
   ...payment,
   paid_at: new Date(payment.paid_at),
@@ -27,7 +27,7 @@ export const usePaymentsStore = defineStore('payments', {
   actions: {
     async fetchForDeal (dealId: number) {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<{ payments: Payment[], total_paid: number, total_wht?: number, total_settled?: number }>>(`/deals/${dealId}/payments`)
+      const response = await $api.get<ApiResponse<{ payments: Payment[], total_paid: number, total_wht?: number }>>(`/deals/${dealId}/payments`)
       const { payments, total_paid, total_wht } = response.data.data
       this.items = [...this.items.filter(p => p.deal_id !== dealId), ...payments.map(parseDates)]
       this.totalPaidByDeal[dealId] = total_paid

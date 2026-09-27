@@ -75,7 +75,8 @@ const { t } = useI18n()
 useHead({ title: t('crm.deals.create.pageTitle') })
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success } = useNotify()
+const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -309,11 +310,7 @@ const onSubmit = guard(async () => {
     discardDraft()
     navigateTo('/crm/deals')
   } catch (err) {
-    if (apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')) {
-      error(t('crm.deals.detail.contractRequiredToast'))
-    } else {
-      error(getApiErrorMessage(err, t('global.genericError')))
-    }
+    notifyStageChangeError(err)
   }
 })
 </script>

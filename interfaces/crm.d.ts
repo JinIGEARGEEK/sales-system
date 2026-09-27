@@ -50,7 +50,8 @@ type TaskStatus = 'pending' | 'done'
 // Plain triage label, no workflow behavior attached (unlike TaskStatus).
 type TaskPriority = 'low' | 'medium' | 'high'
 // Shared by Task.related_type and Activity.related_type — both point at whichever
-// record (deal, contact, or company) the follow-up/activity is attached to.
+// record (deal, contact, company, prospect, or lead) the follow-up/activity is
+// attached to.
 type TaskRelatedType = ActivityRelatedType
 // Campaign is a batch of Tasks created together against a set of targets
 // (Companies, Leads, or Contacts) — kept as its own union rather than
@@ -85,8 +86,8 @@ type ProjectStatus = 'Not Started' | 'In Progress' | 'On Hold' | 'Completed' | '
 type CustomerProductStatus = 'Interested' | 'Trial' | 'Active' | 'Churned'
 type CustomerProductBillingCycle = 'monthly' | 'yearly' | 'one_time'
 type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Support' | 'Other'
-// Deliberately broader than ActivityRelatedType (which excludes Lead) — attachments
-// are useful before a Lead ever converts to a Deal. 'quote' added 2026-08-23 for the
+// Differs from ActivityRelatedType: adds 'project' and 'quote', has no 'contact'.
+// 'quote' added 2026-08-23 for the
 // Quote editor's attachments section (quotation-builder rebuild) — reuses this same
 // generic model, no dedicated Quote-attachments infrastructure.
 // 'prospect' added 2026-09-01 — carried over to 'lead' by
@@ -271,6 +272,12 @@ interface Prospect {
 // call site that means "leave tags alone" must pass the record's current
 // `tags` back, not omit the key.
 type ProspectUpdatePayload = Required<Pick<Prospect, 'name' | 'company_id' | 'email' | 'phone' | 'source' | 'status' | 'assigned_to' | 'business_unit' | 'business_unit_item' | 'tags' | 'notes'>>
+
+// stores/deals.ts's update() parameter type — same reasoning as
+// LeadUpdatePayload: PUT /deals/:id overwrites every field of the API's
+// dealForm, so all 14 are required. Build one with fullDealUpdatePayload()
+// (stores/deals.ts) from the current record rather than by hand.
+type DealUpdatePayload = Required<Pick<Deal, 'company_id' | 'contact_id' | 'title' | 'value' | 'stage' | 'status' | 'expected_close_date' | 'assigned_to' | 'channel' | 'business_unit' | 'business_unit_item' | 'probability' | 'lost_reason' | 'forecast_category'>>
 
 interface Deal {
   id: number
@@ -722,9 +729,11 @@ interface Project {
   company_name?: string
 }
 
-// A single installment paid against a Deal. A Deal's `value` is the total contract
-// value — revenue actually collected is the sum of its Payments, which can span
-// multiple partial payments over the life of a project or product sale.
+// A single installment paid against a Deal, one of possibly many partial
+// payments over the life of a project or product sale. What the customer owes
+// (the receivable) is the latest Accepted Quote's taxable amount + VAT, else
+// the Deal value (dealReceivable); each Payment's `amount` + `wht_amount`
+// comes off it.
 // Added 2026-09-27: `amount` is the cash actually received, net of the
 // withholding tax the customer deducted (`wht_amount`, which also counts as
 // settled). `document_number` is the FlowAccount receipt/tax-invoice number;

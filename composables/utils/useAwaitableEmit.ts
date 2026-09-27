@@ -12,3 +12,19 @@ export const useAwaitableEmit = <Args extends unknown[]>(event: string) => {
     return Promise.all(handlers.map(handler => handler(...args)))
   }
 }
+
+// The dialog-submit shape built on it: emit `event`, await every bound
+// handler, and call `close` only when none resolved `false` (a handler that
+// failed has already shown its error). A throw propagates without closing,
+// so the dialog stays open with the form intact either way. Resolves whether
+// it closed. Must be called during setup, like useAwaitableEmit.
+export const useAwaitableSubmit = <Args extends unknown[]>(close: () => void, event = 'submit') => {
+  const emitAwaitable = useAwaitableEmit<Args>(event)
+
+  return async (...args: Args): Promise<boolean> => {
+    const results = await emitAwaitable(...args)
+    const succeeded = !results.includes(false)
+    if (succeeded) close()
+    return succeeded
+  }
+}

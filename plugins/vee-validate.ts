@@ -23,22 +23,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     return pn.valid
   })
 
-  defineRule('id_card', (value: string) => {
-    const idCard = value.replace(/\D/g, '')
-
-    if (value.length !== 13) {
-      return false
-    }
-
-    let sum = 0
-    for (let i = 0; i < 12; i++) {
-      sum += parseInt(idCard.charAt(i)) * (13 - i)
-    }
-    const checkDigit = (11 - (sum % 11)) % 10
-
-    return parseInt(idCard.charAt(12)) === checkDigit
-  })
-
   // Thai tax ID: 13 digits with a valid check digit, dashes/spaces allowed.
   defineRule('tax_id', (value: string) => !value || isValidThaiTaxId(value))
 })
@@ -50,7 +34,6 @@ configure({
         ...th.messages,
         required: 'กรุณาระบุ {field}',
         phone: 'รูปแบบเบอร์โทรไม่ถูกต้อง',
-        id_card: 'รูปแบบบัตรประชาชนไม่ถูกต้อง',
         tax_id: 'เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลักที่ถูกต้อง',
       },
     },
@@ -58,7 +41,6 @@ configure({
       messages: {
         ...en.messages,
         phone: 'รูปแบบเบอร์โทรไม่ถูกต้อง',
-        id_card: 'รูปแบบบัตรประชาชนไม่ถูกต้อง',
         tax_id: 'Tax ID must be a valid 13-digit number',
       },
     },

@@ -176,24 +176,22 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const emitSubmit = useAwaitableEmit('submit')
-const emitUpdate = useAwaitableEmit('update')
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update')
 const onSubmit = guard(async () => {
   if (props.record) {
-    const results = await emitUpdate({ status: form.status, end_date: form.end_date ? new Date(form.end_date) : null, ...renewalPayload() })
-    if (!results.includes(false)) onUpdateOpen(false)
+    await updateAndClose({ status: form.status, end_date: form.end_date ? new Date(form.end_date) : null, ...renewalPayload() })
     return
   }
   const product = props.products.find(p => p.id === Number(form.product_id))
   if (!product) return
-  const results = await emitSubmit({
+  await submitAndClose({
     product_id: product.id,
     status: form.status,
     start_date: form.start_date ? new Date(form.start_date) : null,
     source_deal_id: form.source_deal_id ? Number(form.source_deal_id) : null,
     ...renewalPayload(),
   }, product)
-  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

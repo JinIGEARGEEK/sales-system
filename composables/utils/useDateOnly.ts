@@ -12,6 +12,23 @@ export const toDateOnly = (value: string | null | undefined): string | null => {
   return match ? match[0] : null
 }
 
+// A date-input value ("YYYY-MM-DD") as local noon: "sometime that day", and
+// safe from slipping to a neighbouring day in any timezone within ±12h —
+// unlike new Date('YYYY-MM-DD'), which is 00:00 UTC (07:00 in Bangkok).
+export const dateOnlyToLocalNoon = (value: string): Date => {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+  return new Date(year!, month! - 1, day!, 12)
+}
+
+// `date` plus `days` calendar days, same local time of day — through
+// setDate, so a DST change in between doesn't shift it (unlike adding
+// days × 24h of milliseconds). Doesn't mutate `date`.
+export const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
 const dayNumber = (year: number, month: number, day: number) => Date.UTC(year, month - 1, day) / 86_400_000
 
 // Whole calendar days from `today` (its LOCAL date) to the date-only value:
@@ -34,8 +51,32 @@ export const dateOnlyCountdown = (value: string | null | undefined, today: Date 
   return { days, tone: days <= soonDays ? 'soon' : 'later' }
 }
 
+// i18n keys for a countdown badge's three phrasings; `past` and `future`
+// get a positive `{days}` param.
+export interface CountdownLabelKeys {
+  past: string
+  today: string
+  future: string
+}
+
+type Translate = (key: string, params?: Record<string, unknown>) => string
+
+export const countdownLabel = (days: number, keys: CountdownLabelKeys, t: Translate): string => {
+  if (days < 0) return t(keys.past, { days: -days })
+  if (days === 0) return t(keys.today)
+  return t(keys.future, { days })
+}
+
 export const countdownColor = (tone: RenewalTone) => {
   if (tone === 'overdue') return 'error' as const
   if (tone === 'today' || tone === 'soon') return 'warning' as const
   return 'neutral' as const
+}
+
+// Everything a countdown badge renders, worked out once per row: null when
+// there's no date to count down to.
+export const countdownBadge = (value: string | null | undefined, keys: CountdownLabelKeys, t: Translate, today: Date = new Date()) => {
+  const countdown = dateOnlyCountdown(value, today)
+  if (!countdown) return null
+  return { color: countdownColor(countdown.tone), label: countdownLabel(countdown.days, keys, t) }
 }

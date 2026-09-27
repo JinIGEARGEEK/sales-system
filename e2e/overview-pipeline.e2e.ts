@@ -1,6 +1,12 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { ADMIN, json, mockApi, signIn } from './support'
 import { overviewFixture } from './fixtures/overview'
+
+// The toast's Undo action. Not getByRole: while the panel (a modal
+// slideover) is open, everything outside it — the toaster included — is
+// aria-hidden, so a role query would never find it and a "no Undo"
+// assertion would pass vacuously.
+const undoButton = (page: Page) => page.locator('button', { hasText: /^Undo$/ })
 
 // Smoke test for the Overview Pipeline page (FR-CRM-123): it renders every
 // lane kind from the API, uses the API's exact highlight counts, highlights
@@ -8,9 +14,11 @@ import { overviewFixture } from './fixtures/overview'
 // picker.
 test.describe('Overview Pipeline', () => {
   let stageMoves: Array<{ id: string, body: Record<string, unknown> }>
+  let tasks: Array<Record<string, unknown>>
 
   test.beforeEach(async ({ page }) => {
     stageMoves = []
+    tasks = []
     await signIn(page)
     await mockApi(page, {
       'GET /auth/me': route => json(route, ADMIN),
@@ -22,8 +30,14 @@ test.describe('Overview Pipeline', () => {
         { id: 4, name: 'Lost', sort_order: 4, is_active: true, is_won_stage: false, is_lost_stage: true, stale_days: null, created_at: null },
       ]),
       'PATCH /deals/21/stage': async (route) => {
-        stageMoves.push({ id: '21', body: route.request().postDataJSON() })
-        await json(route, { id: 21, stage: 'Lost', status: 'lost', created_at: new Date().toISOString() })
+        const body = route.request().postDataJSON()
+        stageMoves.push({ id: '21', body })
+        await json(route, { id: 21, company_id: 1, assigned_to: null, title: 'Slipping Deal', stage: body.stage, status: body.stage === 'Won' ? 'won' : body.stage === 'Lost' ? 'lost' : 'open', created_at: new Date().toISOString() })
+      },
+      'POST /tasks': async (route) => {
+        const body = route.request().postDataJSON()
+        tasks.push(body)
+        await json(route, { id: 77, status: 'pending', created_at: new Date().toISOString(), ...body })
       },
     })
     await page.goto('/crm/overview-pipeline?period=quarter')
@@ -64,6 +78,24 @@ test.describe('Overview Pipeline', () => {
 
     await expect.poll(() => stageMoves.length).toBe(1)
     expect(stageMoves[0]!.body).toMatchObject({ stage: 'Lost', lost_reason: 'competitor' })
+    // An ordinary move can be undone (unlike a move into Won, below).
+    await expect(undoButton(page)).toBeVisible()
+  })
+
+  // The hand-off (kickoff task + Create Project) can't be unwound by moving
+  // the stage back, so a move into Won offers no Undo.
+  test('moving a Deal to Won runs the hand-off and offers no Undo', async ({ page }) => {
+    await page.locator('[data-cy="overview-card-deal-21"]').click()
+    await page.locator('[role="combobox"][data-cy="overview-panel-stage"]').click()
+    await page.getByRole('option', { name: 'Won', exact: true }).click()
+
+    await expect.poll(() => stageMoves.length).toBe(1)
+    expect(stageMoves[0]!.body).toMatchObject({ stage: 'Won' })
+    await expect.poll(() => tasks.length).toBe(1)
+    expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 21, title: 'Schedule kickoff call' })
+    await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
+    await expect(page.getByText('Moved to Won', { exact: true })).toBeVisible()
+    await expect(undoButton(page)).toHaveCount(0)
   })
 
   test('an "other" lane card opens with a stage picker and an explanation', async ({ page }) => {

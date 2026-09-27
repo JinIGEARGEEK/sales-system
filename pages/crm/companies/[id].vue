@@ -192,7 +192,7 @@
           </div>
           <div v-else class="flex flex-col gap-2">
             <button
-              v-for="record in companyProducts"
+              v-for="{ record, renewal } in companyProductRows"
               :key="record.id"
               type="button"
               class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
@@ -212,13 +212,13 @@
               </div>
               <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
                 <UBadge
-                  v-if="renewalCountdown(record)"
-                  :color="countdownColor(renewalCountdown(record)!.tone)"
+                  v-if="renewal"
+                  :color="renewal.color"
                   variant="subtle"
                   icon="material-symbols:event-repeat-outline"
                   :data-cy="`customer-product-renewal-badge-${record.id}`"
                 >
-                  {{ countdownLabel(renewalCountdown(record)!.days) }}
+                  {{ renewal.label }}
                 </UBadge>
                 <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
               </div>
@@ -353,7 +353,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { COMPANY_STATUS_FORM_OPTIONS, isTaskOverdue } from '~/constants/mockData'
+import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
 
@@ -460,7 +460,6 @@ const revenueSizeOptions = computed<Select[]>(() => {
 // a query param is the lighter-weight way to get the same result).
 const COMPANY_TABS = ['overview', 'contacts', 'deals', 'quotesContracts', 'products', 'projects', 'activity', 'tasks', 'attachments']
 const activeTab = useQuerySyncedRef('tab', 'overview', 0, COMPANY_TABS)
-const companyOverdueTaskCount = computed(() => companyTasks.value.filter(task => isTaskOverdue(task)).length)
 const tabItems = computed(() => [
   { label: t('crm.companies.detail.tabs.overview'), value: 'overview' },
   { label: t('crm.companies.detail.tabs.contacts'), value: 'contacts' },
@@ -515,7 +514,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, overdueCount: companyOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
@@ -535,12 +534,12 @@ const openEditCustomerProduct = (record: CustomerProduct) => {
 
 // Only Active products renew (that's also all the renewal rule watches), so
 // a Churned/Trial record's stale date doesn't raise a countdown badge.
-const renewalCountdown = (record: CustomerProduct) => (record.status === 'Active' ? dateOnlyCountdown(record.renewal_date) : null)
-const countdownLabel = (days: number) => {
-  if (days < 0) return t('crm.companies.detail.renewalOverdue', { days: -days })
-  if (days === 0) return t('crm.companies.detail.renewsToday')
-  return t('crm.companies.detail.renewsInDays', { days })
-}
+// Only an Active subscription renews.
+const RENEWAL_LABEL_KEYS = { past: 'crm.companies.detail.renewalOverdue', today: 'crm.companies.detail.renewsToday', future: 'crm.companies.detail.renewsInDays' }
+const companyProductRows = computed(() => companyProducts.value.map(record => ({
+  record,
+  renewal: record.status === 'Active' ? countdownBadge(record.renewal_date, RENEWAL_LABEL_KEYS, t) : null,
+})))
 const customerProductPriceLabel = (record: CustomerProduct) => {
   const price = record.price !== null ? `${t('global.currencySymbol')}${priceFormat(record.price)}` : ''
   const cycle = record.billing_cycle ? t(`crm.components.addCustomerProductModal.billingCycleOptions.${record.billing_cycle}`) : ''

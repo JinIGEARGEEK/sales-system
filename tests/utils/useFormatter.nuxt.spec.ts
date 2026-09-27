@@ -51,6 +51,14 @@ describe('useFormatter', () => {
     })
   })
 
+  describe('currency / currencyCompact', () => {
+    it('prefixes the currency symbol to the full and compact price formats', () => {
+      const { currency, currencyCompact } = useFormatter()
+      expect(currency(1234.5)).toBe('฿1,234.50')
+      expect(currencyCompact(1_550_000)).toBe('฿1.6M')
+    })
+  })
+
   describe('numberFormat', () => {
     it('formats a whole number with thousands separators and no decimals', () => {
       expect(numberFormat(1234567)).toBe('1,234,567')

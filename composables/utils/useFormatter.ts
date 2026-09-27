@@ -45,6 +45,13 @@ export const useFormatter = () => {
   // exact precision belongs in a detail view/export, not a stat tile.
   const priceFormatCompact = (value: number) => numeric(value).format('0,0.[0]a').toUpperCase()
 
+  // Money with the currency symbol in front ("฿1,234.00" / "฿1.2M"). The
+  // symbol is read at call time off the app's i18n instance, so this works
+  // anywhere useFormatter does (no setup-only useI18n()).
+  const currencySymbol = () => useNuxtApp().$i18n.t('global.currencySymbol')
+  const currency = (value: number) => `${currencySymbol()}${priceFormat(value)}`
+  const currencyCompact = (value: number) => `${currencySymbol()}${priceFormatCompact(value)}`
+
   const toBadge = (title: string, color = 'neutral') => ({ title, color, isNoData: false })
 
   // Escalates a day-count based badge color neutral -> warning -> error as it
@@ -82,6 +89,8 @@ export const useFormatter = () => {
     phoneFormat,
     priceFormat,
     priceFormatCompact,
+    currency,
+    currencyCompact,
     numberFormat,
     toBadge,
     severityColor,

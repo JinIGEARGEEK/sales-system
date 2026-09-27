@@ -60,8 +60,8 @@
           <template #hint>{{ t('crm.reports.sourcePerformance.summary.dealsWonHint', { fromLeads: totals.dealsWon, direct: totals.directDealsWon }) }}</template>
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.sourcePerformance.summary.wonValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totals.wonValue + totals.directWonValue) }}
-          <template #hint>{{ t('crm.reports.sourcePerformance.summary.wonValueHint', { direct: `${t('global.currencySymbol')}${priceFormatCompact(totals.directWonValue)}` }) }}</template>
+          {{ currencyCompact(totals.wonValue + totals.directWonValue) }}
+          <template #hint>{{ t('crm.reports.sourcePerformance.summary.wonValueHint', { direct: currencyCompact(totals.directWonValue) }) }}</template>
         </CrmStatCard>
         <CrmStatCard
           :label="t('crm.reports.sourcePerformance.summary.winRate')"
@@ -109,7 +109,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, numberFormat } = useFormatter()
+const { currencyCompact, numberFormat } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -179,15 +179,14 @@ const totals = computed(() => results.value.reduce((sum, row) => ({
 // Same definition as the per-row win_rate: Lead-sourced Won Deals ÷ Leads.
 const overallWinRate = computed(() => (totals.value.leads > 0 ? (totals.value.dealsWon / totals.value.leads) * 100 : 0))
 
-const money = (value: number) => `${t('global.currencySymbol')}${priceFormatCompact(value)}`
 
 const rows = computed(() => results.value.map(row => ({
   ...row,
   id: row.source,
   sourceDisplay: row.source || t('crm.reports.sourcePerformance.noSource'),
-  wonValueDisplay: money(row.won_value),
+  wonValueDisplay: currencyCompact(row.won_value),
   winRateDisplay: `${row.win_rate.toFixed(1)}%`,
-  directWonValueDisplay: row.direct_deals_won ? money(row.direct_won_value) : '-',
+  directWonValueDisplay: row.direct_deals_won ? currencyCompact(row.direct_won_value) : '-',
 })))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => rows.value.length)

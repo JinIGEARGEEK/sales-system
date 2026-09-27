@@ -131,14 +131,7 @@
       @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
-    <CrmAddProjectModal
-      v-model:open="projectModal"
-      :title="t('crm.deals.detail.createProjectModalTitle')"
-      :default-name="handoffDeal?.title"
-      :default-target-end-date="handoffDeal?.expected_close_date"
-      :description="t('crm.deals.detail.createProjectModalBody')"
-      @submit="onCreateProject"
-    />
+    <CrmWonHandoffProjectModal :handoff="wonHandoff" />
   </div>
 </template>
 
@@ -439,7 +432,8 @@ const columnCounts = computed(() => {
 // first, same as the Overview Pipeline's side panel; the move only happens
 // once a reason is chosen, and cancelling leaves the card where it was.
 const lostReasonOpen = ref(false)
-const { handoffDeal, projectModal, onDealWon, onCreateProject } = useDealWonHandoff()
+const wonHandoff = useDealWonHandoff()
+const { onDealWon } = wonHandoff
 const notifyStageChangeError = useStageChangeErrorNotifier()
 const pendingLostMove = ref<{ item: Deal & { _type: 'deal' }, newStage: string, position?: number } | null>(null)
 const onConfirmLostReason = (reason: LostReason) => {
@@ -547,6 +541,13 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     // the drag gesture. Land the rep straight on the new Deal's own edit page
     // right after, where value is a required field front and center, instead
     // of leaving a $0 Deal sitting unnoticed on the board.
+    // Dropped straight into Won: same hand-off as a Deal moved there — the
+    // follow-up task now, and Create Project on the Deal page it lands on.
+    if (deal.status === 'won') {
+      await onDealWon(deal, { promptProject: false })
+      navigateTo({ path: `/crm/deals/${deal.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
+      return
+    }
     navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

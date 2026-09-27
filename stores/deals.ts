@@ -8,6 +8,28 @@ const parseDates = (deal: Deal): Deal => ({
   deleted_at: deal.deleted_at ? new Date(deal.deleted_at) : deal.deleted_at,
 })
 
+// PUT /deals/:id replaces every mapped field (CLAUDE.md, design-system.md §8)
+// and Deal has no narrow "edit these fields" endpoint, so every update()
+// resends the whole current record with just `changes` swapped in. The one
+// list of those fields — DealUpdatePayload makes a missing one a compile error.
+export const fullDealUpdatePayload = (deal: Deal, changes: Partial<DealUpdatePayload> = {}): DealUpdatePayload => ({
+  company_id: deal.company_id,
+  contact_id: deal.contact_id,
+  title: deal.title,
+  value: deal.value,
+  stage: deal.stage,
+  status: deal.status,
+  probability: deal.probability,
+  lost_reason: deal.lost_reason,
+  forecast_category: deal.forecast_category,
+  expected_close_date: deal.expected_close_date,
+  assigned_to: deal.assigned_to,
+  channel: deal.channel,
+  business_unit: deal.business_unit,
+  business_unit_item: deal.business_unit_item,
+  ...changes,
+})
+
 export const useDealsStore = defineStore('deals', {
   state: () => ({
     items: [] as Deal[],
@@ -72,7 +94,7 @@ export const useDealsStore = defineStore('deals', {
       this.items.push(parsed)
       return parsed
     },
-    async update (id: number, changes: Partial<Omit<Deal, 'id'>>): Promise<Deal> {
+    async update (id: number, changes: DealUpdatePayload): Promise<Deal> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Deal>>(`/deals/${id}`, changes)
       const updated = parseDates(response.data.data)
