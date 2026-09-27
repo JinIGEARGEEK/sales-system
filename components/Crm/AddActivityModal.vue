@@ -68,12 +68,23 @@ const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() =>
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
 
+// A date input only carries a calendar day, and `new Date('YYYY-MM-DD')` is
+// 00:00 UTC — 07:00 in Bangkok — so every activity used to show 07:00.
+// Today's date means "just now", so it gets the current time; a backdated
+// day gets local noon, which reads as "sometime that day" and can't slip to
+// a neighbouring day in any timezone within ±12h.
+const toCreatedAt = (value: string) => {
+  if (value === toDateInputValue(new Date())) return new Date().toISOString()
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year!, month! - 1, day!, 12).toISOString()
+}
+
 const onSubmit = guard(async () => {
   emit('submit', {
     type: form.type,
     subject: form.subject,
     notes: form.notes,
-    created_at: new Date(form.date).toISOString(),
+    created_at: toCreatedAt(form.date),
     ...(props.showRelatedPicker
       ? { related_type: form.related_type as ActivityRelatedType, related_id: Number(form.related_id) }
       : {}),

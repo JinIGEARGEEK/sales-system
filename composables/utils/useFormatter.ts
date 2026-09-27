@@ -65,7 +65,14 @@ export const useFormatter = () => {
   // Converts a Date to the plain 'YYYY-MM-DD' string InputDatePicker's
   // v-model expects — shared by every Add*Modal that prefills a date field
   // from an existing record (Project, CustomerProduct, Task, ...).
-  const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10)
+  // Built from the browser's LOCAL date parts, not toISOString() (UTC): in
+  // Bangkok (UTC+7) toISOString() reports the previous day before 07:00, so
+  // a "today" default would silently show yesterday. Stored dates saved at
+  // 00:00 UTC still read as the same calendar day in UTC+7.
+  const toDateInputValue = (date: Date | string) => {
+    const d = new Date(date)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
 
   return {
     dateFormat,
