@@ -227,9 +227,12 @@ const onSubmitActivity = async (payload: { type: ActivityType, subject: string, 
       related_id: payload.related_id,
     })
     success(t('crm.activities.index.addActivitySuccess'))
-    await fetch()
   } catch (err) {
     notifyApiError(err)
+    return false
   }
+  // Saved already — a failed reload must not keep the dialog open
+  // (a second Save would create a duplicate).
+  await fetch().catch(notifyApiError)
 }
 </script>

@@ -409,6 +409,7 @@ const onSaveProduct = async (product: { name: string, category: string, descript
     }
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

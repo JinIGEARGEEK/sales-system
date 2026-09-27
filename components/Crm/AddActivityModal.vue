@@ -79,8 +79,12 @@ const toCreatedAt = (value: string) => {
   return new Date(year!, month! - 1, day!, 12).toISOString()
 }
 
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
-  emit('submit', {
+  const results = await emitSubmit({
     type: form.type,
     subject: form.subject,
     notes: form.notes,
@@ -89,7 +93,7 @@ const onSubmit = guard(async () => {
       ? { related_type: form.related_type as ActivityRelatedType, related_id: Number(form.related_id) }
       : {}),
   })
-  onUpdateOpen(false)
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

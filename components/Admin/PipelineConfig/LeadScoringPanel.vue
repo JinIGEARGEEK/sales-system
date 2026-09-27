@@ -81,6 +81,7 @@ const onSubmitCriterion = async (payload: { name: string, field: LeadScoringCrit
     success(t('admin.pipelineConfig.leadScoring.saveSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

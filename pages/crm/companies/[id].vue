@@ -516,6 +516,7 @@ const onAddCustomerProduct = async (payload: { product_id: number, status: Custo
     success(t('crm.companies.detail.addProductSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 
@@ -526,6 +527,7 @@ const onUpdateCustomerProduct = async (payload: { status: CustomerProductStatus,
     success(t('crm.companies.detail.updateProductSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 
@@ -623,6 +625,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.companies.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

@@ -214,6 +214,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.leads.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

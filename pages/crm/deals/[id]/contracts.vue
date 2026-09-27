@@ -170,6 +170,7 @@ const onAddContract = async (contract: { status: ContractStatus, quote_id?: numb
     promptProjectIfSigned(created)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

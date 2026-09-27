@@ -111,6 +111,7 @@ const onSubmit = async (payload: NamedOptionPayload) => {
     success(t(`${props.i18nPrefix}.saveSuccess`))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

@@ -68,13 +68,17 @@ const onUpdateOpen = (value: boolean) => emit('update:open', value)
 // "Converted" is a reserved, system-set stage (see ProspectStage's own doc)
 // — the backend rejects it too, but catching it here avoids a round trip
 // for a mistake that's cheap to catch client-side.
+// Awaits the caller's save: Save spins until it lands, the guard turns away
+// a second click, and the dialog stays open (form intact) if the handler
+// resolves `false` or throws.
+const emitSubmit = useAwaitableEmit('submit')
 const onSubmit = guard(async () => {
   if (form.name.trim() === 'Converted') {
     error(t('admin.pipelineConfig.prospectStages.reservedNameError'))
     return
   }
-  emit('submit', { ...form, stale_days: form.stale_days === '' ? null : Number(form.stale_days) })
-  onUpdateOpen(false)
+  const results = await emitSubmit({ ...form, stale_days: form.stale_days === '' ? null : Number(form.stale_days) })
+  if (!results.includes(false)) onUpdateOpen(false)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

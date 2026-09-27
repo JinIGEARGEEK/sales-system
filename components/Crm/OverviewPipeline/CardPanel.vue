@@ -319,6 +319,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
     success(t('crm.overviewPipeline.panel.taskAdded'))
   } catch (err) {
     notifyApiError(err)
+    return false
   }
 }
 

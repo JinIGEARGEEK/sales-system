@@ -276,10 +276,13 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
   try {
     await tasksStore.add(payload as Omit<Task, 'id' | 'status' | 'created_at'>)
     success(t('crm.tasks.index.addTaskSuccess'))
-    await refresh()
   } catch (err) {
     notifyApiError(err)
+    return false
   }
+  // Saved already — a failed reload must not keep the dialog open
+  // (a second Save would create a duplicate).
+  await refresh().catch(notifyApiError)
 }
 
 const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
@@ -287,10 +290,13 @@ const onUpdateTask = async (payload: { title: string, description: string, due_d
   try {
     await tasksStore.update(editingTask.value.id, payload)
     success(t('crm.tasks.index.editTaskSuccess'))
-    await refresh()
   } catch (err) {
     notifyApiError(err)
+    return false
   }
+  // Saved already — a failed reload must not keep the dialog open
+  // (a second Save would create a duplicate).
+  await refresh().catch(notifyApiError)
 }
 
 // ── Bulk select / mark-done / reassign ──────────────────────────

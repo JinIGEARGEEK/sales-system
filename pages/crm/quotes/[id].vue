@@ -391,6 +391,7 @@ const onSaveTemplate = async ({ name }: { name: string }) => {
     success(t('crm.quotes.detail.saveAsTemplateSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 
@@ -433,6 +434,7 @@ const onAddAttachment = async (payload: { category: AttachmentCategory, file: Fi
     success(t('crm.quotes.detail.addAttachmentSuccess'))
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
+    return false
   }
 }
 

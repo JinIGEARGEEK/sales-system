@@ -177,6 +177,7 @@ const onAddPayment = async (payment: { amount: number, paid_at: Date, method: Pa
     success(t('crm.deals.detail.addPaymentSuccess'))
   } catch (err) {
     notifyApiError(err)
+    return false
   }
 }
 

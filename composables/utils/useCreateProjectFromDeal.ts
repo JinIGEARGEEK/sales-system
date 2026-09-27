@@ -52,6 +52,7 @@ export const useCreateProjectFromDeal = (deal: Ref<Deal | null>) => {
       success(t('crm.deals.detail.createProjectSuccess'))
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
+      return false
     }
   }
 
