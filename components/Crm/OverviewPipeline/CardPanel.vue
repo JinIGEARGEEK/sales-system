@@ -284,8 +284,13 @@ const performMove = async (stage: string, reason?: LostReason) => {
   try {
     const moved = await moveTo(zone, card.id, stage, reason)
     emit('changed')
-    if (moved?.status === 'won' && current.lane.kind !== 'won') onDealWon(moved)
-    success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null
+    const wonHandoff = moved?.status === 'won' && current.lane.kind !== 'won'
+    if (wonHandoff) onDealWon(moved)
+    // No Undo for a move into Won: the hand-off has already created the
+    // kickoff task and opened Create Project, and moving the stage back
+    // wouldn't unwind either — same as a drop into Won on the Deals board,
+    // which never offers Undo. Moving it back is a deliberate stage change.
+    success(t('crm.overviewPipeline.panel.movedTo', { stage }), from === null || wonHandoff
       ? undefined
       : {
           label: t('crm.overviewPipeline.panel.undo'),

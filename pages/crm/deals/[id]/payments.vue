@@ -12,8 +12,9 @@
         />
       </div>
 
-      <!-- Cash received + WHT the customer withheld = settled (WHT counts
-           toward the balance once its 50 ทวิ certificate is on file). -->
+      <!-- Cash received + WHT the customer withheld = settled. WHT counts
+           toward the balance as soon as it's recorded, certificate (50 ทวิ)
+           or not — the certificate flag is tracked separately, not a gate. -->
       <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-lg border border-(--color-light-gray-2) p-4">
           <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalPaid') }}</p>
