@@ -44,7 +44,7 @@ export default {
     lostBadge: 'Lost',
     deactivateConfirm: 'ปิดใช้งานขั้นตอนนี้? Deal ที่มีอยู่จะยังคงอยู่ในขั้นตอนนี้ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกขั้นตอนไปป์ไลน์สำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานขั้นตอนไปป์ไลน์แล้ว',
+    deactivateSuccess: 'ปิดใช้งานขั้นตอนไปป์ไลน์สำเร็จ',
   },
   sources: {
     heading: 'แหล่งที่มาของ Lead / Deal',
@@ -59,7 +59,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานแหล่งที่มานี้? Lead/Deal ที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกแหล่งที่มาสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานแหล่งที่มาแล้ว',
+    deactivateSuccess: 'ปิดใช้งานแหล่งที่มาสำเร็จ',
   },
   prospectStages: {
     heading: 'ขั้นตอนของ Prospect',
@@ -80,7 +80,7 @@ export default {
     deactivateConfirm: 'ปิดใช้งานขั้นตอนนี้? Prospect ที่มีอยู่จะยังคงอยู่ในขั้นตอนนี้ แต่จะไม่สามารถเลือกใหม่ได้ ขั้นตอน "Converted" เป็นขั้นตอนสงวนที่ระบบกำหนดเอง ไม่สามารถสร้างที่นี่ได้',
     reservedNameError: '"Converted" เป็นขั้นตอนสงวนที่ระบบกำหนดเอง ไม่สามารถใช้ที่นี่ได้',
     saveSuccess: 'บันทึกขั้นตอน Prospect สำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานขั้นตอน Prospect แล้ว',
+    deactivateSuccess: 'ปิดใช้งานขั้นตอน Prospect สำเร็จ',
   },
   prospectSources: {
     heading: 'แหล่งที่มาของ Prospect',
@@ -95,7 +95,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานแหล่งที่มานี้? Prospect ที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกแหล่งที่มาสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานแหล่งที่มาแล้ว',
+    deactivateSuccess: 'ปิดใช้งานแหล่งที่มาสำเร็จ',
   },
   industries: {
     heading: 'ประเภทธุรกิจ',
@@ -110,7 +110,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานประเภทธุรกิจนี้? บริษัทที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกประเภทธุรกิจสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานประเภทธุรกิจแล้ว',
+    deactivateSuccess: 'ปิดใช้งานประเภทธุรกิจสำเร็จ',
   },
   companySizes: {
     heading: 'ขนาดบริษัท',
@@ -125,7 +125,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานขนาดบริษัทนี้? บริษัทที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกขนาดบริษัทสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานขนาดบริษัทแล้ว',
+    deactivateSuccess: 'ปิดใช้งานขนาดบริษัทสำเร็จ',
   },
   revenueSizes: {
     heading: 'ขนาดรายได้บริษัท',
@@ -155,7 +155,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานตำแหน่งงานนี้? ผู้ติดต่อที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกตำแหน่งงานสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานตำแหน่งงานแล้ว',
+    deactivateSuccess: 'ปิดใช้งานตำแหน่งงานสำเร็จ',
   },
   productCategories: {
     heading: 'หมวดหมู่สินค้า',
@@ -170,7 +170,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานหมวดหมู่นี้? สินค้าที่มีอยู่จะยังคงอยู่ แต่จะไม่สามารถเลือกใหม่ได้',
     saveSuccess: 'บันทึกหมวดหมู่สินค้าสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานหมวดหมู่สินค้าแล้ว',
+    deactivateSuccess: 'ปิดใช้งานหมวดหมู่สินค้าสำเร็จ',
   },
   weeklyDigest: {
     heading: 'อีเมลสรุปไปป์ไลน์รายสัปดาห์',
@@ -185,8 +185,8 @@ export default {
     sendTest: 'ส่งทดสอบถึงฉัน',
     previewTitle: 'ตัวอย่างอีเมลรายสัปดาห์',
     previewWeek: 'ครอบคลุม {from} – {to}',
-    testSent: 'ส่งอีเมลทดสอบไปที่ {email} แล้ว',
-    saveSuccess: 'บันทึกการตั้งค่าอีเมลรายสัปดาห์แล้ว',
+    testSent: 'ส่งอีเมลทดสอบไปที่ {email} สำเร็จ',
+    saveSuccess: 'บันทึกการตั้งค่าอีเมลรายสัปดาห์สำเร็จ',
   },
   salesQuota: {
     heading: 'เป้าหมายยอดขายและรายได้',
@@ -226,7 +226,7 @@ export default {
     deleteConfirm: 'ลบเป้าหมายนี้? ไตรมาสนี้จะใช้เป้าหมายยอดขายรายไตรมาส (ค่าเริ่มต้น) ด้านบนแทน',
     delete: 'ลบ',
     saveSuccess: 'บันทึกเป้าหมายรายไตรมาสสำเร็จ',
-    deleteSuccess: 'ลบเป้าหมายรายไตรมาสแล้ว',
+    deleteSuccess: 'ลบเป้าหมายรายไตรมาสสำเร็จ',
   },
   leadScoring: {
     heading: 'เกณฑ์การให้คะแนน Lead',
@@ -253,7 +253,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานเกณฑ์นี้? คะแนนของ Lead ที่มีอยู่จะไม่เปลี่ยนแปลง แต่จะไม่ถูกนำไปใช้คำนวณคะแนนในอนาคต',
     saveSuccess: 'บันทึกเกณฑ์การให้คะแนนสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานเกณฑ์การให้คะแนนแล้ว',
+    deactivateSuccess: 'ปิดใช้งานเกณฑ์การให้คะแนนสำเร็จ',
   },
   notifications: {
     smtpConfigured: 'การแจ้งเตือนทางอีเมล: ตั้งค่า SMTP แล้ว — ระบบสามารถส่งอีเมลแจ้งเตือนงานครบกำหนดได้',
@@ -291,7 +291,7 @@ export default {
     },
     deactivateConfirm: 'ปิดใช้งานกฎนี้? จะไม่มีการแจ้งเตือนตามกฎนี้จนกว่าจะเปิดใช้งานอีกครั้ง',
     saveSuccess: 'บันทึกกฎการแจ้งเตือนสำเร็จ',
-    deactivateSuccess: 'ปิดใช้งานกฎการแจ้งเตือนแล้ว',
+    deactivateSuccess: 'ปิดใช้งานกฎการแจ้งเตือนสำเร็จ',
   },
   statusActive: 'ใช้งานอยู่',
   statusInactive: 'ปิดใช้งาน',

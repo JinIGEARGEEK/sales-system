@@ -33,8 +33,8 @@ export default {
       deactivateConfirmBody: 'พนักงานเหล่านี้จะไม่สามารถเข้าสู่ระบบได้ คุณสามารถเปิดใช้งานอีกครั้งได้ในภายหลัง',
       deactivateConfirmButton: 'ปิดใช้งาน',
       cancel: 'ยกเลิก',
-      activateSuccess: 'เปิดใช้งานพนักงาน {count} คนแล้ว',
-      deactivateSuccess: 'ปิดใช้งานพนักงาน {count} คนแล้ว',
+      activateSuccess: 'เปิดใช้งานพนักงาน {count} คนสำเร็จ',
+      deactivateSuccess: 'ปิดใช้งานพนักงาน {count} คนสำเร็จ',
     },
   },
   form: {

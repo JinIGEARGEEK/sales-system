@@ -9,7 +9,7 @@ export default {
   deactivate: 'ปิดใช้งาน',
   deactivateModalTitle: 'ปิดใช้งานสินค้านี้หรือไม่?',
   deactivateModalBody: 'ปิดใช้งาน {name} หรือไม่? จะไม่สามารถเลือกสินค้านี้เพิ่มให้บริษัทอื่นได้อีก แต่การเชื่อมโยงที่มีอยู่แล้วจะไม่ได้รับผลกระทบ',
-  deactivateSuccess: 'ปิดใช้งานสินค้าแล้ว',
+  deactivateSuccess: 'ปิดใช้งานสินค้าสำเร็จ',
   searchPlaceholder: 'ค้นหาด้วยชื่อหรือหมวดหมู่...',
   statusPlaceholder: 'สถานะ',
   allStatuses: 'สถานะทั้งหมด',

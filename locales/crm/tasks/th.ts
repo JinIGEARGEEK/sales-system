@@ -18,8 +18,8 @@ export default {
     reassignPlaceholder: 'มอบหมายให้...',
     bulkReassign: 'มอบหมาย',
     clearSelection: 'ล้างการเลือก',
-    bulkMarkDoneSuccess: 'ทำเครื่องหมายเสร็จแล้ว {count} รายการ',
-    bulkReassignSuccess: 'มอบหมายงานใหม่ {count} รายการ',
+    bulkMarkDoneSuccess: 'ทำเครื่องหมายเสร็จ {count} รายการสำเร็จ',
+    bulkReassignSuccess: 'มอบหมายงานใหม่ {count} รายการสำเร็จ',
     bulkConfirmDoneTitle: 'ทำเครื่องหมายว่าเสร็จแล้ว?',
     bulkConfirmDoneBody: 'ทำเครื่องหมายงานที่เลือก {count} รายการว่าเสร็จแล้วใช่หรือไม่?',
     groups: {

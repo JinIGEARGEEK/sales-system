@@ -18,7 +18,7 @@ export default {
     revealTitle: 'สร้าง API Key แล้ว',
     revealWarning: 'คัดลอก Key นี้ไว้ตอนนี้ — จะไม่แสดงให้เห็นอีก',
     copy: 'คัดลอก',
-    copySuccess: 'คัดลอกไปยังคลิปบอร์ดแล้ว',
+    copySuccess: 'คัดลอกไปยังคลิปบอร์ดสำเร็จ',
     copyFailed: 'ไม่สามารถคัดลอกได้ — กรุณาเลือกและคัดลอก Key ด้วยตนเอง',
     revealDone: 'เสร็จสิ้น',
     columns: {
@@ -36,6 +36,6 @@ export default {
     revoke: 'เพิกถอน',
     revokeTitle: 'เพิกถอน API Key นี้หรือไม่?',
     revokeConfirm: 'เพิกถอน "{name}"? ระบบภายนอกที่ใช้ Key นี้อยู่จะหยุดทำงานทันที — ไม่สามารถย้อนกลับได้',
-    revokeSuccess: 'เพิกถอน API Key แล้ว',
+    revokeSuccess: 'เพิกถอน API Key สำเร็จ',
   },
 }
