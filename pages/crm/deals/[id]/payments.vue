@@ -224,20 +224,8 @@ const dealPayments = computed(() => paymentsStore.forDeal(dealId))
 const totalPaid = computed(() => paymentsStore.totalForDeal(dealId))
 const totalWht = computed(() => paymentsStore.whtForDeal(dealId))
 const totalSettled = computed(() => paymentsStore.settledForDeal(dealId))
-// What the customer owes, by the same rule as the Outstanding Balance report
-// (sales-system-api computeOutstandingRow): the latest Accepted Quote's
-// taxable amount + VAT (before WHT), else the deal value.
-const receivable = computed(() => {
-  const accepted = quotesStore.forDeal(dealId)
-    .filter(q => q.status === 'accepted')
-    // Newest first — ids follow creation order, matching the API's created_at DESC.
-    .sort((a, b) => b.id - a.id)[0]
-  if (accepted) {
-    const { taxableAmount, vat } = useQuoteTotals(accepted.items ?? [], accepted.discount_total ?? 0, accepted.vat_enabled, false, 0)
-    return { amount: Math.round((taxableAmount + vat) * 100) / 100, fromQuote: true }
-  }
-  return { amount: deal.value?.value ?? 0, fromQuote: false }
-})
+// What the customer owes — the Outstanding Balance report's rule (dealReceivable).
+const receivable = computed(() => dealReceivable(quotesStore.forDeal(dealId), deal.value?.value ?? 0))
 // WHT counts as settled, so it comes off the balance like cash does.
 const remainingBalance = computed(() => receivable.value.amount - totalSettled.value)
 

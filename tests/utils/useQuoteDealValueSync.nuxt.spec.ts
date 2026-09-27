@@ -1,18 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { makeDeal, apiResponse } from '../factories'
+import { makeDeal, makeQuote, apiResponse } from '../factories'
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-const quote = (overrides: Partial<Quote> = {}) => ({
+// A priced Quote with both discounts, VAT and WHT on — only the pre-VAT
+// taxable amount should reach the Deal.
+const quote = (overrides: Partial<Quote> = {}) => makeQuote({
   items: [{ description: 'Build', qty: 2, price: 50000, discount_percent: 10 }],
   discount_total: 5000,
   vat_enabled: true,
   wht_enabled: true,
   wht_rate: 3,
   ...overrides,
-} as Quote)
+})
 
 describe('quoteRevenueAmount', () => {
   it('is the taxable amount after both discounts, before VAT and WHT', () => {
