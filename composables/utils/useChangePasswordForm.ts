@@ -7,11 +7,17 @@ interface ChangePasswordPayload {
   confirm_password: string
 }
 
+// A password change revokes every earlier token, the one sending this
+// request included, so the response carries a fresh one alongside the user.
+// Optional so this still works against an API that predates it.
+type ChangePasswordResponse = User & { access_token?: string }
+
 export const useChangePasswordForm = (onSuccess?: () => unknown) => {
   const { t } = useI18n()
   const { success, error } = useNotify()
   const userStore = useUserStore()
-  const { post } = useMutateApi<User, ChangePasswordPayload>('/auth/change-password')
+  const { setAccessToken } = useAuth()
+  const { post } = useMutateApi<ChangePasswordResponse, ChangePasswordPayload>('/auth/change-password')
   const { loading, guard } = useSubmitGuard()
 
   const state = reactive({
@@ -29,7 +35,9 @@ export const useChangePasswordForm = (onSuccess?: () => unknown) => {
         new_password: state.newPassword,
         confirm_password: state.confirmPassword,
       })
-      userStore.setUser(response.data)
+      const { access_token: accessToken, ...user } = response.data
+      if (accessToken) setAccessToken(accessToken)
+      userStore.setUser(user)
       success(t('global.auth.changePasswordSuccess'))
       await onSuccess?.()
     } catch (err) {
