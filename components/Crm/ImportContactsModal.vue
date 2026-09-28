@@ -202,7 +202,7 @@ const lookupTaxIdMatches = async (rows: ParsedRow[]) => {
 
 // The Company fields an existing record is missing that this row can fill.
 const backfillFor = (company: Company, row: ParsedRow) => {
-  const changes: Partial<Company> = {}
+  const changes: Partial<CompanyUpdatePayload> = {}
   const address = joinAddress(row)
   if (!company.tax_id && row.validTaxId) changes.tax_id = row.validTaxId
   if (!company.branch_code && row.validBranchCode) changes.branch_code = row.validBranchCode
@@ -378,7 +378,7 @@ const onConfirm = async () => {
           try {
             // Full-record PUT (the API overwrites every field): resend the
             // whole Company with only the blanks filled in.
-            company = await companiesStore.update(company.id, { ...company, ...changes })
+            company = await companiesStore.update(company.id, fullCompanyUpdatePayload(company, changes))
           } catch {
             // Best-effort — e.g. a size option since deactivated fails the
             // PUT's validation; keep importing the rest.

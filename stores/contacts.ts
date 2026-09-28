@@ -83,7 +83,7 @@ export const useContactsStore = defineStore('contacts', {
       if (created.is_primary) this.clearOtherPrimaries(created.company_id, created.id)
       return created
     },
-    async update (id: number, changes: Partial<Omit<Contact, 'id'>>): Promise<Contact> {
+    async update (id: number, changes: ContactUpdatePayload): Promise<Contact> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Contact>>(`/contacts/${id}`, changes)
       const updated = parseDates(response.data.data)

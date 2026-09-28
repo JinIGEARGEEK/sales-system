@@ -149,6 +149,15 @@ interface Contact {
   created_at: Date
 }
 
+// stores/companies.ts / stores/contacts.ts update() parameter types — same
+// reasoning as LeadUpdatePayload below: PUT /companies/:id and
+// PUT /contacts/:id overwrite these fields unconditionally, so they're
+// required rather than Partial<...>. Optional ones are those the backend keeps
+// when omitted: a Company's status/branch_code/postal_code, and a Contact's
+// status and company_id (0 also means "keep").
+type CompanyUpdatePayload = Required<Pick<Company, 'name' | 'industry' | 'size' | 'revenue_size' | 'website' | 'tags' | 'notes' | 'legal_name' | 'address' | 'tax_id'>> & Partial<Pick<Company, 'status' | 'branch_code' | 'postal_code'>>
+type ContactUpdatePayload = Required<Pick<Contact, 'name' | 'email' | 'phone' | 'role_title' | 'tags' | 'is_primary'>> & Partial<Pick<Contact, 'status' | 'company_id'>>
+
 interface TeamMember {
   id: number
   name: string
