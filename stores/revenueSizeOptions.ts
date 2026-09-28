@@ -32,7 +32,7 @@ export const useRevenueSizeOptionsStore = defineStore('revenueSizeOptions', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<RevenueSizeOption, 'id' | 'created_at'>>): Promise<RevenueSizeOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<RevenueSizeOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<RevenueSizeOption>>(`/admin/revenue-sizes/${id}`, changes)
       const updated = parseDates(response.data.data)

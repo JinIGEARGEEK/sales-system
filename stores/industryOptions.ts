@@ -32,7 +32,7 @@ export const useIndustryOptionsStore = defineStore('industryOptions', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<IndustryOption, 'id' | 'created_at'>>): Promise<IndustryOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<IndustryOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<IndustryOption>>(`/admin/industries/${id}`, changes)
       const updated = parseDates(response.data.data)

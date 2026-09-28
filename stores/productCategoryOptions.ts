@@ -31,7 +31,7 @@ export const useProductCategoryOptionsStore = defineStore('productCategoryOption
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<ProductCategoryOption, 'id' | 'created_at'>>): Promise<ProductCategoryOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<ProductCategoryOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<ProductCategoryOption>>(`/admin/product-categories/${id}`, changes)
       const updated = parseDates(response.data.data)

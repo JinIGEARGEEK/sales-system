@@ -10,6 +10,28 @@ const parseDates = (company: Company): Company => ({
   deleted_at: company.deleted_at ? new Date(company.deleted_at) : company.deleted_at,
 })
 
+// PUT /companies/:id replaces every mapped field (CLAUDE.md, design-system.md
+// §8), so an update() built from an existing record resends all of them with
+// just `changes` swapped in — same as fullDealUpdatePayload() in stores/deals.ts.
+// legal_name/address/tax_id are optional on Company but always sent by the API
+// (null when unset), hence the `?? null`.
+export const fullCompanyUpdatePayload = (company: Company, changes: Partial<CompanyUpdatePayload> = {}): CompanyUpdatePayload => ({
+  name: company.name,
+  industry: company.industry,
+  size: company.size,
+  revenue_size: company.revenue_size,
+  website: company.website,
+  tags: company.tags,
+  notes: company.notes,
+  status: company.status,
+  legal_name: company.legal_name ?? null,
+  address: company.address ?? null,
+  tax_id: company.tax_id ?? null,
+  branch_code: company.branch_code ?? null,
+  postal_code: company.postal_code ?? null,
+  ...changes,
+})
+
 export const useCompaniesStore = defineStore('companies', {
   state: () => ({
     items: [] as Company[],
@@ -100,7 +122,7 @@ export const useCompaniesStore = defineStore('companies', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<Company, 'id'>>): Promise<Company> {
+    async update (id: number, changes: CompanyUpdatePayload): Promise<Company> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Company>>(`/companies/${id}`, changes)
       const updated = parseDates(response.data.data)

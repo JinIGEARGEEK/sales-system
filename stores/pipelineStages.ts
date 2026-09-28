@@ -47,7 +47,7 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<PipelineStage, 'id' | 'created_at'>>): Promise<PipelineStage> {
+    async update (id: number, changes: PipelineStageUpdatePayload): Promise<PipelineStage> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<PipelineStage>>(`/admin/pipeline-stages/${id}`, changes)
       const updated = parseDates(response.data.data)
