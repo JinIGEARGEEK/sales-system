@@ -12,8 +12,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   setLocale(localStorage.getItem('lang') || 'th')
 
-  Object.keys(AllRules).forEach((rule) => {
-    defineRule(rule, AllRules[rule])
+  Object.entries(AllRules).forEach(([rule, validator]) => {
+    defineRule(rule, validator)
   })
 
   defineRule('phone', (value: string) => {

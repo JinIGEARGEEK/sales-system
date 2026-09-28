@@ -110,7 +110,7 @@ onMounted(() => {
   const mainEl = sentinelEl?.closest('main') ?? null
   if (!sentinelEl || !mainEl) return
   const observer = new IntersectionObserver(
-    ([entry]) => { isSearchBarStuck.value = !entry.isIntersecting },
+    ([entry]) => { isSearchBarStuck.value = !entry?.isIntersecting },
     { root: mainEl, threshold: 0 },
   )
   observer.observe(sentinelEl)

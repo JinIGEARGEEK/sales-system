@@ -32,7 +32,7 @@ describe('stores/deals', () => {
 
     expect(mockApi.get).toHaveBeenCalledWith('/deals', { params: { per_page: 200 } })
     expect(result).toHaveLength(1)
-    expect(store.items[0].id).toBe(1)
+    expect(store.items[0]?.id).toBe(1)
     expect(store.total).toBe(1)
     expect(store.page).toBe(1)
   })
@@ -44,8 +44,8 @@ describe('stores/deals', () => {
     const store = useDealsStore()
     await store.fetchAll()
 
-    expect(store.items[0].created_at).toBeInstanceOf(Date)
-    expect(store.items[0].expected_close_date).toBeInstanceOf(Date)
+    expect(store.items[0]?.created_at).toBeInstanceOf(Date)
+    expect(store.items[0]?.expected_close_date).toBeInstanceOf(Date)
   })
 
   it('add posts the new deal to POST /deals and pushes the created record into items', async () => {
@@ -72,7 +72,7 @@ describe('stores/deals', () => {
     expect(mockApi.put).toHaveBeenCalledWith('/deals/1', expect.objectContaining({ title: 'New title' }))
     expect(result.title).toBe('New title')
     expect(store.items).toHaveLength(1)
-    expect(store.items[0].title).toBe('New title')
+    expect(store.items[0]?.title).toBe('New title')
   })
 
   it('update leaves items untouched when the deal being updated is not already loaded', async () => {
@@ -84,7 +84,7 @@ describe('stores/deals', () => {
     await store.update(99, fullDealUpdatePayload(makeDeal({ id: 99 }), { title: 'Untracked' }))
 
     expect(store.items).toHaveLength(1)
-    expect(store.items[0].id).toBe(1)
+    expect(store.items[0]?.id).toBe(1)
   })
 
   it('fullDealUpdatePayload carries every PUT field from the record, with changes swapped in', () => {
@@ -117,7 +117,7 @@ describe('stores/deals', () => {
 
     expect(mockApi.patch).toHaveBeenCalledWith('/deals/1/stage', { stage: 'Qualified' })
     expect(result.stage).toBe('Qualified')
-    expect(store.items[0].stage).toBe('Qualified')
+    expect(store.items[0]?.stage).toBe('Qualified')
   })
 
   it('remove deletes the deal via DELETE /deals/:id and drops it from items', async () => {

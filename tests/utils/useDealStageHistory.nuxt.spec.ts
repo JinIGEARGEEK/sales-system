@@ -100,7 +100,7 @@ describe('useDealStageHistory', () => {
     const { fetchDealStageHistory } = useDealStageHistory()
     const [entry] = await fetchDealStageHistory(1)
 
-    expect(entry.fromStage).toBeNull()
+    expect(entry?.fromStage).toBeNull()
   })
 
   it('resolves an unknown actor to "Unassigned" via teamMembersStore.nameById', async () => {
@@ -110,7 +110,7 @@ describe('useDealStageHistory', () => {
     const { fetchDealStageHistory } = useDealStageHistory()
     const [entry] = await fetchDealStageHistory(1)
 
-    expect(entry.actorName).toBe('Unassigned')
+    expect(entry?.actorName).toBe('Unassigned')
   })
 
   it('fetches team members first when they are not already loaded', async () => {

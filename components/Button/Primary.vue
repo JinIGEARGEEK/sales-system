@@ -35,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ButtonProps } from '@nuxt/ui'
+
 const props = defineProps({
   dataCy: {
     type: String,
@@ -45,7 +47,7 @@ const props = defineProps({
     default: '',
   },
   color: {
-    type: String,
+    type: String as PropType<ButtonProps['color']>,
     default: 'primary',
   },
   disabled: {
