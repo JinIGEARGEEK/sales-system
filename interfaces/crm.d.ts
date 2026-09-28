@@ -442,6 +442,17 @@ interface LeadScoringCriterion {
   created_at: Date
 }
 
+// Admin config update() parameter types. Each handler overwrites the required
+// fields here on every PUT (or rejects a request without `name`), and keeps the
+// optional ones when omitted — so, as with LeadUpdatePayload, a call site that
+// leaves out a required field is a compile error, not a zeroed-out column.
+// OptionUpdatePayload covers the seven name + is_active option lists, which
+// share one backend handler (option_crud.go).
+type OptionUpdatePayload = Pick<IndustryOption, 'name'> & Partial<Pick<IndustryOption, 'is_active'>>
+type PipelineStageUpdatePayload = Pick<PipelineStage, 'name' | 'sort_order' | 'is_won_stage' | 'is_lost_stage'> & Partial<Pick<PipelineStage, 'is_active' | 'stale_days'>>
+type ProspectStageUpdatePayload = Pick<ProspectStage, 'name' | 'sort_order' | 'is_disqualified_stage'> & Partial<Pick<ProspectStage, 'is_active' | 'stale_days'>>
+type LeadScoringCriterionUpdatePayload = Pick<LeadScoringCriterion, 'name' | 'field' | 'match_value' | 'weight'> & Partial<Pick<LeadScoringCriterion, 'is_active'>>
+
 // GET /leads/:id/score-breakdown (FR-CRM-007) — same total as Lead.score,
 // plus which active LeadScoringCriterion rows matched and contributed, so a
 // rep can see why a Lead scored what it did without needing Admin access to
@@ -507,6 +518,10 @@ interface AppSettings {
   // the only place that's visible from the app itself.
   smtp_configured: boolean
 }
+
+// stores/appSettings.ts update() parameter type: PATCH /settings requires both
+// revenue figures on every call and keeps the rest when omitted.
+type AppSettingsUpdatePayload = Pick<AppSettings, 'quarterly_sales_target' | 'annual_revenue_goal'> & Partial<Pick<AppSettings, 'lead_scoring_mql_threshold' | 'require_signed_contract_before_won' | 'weekly_digest_enabled'>>
 
 // An Admin-configurable target for one specific (year, quarter) period —
 // GET/POST/PATCH/DELETE /admin/sales-targets, FR-CRM-092. Overrides
@@ -575,6 +590,10 @@ interface Tag {
   status: TagStatus
   created_at: Date
 }
+
+// stores/tags.ts update() parameter type: PUT /tags/:id overwrites name,
+// category and description, and keeps status when omitted.
+type TagUpdatePayload = Pick<Tag, 'name' | 'category' | 'description'> & Partial<Pick<Tag, 'status'>>
 
 // Editable-row shape used by components/Crm/QuoteItemsEditor.vue and the
 // Quote create/edit pages — a superset of QuoteItem with the UI-only `key`

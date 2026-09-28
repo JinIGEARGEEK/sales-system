@@ -39,7 +39,7 @@ export const useTagsStore = defineStore('tags', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<Tag, 'id' | 'created_at'>>): Promise<Tag> {
+    async update (id: number, changes: TagUpdatePayload): Promise<Tag> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Tag>>(`/tags/${id}`, changes)
       const updated = parseDates(response.data.data)
