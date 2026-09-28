@@ -378,7 +378,7 @@ const observePageTitle = () => {
     currentPageTitle.value = titleEl.textContent?.trim() ?? ''
 
     titleObserver = new IntersectionObserver(
-      ([entry]) => { showTitleInHeader.value = !entry.isIntersecting },
+      ([entry]) => { showTitleInHeader.value = !entry?.isIntersecting },
       { root: mainEl, rootMargin: `-${headerEl.offsetHeight}px 0px 0px 0px`, threshold: 0 },
     )
     titleObserver.observe(titleEl)

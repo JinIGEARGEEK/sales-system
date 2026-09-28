@@ -59,7 +59,7 @@ describe('stores/contracts', () => {
 
     expect(mockApi.put).toHaveBeenCalledWith('/contracts/1', { status: 'signed' })
     expect(result.status).toBe('signed')
-    expect(store.items[0].status).toBe('signed')
+    expect(store.items[0]?.status).toBe('signed')
   })
 
   it('update leaves items untouched when the contract being updated is not already loaded', async () => {
@@ -71,7 +71,7 @@ describe('stores/contracts', () => {
     await store.update(99, { status: 'signed' })
 
     expect(store.items).toHaveLength(1)
-    expect(store.items[0].id).toBe(1)
+    expect(store.items[0]?.id).toBe(1)
   })
 
   it('upload POSTs a multipart file to /contracts/:id/upload and replaces the item in place', async () => {
@@ -89,7 +89,7 @@ describe('stores/contracts', () => {
       { headers: { 'Content-Type': 'multipart/form-data' } },
     )
     expect(result.signed_file_url).toBe('/files/contract.pdf')
-    expect(store.items[0].signed_file_url).toBe('/files/contract.pdf')
+    expect(store.items[0]?.signed_file_url).toBe('/files/contract.pdf')
   })
 
   it('keeps end_date as the date-only YYYY-MM-DD prefix, never a Date', async () => {

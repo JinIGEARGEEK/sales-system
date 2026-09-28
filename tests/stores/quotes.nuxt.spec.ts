@@ -88,7 +88,7 @@ describe('stores/quotes', () => {
 
     expect(mockApi.put).toHaveBeenCalledWith('/quotes/1', payload)
     expect(result.status).toBe('sent')
-    expect(store.items[0].status).toBe('sent')
+    expect(store.items[0]?.status).toBe('sent')
   })
 
   it('updateStatus rebuilds the full PUT payload from the already-loaded quote and only changes status', async () => {

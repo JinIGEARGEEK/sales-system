@@ -128,6 +128,7 @@ pnpm preview          # Preview production build
 pnpm test             # Run unit tests (Vitest)
 pnpm test:e2e         # E2E smoke tests (Playwright) — run `pnpm build` first
 pnpm lint             # Lint code
+pnpm typecheck        # Type-check (nuxi typecheck / vue-tsc) — also runs in CI
 ```
 
 ## Rules

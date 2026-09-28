@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint .",
-    "lint-fix": "eslint --fix ."
+    "lint-fix": "eslint --fix .",
+    "typecheck": "nuxi typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "18.4.3",
@@ -44,6 +45,7 @@
     "numeral": "2.0.6",
     "nuxt": "4.2.0",
     "pinia": "3.0.3",
+    "reka-ui": "2.6.0",
     "vee-validate": "4.11.6",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },

@@ -29,9 +29,9 @@
         >
           <UCheckbox
             v-if="hasSelectColumn"
-            v-model="selected"
-            :value="row"
+            :model-value="selected.includes(row)"
             class="pt-0.5"
+            @update:model-value="toggleRowSelection(row)"
           />
           <dl class="grid min-w-0 flex-1 grid-cols-2 gap-x-3 gap-y-1.5">
             <div
@@ -313,7 +313,7 @@ const paginatedRows = computed(() => {
 })
 
 const selected = ref(prop.selectValue)
-const isSelectAll = ref<boolean | null>(false)
+const isSelectAll = ref<boolean | 'indeterminate'>(false)
 
 watch(
   () => prop.selectValue,
@@ -355,7 +355,7 @@ watch(
   () => selected.value,
   (value) => {
     if (selected.value.length > 0 && selected.value.length !== prop.rows.length) {
-      isSelectAll.value = null
+      isSelectAll.value = 'indeterminate'
     } else if (selected.value.length === prop.rows.length) {
       isSelectAll.value = true
     } else if (selected.value.length === 0) {
@@ -366,7 +366,7 @@ watch(
   { deep: true },
 )
 
-const onSelectAll = (val: boolean) => {
+const onSelectAll = (val: boolean | 'indeterminate') => {
   selected.value = val ? [...prop.rows] : []
 }
 

@@ -115,7 +115,7 @@ const { t } = useI18n()
 const { priceFormatCompact } = useFormatter()
 
 defineProps<{
-  upsellCandidates: { company: Company, contact: { color: string, label: string } }[]
+  upsellCandidates: { company: Company, contact: { color: LastContactColor, label: string } }[]
   upsellStaleDaysOptions: Select[]
   funnelStages: { label: string, value: number, barClass?: string }[]
   funnelStagesPreview: { label: string, value: number, barClass?: string }[]

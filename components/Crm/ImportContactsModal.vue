@@ -225,7 +225,12 @@ const onFileChange = async (event: Event) => {
   try {
     const buffer = await file.arrayBuffer()
     const workbook = XLSX.read(buffer, { type: 'array' })
-    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const firstSheetName = workbook.SheetNames[0]
+    const sheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined
+    if (!sheet) {
+      error.value = t('crm.components.importModal.errorNoHeader')
+      return
+    }
     const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: '' })
 
     // The FlowAccount export has a merged title row before the real header
@@ -236,7 +241,7 @@ const onFileChange = async (event: Event) => {
       return
     }
 
-    const headerRow = rows[headerRowIndex]
+    const headerRow = rows[headerRowIndex]!
     const headerIndex: Record<string, number> = {}
     headerRow.forEach((label, index) => {
       const key = HEADER_MAP[String(label).trim()]

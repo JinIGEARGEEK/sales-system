@@ -93,7 +93,7 @@ watch(() => props.modelValue, (value) => {
   const start = value?.start ?? null
   const end = value?.end ?? null
   const current = calendarValue.value
-  if ((current?.start.toString() ?? null) === start && (current?.end.toString() ?? null) === end) return
+  if ((current?.start?.toString() ?? null) === start && (current?.end?.toString() ?? null) === end) return
   calendarValue.value = fromProp(value)
 })
 

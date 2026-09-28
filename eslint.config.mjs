@@ -2,5 +2,6 @@
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
-  // Your custom configs here
+  // Agent worktrees under .claude/ are full checkouts of other branches
+  { ignores: ['.claude/**'] },
 )

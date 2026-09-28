@@ -14,11 +14,11 @@
     >
       <div
         class="flex items-start justify-between gap-2 border-b border-white/40 px-3 py-2 backdrop-blur-2xl"
-        :style="{ backgroundColor: getColumnHeaderTint(column.value, entity) }"
+        :style="{ backgroundColor: getColumnHeaderTint(String(column.value), entity) }"
       >
         <div class="flex flex-col">
           <span class="text-sm font-medium text-white">{{ column.label }}</span>
-          <span class="text-[11px] text-white/70">{{ getStageDescription(column.value, entity) }}</span>
+          <span class="text-[11px] text-white/70">{{ getStageDescription(String(column.value), entity) }}</span>
         </div>
         <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white">
           {{ columnCounts?.[column.value] ?? (grouped[column.value]?.length || 0) }}
@@ -28,7 +28,7 @@
       <div
         class="flex flex-1 flex-col gap-2 p-3 backdrop-blur-xl"
         :class="{ 'cursor-pointer': allowQuickAdd }"
-        :style="{ backgroundColor: getColumnTint(column.value, entity) }"
+        :style="{ backgroundColor: getColumnTint(String(column.value), entity) }"
         @click.self="onEmptyAreaClick(column.value)"
       >
         <template v-for="(item, idx) in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
