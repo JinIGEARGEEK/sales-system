@@ -1,10 +1,13 @@
 import { fileURLToPath } from 'node:url'
+import { configDefaults } from 'vitest/config'
 import { defineVitestConfig } from '@nuxt/test-utils/config'
 
 export default defineVitestConfig({
   test: {
     // globals: true,
     testTimeout: 30000,
+    // Agent worktrees under .claude/ are full checkouts of other branches
+    exclude: [...configDefaults.exclude, '.claude/**'],
     environment: 'nuxt',
     environmentOptions: {
       nuxt: {
