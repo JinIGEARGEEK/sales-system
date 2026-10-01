@@ -10,10 +10,10 @@
         @click="emit('back')"
       />
       <div v-if="subtitle" class="min-w-0">
-        <h2 class="max-w-full truncate text-xl font-semibold">{{ title }}</h2>
+        <h2 class="max-w-full truncate text-xl font-medium">{{ title }}</h2>
         <p class="text-sm text-(--color-gray)">{{ subtitle }}</p>
       </div>
-      <h2 v-else class="max-w-full truncate text-xl font-semibold">{{ title }}</h2>
+      <h2 v-else class="max-w-full truncate text-xl font-medium">{{ title }}</h2>
       <!-- Badges, status pills, popovers — whatever a caller wants next to the title. -->
       <slot />
     </div>

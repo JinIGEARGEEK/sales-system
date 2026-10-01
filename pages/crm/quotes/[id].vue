@@ -210,7 +210,7 @@
                 <div v-if="vatIncluded" class="flex justify-between" data-cy="quote-pre-vat"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.amountBeforeVat') }}</span><span>{{ currency(totals.taxableAmount) }}</span></div>
                 <div v-if="form.vat_enabled" class="flex justify-between" data-cy="quote-vat"><span class="text-(--color-gray)">{{ vatIncluded ? t('crm.quotes.editor.vatIncluded') : t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
                 <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ currency(totals.wht) }}</span></div>
-                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
+                <div class="flex justify-between text-base font-medium"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
               </div>
 
               <fieldset class="mt-4 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2" :disabled="locked">

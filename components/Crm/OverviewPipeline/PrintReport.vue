@@ -5,7 +5,7 @@
   board. Browser printing also renders Thai names correctly, which the
   backend's PDF export fonts can't. -->
   <div class="overview-print hidden text-[11px] text-black">
-    <h1 class="text-lg font-semibold">{{ t('crm.overviewPipeline.heading') }} · {{ periodLabel }}</h1>
+    <h1 class="text-lg font-medium">{{ t('crm.overviewPipeline.heading') }} · {{ periodLabel }}</h1>
     <p class="text-(--color-dark-gray)">
       {{ t('crm.overviewPipeline.print.generated', { date: dateTimeFormat(new Date()) }) }} ·
       {{ filtersLabel ? t('crm.overviewPipeline.print.filters', { filters: filtersLabel }) : t('crm.overviewPipeline.print.noFilters') }}
@@ -16,7 +16,7 @@
         <tr>
           <td v-for="item in summaryItems" :key="item.label" class="border border-(--color-light-gray-2) px-2 py-1.5 align-top">
             <div class="text-(--color-dark-gray)">{{ item.label }}</div>
-            <div class="text-base font-semibold">{{ item.value }}</div>
+            <div class="text-base font-medium">{{ item.value }}</div>
             <div v-if="item.sub" class="text-(--color-dark-gray)">{{ item.sub }}</div>
           </td>
         </tr>
@@ -24,7 +24,7 @@
     </table>
 
     <section v-for="zone in data.zones" :key="zone.key" class="mt-4 break-inside-avoid-page">
-      <h2 class="mb-1 text-sm font-semibold">{{ t(`crm.overviewPipeline.zones.${zone.key}`) }}</h2>
+      <h2 class="mb-1 text-sm font-medium">{{ t(`crm.overviewPipeline.zones.${zone.key}`) }}</h2>
       <table class="w-full border-collapse">
         <thead>
           <tr class="bg-(--color-light-gray-1) text-left">

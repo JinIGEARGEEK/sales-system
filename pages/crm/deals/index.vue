@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-semibold">{{ t('crm.deals.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.deals.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.deals.index.viewKanban')" :list-label="t('crm.deals.index.viewList')" />
 

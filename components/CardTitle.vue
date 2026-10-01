@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 // The heading inside a UCard's #header (or a card-like section) — one step
-// below the page's `text-xl font-semibold` <h2> (design-system.md §3.4).
+// below the page's `text-xl font-medium` <h2> (design-system.md §3.4).
 // `md` (default) is the standard card/section title; `lg` is the Dashboard
 // widget cards' slightly larger, lighter title (same as a modal title).
 withDefaults(defineProps<{

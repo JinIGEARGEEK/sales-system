@@ -17,8 +17,8 @@
         <span class="truncate">{{ step.label }}</span>
       </p>
       <p class="flex items-baseline gap-2">
-        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ numberFormat(step.current) }}</span>
-        <span v-if="step.extra" class="truncate text-sm font-semibold tabular-nums" :style="{ color: step.color }">{{ step.extra }}</span>
+        <span class="text-2xl leading-tight font-medium tabular-nums">{{ numberFormat(step.current) }}</span>
+        <span v-if="step.extra" class="truncate text-sm font-medium tabular-nums" :style="{ color: step.color }">{{ step.extra }}</span>
         <span class="ml-auto shrink-0 rounded-full px-1.5 py-px text-[11px] font-medium tabular-nums" :class="deltaClass(step.current - step.previous)">
           {{ deltaLabel(step.current - step.previous) }}
         </span>
@@ -40,7 +40,7 @@
         {{ t('crm.overviewPipeline.summary.openPipeline') }}
       </p>
       <p class="flex flex-wrap items-baseline gap-x-2">
-        <span class="text-2xl leading-tight font-semibold tabular-nums">{{ currencyCompact(summary.open_pipeline.value) }}</span>
+        <span class="text-2xl leading-tight font-medium tabular-nums">{{ currencyCompact(summary.open_pipeline.value) }}</span>
         <span class="text-xs text-(--color-gray) tabular-nums">{{ t('crm.overviewPipeline.summary.openDeals', { count: numberFormat(summary.open_pipeline.count), value: currencyCompact(summary.open_pipeline.weighted_value) }) }}</span>
       </p>
       <UTooltip :text="t('crm.overviewPipeline.summary.weightedShare')">

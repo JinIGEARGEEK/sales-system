@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-semibold">{{ t('admin.activityLog.title') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('admin.activityLog.title') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('admin.activityLog.subtitle') }}</p>
         </div>
       </div>
