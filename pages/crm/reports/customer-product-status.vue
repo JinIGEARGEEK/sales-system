@@ -13,14 +13,16 @@
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputSelect
-            v-model="productFilter"
-            :options="productOptions"
-            :label="t('crm.reports.customerProductStatus.filterProduct')"
-            name="productFilter"
-            size="xs"
-            class="w-full sm:w-48"
-          />
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <InputSelect
+              v-model="productFilter"
+              :options="productOptions"
+              :label="t('crm.reports.customerProductStatus.filterProduct')"
+              name="productFilter"
+              size="xs"
+              class="w-full sm:w-48"
+            />
+          </CrmMoreFilters>
           <InputSelect
             v-model="statusFilter"
             :options="statusOptions"
@@ -60,6 +62,8 @@
         :total="rows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
       />
@@ -105,19 +109,21 @@ const statusOptions = computed(() => [
   ...CUSTOMER_PRODUCT_STATUS_OPTIONS,
 ])
 
-const productFilter = ref('all')
-const statusFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view. Status is the primary filter and
+// the company-tag text box stands in for search; Product collapses behind
+// "More filters" on mobile.
+const productFilter = useQuerySyncedRef('product_id')
+const statusFilter = useQuerySyncedRef('status')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => {
-  return productFilter.value !== 'all' || statusFilter.value !== 'all' || Boolean(companyTagFilter.value)
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: productFilter, secondary: true },
+    { ref: statusFilter },
+    { ref: companyTagFilter, default: '' },
+  ],
 })
-
-const clearFilters = () => {
-  productFilter.value = 'all'
-  statusFilter.value = 'all'
-  companyTagFilter.value = ''
-}
 
 const results = ref<CustomerByProductStatusRow[]>([])
 const loading = ref(false)

@@ -91,22 +91,30 @@ const assigneeOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const dateRange = ref<{ start: string, end: string } | null>(null)
-const assigneeFilter = ref('all')
+// URL-synced (design-system §5.4), like Source Performance: a shared link,
+// a refresh or a back-button return reopens the same window. The range
+// travels as two YYYY-MM-DD strings straight from the date picker.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const assigneeFilter = useQuerySyncedRef('assigned_to')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || assigneeFilter.value !== 'all')
-
-const clearFilters = () => {
-  dateRange.value = null
-  assigneeFilter.value = 'all'
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: dateFrom, default: '' }, { ref: dateTo, default: '' }, { ref: assigneeFilter }],
+})
 
 const rows = ref<ProspectSourceConversionRow[]>([])
 const loading = ref(false)
 
 const reportParams = () => ({
-  date_from: dateRange.value?.start,
-  date_to: dateRange.value?.end,
+  date_from: dateFrom.value || undefined,
+  date_to: dateTo.value || undefined,
   assigned_to: assigneeFilter.value !== 'all' ? assigneeFilter.value : undefined,
 })
 
@@ -126,5 +134,5 @@ const fetchReport = async () => {
 const onExport = () => downloadCsvBlob('/reports/prospect-source-conversion/export', 'prospect-source-conversion.csv', reportParams())
 
 guardMounted(fetchReport)
-watch([dateRange, assigneeFilter], fetchReport)
+watch([dateFrom, dateTo, assigneeFilter], fetchReport)
 </script>

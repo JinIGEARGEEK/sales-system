@@ -26,29 +26,32 @@
       <UCard class="mb-4" :ui="GLASS_PANEL_UI">
         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <InputText
-            v-model.number="minDays"
+            :model-value="minDaysParam"
             type="number"
             :label="t('crm.reports.stalledDeals.filterMinDays')"
             name="minDays"
             size="xs"
             class="w-full sm:w-80"
+            @update:model-value="minDaysParam = String($event ?? '')"
           />
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.stalledDeals.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <InputText
-            v-model="companyTagFilter"
-            :label="t('crm.reports.stalledDeals.filterCompanyTag')"
-            :placeholder="t('crm.reports.stalledDeals.filterCompanyTagPlaceholder')"
-            name="companyTagFilter"
-            size="xs"
-            class="w-full sm:w-40"
-          />
+          <CrmMoreFilters :count="secondaryFilterCount">
+            <InputSelect
+              v-model="salesRepFilter"
+              :options="salesRepOptions"
+              :label="t('crm.reports.stalledDeals.filterSalesRep')"
+              name="salesRepFilter"
+              size="xs"
+              class="w-full sm:w-56"
+            />
+            <InputText
+              v-model="companyTagFilter"
+              :label="t('crm.reports.stalledDeals.filterCompanyTag')"
+              :placeholder="t('crm.reports.stalledDeals.filterCompanyTagPlaceholder')"
+              name="companyTagFilter"
+              size="xs"
+              class="w-full sm:w-40"
+            />
+          </CrmMoreFilters>
           <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
             <UButton
@@ -72,6 +75,8 @@
         :total="displayRows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-deal="onViewDeal"
@@ -110,17 +115,22 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const minDays = ref(14)
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view. min_days travels as a string and is
+// converted at use; the two free-text inputs debounce their URL write like
+// their refetch below.
+const minDaysParam = useQuerySyncedRef('min_days', '14', 400)
+const minDays = computed(() => Number(minDaysParam.value) || 0)
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => minDays.value !== 14 || salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  minDays.value = 14
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: minDaysParam, default: '14' },
+    { ref: salesRepFilter, secondary: true },
+    { ref: companyTagFilter, default: '', secondary: true },
+  ],
+})
 
 const results = ref<StalledDealRow[]>([])
 const loading = ref(false)
@@ -147,11 +157,16 @@ const fetchReport = async () => {
 guardMounted(fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
-watch([minDays, companyTagFilter], () => {
+watch([minDaysParam, companyTagFilter], () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(fetchReport, 400)
 })
-watch(salesRepFilter, fetchReport)
+// Runs after the debounced watcher in the same flush (watchers fire in
+// creation order), so Clear filters fetches once instead of twice.
+watch(salesRepFilter, () => {
+  clearTimeout(debounceTimer)
+  fetchReport()
+})
 
 const onExport = () => downloadCsvBlob('/reports/stalled-deals/export', 'stalled-deals.csv', reportParams())
 

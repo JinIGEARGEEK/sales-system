@@ -29,7 +29,7 @@
             size="xs"
             class="w-full sm:w-48"
           />
-          <div v-if="hasActiveFilters || bucketFilter !== 'all'" class="flex flex-col">
+          <div v-if="hasActiveFilters" class="flex flex-col">
             <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
             <UButton
               icon="material-symbols:filter-alt-off-outline"
@@ -76,6 +76,8 @@
         :total="rows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-deal="onViewDeal"
@@ -115,20 +117,18 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
-
-const hasActiveFilters = computed(() => salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-  bucketFilter.value = 'all'
-}
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view.
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
 // Client-side: the API has no bucket filter, and the summary tiles above
 // always show every bucket of the current server-side filter.
 const bucketFilter = useQuerySyncedRef<AgingBucket | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
+
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: salesRepFilter }, { ref: companyTagFilter, default: '' }, { ref: bucketFilter }],
+})
 const toggleBucket = (bucket: AgingBucket) => {
   bucketFilter.value = bucketFilter.value === bucket ? 'all' : bucket
 }
