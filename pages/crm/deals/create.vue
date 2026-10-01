@@ -98,7 +98,8 @@ import type { SubmissionContext } from 'vee-validate'
 import { isAxiosError } from 'axios'
 import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, findDuplicateDeals, stageDefaultForecastCategory } from '~/constants/mockData'
 
-const { t, te } = useI18n()
+const { t } = useI18n()
+const showFieldErrors = useApiFieldErrors()
 
 useHead({ title: t('crm.deals.create.pageTitle') })
 
@@ -389,8 +390,7 @@ const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) =>
     // A 422's fields (assigned_to no longer an active sales user, a missing
     // lost_reason, …) go onto their inputs; the Won gate keeps its own toast.
     if (!apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')
-      && actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
-      fields: DEAL_FORM_FIELDS,
+      && actions && showFieldErrors(err, actions.setErrors, DEAL_FORM_FIELDS, {
       messages: { assigned_to: t('crm.deals.create.assigneeInvalid') },
     })) return
     notifyStageChangeError(err)

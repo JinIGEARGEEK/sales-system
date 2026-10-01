@@ -18,7 +18,8 @@ export type PaymentErrorReporter = (err: unknown) => boolean
 export const PAYMENT_FORM_FIELDS = ['amount', 'paid_at', 'wht_amount', 'method', 'document_number', 'installment_id', 'note']
 
 export const usePaymentSaveErrors = (setErrors: () => ((errors: Record<string, string>) => void) | undefined) => {
-  const { t, te } = useI18n()
+  const { t } = useI18n()
+  const showFieldErrors = useApiFieldErrors()
   const { error } = useNotify()
   const overpaymentPending = ref(false)
 
@@ -37,8 +38,7 @@ export const usePaymentSaveErrors = (setErrors: () => ((errors: Record<string, s
     }
     if (fields.amount?.includes('exceeds_receivable')) overpaymentPending.value = true
     if (!set) return overpaymentPending.value
-    return applyFormApiFieldErrors(err, set, t, te, {
-      fields: PAYMENT_FORM_FIELDS,
+    return showFieldErrors(err, set, PAYMENT_FORM_FIELDS, {
       messages: { paid_at: t('crm.components.addPaymentModal.errors.paidAtFuture') },
     }) || overpaymentPending.value
   }

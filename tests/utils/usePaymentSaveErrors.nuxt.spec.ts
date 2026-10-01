@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { apiResponse, apiError } from '../factories'
 
-// Echo i18n keys back; `te` knows only the exceeds_receivable field code
-// (like the real global.apiFieldError table). The real useToast stays intact.
+// Echo i18n keys back for the composable's own messages. The field-code
+// text comes from useApiFieldErrors, which reads the real $i18n table. The
+// real useToast stays intact.
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key, te: (key: string) => key === 'global.apiFieldError.exceeds_receivable' }),
 }))
@@ -48,7 +49,7 @@ describe('usePaymentSaveErrors', () => {
     const refused = await store.add(7, withOverpayment(basePayload())).catch((err: unknown) => err)
     expect(report(refused)).toBe(true)
     expect(overpaymentPending.value).toBe(true)
-    expect(setErrors).toHaveBeenCalledWith({ amount: 'global.apiFieldError.exceeds_receivable' })
+    expect(setErrors).toHaveBeenCalledWith({ amount: useNuxtApp().$i18n.t('global.apiFieldError.exceeds_receivable') })
     expect(postSpy.mock.calls[0]![1]).not.toHaveProperty('allow_overpayment')
 
     // "Record anyway": the same payment, now with allow_overpayment.

@@ -270,7 +270,8 @@
 import { useI18n } from 'vue-i18n'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
-const { t, te } = useI18n()
+const { t } = useI18n()
+const showFieldErrors = useApiFieldErrors()
 
 useHead({ title: t('crm.quotes.detail.pageTitle') })
 
@@ -454,8 +455,7 @@ const reloadQuote = () => quotesStore.fetchOne(quoteId).catch(notifyApiError)
 // 409 in words with Reload, anything else as the API's message.
 const reportSaveError = (err: unknown) => {
   const setErrors = (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors
-  if (setErrors && applyFormApiFieldErrors(err, setErrors, t, te, {
-    fields: quoteFormFieldNames(items.value),
+  if (setErrors && showFieldErrors(err, setErrors, quoteFormFieldNames(items.value), {
     fieldMap: quoteItemFieldMap(items.value),
   })) return
   notifyQuoteError(err, reloadQuote)

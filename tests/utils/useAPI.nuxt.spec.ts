@@ -81,7 +81,37 @@ describe('useApiFieldErrors', () => {
     const setErrors = vi.fn()
     const err = apiError(422, { fields: { assigned_to: ['invalid'] } })
 
-    expect(showFieldErrors(err, setErrors, ['assignedTo'], { assigned_to: 'assignedTo' })).toBe(true)
+    expect(showFieldErrors(err, setErrors, ['assignedTo'], { fieldMap: { assigned_to: 'assignedTo' } })).toBe(true)
     expect(Object.keys(setErrors.mock.calls[0]![0])).toEqual(['assignedTo'])
+  })
+
+  it('still marks the rendered fields when some API field has no input, but asks for the toast', () => {
+    const showFieldErrors = useApiFieldErrors()
+    const setErrors = vi.fn()
+    const err = apiError(422, { fields: { amount: ['required'], deal_id: ['invalid'] } })
+
+    expect(showFieldErrors(err, setErrors, ['amount', 'note'])).toBe(false)
+    expect(setErrors).toHaveBeenCalledTimes(1)
+    expect(Object.keys(setErrors.mock.calls[0]![0])).toEqual(['amount'])
+  })
+
+  it('uses a per-field message override instead of the generic code text', () => {
+    const showFieldErrors = useApiFieldErrors()
+    const setErrors = vi.fn()
+    const err = apiError(422, { fields: { assigned_to: ['invalid'], name: ['required'] } })
+
+    expect(showFieldErrors(err, setErrors, ['assigned_to', 'name'], { messages: { assigned_to: 'Pick an active sales user' } })).toBe(true)
+    const shown = setErrors.mock.calls[0]![0] as Record<string, string>
+    expect(shown.assigned_to).toBe('Pick an active sales user')
+    expect(shown.name).toBe(useNuxtApp().$i18n.t('global.apiFieldError.required'))
+  })
+
+  it('sets nothing and asks for the toast when no field is rendered or the error has no fields', () => {
+    const showFieldErrors = useApiFieldErrors()
+    const setErrors = vi.fn()
+
+    expect(showFieldErrors(apiError(422, { fields: { deal: ['invalid'] } }), setErrors, ['name'])).toBe(false)
+    expect(showFieldErrors(apiError(500, { message: 'boom' }), setErrors, ['name'])).toBe(false)
+    expect(setErrors).not.toHaveBeenCalled()
   })
 })
