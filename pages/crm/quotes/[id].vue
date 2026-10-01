@@ -40,6 +40,18 @@
       Never shown again once the query param is stripped below, including on
       a later visit to edit the same (by-then-finished) Quote. -->
       <UAlert
+        v-if="pricingLocked"
+        class="mb-4"
+        color="info"
+        variant="subtle"
+        icon="material-symbols:lock-outline"
+        :title="t('crm.quotes.detail.acceptedLockedTitle')"
+        :description="t('crm.quotes.detail.acceptedLockedDescription')"
+        :actions="[{ label: t('crm.quotes.detail.duplicateToRevise'), icon: 'material-symbols:content-copy-outline', color: 'primary', variant: 'solid', loading: duplicatingId !== null, onClick: () => duplicateQuote(quote!.id) }]"
+        data-cy="quote-accepted-locked"
+      />
+
+      <UAlert
         v-if="justCreated"
         class="mb-4"
         color="success"
@@ -116,7 +128,7 @@
                 <InputDatePicker v-model="form.issue_date" :label="t('crm.quotes.editor.issueDate')" name="issue_date" />
                 <InputText v-model.number="form.credit_days" type="number" :label="t('crm.quotes.editor.creditDays')" name="credit_days" rules="min_value:0" />
                 <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
-                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" />
+                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" :disable="pricingLocked" />
               </div>
 
               <InputTextarea
@@ -128,14 +140,17 @@
                 class="mt-3"
               />
 
-              <div class="mt-4">
+              <!-- A disabled <fieldset> disables every control inside it
+              (inputs, selects, checkboxes, add/remove buttons) — the
+              Accepted-quote lock (pricingLocked). -->
+              <fieldset class="mt-4 min-w-0" :disabled="pricingLocked" data-cy="quote-pricing-fieldset">
                 <CrmQuoteItemsEditor v-model="items" />
-              </div>
+              </fieldset>
 
               <!-- Discount/VAT/WHT toggles + the live totals breakdown —
               mirrors utils.ComputeQuoteTotals on the backend exactly (see
               useQuoteTotals) so this and the exported PDF never disagree. -->
-              <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <fieldset class="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2" :disabled="pricingLocked">
                 <InputText v-model.number="form.discount_total" type="number" :label="t('crm.quotes.editor.discountTotal')" name="discount_total" rules="min_value:0" />
                 <div class="flex items-end gap-4">
                   <UCheckbox v-model="form.vat_enabled" :label="t('crm.quotes.editor.vatEnabled')" />
@@ -150,12 +165,13 @@
                   name="wht_rate"
                   rules="min_value:0"
                 />
-              </div>
+              </fieldset>
 
               <div class="mt-4 flex flex-col gap-1 border-t border-(--color-light-gray-2) pt-3 text-sm">
                 <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ currency(totals.subtotal) }}</span></div>
                 <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ currency(totals.discountTotal) }}</span></div>
-                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
+                <div v-if="vatIncluded" class="flex justify-between" data-cy="quote-pre-vat"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.amountBeforeVat') }}</span><span>{{ currency(totals.taxableAmount) }}</span></div>
+                <div v-if="form.vat_enabled" class="flex justify-between" data-cy="quote-vat"><span class="text-(--color-gray)">{{ vatIncluded ? t('crm.quotes.editor.vatIncluded') : t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
                 <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ currency(totals.wht) }}</span></div>
                 <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
               </div>
@@ -204,6 +220,8 @@
       />
 
       <CrmDealValueSyncModal :sync="dealValueSync" />
+
+      <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
     </div>
 
     <DetailSkeleton v-else-if="recordPending" />
@@ -340,7 +358,10 @@ watch(quote, (value) => {
   if (!value) return
   form.scope_of_work = value.scope_of_work
   form.validity_date = value.validity_date ? value.validity_date.toISOString().slice(0, 10) : ''
-  form.status = value.status
+  // 'expired' is read-derived (the API's EffectiveStatus: a Sent quote past
+  // its validity date), never a value PUT accepts — edit it as the Sent it's
+  // stored as. The header badge still shows Expired.
+  form.status = value.status === 'expired' ? 'sent' : value.status
   form.reference_number = value.reference_number ?? ''
   form.issue_date = value.issue_date ? value.issue_date.toISOString().slice(0, 10) : ''
   form.credit_days = value.credit_days
@@ -363,7 +384,16 @@ watch(quote, (value) => {
   markClean()
 }, { immediate: true })
 
-const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
+const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.price_type, form.vat_enabled, form.wht_enabled, form.wht_rate))
+// Tax-inclusive prices with VAT on: VAT is backed out of them, so the
+// breakdown shows the pre-VAT amount and the VAT it contains.
+const vatIncluded = computed(() => form.vat_enabled && form.price_type === 'incl_tax')
+
+// An Accepted Quote's pricing is final — the Deal's receivable and revenue
+// come from it, and the API rejects item/price edits to it. Status and the
+// text fields stay editable; to revise the prices, duplicate it. Keyed on
+// the saved status, so a rep must save it out of Accepted before editing.
+const pricingLocked = computed(() => quote.value?.status === 'accepted')
 
 const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload => ({
   items: serializeQuoteItems(items.value),
@@ -386,11 +416,20 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
 // (pre-VAT — see quoteRevenueAmount).
 const dealValueSync = useQuoteDealValueSync()
 
+const supersede = useSupersedeAcceptedQuotes()
+
 const onSave = guard(async () => {
   if (!quote.value) return
-  const wasAccepted = quote.value.status === 'accepted'
+  const current = quote.value
+  const wasAccepted = current.status === 'accepted'
   try {
-    const updated = await quotesStore.update(quote.value.id, buildUpdatePayload())
+    // Accepting while another quote on the Deal is Accepted: offer to reject
+    // those first (then accept this one).
+    if (!wasAccepted && form.status === 'accepted') {
+      const others = await supersede.loadOtherAccepted(current.deal_id, current.id)
+      if (!(await supersede.resolveOthers(others))) return
+    }
+    const updated = await quotesStore.update(current.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
     if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)

@@ -22,8 +22,9 @@ export const splitEqually = (total: number, count: number, firstDue: Date, inter
   const rows: PaymentSplitRow[] = []
   let allocated = 0
   for (let i = 0; i < count; i++) {
-    const dueDate = new Date(firstDue)
-    dueDate.setMonth(dueDate.getMonth() + i * intervalMonths)
+    // From the first due date each time, clamped to month end (Jan 31 →
+    // Feb 28 → Mar 31), not setMonth's overflow (Jan 31 → Mar 3).
+    const dueDate = addMonths(firstDue, i * intervalMonths)
     const amount = i === count - 1 ? roundSatang(total - allocated) : perInstallment
     allocated += amount
     rows.push({ amount, due_date: dueDate, note: '' })

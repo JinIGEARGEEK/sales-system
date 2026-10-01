@@ -110,7 +110,7 @@ e2e/                         # Playwright smoke tests (*.e2e.ts), API mocked via
 ### Dates and money
 - Local dates for inputs: `toDateInputValue()` (`useFormatter`) builds `YYYY-MM-DD` from local parts — never `toISOString().slice(0, 10)`, which is the UTC day (yesterday before 07:00 in Thailand)
 - Date-only API fields (`Contract.end_date`, `CustomerProduct.renewal_date`) stay `'YYYY-MM-DD'` strings end to end (`useDateOnly.ts`: `toDateOnly`, `daysUntilDateOnly`, `countdownBadge`); never pass them through `new Date()` + a local-time formatter. `addDays`/`dateOnlyToLocalNoon` live there too
-- Money: `currency()` from `useFormatter` ("฿1,234.00"), `roundSatang()`/`VAT_PERCENT` from `useMoney.ts`. Revenue (Deal value, forecast) is pre-VAT; what a customer owes is `dealReceivable()` — the latest Accepted Quote's taxable amount + VAT when it has priced items, else the Deal value — minus cash + WHT. Keep it identical to `sales-system-api`'s Outstanding Balance rule
+- Money: `currency()` from `useFormatter` ("฿1,234.00"), `roundSatang()`/`VAT_PERCENT` from `useMoney.ts`. Revenue (Deal value, forecast) is pre-VAT; what a customer owes is `dealReceivable()` — the latest Accepted Quote's taxable amount + VAT when it has priced items, else the Deal value — minus cash + WHT. Keep it identical to `sales-system-api`'s Outstanding Balance rule. Quote totals come only from `useQuoteTotals`/`quoteTotalsOf` (mirrors the API's `ComputeQuoteTotals` step for step, satang-rounded): an `incl_tax` quote with VAT on backs VAT out of its prices, never adds it again. An Accepted or Rejected quote is read-only apart from its status (API 409)
 - Moving a Deal into Won from anywhere runs `useDealWonHandoff` (follow-up task + Create Project)
 
 ### Notifications

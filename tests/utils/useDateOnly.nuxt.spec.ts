@@ -72,6 +72,23 @@ describe('addDays', () => {
   })
 })
 
+describe('addMonths', () => {
+  it('clamps to the target month\'s last day instead of overflowing', () => {
+    const jan31 = new Date(2026, 0, 31, 9, 15)
+    const feb = addMonths(jan31, 1)
+    expect([feb.getMonth(), feb.getDate(), feb.getHours(), feb.getMinutes()]).toEqual([1, 28, 9, 15])
+    expect(addMonths(new Date(2028, 0, 31), 1).getDate()).toBe(29) // leap year
+    expect([addMonths(jan31, 2).getMonth(), addMonths(jan31, 2).getDate()]).toEqual([2, 31])
+  })
+
+  it('crosses year boundaries both ways, and does not mutate the input', () => {
+    const start = new Date(2026, 10, 30, 12)
+    expect([addMonths(start, 3).getFullYear(), addMonths(start, 3).getMonth(), addMonths(start, 3).getDate()]).toEqual([2027, 1, 28])
+    expect([addMonths(start, -12).getFullYear(), addMonths(start, -12).getMonth()]).toEqual([2025, 10])
+    expect(start.getDate()).toBe(30)
+  })
+})
+
 describe('countdownLabel / countdownBadge', () => {
   const keys = { past: 'past', today: 'today', future: 'future' }
   const t = (key: string, params?: Record<string, unknown>) => (params ? `${key}:${params.days}` : key)
