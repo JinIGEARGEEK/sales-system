@@ -17,7 +17,7 @@ const pendingDealFetches = reactive(new Set<number>())
 export const useCurrentDeal = () => {
   const route = useRoute()
   const dealsStore = useDealsStore()
-  const { notifyApiError } = useApiErrorNotifier()
+  const { notifyLoadError } = useApiErrorNotifier()
 
   const dealId = Number(route.params.id)
   const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
@@ -30,7 +30,7 @@ export const useCurrentDeal = () => {
   // from a list page) — it just re-fetches and upserts the same record.
   if (!deal.value && !pendingDealFetches.has(dealId)) {
     pendingDealFetches.add(dealId)
-    dealsStore.fetchOne(dealId).catch(notifyApiError).finally(() => pendingDealFetches.delete(dealId))
+    dealsStore.fetchOne(dealId).catch(notifyLoadError).finally(() => pendingDealFetches.delete(dealId))
   }
 
   // True while this Deal's own GET is still in flight — the layout shows

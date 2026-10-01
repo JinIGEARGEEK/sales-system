@@ -258,7 +258,7 @@ useHead({ title: t('crm.leads.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { hasRole } = useRole()
 const leadsStore = useLeadsStore()
@@ -334,7 +334,7 @@ onMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Lead, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely —
   // a Lead past that cutoff would otherwise never load here at all.
-  trackRecord(leadsStore.items.some(l => l.id === leadId) ? undefined : leadsStore.fetchOne(leadId).catch(notifyApiError))
+  trackRecord(leadsStore.items.some(l => l.id === leadId) ? undefined : leadsStore.fetchOne(leadId).catch(notifyLoadError))
   if (leadSourcesStore.items.length === 0) leadSourcesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('lead', leadId).catch(notifyApiError)
   activitiesStore.fetchForRelated('lead', leadId).catch(notifyApiError)

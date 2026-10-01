@@ -39,7 +39,7 @@ const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const route = useRoute()
 const { success, error } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const usersStore = useUsersStore()
 const userStore = useUserStore()
@@ -47,7 +47,7 @@ const { toReassignTo, notifyRecordsResult, userGuardMessage, applyUserFieldError
 const goBack = useBackNavigation('/admin/users')
 
 guardMounted(() => {
-  trackRecord(usersStore.items.length === 0 ? usersStore.fetchAll().catch(notifyApiError) : undefined)
+  trackRecord(usersStore.items.length === 0 ? usersStore.fetchAll().catch(notifyLoadError) : undefined)
 })
 
 const userId = Number(route.params.id)

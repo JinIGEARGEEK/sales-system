@@ -287,7 +287,7 @@ if (justCreated.value) {
   router.replace({ query: rest })
 }
 const { success, error } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { currency } = useFormatter()
 const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
@@ -321,7 +321,7 @@ const loadQuoteAndDeal = async () => {
   try {
     if (!quote.value) await quotesStore.fetchOne(quoteId)
   } catch (err) {
-    notifyApiError(err)
+    notifyLoadError(err)
     return false
   }
   // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket

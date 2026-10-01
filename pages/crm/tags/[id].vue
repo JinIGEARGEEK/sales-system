@@ -49,13 +49,13 @@ useHead({ title: t('crm.tags.detail.pageTitle') })
 
 const route = useRoute()
 const { success } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const tagsStore = useTagsStore()
 const goBack = useBackNavigation('/crm/tags')
 
 onMounted(() => {
-  trackRecord(tagsStore.items.length === 0 ? tagsStore.fetchAll().catch(notifyApiError) : undefined)
+  trackRecord(tagsStore.items.length === 0 ? tagsStore.fetchAll().catch(notifyLoadError) : undefined)
 })
 
 const tagId = Number(route.params.id)
