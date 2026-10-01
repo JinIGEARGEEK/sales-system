@@ -32,8 +32,15 @@ export const useRelatedRecordPicker = (form: { related_type: string, related_id:
   // A record picked before switching type would otherwise submit as e.g. a
   // Deal id under related_type: 'contact' — clear it so the field always
   // reflects only the currently-selected type's records.
-  watch(() => form.related_type, () => {
-    form.related_id = ''
+  // `idType` is the type the current related_id was set under (tracked
+  // synchronously), so a prefill that sets both at once — useModalForm's
+  // reset with a Quick Add target — keeps its id; only a later type change
+  // clears it.
+  let idType = form.related_type
+  watch(() => form.related_id, () => { idType = form.related_type }, { flush: 'sync' })
+  watch(() => form.related_type, (type) => {
+    if (type !== idType) form.related_id = ''
+    idType = type
   })
 
   return { searchDeals, resolveDeal, searchContacts, resolveContact, searchProspects, resolveProspect, searchLeads, resolveLead, relatedRecordId }

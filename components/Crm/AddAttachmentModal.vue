@@ -74,7 +74,9 @@ const emptyForm = () => ({
   external_url: '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm, {
+  extraState: () => selectedFile.value?.name ?? null,
+})
 
 watch(() => props.open, (value) => {
   if (value) {
@@ -85,7 +87,7 @@ watch(() => props.open, (value) => {
   }
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Mirrors the backend's 10 MB cap (utils.MaxUploadSize) so an oversized file
 // is rejected client-side instead of round-tripping to get a 413.

@@ -61,6 +61,10 @@ const props = defineProps<{
   // useActivityList and never pass this) — mirrors AddTaskModal's own
   // showRelatedPicker.
   showRelatedPicker?: boolean
+  // Prefills the Relates-to picker (still changeable) — Quick Add passes
+  // the record the user is looking at or acting on (useQuickAdd).
+  defaultRelatedType?: ActivityRelatedType | null
+  defaultRelatedId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -76,14 +80,14 @@ const emptyForm = () => ({
   // (including "mark as contacted now" from the Company page), backdating
   // is just picking an earlier date here.
   date: toDateInputValue(new Date()),
-  related_type: '' as ActivityRelatedType | '',
-  related_id: '',
+  related_type: (props.defaultRelatedType ?? '') as ActivityRelatedType | '',
+  related_id: props.defaultRelatedId ? String(props.defaultRelatedId) : '',
   follow_up: false,
   follow_up_title: followUpTitleFor(''),
   follow_up_due_date: toDateInputValue(addDays(new Date(), FOLLOW_UP_DUE_DAYS)),
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 // The follow-up title tracks the subject ("Follow up: <subject>") until the
 // user types their own title.
@@ -91,7 +95,7 @@ watch(() => form.subject, (subject, previous) => {
   if (form.follow_up_title === followUpTitleFor(previous ?? '')) form.follow_up_title = followUpTitleFor(subject)
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // A date input only carries a calendar day, and `new Date('YYYY-MM-DD')` is
 // 00:00 UTC — 07:00 in Bangkok — so every activity used to show 07:00.

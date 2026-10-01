@@ -25,6 +25,7 @@
         :size="props.size"
         :aria-invalid="errors.length > 0"
         :aria-describedby="errors.length ? errorId : undefined"
+        :aria-label="inputAriaLabel(props)"
         autocomplete="off"
         :class="['w-full', { 'text-sm': props.small }]"
         @keypress="onInput($event)"

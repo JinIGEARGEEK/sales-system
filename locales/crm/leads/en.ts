@@ -37,7 +37,7 @@ export default {
     },
     entityLabel: 'leads',
     campaignCreateSuccess: 'Campaign "{name}" created with {count} follow-up tasks',
-    campaignAddSuccess: 'Added {count} follow-up tasks to "{name}"',
+    campaignAddSuccess: '{count} follow-up tasks added to "{name}"',
   },
   create: {
     pageTitle: 'Add Lead',

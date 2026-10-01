@@ -282,6 +282,7 @@ const onSubmit = guard(async () => {
       forecast_category: form.forecast_category || stageDefaultForecastCategory(form.stage),
     }
 
+    let createdId: number
     if (originatingLead.value) {
       // Route this through the same conversion endpoint the pipeline board's
       // drag-to-convert uses, so the Lead actually gets marked converted
@@ -295,8 +296,9 @@ const onSubmit = guard(async () => {
       const convertedLead = leadsStore.items.find(l => l.id === originatingLead.value!.id)
       if (convertedLead) convertedLead.converted_deal_id = deal.id
       dealsStore.receiveConverted(deal)
+      createdId = deal.id
     } else {
-      await dealsStore.add({
+      const created = await dealsStore.add({
         ...dealFields,
         company_id: Number(form.company_id),
         contact_id: Number(form.contact_id) || 0,
@@ -304,11 +306,14 @@ const onSubmit = guard(async () => {
         lead_id: null,
         created_at: new Date(),
       })
+      createdId = created.id
     }
     success(t('crm.deals.create.createSuccess'))
     markClean()
     discardDraft()
-    navigateTo('/crm/deals')
+    // Straight to the new Deal (also when opened from a Company/Contact's
+    // "Add Deal") — that's where the next actions (quote, task, activity) are.
+    navigateTo(`/crm/deals/${createdId}`)
   } catch (err) {
     notifyStageChangeError(err)
   }

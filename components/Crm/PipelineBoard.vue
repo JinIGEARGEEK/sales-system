@@ -57,19 +57,37 @@
             class="-my-1 h-1 shrink-0 rounded-full bg-(--color-primary)"
           />
 
-          <div
-            draggable="true"
-            role="button"
-            tabindex="0"
-            :data-cy="`pipeline-card-${item._type}-${item.id}`"
-            class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
-            @dragstart="onDragStart(item)"
-            @dragend="onDragEnd"
-            @dragover.prevent.stop="onCardDragOver($event, String(column.value), idx)"
-            @click="emit('select', item)"
-            @keydown.enter.space.prevent="emit('select', item)"
-          >
-            <slot name="card" :item="item" />
+          <div class="group relative">
+            <div
+              draggable="true"
+              role="button"
+              tabindex="0"
+              :data-cy="`pipeline-card-${item._type}-${item.id}`"
+              class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+              @dragstart="onDragStart(item)"
+              @dragend="onDragEnd"
+              @dragover.prevent.stop="onCardDragOver($event, String(column.value), idx)"
+              @click="emit('select', item)"
+              @keydown.enter.space.prevent="emit('select', item)"
+            >
+              <slot name="card" :item="item" />
+            </div>
+            <!-- Non-drag move (keyboard / no mouse): a sibling of the card, not
+                 inside it, so it isn't a button nested in a button. Hidden
+                 until the card is hovered or anything in it has focus. Emits
+                 the same `move` as a drop, so the caller's lost-reason /
+                 Won hand-off applies. -->
+            <UDropdownMenu :items="moveMenuItems(item)" :content="{ align: 'end' }">
+              <UButton
+                icon="material-symbols:more-horiz"
+                variant="ghost"
+                color="neutral"
+                size="xs"
+                class="absolute right-1 bottom-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                :aria-label="t('crm.components.pipelineBoard.moveMenu')"
+                :data-cy="`pipeline-move-${item._type}-${item.id}`"
+              />
+            </UDropdownMenu>
           </div>
         </template>
         <div
@@ -158,6 +176,7 @@
             label-key="label"
             size="xs"
             class="self-end"
+            :aria-label="t('crm.components.pipelineBoard.stageSelect')"
             @update:model-value="(value) => onMobileMove(item, value)"
           />
         </div>
@@ -351,6 +370,15 @@ const toggleExpanded = (value: string) => {
     collapsedColumns.value.add(value)
   }
 }
+
+// Desktop card's "Move to…" menu: every other column. No position, like the
+// mobile select — the backend appends to the target lane's end.
+const moveMenuItems = (item: PipelineCard) => props.columns
+  .filter(column => String(column.value) !== item._lane)
+  .map(column => ({
+    label: t('crm.components.pipelineBoard.moveTo', { stage: column.label }),
+    onSelect: () => emit('move', item, String(column.value)),
+  }))
 
 const onMobileMove = (item: PipelineCard, value: string | number) => {
   if (String(value) !== item._lane) emit('move', item, String(value))

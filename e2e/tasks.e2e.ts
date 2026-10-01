@@ -3,7 +3,9 @@ import { ADMIN, json, mockApi, signIn } from './support'
 
 // Tasks page: each due-date group is its own server query (GET /tasks with
 // due_from/due_before), shown with its server total; bulk Mark done asks
-// for confirmation with the count before calling the API.
+// for confirmation with the count before calling the API, while a single
+// task's Mark done saves at once with an Undo on the toast; an overdue /
+// due-today task's due-date badge opens a snooze menu.
 const day = (offset: number) => {
   const d = new Date()
   d.setHours(12, 0, 0, 0)
@@ -25,10 +27,14 @@ const paged = (route: Route, data: unknown[], total: number) =>
 
 test.describe('Tasks page', () => {
   let bulkDone: Array<Record<string, unknown>>
+  let toggled: string[]
+  let updates: Array<Record<string, unknown>>
   const queries: URLSearchParams[] = []
 
   test.beforeEach(async ({ page }) => {
     bulkDone = []
+    toggled = []
+    updates = []
     queries.length = 0
     await signIn(page)
     await mockApi(page, {
@@ -45,6 +51,15 @@ test.describe('Tasks page', () => {
       'PATCH /tasks/bulk-mark-done': async (route) => {
         bulkDone.push(route.request().postDataJSON())
         await route.fulfill({ status: 204 })
+      },
+      'PATCH /tasks/1/toggle': (route) => {
+        toggled.push(route.request().url())
+        return json(route, { ...OVERDUE, status: toggled.length % 2 ? 'done' : 'pending' })
+      },
+      'PATCH /tasks/1': (route) => {
+        const body = route.request().postDataJSON()
+        updates.push(body)
+        return json(route, { ...OVERDUE, ...body })
       },
     })
     await page.goto('/crm/tasks')
@@ -76,5 +91,22 @@ test.describe('Tasks page', () => {
     expect(bulkDone).toHaveLength(0)
     await dialog.getByRole('button', { name: 'Mark as Done' }).click()
     await expect.poll(() => bulkDone).toEqual([{ ids: [1, 2] }])
+  })
+
+  test('a single Mark done saves at once and the toast offers Undo', async ({ page }) => {
+    const overdue = page.getByTestId('task-group-overdue')
+    await overdue.getByTestId('task-toggle-done').click()
+    await expect.poll(() => toggled.length).toBe(1)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Undo' }).click()
+    await expect.poll(() => toggled.length).toBe(2)
+  })
+
+  test('snoozing an overdue task resends the full task with a new due date', async ({ page }) => {
+    await page.getByTestId('task-group-overdue').getByTestId('task-snooze-trigger').click()
+    await page.getByRole('menuitem', { name: 'Tomorrow' }).click()
+    await expect.poll(() => updates.length).toBe(1)
+    expect(updates[0]).toMatchObject({ title: OVERDUE.title, description: '', priority: 'medium', assigned_to: null })
+    expect(new Date(updates[0]!.due_date as string).getTime()).toBeGreaterThan(Date.now())
   })
 })

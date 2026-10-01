@@ -30,6 +30,8 @@
         :total="rows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-company="onViewCompany"
@@ -58,9 +60,12 @@ const downloadCsvBlob = useDownloadCsvBlob()
 
 const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
-const companyTagFilter = ref('')
-const hasActiveFilters = computed(() => Boolean(companyTagFilter.value))
-const clearFilters = () => { companyTagFilter.value = '' }
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view.
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: companyTagFilter, default: '' }],
+})
 
 const results = ref<ProjectAtRiskRow[]>([])
 const loading = ref(false)

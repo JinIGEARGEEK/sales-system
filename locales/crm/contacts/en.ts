@@ -7,7 +7,7 @@ export default {
     addContact: 'Add Contact',
     exportCsv: 'Export CSV',
     import: 'Import',
-    importSuccess: 'Imported {companies} companies and {contacts} contacts',
+    importSuccess: '{companies} companies and {contacts} contacts imported',
     searchPlaceholder: 'Search by name or email...',
     allCompanies: 'All Companies',
     companyPlaceholder: 'Company',
@@ -35,7 +35,7 @@ export default {
     entityLabel: 'contacts',
     primaryBadge: 'Primary',
     campaignCreateSuccess: 'Campaign "{name}" created with {count} follow-up tasks',
-    campaignAddSuccess: 'Added {count} follow-up tasks to "{name}"',
+    campaignAddSuccess: '{count} follow-up tasks added to "{name}"',
   },
   create: {
     pageTitle: 'Add Contact',

@@ -132,7 +132,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="prospectTasks" @toggle="onToggleTask" @edit="openEditTask" />
+            <CrmTaskList :tasks="prospectTasks" @edit="openEditTask" />
           </UCard>
         </div>
       </div>
@@ -356,6 +356,5 @@ const {
   openEditTask,
   onSubmitTask,
   onUpdateTask,
-  onToggleTask,
 } = useTaskList('prospect', prospectId, 'crm.prospects.detail.addTaskSuccess', 'crm.prospects.detail.editTaskSuccess')
 </script>

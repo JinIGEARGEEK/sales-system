@@ -836,6 +836,13 @@ interface Task {
   campaign_id?: number | null
 }
 
+// stores/tasks.ts update() parameter type. PATCH /tasks/:id (despite the verb)
+// overwrites all five fields unconditionally (TaskHandler.Update in
+// sales-system-api), so none is optional — editing one field of a loaded Task
+// goes through fullTaskUpdatePayload(). status has its own toggle endpoint;
+// related_type/related_id are immutable.
+type TaskUpdatePayload = Pick<Task, 'title' | 'description' | 'due_date' | 'priority' | 'assigned_to'>
+
 // A batch of Tasks created together against a set of targets (see
 // CampaignTarget/CampaignType above).
 interface Campaign {

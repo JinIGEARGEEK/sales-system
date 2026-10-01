@@ -44,6 +44,10 @@ export default {
     search: 'ค้นหาชื่อหรือบริษัท',
     allSources: 'ทุกแหล่งที่มา',
     allTags: 'ทุก Tag',
+    assignee: 'ผู้รับผิดชอบ',
+    source: 'แหล่งที่มา',
+    businessUnit: 'สายธุรกิจ',
+    tag: 'Tag',
     clear: 'ล้างตัวกรอง',
   },
   summary: {

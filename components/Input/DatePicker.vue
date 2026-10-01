@@ -19,6 +19,7 @@
         :disabled="disable"
         :aria-invalid="errors.length > 0"
         :aria-describedby="errors.length ? errorId : undefined"
+        :aria-label="inputAriaLabel(props, placeholder || t('global.input.datePlaceholder'))"
         class="w-full cursor-pointer"
         style="text-align: left"
       >

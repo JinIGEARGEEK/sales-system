@@ -73,15 +73,23 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const dateRange = ref<{ start: string, end: string } | null>(null)
-const salesRepFilter = ref('all')
+// URL-synced (design-system §5.4), like Source Performance: a shared link,
+// a refresh or a back-button return reopens the same window. The range
+// travels as two YYYY-MM-DD strings straight from the date picker.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all')
-
-const clearFilters = () => {
-  dateRange.value = null
-  salesRepFilter.value = 'all'
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: dateFrom, default: '' }, { ref: dateTo, default: '' }, { ref: salesRepFilter }],
+})
 
 const rows = ref<LeadSourceConversionRow[]>([])
 const loading = ref(false)
@@ -91,8 +99,8 @@ const loading = ref(false)
 const breakdownRows = computed(() => rows.value.map(row => ({ source: row.source, total: row.total, converted: row.qualified, conversion_rate: row.conversion_rate })))
 
 const reportParams = () => ({
-  date_from: dateRange.value?.start,
-  date_to: dateRange.value?.end,
+  date_from: dateFrom.value || undefined,
+  date_to: dateTo.value || undefined,
   assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
 })
 
@@ -112,5 +120,5 @@ const fetchReport = async () => {
 const onExport = () => downloadCsvBlob('/reports/lead-source-conversion/export', 'lead-source-conversion.csv', reportParams())
 
 guardMounted(fetchReport)
-watch([dateRange, salesRepFilter], fetchReport)
+watch([dateFrom, dateTo, salesRepFilter], fetchReport)
 </script>

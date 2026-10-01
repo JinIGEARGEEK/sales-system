@@ -27,12 +27,16 @@
       :empty-action-label="emptyActionLabel"
       :empty-action-to="emptyActionTo"
       :filtered="filtered"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="emit('clearFilters')"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
+      @log-activity="onLogActivity"
+      @add-task="onAddTask"
+      @create-quote="onCreateQuote"
       @delete="requestDelete"
     />
 
@@ -114,14 +118,8 @@ const { stageBadgeColor } = useDealStageColor()
 // understands (created_at/title/value, plus the join-backed company_name).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: props.search || undefined,
@@ -144,7 +142,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams)
+} = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(() => props.search, () => refetchDebounced())
 watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.channelFilter, () => props.stageFilter], () => refetchFromStart())
@@ -190,7 +188,8 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.deals.table.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.deals.table.actions.edit'), emitName: 'edit', isBorderBottom: true },
+      ...rowQuickActions.value,
+      { label: t('crm.components.rowActions.createQuote'), emitName: 'createQuote', isBorderBottom: true },
       { label: t('crm.deals.table.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -200,8 +199,10 @@ const onViewDetail = (row: Deal) => {
   navigateTo(`/crm/deals/${row.id}`)
 }
 
-const onEdit = (row: Deal) => {
-  navigateTo(`/crm/deals/${row.id}`)
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('deal')
+
+const onCreateQuote = (row: Deal) => {
+  navigateTo(`/crm/quotes/create?deal_id=${row.id}`)
 }
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Deal>()

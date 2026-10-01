@@ -2,6 +2,9 @@ export default {
   pipelineBoard: {
     noItems: 'ไม่มีรายการ',
     addInColumn: 'เพิ่มที่นี่',
+    moveMenu: 'ย้ายไปขั้นอื่น',
+    moveTo: 'ย้ายไป {stage}',
+    stageSelect: 'ขั้น',
     stageDescriptions: {
       lead: 'ลูกค้าที่มีแนวโน้มใหม่',
       qualified: 'ผ่านการคัดกรองแล้ว',
@@ -235,9 +238,20 @@ export default {
     editTask: 'แก้ไขงาน',
     removeTask: 'ลบงาน',
     removeSuccess: 'ลบงานติดตามสำเร็จ',
-    confirmDoneTitle: 'ทำเครื่องหมายว่าเสร็จแล้วหรือไม่?',
-    confirmDoneBody: 'ต้องการทำเครื่องหมาย "{title}" ว่าเสร็จแล้วหรือไม่?',
+    // Still the bulk Mark done confirm's button (Tasks page) — a single task
+    // is marked done at once, with an Undo on the toast.
     confirmDoneButton: 'ทำเครื่องหมายว่าเสร็จแล้ว',
+    markDoneSuccess: 'ทำเครื่องหมายงานว่าเสร็จแล้วสำเร็จ',
+    reopenSuccess: 'เปิดงานอีกครั้งสำเร็จ',
+    undo: 'เลิกทำ',
+    snoozeLabel: 'เลื่อนงาน ครบกำหนด {date}',
+    snoozeMenuTitle: 'เลื่อนไปเป็น',
+    snooze: {
+      tomorrow: 'พรุ่งนี้',
+      threeDays: '+3 วัน',
+      nextWeek: 'สัปดาห์หน้า',
+    },
+    snoozeSuccess: 'เลื่อนงานไปวันที่ {date} สำเร็จ',
     priority: {
       low: 'ต่ำ',
       medium: 'ปานกลาง',
@@ -306,14 +320,20 @@ export default {
     createCampaign: 'สร้างแคมเปญ',
     addToCampaign: 'เพิ่มเข้าแคมเปญ',
   },
+  rowActions: {
+    logActivity: 'บันทึกกิจกรรม',
+    addTask: 'เพิ่มงานติดตาม',
+    createQuote: 'สร้างใบเสนอราคา',
+  },
   globalSearch: {
-    placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ Lead หรือ Prospect...',
+    placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ Lead Prospect หรือใบเสนอราคา...',
     noResults: 'ไม่พบผลลัพธ์ที่ตรงกัน',
     deals: 'Deal',
     companies: 'บริษัท',
     contacts: 'ผู้ติดต่อ',
     leads: 'Lead',
     prospects: 'Prospect',
+    quotes: 'ใบเสนอราคา',
   },
   tableSelect: {
     selectRows: 'เลือกรายการ',

@@ -28,6 +28,9 @@ export interface QuoteUpdatePayload {
   internal_notes: string | null
 }
 
+// A GET /quotes row — the Quote plus its parent Deal's title.
+export type QuoteSearchResult = Quote & { deal_title: string }
+
 export const useQuotesStore = defineStore('quotes', {
   state: () => ({
     items: [] as Quote[],
@@ -113,6 +116,19 @@ export const useQuotesStore = defineStore('quotes', {
       const created = parseDates(response.data.data)
       this.items = [...this.items.filter(q => q.id !== created.id), created]
       return created
+    },
+    // GET /quotes?search= (added 2026-10-01) — searches every Quote the
+    // caller can see by number / reference_number / parent Deal title, for
+    // the global search bar. Doesn't touch `items` (results span Deals).
+    async search (params: { search: string, per_page?: number, page?: number }) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<QuoteSearchResult[]>>('/quotes', { params })
+      return {
+        items: response.data.data.map(q => ({ ...parseDates(q), deal_title: q.deal_title })),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
     },
     // Loads a single Quote by id directly (not scoped to a known Deal) —
     // used by pages/crm/quotes/[id].vue, reached by URL/link rather than
