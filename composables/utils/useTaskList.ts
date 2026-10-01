@@ -5,7 +5,7 @@ interface TaskFormPayload {
   title: string
   description: string
   due_date: Date
-  priority: TaskPriority
+  priority: CrmTaskPriority
   assigned_to: number | null
 }
 

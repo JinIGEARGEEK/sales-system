@@ -1,17 +1,5 @@
 import { useI18n } from 'vue-i18n'
 
-interface ProjectSavePayload {
-  status: ProjectStatus
-  production_reference: string | null
-  name?: string
-  target_end_date?: Date | null
-  expected_proposal_date?: Date | null
-  expected_start_date?: Date | null
-  notes?: string
-  company_id?: number
-  deal_id?: number | null
-}
-
 // Shared by the Company detail page's Projects tab, the Contact detail page's
 // Projects section, and the cross-company Projects list, which each open the
 // same CrmAddProjectModal for add/edit. defaultCompanyId is used on create
@@ -41,7 +29,7 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
   // Bind to CrmAddProjectModal's @submit: resolves the created/updated
   // Project, or a submitFailure() (the toast already covers it) so the modal
   // stays open with a 422's fields on its inputs (useAwaitableSubmit).
-  const onSubmit = async (payload: ProjectSavePayload): Promise<Project | SubmitFailure> => {
+  const onSubmit = async (payload: ProjectModalPayload): Promise<Project | SubmitFailure> => {
     try {
       if (editing.value) {
         // A Production-role edit only carries status/production_reference
@@ -76,7 +64,7 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
   // "pick a Project" field elsewhere (e.g. Deal/Lead/Prospect's Business Unit
   // item select) and selects the Project immediately — `false` on failure,
   // which also keeps the modal open.
-  const onSave = async (payload: ProjectSavePayload): Promise<Project | false> => {
+  const onSave = async (payload: ProjectModalPayload): Promise<Project | false> => {
     const result = await onSubmit(payload)
     return 'submitFailed' in result ? false : result
   }

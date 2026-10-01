@@ -174,7 +174,7 @@
           size="sm"
           class="relative shrink-0 text-white hover:bg-white/10 md:hidden"
           :aria-label="t('layout.openMenu')"
-          @click="drawer = true"
+          @click="() => { drawer = true }"
         />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
@@ -325,7 +325,7 @@ const isGroupChildActive = (group: MenuGroup) => group.children.some(child => is
 const isGroupExpanded = (group: MenuGroup) => !isGroupCollapsed(group.key) || isGroupChildActive(group)
 
 const footerActions = computed(() => [
-  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
+  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => { navigateTo('/account/change-password') }, danger: false },
   { icon: 'material-symbols:logout', ariaLabel: t('layout.logout'), onClick: logout, danger: true },
 ])
 

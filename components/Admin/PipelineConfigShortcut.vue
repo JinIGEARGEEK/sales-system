@@ -8,7 +8,7 @@
       size="sm"
       :aria-label="tooltip"
       :data-cy="`manage-${tab}-shortcut`"
-      @click="navigateTo(`/admin/pipeline-config?tab=${tab}`)"
+      @click="() => { navigateTo(`/admin/pipeline-config?tab=${tab}`) }"
     />
   </UTooltip>
 </template>

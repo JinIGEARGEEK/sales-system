@@ -78,6 +78,21 @@ describe('useDealWonHandoff', () => {
     expect(projectModal.value).toBe(false)
   })
 
+  it('Create Project links the new project to the Won deal, whatever deal_id the modal sends', async () => {
+    const api = useNuxtApp().$api
+    vi.spyOn(api, 'get').mockResolvedValue(apiResponse([]) as never)
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue(apiResponse(makeProject({ id: 10, company_id: 3, deal_id: 42 })) as never)
+
+    const { onDealWon, onCreateProject } = useDealWonHandoff()
+    await onDealWon(makeDeal({ id: 42, company_id: 3, title: 'Warehouse system', status: 'won' }), { wasWon: true })
+    // CrmAddProjectModal hides its Deal picker in the hand-off, so its
+    // create payload carries deal_id: null — that must not unlink the deal.
+    await onCreateProject({ status: 'Not Started', production_reference: null, name: 'Warehouse system', notes: '', deal_id: null })
+
+    const projectPost = postSpy.mock.calls.find(([url]) => String(url).includes('/projects'))
+    expect(projectPost?.[1]).toMatchObject({ deal_id: 42, name: 'Warehouse system', status: 'Not Started' })
+  })
+
   it('markWon moves the deal into the configured Won stage, then hands off', async () => {
     const api = useNuxtApp().$api
     usePipelineStagesStore().items = [

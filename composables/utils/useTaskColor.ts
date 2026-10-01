@@ -17,6 +17,6 @@ export const taskDueColor = (task: Pick<Task, 'status' | 'due_date'>, now = new 
 // Priority badge: only High is flagged (error); Medium/Low stay neutral so
 // the due-date badge remains the primary flag for overdue-ness rather than
 // competing with priority for attention.
-export const taskPriorityColor = (priority: TaskPriority): 'error' | 'neutral' => (priority === 'high' ? 'error' : 'neutral')
+export const taskPriorityColor = (priority: CrmTaskPriority): 'error' | 'neutral' => (priority === 'high' ? 'error' : 'neutral')
 
 export const useTaskDueColor = () => ({ taskDueColor, taskPriorityColor })

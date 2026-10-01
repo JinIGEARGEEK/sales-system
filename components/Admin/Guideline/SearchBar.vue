@@ -37,7 +37,7 @@
               color="neutral"
               size="xs"
               :aria-label="t('admin.guideline.clearSearch')"
-              @click="modelValue = ''"
+              @click="() => { modelValue = '' }"
             />
           </template>
         </UInput>

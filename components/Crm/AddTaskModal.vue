@@ -59,15 +59,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [task: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }]
-  update: [task: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }]
+  submit: [task: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }]
+  update: [task: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }]
 }>()
 
 const emptyForm = () => ({
   title: props.task?.title ?? '',
   description: props.task?.description ?? '',
   due_date: props.task?.due_date ? toDateInputValue(props.task.due_date) : '',
-  priority: props.task?.priority ?? ('medium' as TaskPriority),
+  priority: props.task?.priority ?? ('medium' as CrmTaskPriority),
   assigned_to: props.task?.assigned_to ? String(props.task.assigned_to) : '',
   related_type: (props.defaultRelatedType ?? '') as TaskRelatedType | '',
   related_id: props.defaultRelatedId ? String(props.defaultRelatedId) : '',
@@ -88,7 +88,7 @@ const onSubmit = guard(async () => {
     title: form.title,
     description: form.description,
     due_date: new Date(form.due_date),
-    priority: form.priority as TaskPriority,
+    priority: form.priority as CrmTaskPriority,
     assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
   }
   // A handler resolves `false` when its save failed (it has already shown

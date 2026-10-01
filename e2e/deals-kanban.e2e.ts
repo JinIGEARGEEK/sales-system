@@ -136,7 +136,9 @@ test.describe('Deals Kanban', () => {
     await reasonDialog.getByTestId('won-deal-reason-confirm').click()
     await expect.poll(() => wonMoves.length).toBe(2)
     expect(wonMoves[1]).toMatchObject({ body: { stage: 'Negotiation' }, reason: 'Customer cancelled the contract' })
-    await expect(page.getByText('Deal moved to Negotiation')).toBeVisible()
+    // exact: Reka UI 2.10's toast also repeats its text in a hidden aria-live
+    // announcer ("Notification [ ... ]"), which a substring match would hit too.
+    await expect(page.getByText('Deal moved to Negotiation', { exact: true })).toBeVisible()
   })
 
   test('a Lead dropped into Won opens the create form, then converts with its value and runs the Won hand-off', async ({ page }) => {

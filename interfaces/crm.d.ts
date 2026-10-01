@@ -48,7 +48,30 @@ type ContractStatus = 'draft' | 'sent' | 'signed' | 'expired'
 type PaymentMethod = 'cash' | 'transfer' | 'card' | 'other'
 type TaskStatus = 'pending' | 'done'
 // Plain triage label, no workflow behavior attached (unlike TaskStatus).
-type TaskPriority = 'low' | 'medium' | 'high'
+// Not "TaskPriority": TypeScript 6's lib.dom declares a global TaskPriority (the
+// Scheduler API's 'background' | 'user-blocking' | 'user-visible') that clashes.
+type CrmTaskPriority = 'low' | 'medium' | 'high'
+// A CrmPipelineBoard card: a Deal or a Lead shown ahead of conversion (the
+// unified Deals board), or a Prospect on its own board (§3.1a). `_lane` is
+// the column value it renders under, precomputed by the caller so the board
+// never needs to know how a Lead/Prospect's status maps onto its columns.
+// What CrmAddProjectModal emits: status + production reference always; the
+// rest only in create/full-edit mode (a Production user's edit sends just
+// those two), company_id/deal_id only when creating.
+type ProjectModalPayload = {
+  status: ProjectStatus
+  production_reference: string | null
+  name?: string
+  target_end_date?: Date | null
+  expected_proposal_date?: Date | null
+  expected_start_date?: Date | null
+  notes?: string
+  company_id?: number
+  deal_id?: number | null
+}
+type PipelineBoardCard = ({ id: number, _type: 'deal', _lane: string } & Deal)
+  | ({ id: number, _type: 'lead', _lane: string } & Lead)
+  | ({ id: number, _type: 'prospect', _lane: string } & Prospect)
 // Shared by Task.related_type and Activity.related_type — both point at whichever
 // record (deal, contact, company, prospect, or lead) the follow-up/activity is
 // attached to.
@@ -71,8 +94,8 @@ interface CampaignTarget {
 // Submitted by CampaignTaskSetupForm — 'new' creates a fresh Campaign,
 // 'existing' appends Tasks to one already listed in stores/campaigns.ts.
 type CampaignTaskSetupSubmitPayload =
-  | { mode: 'new', name: string, type: CampaignType, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }
-  | { mode: 'existing', campaignId: number, title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }
+  | { mode: 'new', name: string, type: CampaignType, title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }
+  | { mode: 'existing', campaignId: number, title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }
 type TagCategory = 'Tier' | 'Industry' | 'Priority'
 type TagStatus = 'active' | 'inactive'
 type LostReason = 'price' | 'timing' | 'competitor' | 'no_budget' | 'other'
@@ -856,7 +879,7 @@ interface Task {
   description: string
   due_date: Date
   status: TaskStatus
-  priority: TaskPriority
+  priority: CrmTaskPriority
   assigned_to: number | null
   created_at: Date
   // Set only for a Task created in bulk from a Campaign (e.g. win-back

@@ -94,7 +94,7 @@ const onSubmitActivity = (payload: ActivityFormSubmit) => {
   return logActivity(payload.related_type, payload.related_id, payload, t('layout.quickAdd.activityLogged'))
 }
 
-const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
+const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
   if (!payload.related_type || !payload.related_id) return false
   try {
     await tasksStore.add(payload as Omit<Task, 'id' | 'status' | 'created_at'>)

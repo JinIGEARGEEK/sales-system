@@ -217,20 +217,17 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends PipelineBoardCard">
 import { useI18n } from 'vue-i18n'
 import type { StageEntity } from '~/composables/utils/usePipelineStageColors'
 
 const { t } = useI18n()
 
-// A card can be a Deal or a Lead being shown ahead of conversion (on the
-// unified Deals board), or a Prospect on its own standalone board (§3.1a) —
-// `_lane` is the column value it renders under, precomputed by the caller so
-// this component never needs to know how a Lead/Prospect's status maps onto
-// its board's columns.
-type PipelineCard = { id: number, _type: 'deal', _lane: string } & Deal
-  | { id: number, _type: 'lead', _lane: string } & Lead
-  | { id: number, _type: 'prospect', _lane: string } & Prospect
+// Generic over the caller's own card type (`PipelineBoardCard` in
+// interfaces/crm.d.ts narrowed to what that board holds — Deals + Leads on
+// the Deals board, Prospects on the Prospects board), so @move/@select and
+// the #card slot hand back that narrower type instead of the full union.
+type PipelineCard = T
 
 const props = defineProps<{
   columns: Select[]

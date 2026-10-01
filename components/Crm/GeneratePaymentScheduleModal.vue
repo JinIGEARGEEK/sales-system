@@ -192,7 +192,9 @@ const addMilestone = () => {
     dueDate: milestoneDueDate(form.milestones.length),
   })
 }
-const removeMilestone = (index: number) => form.milestones.splice(index, 1)
+const removeMilestone = (index: number) => {
+  form.milestones.splice(index, 1)
+}
 
 // Awaits the caller's save; stays open (form intact) if it resolves false.
 const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))

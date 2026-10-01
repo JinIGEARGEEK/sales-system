@@ -73,7 +73,7 @@
                   color="neutral"
                   size="xs"
                   :aria-label="t('crm.deals.detail.editQuote')"
-                  @click="navigateTo(`/crm/quotes/${quote.id}`)"
+                  @click="() => { navigateTo(`/crm/quotes/${quote.id}`) }"
                 />
                 <UButton
                   icon="material-symbols:content-copy-outline"
