@@ -6,10 +6,9 @@
 //
 // Order matters: the others are rejected FIRST, then the new one accepted,
 // so the Deal never has two Accepted quotes at once — the API enforces one
-// Accepted Quote per Deal with a 409. The modal no longer offers 'keep'
-// (it could only fail); the decision stays for callers that still pass it,
-// and if the API refuses, its error reaches the caller's notifier.
-export type SupersedeDecision = 'reject' | 'keep' | 'cancel'
+// Accepted Quote per Deal with a 409, so keeping them isn't an option.
+// If a rejection fails, its error reaches the caller's notifier.
+export type SupersedeDecision = 'reject' | 'cancel'
 
 export const useSupersedeAcceptedQuotes = () => {
   const quotesStore = useQuotesStore()
@@ -53,7 +52,7 @@ export const useSupersedeAcceptedQuotes = () => {
     if (others.length === 0) return true
     const decision = await ask(others)
     if (decision === 'cancel') return false
-    if (decision === 'reject') await rejectAll(others)
+    await rejectAll(others)
     return true
   }
 

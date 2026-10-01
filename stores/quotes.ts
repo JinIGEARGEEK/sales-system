@@ -1,7 +1,7 @@
 // Real API-backed store, scoped one deal at a time. Quotes are hard-deleted
-// server-side, and only Drafts can be deleted (409 otherwise). PDF export (GET /quotes/:id/export-pdf) is called directly via
-// useDownloadPdfBlob from pages/crm/deals/[id]/quotes.vue, not through this
-// store — there's no local state it would update.
+// server-side, and only Drafts can be deleted (409 otherwise). PDF export
+// (GET /quotes/:id/export-pdf) is called directly via useDownloadPdfBlob from
+// pages/crm/deals/[id]/quotes.vue — there's no local state it would update.
 const parseDates = (quote: Quote): Quote => ({
   ...quote,
   validity_date: quote.validity_date ? new Date(quote.validity_date) : null,
@@ -73,11 +73,8 @@ export const useQuotesStore = defineStore('quotes', {
       await $api.delete(`/quotes/${id}`)
       this.items = this.items.filter(q => q.id !== id)
     },
-    // PUT /quotes/:id — existed on the backend since before this rebuild but
-    // was never called from any UI; the new Quote editor page is the first
-    // caller. Merges the response into `items` rather than replacing the
-    // whole array, so other already-fetched quotes for the same Deal aren't
-    // dropped from state.
+    // PUT /quotes/:id — the Quote editor's full save. Merges the response
+    // into `items`, so the Deal's other loaded quotes stay.
     async update (id: number, payload: QuoteUpdatePayload): Promise<Quote> {
       const { $api } = useNuxtApp()
       const response = await $api.put<ApiResponse<Quote>>(`/quotes/${id}`, payload)
