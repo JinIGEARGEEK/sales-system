@@ -59,9 +59,11 @@ export const useLeadsStore = defineStore('leads', {
     // computeAndClassify runs on every Create/Update) — excluded from the
     // create payload type since the client never supplies them, only reads
     // them back off the response.
-    async add (lead: Omit<Lead, 'id' | 'score' | 'classification' | 'position'>): Promise<Lead> {
+    // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
+    // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
+    async add (lead: Omit<Lead, 'id' | 'score' | 'classification' | 'position'>, options: CreateOptions = {}): Promise<Lead> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Lead>>('/leads', lead)
+      const response = await $api.post<ApiResponse<Lead>>('/leads', lead, createParams(options))
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created

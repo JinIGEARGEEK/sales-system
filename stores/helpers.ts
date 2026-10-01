@@ -5,6 +5,14 @@ export const toBulkArchiveResult = (ids: number[], body: ApiResponse<BulkArchive
   return { archived: data.archived, skipped: Array.isArray(data.skipped) ? data.skipped : [] }
 }
 
+// POST /leads, /prospects, /contacts: resend with ?allow_duplicate=true after
+// the user has seen the duplicate 409 and chosen "Create anyway".
+export interface CreateOptions {
+  allowDuplicate?: boolean
+}
+export const createParams = (options: CreateOptions) =>
+  options.allowDuplicate ? { params: { allow_duplicate: true } } : undefined
+
 export const nextId = <T extends { id: number }>(items: T[]): number => Math.max(0, ...items.map(item => item.id)) + 1
 
 // Shared by every resource that got a GET :resource/trash + POST :id/restore pair

@@ -50,9 +50,11 @@ export const useProspectsStore = defineStore('prospects', {
       this.items = [...this.items.filter(p => p.id !== id), fetched]
       return fetched
     },
-    async add (prospect: Omit<Prospect, 'id' | 'position'>): Promise<Prospect> {
+    // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
+    // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
+    async add (prospect: Omit<Prospect, 'id' | 'position'>, options: CreateOptions = {}): Promise<Prospect> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Prospect>>('/prospects', prospect)
+      const response = await $api.post<ApiResponse<Prospect>>('/prospects', prospect, createParams(options))
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created

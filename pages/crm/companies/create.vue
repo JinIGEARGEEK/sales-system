@@ -162,7 +162,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.companies.create.pageTitle') })
 
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
@@ -246,7 +246,16 @@ const onSubmit = guard(async () => {
     )
 
     success(t('crm.companies.create.createSuccess'))
-    if (results.some(r => r.status === 'rejected')) {
+    // A contact whose email/phone matches an existing one (in any Company)
+    // is a 409 now — say so, rather than a vague "couldn't be added".
+    const rejected = results.filter(r => r.status === 'rejected')
+    const duplicateNames = contactRows
+      .filter((_, i) => { const r = results[i]; return r?.status === 'rejected' && getDuplicateConflict(r.reason) })
+      .map(c => c.name)
+    if (duplicateNames.length > 0) {
+      warning(t('crm.companies.create.contactDuplicateSkipped', { count: duplicateNames.length, names: duplicateNames.join(', ') }))
+    }
+    if (rejected.length > duplicateNames.length) {
       error(t('crm.companies.create.contactCreateFailed'))
     }
     markClean()

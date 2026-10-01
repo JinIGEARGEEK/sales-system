@@ -75,9 +75,11 @@ export const useContactsStore = defineStore('contacts', {
       this.items = [...this.items.filter(c => c.id !== id), fetched]
       return fetched
     },
-    async add (contact: Omit<Contact, 'id'>): Promise<Contact> {
+    // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
+    // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
+    async add (contact: Omit<Contact, 'id'>, options: CreateOptions = {}): Promise<Contact> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Contact>>('/contacts', contact)
+      const response = await $api.post<ApiResponse<Contact>>('/contacts', contact, createParams(options))
       const created = parseDates(response.data.data)
       this.items.push(created)
       if (created.is_primary) this.clearOtherPrimaries(created.company_id, created.id)

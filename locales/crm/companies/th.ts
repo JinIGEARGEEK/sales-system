@@ -78,6 +78,7 @@ export default {
     contactRowLabel: 'ผู้ติดต่อ {index}',
     removeContact: 'ลบผู้ติดต่อนี้',
     contactCreateFailed: 'สร้างบริษัทสำเร็จ แต่เพิ่มผู้ติดต่อบางรายการไม่สำเร็จ',
+    contactDuplicateSkipped: 'สร้างบริษัทสำเร็จ แต่ไม่ได้เพิ่มผู้ติดต่อ {count} รายการ เพราะมีผู้ติดต่อที่ใช้อีเมลหรือเบอร์โทรเดียวกันอยู่แล้ว: {names}',
   },
   taxFields: {
     taxId: 'เลขประจำตัวผู้เสียภาษี',

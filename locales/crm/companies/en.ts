@@ -78,6 +78,7 @@ export default {
     contactRowLabel: 'Contact {index}',
     removeContact: 'Delete this contact',
     contactCreateFailed: 'Company created, but some contacts could not be added.',
+    contactDuplicateSkipped: 'Company created. {count} contacts were not added because a contact with the same email or phone already exists: {names}',
   },
   taxFields: {
     taxId: 'Tax ID',

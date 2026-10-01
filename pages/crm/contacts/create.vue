@@ -6,6 +6,17 @@
       @back="goBack()"
     />
 
+    <CrmDuplicateConflictAlert
+      v-if="conflict"
+      :conflict="conflict"
+      entity="contact"
+      base-path="/crm/contacts"
+      :name-of="id => contactsStore.items.find(c => c.id === id)?.name"
+      :loading="loading"
+      @create-anyway="createAnyway"
+      @dismiss="dismiss"
+    />
+
     <ContainerTemplate>
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -68,7 +79,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.contacts.create.pageTitle') })
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const contactsStore = useContactsStore()
@@ -95,26 +106,25 @@ const form = reactive({
 
 const { markClean } = useUnsavedChangesGuard(() => form)
 
-const { loading, guard } = useSubmitGuard()
-
-const onSubmit = guard(async () => {
-  try {
-    const created = await contactsStore.add({
-      name: form.name,
-      company_id: form.company_id ?? 0,
-      role_title: form.role_title,
-      email: form.email,
-      phone: form.phone,
-      tags: parseTags(form.tags),
-      status: 'active',
-      is_primary: form.is_primary,
-      created_at: new Date(),
-    })
+// Contacts are checked for duplicates across every Company — same flow as
+// pages/crm/leads/create.vue.
+const { conflict, loading, onSubmit, createAnyway, dismiss } = useCreateWithDuplicateCheck({
+  create: allowDuplicate => contactsStore.add({
+    name: form.name,
+    company_id: form.company_id ?? 0,
+    role_title: form.role_title,
+    email: form.email,
+    phone: form.phone,
+    tags: parseTags(form.tags),
+    status: 'active',
+    is_primary: form.is_primary,
+    created_at: new Date(),
+  }, { allowDuplicate }),
+  onCreated: (created) => {
     success(t('crm.contacts.create.createSuccess'))
     markClean()
     navigateTo(`/crm/contacts/${created.id}`)
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
+  },
+  resetOn: () => [form.email, form.phone],
 })
 </script>
