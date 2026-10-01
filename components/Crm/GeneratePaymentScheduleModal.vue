@@ -10,6 +10,9 @@
             <p v-if="exceedsLimit" class="mt-1 text-sm text-(--color-danger-toast)" role="alert" data-cy="payment-schedule-exceeds">
               {{ t('crm.components.generatePaymentScheduleModal.exceedsReceivable', { amount: currency(props.maxTotalAmount ?? 0) }) }}
             </p>
+            <p v-else-if="emptyInstallment" class="mt-1 text-sm text-(--color-danger-toast)" role="alert" data-cy="payment-schedule-empty-row">
+              {{ t('crm.components.generatePaymentScheduleModal.emptyInstallment') }}
+            </p>
           </div>
           <template v-if="form.mode === 'equal'">
             <InputText v-model.number="form.count" :label="t('crm.components.generatePaymentScheduleModal.count')" type="number" name="count" rules="required|min_value:2" />
@@ -170,21 +173,24 @@ const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useM
 
 const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
+// The rounded total — what's checked against the limit is what gets split.
+const scheduleTotal = computed(() => roundSatang(Number(form.totalAmount) || 0))
+
 const equalPreview = computed(() => {
   if (!form.firstDueDate || form.count < 2) return []
-  return splitEqually(form.totalAmount, form.count, new Date(form.firstDueDate), form.intervalMonths)
+  return splitEqually(scheduleTotal.value, form.count, new Date(form.firstDueDate), form.intervalMonths)
 })
 
 const milestonePercentTotal = computed(() => percentTotal(form.milestones))
 const percentageValid = computed(() => isPercentageSplitValid(form.milestones))
-const percentagePreview = computed(() => splitByPercentage(form.totalAmount, form.milestones.map(row => ({
+const percentagePreview = computed(() => splitByPercentage(scheduleTotal.value, form.milestones.map(row => ({
   label: row.label,
   percent: row.percent,
   due_date: new Date(row.dueDate),
 }))))
 
 const addMilestone = () => {
-  const remaining = Math.max(0, Math.round((100 - milestonePercentTotal.value) * 100) / 100)
+  const remaining = Math.max(0, roundSatang(100 - milestonePercentTotal.value))
   form.milestones.push({
     key: ++milestoneKey,
     label: t('crm.components.generatePaymentScheduleModal.milestoneN', { n: form.milestones.length + 1 }),
@@ -199,12 +205,14 @@ const removeMilestone = (index: number) => {
 // Awaits the caller's save; stays open (form intact) if it resolves false.
 const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
 const exceedsLimit = computed(() => props.maxTotalAmount !== null && props.maxTotalAmount !== undefined
-  && roundSatang(Number(form.totalAmount) || 0) > props.maxTotalAmount + 0.005)
+  && scheduleTotal.value > props.maxTotalAmount + 0.005)
+const activePreview = computed(() => (form.mode === 'percentage' ? percentagePreview.value : equalPreview.value))
+const emptyInstallment = computed(() => hasEmptyInstallment(activePreview.value))
 
 const onSubmit = guard(async () => {
-  if (exceedsLimit.value) return
+  if (exceedsLimit.value || emptyInstallment.value) return
   if (form.mode === 'percentage' && (!percentageValid.value || percentagePreview.value.length === 0)) return
-  await submitAndClose(form.mode === 'percentage' ? percentagePreview.value : equalPreview.value)
+  await submitAndClose(activePreview.value)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

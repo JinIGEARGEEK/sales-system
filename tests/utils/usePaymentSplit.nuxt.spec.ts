@@ -32,6 +32,16 @@ describe('splitByPercentage', () => {
     expect(odd.reduce((sum, r) => sum + r.amount, 0)).toBeCloseTo(1000.01, 10)
   })
 
+  it('never makes a row negative on a tiny total', () => {
+    const rows = splitByPercentage(0.05, [
+      { label: '', percent: 50, due_date: d('2026-10-01') },
+      { label: '', percent: 25, due_date: d('2026-10-01') },
+      { label: '', percent: 25, due_date: d('2026-10-01') },
+    ])
+    expect(rows.map(r => r.amount)).toEqual([0.02, 0.01, 0.02])
+    expect(rows.every(r => r.amount >= 0)).toBe(true)
+  })
+
   it('returns nothing for a zero total or no rows', () => {
     expect(splitByPercentage(0, [{ label: '', percent: 100, due_date: d('2026-10-01') }])).toEqual([])
     expect(splitByPercentage(100, [])).toEqual([])
@@ -57,6 +67,18 @@ describe('splitEqually', () => {
     const rows = splitEqually(100, 3, d('2026-01-15'), 1)
     expect(rows.map(r => r.amount)).toEqual([33.33, 33.33, 33.34])
     expect(rows.map(r => r.due_date.getUTCMonth())).toEqual([0, 1, 2])
+  })
+
+  it('rounds every row but the last down, so the last never goes negative', () => {
+    // Rounding 0.10 / 15 up (0.01 each) used to leave the last row at -0.04.
+    const tiny = splitEqually(0.1, 15, d('2026-01-15'), 1)
+    expect(tiny.slice(0, 14).every(r => r.amount === 0)).toBe(true)
+    expect(tiny[14]!.amount).toBe(0.1)
+    expect(hasEmptyInstallment(tiny)).toBe(true)
+
+    const rows = splitEqually(200, 3, d('2026-01-15'), 1)
+    expect(rows.map(r => r.amount)).toEqual([66.66, 66.66, 66.68])
+    expect(hasEmptyInstallment(rows)).toBe(false)
   })
 
   it('clamps a month-end start to each month\'s last day, always stepping from the start', () => {
