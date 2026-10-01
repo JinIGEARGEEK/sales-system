@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { makeQuote } from '../factories'
 
 describe('whtFromNetReceived', () => {
   it('backs 3% WHT out of the cash received at 7% VAT (net × 3 / 104)', () => {
@@ -21,6 +22,29 @@ describe('whtFromNetReceived', () => {
     expect(whtFromNetReceived(0)).toBe(0)
     expect(whtFromNetReceived(-5)).toBe(0)
     expect(whtFromNetReceived(Number.NaN)).toBe(0)
+  })
+})
+
+describe('paymentTaxRates', () => {
+  it('falls back to 3% WHT at 7% VAT without an Accepted Quote', () => {
+    expect(paymentTaxRates([])).toEqual({ whtRate: 3, vatRate: 7 })
+    expect(paymentTaxRates([makeQuote({ status: 'sent', wht_enabled: true, wht_rate: 5 })])).toEqual({ whtRate: 3, vatRate: 7 })
+  })
+
+  it('uses the latest Accepted Quote\'s WHT rate, and 0 VAT when it has VAT off', () => {
+    const older = makeQuote({ id: 1, status: 'accepted', vat_enabled: true, wht_enabled: true, wht_rate: 1 })
+    const latest = makeQuote({ id: 2, status: 'accepted', vat_enabled: false, wht_enabled: true, wht_rate: 5 })
+    expect(paymentTaxRates([latest, older].reverse())).toEqual({ whtRate: 5, vatRate: 0 })
+  })
+
+  it('keeps the 3% default WHT when the Accepted Quote has WHT off', () => {
+    expect(paymentTaxRates([makeQuote({ status: 'accepted', vat_enabled: true, wht_enabled: false, wht_rate: 0 })])).toEqual({ whtRate: 3, vatRate: 7 })
+  })
+
+  it('feeds whtFromNetReceived: 5% WHT, no VAT', () => {
+    const { whtRate, vatRate } = paymentTaxRates([makeQuote({ status: 'accepted', vat_enabled: false, wht_enabled: true, wht_rate: 5 })])
+    // Base 1,000, no VAT, 5% WHT -> cash 950.
+    expect(whtFromNetReceived(950, whtRate, vatRate)).toBe(50)
   })
 })
 

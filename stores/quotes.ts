@@ -39,11 +39,15 @@ export const useQuotesStore = defineStore('quotes', {
     forDeal: state => (dealId: number) => state.items.filter(q => q.deal_id === dealId),
   },
   actions: {
-    async fetchForDeal (dealId: number) {
+    // `keepId`: leave that Quote's already-loaded copy (same object) in place
+    // — the editor page's open Quote, whose form a fresh copy would reset.
+    async fetchForDeal (dealId: number, keepId?: number) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Quote[]>>(`/deals/${dealId}/quotes`)
       const fetched = response.data.data.map(parseDates)
-      this.items = [...this.items.filter(q => q.deal_id !== dealId), ...fetched]
+      const kept = keepId === undefined ? undefined : this.items.find(q => q.id === keepId)
+      const merged = kept ? fetched.map(q => q.id === kept.id ? kept : q) : fetched
+      this.items = [...this.items.filter(q => q.deal_id !== dealId), ...merged]
       return fetched
     },
     async add (dealId: number, quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }): Promise<Quote> {

@@ -15,8 +15,14 @@ describe('dealReceivable', () => {
   })
 
   it('rounds to satang', () => {
+    // The line rounds to 333.33 first (as the PDF prints it), + VAT 23.33.
     const quote = makeQuote({ status: 'accepted', items: [{ description: 'x', qty: 1, price: 333.333 }], vat_enabled: true })
-    expect(dealReceivable([quote], 0).amount).toBe(356.67)
+    expect(dealReceivable([quote], 0).amount).toBe(356.66)
+  })
+
+  it('is exactly the prices of a tax-inclusive quote — VAT not added a second time', () => {
+    const quote = makeQuote({ status: 'accepted', items: [{ description: 'x', qty: 1, price: 107000 }], price_type: 'incl_tax', vat_enabled: true, wht_enabled: true, wht_rate: 3 })
+    expect(dealReceivable([quote], 0)).toEqual({ amount: 107000, fromQuote: true })
   })
 
   it('falls back to the deal value when the Accepted Quote has no priced content', () => {

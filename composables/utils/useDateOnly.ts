@@ -29,7 +29,23 @@ export const addDays = (date: Date, days: number): Date => {
   return result
 }
 
-const dayNumber = (year: number, month: number, day: number) => Date.UTC(year, month - 1, day) / 86_400_000
+// `date` plus `months` calendar months, same local time of day, clamped to
+// the target month's last day: Jan 31 + 1 month is Feb 28 (29 in a leap
+// year), not setMonth's Mar 3 overflow. For a series (monthly installments)
+// always step from the original start — addMonths(start, i) — never from the
+// previous result, or one short month (Jan 31 → Feb 28) would pull every
+// later date back to the 28th. Doesn't mutate `date`.
+export const addMonths = (date: Date, months: number): Date => {
+  const result = new Date(date)
+  const day = result.getDate()
+  result.setDate(1)
+  result.setMonth(result.getMonth() + months)
+  const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate()
+  result.setDate(Math.min(day, lastDay))
+  return result
+}
+
+const dayNumber =(year: number, month: number, day: number) => Date.UTC(year, month - 1, day) / 86_400_000
 
 // Whole calendar days from `today` (its LOCAL date) to the date-only value:
 // 0 = today, negative = already past.

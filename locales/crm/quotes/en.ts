@@ -40,6 +40,8 @@ export default {
     whtEnabled: 'Withholding Tax',
     whtRateLabel: 'Withholding Tax Rate (%)',
     whtRatePlaceholder: 'Rate %',
+    amountBeforeVat: 'Amount before VAT',
+    vatIncluded: 'VAT (7%, included)',
     grandTotal: 'Grand Total',
     notes: 'Notes',
     notesPlaceholder: 'Printed on the exported PDF (payment terms, validity terms, etc.)',
@@ -84,5 +86,15 @@ export default {
     extractionPartialTitle: 'Pre-filled from the uploaded PDF — please review',
     extractionFailedTitle: 'Could not read this PDF automatically — fields below are blank, fill them in manually',
     continueEditingTitle: 'Quote created — step 2: add reference number, VAT/WHT, discounts, and notes below to finish it up',
+    acceptedLockedTitle: 'This quote is Accepted, so its items and prices are locked',
+    acceptedLockedDescription: 'The deal\'s amount owed is based on it. To change the prices, duplicate it and send the new quote instead.',
+    duplicateToRevise: 'Duplicate to revise',
+  },
+  // Accepting a quote while others on the same deal are already Accepted.
+  supersede: {
+    title: 'Another quote is already Accepted',
+    description: 'A deal should have one Accepted quote — the amount owed is based on the latest one. Mark these as Rejected before accepting this one?',
+    keep: 'Keep them Accepted',
+    reject: 'Mark as Rejected',
   },
 }

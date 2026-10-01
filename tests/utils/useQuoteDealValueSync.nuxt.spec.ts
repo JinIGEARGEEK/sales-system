@@ -22,6 +22,13 @@ describe('quoteRevenueAmount', () => {
     expect(quoteRevenueAmount(quote())).toBe(85000)
   })
 
+  it('backs VAT out of a tax-inclusive quote: revenue is pre-VAT', () => {
+    // 107,000 incl. VAT, no discounts -> 100,000 before VAT.
+    expect(quoteRevenueAmount(quote({ items: [{ description: '', qty: 1, price: 107000 }], discount_total: 0, price_type: 'incl_tax' }))).toBe(100000)
+    // VAT off: nothing to back out.
+    expect(quoteRevenueAmount(quote({ items: [{ description: '', qty: 1, price: 107000 }], discount_total: 0, price_type: 'incl_tax', vat_enabled: false }))).toBe(107000)
+  })
+
   it('rounds to 2 decimals', () => {
     expect(quoteRevenueAmount(quote({ items: [{ description: '', qty: 3, price: 33.333 }], discount_total: 0 }))).toBe(100)
   })
