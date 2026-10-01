@@ -48,7 +48,7 @@
               class="w-36 shrink-0"
               :name="`quote-status-${quote.id}`"
               :data-cy="`quote-status-${quote.id}`"
-              @update:model-value="(value: string) => requestQuoteStatusChange(quote, value as QuoteStatus)"
+              @update:model-value="(value: string) => onQuoteStatusPick(quote, value as QuoteStatus)"
             />
             <div class="flex min-w-0 flex-wrap items-center gap-3">
               <span class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
@@ -148,6 +148,8 @@
 
     <CrmDealValueSyncModal :sync="dealValueSync" />
 
+    <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
+
     <CrmConfirmDeleteModal
       v-model:open="open"
       :body="target ? t('crm.deals.detail.removeQuotationConfirmBody', { name: target.file_name || target.number || `#${target.id}` }) : ''"
@@ -238,13 +240,34 @@ const {
   confirm: confirmQuoteStatusChange,
 } = useConfirmedStatusChange<QuoteStatus, Quote>({
   confirmStatuses: CONFIRMED_QUOTE_STATUSES,
-  save: async (quote, status) => {
-    // updateStatus rebuilds the full PUT payload from the loaded Quote.
-    const updated = await quotesStore.updateStatus(quote.id, status)
-    success(t('crm.deals.detail.updateQuoteStatusSuccess'))
-    if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
-  },
+  save: (quote, status) => saveQuoteStatus(quote, status),
 })
+
+// updateStatus rebuilds the full PUT payload from the loaded Quote.
+const saveQuoteStatus = async (quote: Quote, status: QuoteStatus) => {
+  const updated = await quotesStore.updateStatus(quote.id, status)
+  success(t('crm.deals.detail.updateQuoteStatusSuccess'))
+  if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
+}
+
+// Accepting while another quote on this Deal is already Accepted asks
+// whether to reject those first — that question replaces the generic
+// confirm (it confirms the acceptance too); otherwise the usual flow.
+const supersede = useSupersedeAcceptedQuotes()
+const onQuoteStatusPick = async (quote: Quote, status: QuoteStatus) => {
+  const others = status === 'accepted' && quote.status !== 'accepted' ? supersede.otherAccepted(dealId, quote.id) : []
+  if (others.length === 0) return requestQuoteStatusChange(quote, status)
+  try {
+    if (!(await supersede.resolveOthers(others))) {
+      statusSelectResetKey.value++
+      return
+    }
+    await saveQuoteStatus(quote, status)
+  } catch (err) {
+    notifyApiError(err)
+    statusSelectResetKey.value++
+  }
+}
 
 const { duplicatingId, duplicateQuote: onDuplicateQuote } = useDuplicateQuote()
 

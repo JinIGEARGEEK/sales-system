@@ -93,8 +93,9 @@ type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Su
 // 'prospect' added 2026-09-01 — carried over to 'lead' by
 // POST /prospects/:id/convert, same as 'lead' is carried to 'deal'.
 type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote' | 'prospect'
-// Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default; a labeling/
-// expectation field only, doesn't change how VAT is computed (see useQuoteTotals).
+// Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default (7% VAT added on
+// top). Since 2026-10-01 'incl_tax' with VAT on backs VAT out of the prices instead of adding
+// it again (see useQuoteTotals / the API's ComputeQuoteTotals).
 type QuotePriceType = 'excl_tax' | 'incl_tax'
 
 interface Company {

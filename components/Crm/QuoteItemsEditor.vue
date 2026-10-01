@@ -103,14 +103,9 @@ const { priceFormat } = useFormatter()
 
 const items = defineModel<QuoteItemRow[]>({ required: true })
 
-// Mirrors useQuoteTotals' own per-line formula exactly (qty * price * (1 -
-// discount_percent/100)) so this row-level number and the quote-wide
-// subtotal below it never disagree.
-const lineTotal = (item: QuoteItemRow) => {
-  let total = item.qty * item.price
-  if (item.discount_percent) total *= 1 - item.discount_percent / 100
-  return total
-}
+// useQuoteTotals' own per-line formula (rounded to satang), so these rows
+// add up exactly to the quote-wide subtotal below them.
+const lineTotal = (item: QuoteItemRow) => quoteLineTotal(item)
 
 // Optional Product picker per line item — additive on top of the existing
 // free-text flow, not a replacement for it. Selecting a product just

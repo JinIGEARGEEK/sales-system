@@ -35,9 +35,9 @@
               data-cy="payment-wht-fill"
               @click="fillWht"
             >
-              {{ t('crm.components.addPaymentModal.whtFill') }}
+              {{ t('crm.components.addPaymentModal.whtFill', { rate: whtRate }) }}
             </UButton>
-            <p class="text-xs text-(--color-gray)">{{ t('crm.components.addPaymentModal.whtFillHint') }}</p>
+            <p class="text-xs text-(--color-gray)">{{ whtFillHint }}</p>
           </div>
           <InputSelect v-model="form.method" :options="PAYMENT_METHOD_OPTIONS" :label="t('crm.components.addPaymentModal.method')" name="method" rules="required" />
           <div v-if="Number(form.wht_amount) > 0" class="sm:col-span-2">
@@ -92,7 +92,20 @@ const props = defineProps<{
   // The Deal's installment statuses, in due-date order — the link picker
   // offers the unpaid ones (plus whichever one the record is already on).
   installments?: PaymentInstallmentStatus[]
+  // The Deal's tax rates for "Fill WHT" (paymentTaxRates: its latest
+  // Accepted Quote's, else 3% WHT at 7% VAT).
+  taxRates?: PaymentTaxRates
 }>()
+
+const whtRate = computed(() => props.taxRates?.whtRate ?? DEFAULT_WHT_PERCENT)
+const vatRate = computed(() => props.taxRates?.vatRate ?? VAT_PERCENT)
+// Cash received = base × (1 + VAT − WHT), so WHT = cash ÷ that factor × WHT.
+const whtFillHint = computed(() => {
+  const params = { vat: vatRate.value, rate: whtRate.value, divisor: ((100 + vatRate.value - whtRate.value) / 100).toFixed(2) }
+  return vatRate.value > 0
+    ? t('crm.components.addPaymentModal.whtFillHint', params)
+    : t('crm.components.addPaymentModal.whtFillHintNoVat', params)
+})
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -134,7 +147,7 @@ const installmentOptions = computed<Select[]>(() => {
 })
 
 const fillWht = () => {
-  form.wht_amount = whtFromNetReceived(Number(form.amount))
+  form.wht_amount = whtFromNetReceived(Number(form.amount), whtRate.value, vatRate.value)
 }
 
 const onUpdateOpen = (value: boolean) => emit('update:open', value)
