@@ -2,7 +2,7 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
       <div class="mb-4">
-        <h2 class="text-xl font-black">{{ t('admin.trash.title') }}</h2>
+        <h2 class="text-xl font-semibold">{{ t('admin.trash.title') }}</h2>
         <p class="text-sm text-(--color-gray)">{{ t('admin.trash.subtitle') }}</p>
       </div>
 

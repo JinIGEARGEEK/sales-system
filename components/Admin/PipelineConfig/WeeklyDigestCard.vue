@@ -2,7 +2,7 @@
   <UCard class="mb-4" :ui="GLASS_PANEL_UI" data-cy="weekly-digest-card">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 class="flex items-center gap-2 text-base font-semibold">
+        <h3 class="flex items-center gap-2 text-base font-medium">
           <UIcon name="material-symbols:mark-email-read-outline" class="size-5 text-(--color-gray)" />
           {{ t('admin.pipelineConfig.weeklyDigest.heading') }}
         </h3>

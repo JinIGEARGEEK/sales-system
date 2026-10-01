@@ -8,7 +8,7 @@
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon :name="topic.flowIcons[0] ?? 'material-symbols:info-outline'" class="size-4 text-(--color-primary)" />
-        <h3 class="text-sm font-bold">{{ topic.title }}</h3>
+        <h3 class="text-sm font-semibold">{{ topic.title }}</h3>
       </div>
     </template>
 

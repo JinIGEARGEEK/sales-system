@@ -5,7 +5,7 @@
         <!-- Same header layout as the Kanban pages (Deals/Leads/Prospects):
         heading left, actions right. -->
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
+          <h2 class="text-xl font-semibold">{{ t('crm.overviewPipeline.heading') }}</h2>
           <div class="flex flex-wrap items-center gap-2">
             <span v-if="fetchedAtLabel" class="text-xs text-(--color-gray)">{{ fetchedAtLabel }}</span>
             <UTooltip :text="t('crm.overviewPipeline.refresh')">

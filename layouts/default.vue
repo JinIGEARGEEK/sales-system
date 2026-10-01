@@ -193,7 +193,7 @@
                  already shows this same title, and there's no room to also
                  duplicate it in this narrower bar alongside the menu trigger
                  and search box. -->
-            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-bold text-white md:block">
+            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-semibold text-white md:block">
               {{ currentPageTitle }}
             </p>
           </Transition>

@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-black">{{ t('crm.contacts.index.heading') }}</h2>
+      <h2 class="text-xl font-semibold">{{ t('crm.contacts.index.heading') }}</h2>
       <div class="flex flex-wrap gap-2">
         <ButtonPrimary
           outline

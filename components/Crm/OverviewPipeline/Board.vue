@@ -26,7 +26,7 @@
               <UIcon :name="OVERVIEW_ZONES[zone.key].icon" class="size-4" />
             </span>
             <div class="flex min-w-0 items-baseline gap-2" :class="isCollapsed(zone.key) ? 'md:rotate-180 md:flex-row-reverse md:[writing-mode:vertical-rl]' : ''">
-              <h3 class="text-base font-black">{{ zoneLabel(zone.key) }}</h3>
+              <h3 class="text-base font-semibold">{{ zoneLabel(zone.key) }}</h3>
               <span class="text-xs text-(--color-gray) tabular-nums">{{ zoneMeta(zone) }}</span>
             </div>
             <UBadge v-if="!isCollapsed(zone.key)" size="sm" variant="subtle" color="neutral" :label="t(`crm.overviewPipeline.zoneOwner.${zone.key}`)" />
