@@ -145,7 +145,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, stageDefaultForecastCategory } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -175,7 +175,7 @@ const canViewOwnerHistory = computed(() => hasRole('Admin', 'Sales Manager'))
 // admin-renamed Lost stage still shows/requires lost_reason), falling back to
 // the literal "Lost" name if the store hasn't loaded that row yet — same
 // resolution useDealStageColor.stageBadgeColor uses.
-const isLostStage = (stage: string) => pipelineStagesStore.byName(stage)?.is_lost_stage ?? stage === 'Lost'
+const isLostStage = (stage: string) => pipelineStagesStore.isLostStage(stage)
 
 // Colors the Probability progress bar by simple magnitude thresholds — not
 // stage-derived like forecastCategoryColor, since a rep can freely override
@@ -273,7 +273,9 @@ const form = reactive({
   title: deal.value?.title || '',
   value: deal.value?.value || 0,
   stage: deal.value?.stage || 'Lead',
-  probability: deal.value?.probability ?? stageDefaultProbability(deal.value?.stage || 'Lead'),
+  // undefined (an empty input) when neither the Deal nor the stage config has
+  // a number yet; saved as null, and the API applies the stage default.
+  probability: (deal.value?.probability ?? pipelineStagesStore.defaultProbability(deal.value?.stage || 'Lead') ?? undefined) as number | undefined,
   lost_reason: deal.value?.lost_reason || '',
   forecast_category: deal.value?.forecast_category || stageDefaultForecastCategory(deal.value?.stage || 'Lead'),
   expected_close_date: deal.value?.expected_close_date ? deal.value.expected_close_date.toISOString().slice(0, 10) : '',
@@ -299,7 +301,7 @@ watch(deal, (value) => {
   form.title = value.title
   form.value = value.value
   form.stage = value.stage
-  form.probability = value.probability ?? stageDefaultProbability(value.stage)
+  form.probability = value.probability ?? pipelineStagesStore.defaultProbability(value.stage) ?? undefined
   form.lost_reason = value.lost_reason || ''
   form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
   form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
@@ -326,7 +328,9 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 // afterwards too.
 watch(() => form.stage, (newStage) => {
   if (hydrating) return
-  form.probability = stageDefaultProbability(newStage)
+  // The server's default for the new stage (PipelineStage.default_probability);
+  // left empty when stages haven't loaded, and the API then applies it on save.
+  form.probability = pipelineStagesStore.defaultProbability(newStage) ?? undefined
   form.forecast_category = stageDefaultForecastCategory(newStage)
   if (!isLostStage(newStage)) form.lost_reason = ''
 })
@@ -343,8 +347,8 @@ const onSave = guard(async () => {
       title: form.title,
       value: Number(form.value) || 0,
       stage: form.stage as DealStage,
-      status: dealStatusForStage(form.stage as DealStage),
-      probability: form.probability,
+      status: pipelineStagesStore.statusForStage(form.stage),
+      probability: typeof form.probability === 'number' ? form.probability : null,
       lost_reason: isLostStage(form.stage) ? (form.lost_reason as LostReason || null) : null,
       forecast_category: form.forecast_category as ForecastCategory || null,
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,

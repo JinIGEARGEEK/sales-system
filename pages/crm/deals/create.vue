@@ -31,7 +31,7 @@
           <InputText v-model="form.title" :label="t('crm.deals.create.dealTitle')" :placeholder="t('crm.deals.create.dealTitlePlaceholder')" name="title" rules="required" />
           <InputCompanySelect v-model="form.company_id" :label="t('crm.deals.create.company')" :placeholder="t('crm.deals.create.companyPlaceholder')" name="company_id" rules="required" />
           <InputSelect v-model="form.contact_id" :options="contactOptions" :label="t('crm.deals.create.primaryContact')" :placeholder="t('crm.deals.create.primaryContactPlaceholder')" name="contact_id" :disable="!form.company_id || contactOptions.length === 0" />
-          <InputText v-model="form.value" thousands :decimals="2" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" rules="required" />
+          <InputText v-model="form.value" thousands :decimals="2" :label="t('crm.deals.create.dealValue')" :placeholder="t('crm.deals.create.dealValuePlaceholder')" name="value" :rules="valueRules" />
           <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.create.stage')" :placeholder="t('crm.deals.create.stagePlaceholder')" name="stage" rules="required" />
           <div>
             <InputSelect v-model="form.forecast_category" :options="FORECAST_CATEGORY_OPTIONS" :label="t('crm.deals.create.forecastCategory')" name="forecast_category" />
@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, findDuplicateDeals, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, findDuplicateDeals, stageDefaultForecastCategory } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -259,6 +259,15 @@ watch(() => form.stage, (newStage) => {
 const { discardDraft, offerRestoreIfFound } = useDraftAutosave(`crm-deal-create:${leadOriginId.value ?? (queryContactId ? `contact-${queryContactId}` : 'new')}`, () => form, saved => Object.assign(form, saved))
 onMounted(offerRestoreIfFound)
 
+// A Deal created straight into Won (e.g. a Lead dropped on the board's Won
+// lane lands here with ?lead_id=&stage=) must carry a real value — that's
+// the revenue the dashboard counts the moment it's saved.
+const valueRules = computed(() => pipelineStagesStore.isWonStage(form.stage) ? 'required|positive_amount' : 'required')
+
+// Saving into Won runs the same hand-off as every other path into Won: the
+// follow-up task here, then Create Project on the new Deal's page.
+const { onDealWon } = useDealWonHandoff()
+
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
@@ -277,11 +286,14 @@ const onSubmit = guard(async () => {
       channel: (originatingLead.value?.source ?? 'Other') as LeadSource,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-      probability: stageDefaultProbability(form.stage),
+      // The stage's server-side default (PipelineStage.default_probability);
+      // null lets the API apply that same default itself.
+      probability: pipelineStagesStore.defaultProbability(form.stage),
       lost_reason: null,
       forecast_category: form.forecast_category || stageDefaultForecastCategory(form.stage),
     }
 
+    let created: Deal
     if (originatingLead.value) {
       // Route this through the same conversion endpoint the pipeline board's
       // drag-to-convert uses, so the Lead actually gets marked converted
@@ -295,12 +307,13 @@ const onSubmit = guard(async () => {
       const convertedLead = leadsStore.items.find(l => l.id === originatingLead.value!.id)
       if (convertedLead) convertedLead.converted_deal_id = deal.id
       dealsStore.receiveConverted(deal)
+      created = deal
     } else {
-      await dealsStore.add({
+      created = await dealsStore.add({
         ...dealFields,
         company_id: Number(form.company_id),
         contact_id: Number(form.contact_id) || 0,
-        status: dealStatusForStage(form.stage as DealStage),
+        status: pipelineStagesStore.statusForStage(form.stage),
         lead_id: null,
         created_at: new Date(),
       })
@@ -308,6 +321,12 @@ const onSubmit = guard(async () => {
     success(t('crm.deals.create.createSuccess'))
     markClean()
     discardDraft()
+    // Keyed off the status the API resolved, so a renamed Won stage counts.
+    if (created.status === 'won') {
+      await onDealWon(created, { promptProject: false })
+      navigateTo({ path: `/crm/deals/${created.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
+      return
+    }
     navigateTo('/crm/deals')
   } catch (err) {
     notifyStageChangeError(err)

@@ -319,6 +319,10 @@ interface Deal {
   // create and on every real stage change; drives the Overview Pipeline's
   // days-in-stage figures (FR-CRM-123).
   stage_entered_at?: string | null
+  // When the Deal became Won (ISO string), null while it isn't — server-set on
+  // every move into won, cleared on a reopen. What the dashboard counts "won
+  // this period" by. Read-only, never sent.
+  won_at?: string | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -336,6 +340,12 @@ interface PipelineStage {
   is_lost_stage: boolean
   // Overview Pipeline stale threshold in days; null means the default (14).
   stale_days?: number | null
+  // Read-only, server-derived (utils.DefaultProbabilityFor): the probability a
+  // Deal entering this stage gets when none is sent — 100 Won, 0 Lost, else
+  // spread 10..90 across the open funnel. The single source for the Deal
+  // forms' probability prefill; depends on every open stage, so the store
+  // refetches the list after a stage write.
+  default_probability?: number
   created_at: Date
 }
 
@@ -695,7 +705,12 @@ interface Contract {
   id: number
   deal_id: number
   quote_id: number | null
+  // The stored status — what the Won gate (useContractGate) checks and the
+  // only status ever sent back.
   status: ContractStatus
+  // Read-only, server-derived: 'expired' once a signed contract's end_date has
+  // passed, else `status`. Display it; never send it (status stays 'signed').
+  effective_status?: ContractStatus
   signed_file_url: string | null
   signed_date: Date | null
   // Date-only (added 2026-09-27): kept as the API's 'YYYY-MM-DD' prefix
@@ -881,6 +896,10 @@ interface DashboardSummary {
   won_value: number
   win_rate: number
   open_deals_count: number
+  // The filter bar's "Showing X of Y deals": Deals matching every filter
+  // (created in the date window) and all Deals.
+  deals_count: number
+  total_deals_count: number
   forecasted_revenue: number
   // Same probability-weighted formula as forecasted_revenue, split by open
   // Deals' ForecastCategory — breaks the single blended figure above into

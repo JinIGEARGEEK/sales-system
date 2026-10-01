@@ -50,6 +50,16 @@ describe('useContractGate', () => {
     expect(showContractGateWarning.value).toBe(false)
   })
 
+  it('still counts a signed contract whose end date has passed (effective_status expired)', () => {
+    useAppSettingsStore().settings = { id: 1, require_signed_contract_before_won: true } as AppSettings
+    useContractsStore().items = [makeContract({ deal_id: 1, status: 'signed', effective_status: 'expired', end_date: '2026-01-31' })]
+    const deal = ref(makeDeal({ status: 'open' }))
+
+    const { showContractGateWarning } = useContractGate(1, deal)
+
+    expect(showContractGateWarning.value).toBe(false)
+  })
+
   it('does not warn once the deal is already Won, even with no signed contract', () => {
     useAppSettingsStore().settings = { id: 1, require_signed_contract_before_won: true } as AppSettings
     useContractsStore().items = [makeContract({ deal_id: 1, status: 'draft' })]
