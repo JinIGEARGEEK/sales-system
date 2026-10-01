@@ -164,6 +164,7 @@ const industryOptionsStore = useIndustryOptionsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
+const canDelete = computed(() => hasRole(...MANAGER_ROLES))
 
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
@@ -294,8 +295,9 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('crm.companies.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       ...rowQuickActions.value,
-      { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
-      { label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
+      { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: canDelete.value },
+      // DELETE is Admin/Sales Manager only (403 for Sales Rep/Marketing).
+      ...(canDelete.value ? [{ label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false }] : []),
     ],
   },
 ])
