@@ -1,6 +1,10 @@
 // A small but complete GET /pipeline/overview payload covering every lane
 // kind: open, won/lost/converted (terminal), and the "other" catch-all.
 const iso = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString()
+// The two moved Deals use iso(0): every period (?period=week|month|quarter)
+// ends today, but one that starts today — the 1st of a month or quarter —
+// would leave a move dated a few days ago outside it, so "moved in the
+// period" (movedInPeriod) must be dated now.
 
 const card = (id: number, name: string, over: Record<string, unknown> = {}) => ({
   id, name, company_id: null, company_name: 'Acme Corp', assigned_to: null, source: 'Website',
@@ -40,8 +44,8 @@ export const overviewFixture = () => ({
       lane('Converted', 'converted', [card(12, 'Converted Lead', { stage: 'Converted', stage_entered_at: iso(1) })]),
     ] },
     { key: 'deal', lanes: [
-      lane('Qualified', 'open', [card(21, 'Slipping Deal', { stage: 'Qualified', value: 900000, previous_stage: 'Negotiation', direction: 'backward', stage_entered_at: iso(2) })], 14, 900000),
-      lane('Negotiation', 'open', [card(22, 'Advancing Deal', { stage: 'Negotiation', value: 2000000, previous_stage: 'Qualified', direction: 'forward', stage_entered_at: iso(2) })], 30, 2000000),
+      lane('Qualified', 'open', [card(21, 'Slipping Deal', { stage: 'Qualified', value: 900000, previous_stage: 'Negotiation', direction: 'backward', stage_entered_at: iso(0) })], 14, 900000),
+      lane('Negotiation', 'open', [card(22, 'Advancing Deal', { stage: 'Negotiation', value: 2000000, previous_stage: 'Qualified', direction: 'forward', stage_entered_at: iso(0) })], 30, 2000000),
       lane('Won', 'won', []),
       lane('Lost', 'lost', []),
     ] },
