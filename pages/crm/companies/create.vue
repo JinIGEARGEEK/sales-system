@@ -209,7 +209,7 @@ const removeContactRow = (index: number) => {
 const { markClean } = useUnsavedChangesGuard(() => [form, contacts.value])
 
 const { loading, guard } = useSubmitGuard()
-const showFieldErrors = useApiFieldErrors()
+const showFormErrors = useApiFormErrors()
 
 const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   try {
@@ -264,7 +264,7 @@ const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: Su
     navigateTo(`/crm/companies/${company.id}`)
   } catch (err) {
     // A 422 on the Company itself marks its inputs; anything else toasts.
-    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
+    showFormErrors(err, setErrors, values)
   }
 })
 </script>

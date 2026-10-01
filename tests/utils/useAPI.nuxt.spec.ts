@@ -115,3 +115,38 @@ describe('useApiFieldErrors', () => {
     expect(setErrors).not.toHaveBeenCalled()
   })
 })
+
+describe('error envelope readers', () => {
+  it('read status, message, duplicate ids and a field code without a cast at the call site', () => {
+    const err = apiError(409, { code: 'CONFLICT', message: 'dup', fields: { email: ['duplicate'] }, duplicate_of: [4, '9', 'x'] })
+    expect(getApiErrorStatus(err)).toBe(409)
+    expect(getApiErrorMessage(err, 'fallback')).toBe('dup')
+    expect(getApiErrorDuplicateIds(err)).toEqual([4, 9])
+    expect(apiErrorHasFieldCode(err, 'email', 'duplicate')).toBe(true)
+    expect(getApiErrorDuplicateIds(apiError(422, { duplicate_of: [1] }))).toBeUndefined()
+    expect(getApiErrorStatus(new Error('offline'))).toBeUndefined()
+    expect(getApiErrorMessage(apiError(500, { message: '' }), 'fallback')).toBe('fallback')
+  })
+
+  it('apiFieldErrorMessage translates a known code and falls back to "invalid"', () => {
+    expect(apiFieldErrorMessage('required', t, te)).toBe('t:global.apiFieldError.required')
+    expect(apiFieldErrorMessage('weird', t, te)).toBe('t:global.apiFieldError.invalid')
+    expect(apiFieldErrorMessage(undefined, t, te)).toBe('t:global.apiFieldError.invalid')
+  })
+})
+
+describe('useApiFormErrors', () => {
+  it('toasts the API message only when a field had no input', async () => {
+    const showFormErrors = useApiFormErrors()
+    useToast().clear()
+    const setErrors = vi.fn()
+
+    showFormErrors(apiError(422, { message: 'bad name', fields: { name: ['required'] } }), setErrors, ['name'])
+    await nextTick()
+    expect(useToast().toasts.value).toHaveLength(0)
+
+    showFormErrors(apiError(422, { message: 'bad deal', fields: { deal_id: ['invalid'] } }), setErrors, ['name'])
+    await nextTick()
+    expect(useToast().toasts.value.map(toast => toast.title)).toEqual(['bad deal'])
+  })
+})
