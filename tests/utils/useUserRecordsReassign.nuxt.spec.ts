@@ -57,13 +57,23 @@ describe('useUserRecordsReassign', () => {
   })
 
   it('translates the self-change 422, the last-Admin 409 and a bad reassign_to', () => {
-    const { userGuardMessage, applyUserFieldErrors } = useUserRecordsReassign()
+    const { userGuardMessage, showUserFieldErrors } = useUserRecordsReassign()
 
     expect(userGuardMessage(apiError(409, { code: 'CONFLICT', message: 'last admin' }))).toBe('admin.users.errors.lastAdmin')
     expect(userGuardMessage(apiError(422, { code: 'VALIDATION_ERROR', fields: { ids: ['You cannot…'] } }))).toBe('admin.users.errors.selfChange')
 
     const setErrors = vi.fn()
-    applyUserFieldErrors(apiError(422, { code: 'VALIDATION_ERROR', fields: { status: ['You cannot…'], reassign_to: ['invalid'] } }), setErrors)
+    const err = apiError(422, { code: 'VALIDATION_ERROR', fields: { status: ['You cannot…'], reassign_to: ['invalid'] } })
+    expect(showUserFieldErrors(err, setErrors, ['role', 'status', 'reassign_to'])).toBe(true)
     expect(setErrors).toHaveBeenCalledWith({ status: 'admin.users.errors.selfChange', reassign_to: 'admin.users.errors.reassignInvalid' })
+  })
+
+  it('asks for the toast when a 422 field has no input on the edit form', () => {
+    const { showUserFieldErrors } = useUserRecordsReassign()
+    const setErrors = vi.fn()
+    // reassign_to without the picker rendered (the update didn't look like it took records away).
+    const err = apiError(422, { code: 'VALIDATION_ERROR', fields: { reassign_to: ['invalid'] } })
+    expect(showUserFieldErrors(err, setErrors, ['role', 'status'])).toBe(false)
+    expect(setErrors).not.toHaveBeenCalled()
   })
 })

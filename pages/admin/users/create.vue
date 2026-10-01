@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SubmissionContext } from 'vee-validate'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -32,6 +33,7 @@ useHead({ title: t('admin.users.create.pageTitle') })
 const { canAccess } = usePageAccess('Admin')
 
 const { success } = useNotify()
+const showFormErrors = useApiFormErrors()
 const usersStore = useUsersStore()
 const goBack = useBackNavigation('/admin/users')
 
@@ -50,17 +52,14 @@ const { markClean } = useUnsavedChangesGuard(() => form)
 
 const { loading, guard } = useSubmitGuard()
 
-const onSubmit = guard(async () => {
-  await usersStore.add({
-    first_name: form.first_name,
-    last_name: form.last_name,
-    email: form.email,
-    tel: form.tel,
-    role: form.role,
-    status: form.status,
-    notes: form.notes,
-    password: form.password,
-  })
+// A 422 (e.g. a taken email) lands on its input; anything else is a toast.
+const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
+  try {
+    await usersStore.add({ ...form })
+  } catch (err) {
+    showFormErrors(err, setErrors, values)
+    return
+  }
   success(t('admin.users.create.createSuccess'))
   markClean()
   navigateTo('/admin/users')

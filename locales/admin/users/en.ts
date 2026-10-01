@@ -7,7 +7,6 @@ export default {
     addStaff: 'Add Staff',
     searchPlaceholder: 'Search by name or email...',
     rolePlaceholder: 'Role',
-    statusPlaceholder: 'Status',
     statusActive: 'Active',
     statusInactive: 'Inactive',
     columns: {

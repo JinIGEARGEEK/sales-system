@@ -47,3 +47,6 @@ export const TASK_ROLES: Role[] = [...SALES_PIPELINE_ROLES]
 // AdminRoleFocusSwitcher (stores/user.ts's focusRole/effectiveRole) — every
 // other role, i.e. all of them minus Admin itself.
 export const FOCUSABLE_ROLES: Role[] = ['Sales Rep', 'Sales Manager', 'Marketing', 'Production']
+
+// Every role a user can have, in the order the Users form and filter list them.
+export const USER_ROLES: Role[] = ['Admin', 'Sales Rep', 'Sales Manager', 'Marketing', 'Production']
