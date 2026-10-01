@@ -72,7 +72,7 @@
           <!-- Creating straight into a Lost stage needs the reason, same as
                moving a Deal there later (the API rejects it without one). -->
           <InputSelect
-            v-if="isLostStage(form.stage)"
+            v-if="pipelineStagesStore.isLostStage(form.stage)"
             v-model="form.lost_reason"
             :options="LOST_REASON_OPTIONS"
             :label="t('crm.deals.detail.lostReason')"
@@ -168,9 +168,6 @@ const form = reactive({
   lost_reason: '' as LostReason | '',
 })
 
-// By the stage row's flag, so a renamed Lost stage still asks (same rule as
-// the detail page's Overview form).
-const isLostStage = (stage: string) => pipelineStagesStore.isLostStage(stage)
 // The stage list may still be loading at setup; once it lands, swap an
 // unset/stale default for the real first open stage (never overriding a
 // stage the user already picked or came in with via ?stage=).
@@ -283,7 +280,7 @@ watch(() => form.company_id, () => {
 // forecast_category watcher, still freely editable afterwards.
 watch(() => form.stage, (newStage) => {
   form.forecast_category = stageDefaultForecastCategory(newStage)
-  if (!isLostStage(newStage)) form.lost_reason = ''
+  if (!pipelineStagesStore.isLostStage(newStage)) form.lost_reason = ''
 })
 
 // Keyed by the originating Lead (or 'new' for a plain create): a Deal
@@ -341,7 +338,7 @@ const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) =>
       // The stage's server-side default (PipelineStage.default_probability);
       // null lets the API apply that same default itself.
       probability: pipelineStagesStore.defaultProbability(form.stage),
-      lost_reason: isLostStage(form.stage) && form.lost_reason ? form.lost_reason : null,
+      lost_reason: pipelineStagesStore.isLostStage(form.stage) && form.lost_reason ? form.lost_reason : null,
       forecast_category: form.forecast_category || stageDefaultForecastCategory(form.stage),
     }
 

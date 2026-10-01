@@ -1,17 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { AxiosError, type AxiosResponse } from 'axios'
-import { getDuplicateConflict } from '~/composables/utils/useDuplicateConflict'
+import { duplicateFieldsLabel, getDuplicateConflict } from '~/composables/utils/useDuplicateConflict'
 
-// `te` knows the apiFieldError codes the backend sends here, so
-// applyApiFieldErrors translates instead of falling back to "invalid".
+// Toasts echo keys; the field messages come from the real $i18n
+// (useApiFieldErrors), read back through `fieldText`.
 vi.mock('vue-i18n', async importOriginal => ({
   ...await importOriginal<typeof import('vue-i18n')>(),
-  useI18n: () => ({
-    t: (key: string) => key,
-    te: (key: string) => ['global.apiFieldError.duplicate', 'global.apiFieldError.invalid'].includes(key),
-  }),
+  useI18n: () => ({ t: (key: string) => key }),
 }))
+
+const fieldText = (code: string) => useNuxtApp().$i18n.t(`global.apiFieldError.${code}`)
+
+// The create form's rendered Field names, as the <Form @submit> values.
+const formValues = { name: '', email: '', phone: '', assigned_to: '' }
 
 // Same approach as tests/utils/useTaskQuickActions.nuxt.spec.ts: capture the
 // toasts without the real toast machinery.
@@ -38,6 +40,15 @@ describe('getDuplicateConflict', () => {
   })
 })
 
+describe('duplicateFieldsLabel', () => {
+  it('joins the matched fields, or says "email or phone" when none was named', () => {
+    const t = (key: string) => key
+    expect(duplicateFieldsLabel(['email', 'phone'], t))
+      .toBe('crm.components.duplicateConflict.fields.emailcrm.components.duplicateConflict.andcrm.components.duplicateConflict.fields.phone')
+    expect(duplicateFieldsLabel([], t)).toBe('crm.components.duplicateConflict.emailOrPhone')
+  })
+})
+
 describe('useCreateWithDuplicateCheck', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -56,11 +67,11 @@ describe('useCreateWithDuplicateCheck', () => {
     const { create, onCreated, setErrors, flow } = setup()
     create.mockRejectedValueOnce(duplicate409({ email: ['duplicate'] }, [12]))
 
-    await flow.onSubmit({}, { setErrors })
+    await flow.onSubmit(formValues, { setErrors })
 
     expect(create).toHaveBeenLastCalledWith(false)
     expect(flow.conflict.value).toEqual({ fields: ['email'], ids: [12] })
-    expect(setErrors).toHaveBeenCalledWith({ email: 'global.apiFieldError.duplicate' })
+    expect(setErrors).toHaveBeenCalledWith({ email: fieldText('duplicate') })
     expect(errorMock).not.toHaveBeenCalled()
     expect(onCreated).not.toHaveBeenCalled()
 
@@ -75,7 +86,7 @@ describe('useCreateWithDuplicateCheck', () => {
   it('clears a stale conflict once the matched value is edited, so "Create anyway" does nothing', async () => {
     const { email, create, flow } = setup()
     create.mockRejectedValueOnce(duplicate409({ email: ['duplicate'] }, [12]))
-    await flow.onSubmit({}, { setErrors: vi.fn() })
+    await flow.onSubmit(formValues, { setErrors: vi.fn() })
 
     email.value = 'b@example.com'
     await nextTick()
@@ -89,18 +100,28 @@ describe('useCreateWithDuplicateCheck', () => {
     const { create, setErrors, flow } = setup()
     create.mockRejectedValueOnce(apiError(422, { code: 'VALIDATION_ERROR', message: 'bad', fields: { assigned_to: ['invalid'] } }))
 
-    await flow.onSubmit({}, { setErrors })
+    await flow.onSubmit(formValues, { setErrors })
 
-    expect(setErrors).toHaveBeenCalledWith({ assigned_to: 'global.apiFieldError.invalid' })
+    expect(setErrors).toHaveBeenCalledWith({ assigned_to: fieldText('invalid') })
     expect(errorMock).not.toHaveBeenCalled()
     expect(flow.conflict.value).toBeNull()
+  })
+
+  it('still toasts a 422 whose field the form does not render', async () => {
+    const { create, setErrors, flow } = setup()
+    create.mockRejectedValueOnce(apiError(422, { code: 'VALIDATION_ERROR', message: 'company_id not found', fields: { company_id: ['not_found'] } }))
+
+    await flow.onSubmit(formValues, { setErrors })
+
+    expect(setErrors).not.toHaveBeenCalled()
+    expect(errorMock).toHaveBeenCalledWith('company_id not found')
   })
 
   it('toasts any other failure with the server message', async () => {
     const { create, flow } = setup()
     create.mockRejectedValueOnce(apiError(500, { code: 'INTERNAL_ERROR', message: 'Failed to create lead' }))
 
-    await flow.onSubmit({}, { setErrors: vi.fn() })
+    await flow.onSubmit(formValues, { setErrors: vi.fn() })
 
     expect(errorMock).toHaveBeenCalledWith('Failed to create lead')
   })

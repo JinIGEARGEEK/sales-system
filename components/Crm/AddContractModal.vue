@@ -16,7 +16,8 @@
             :disable="quoteOptions.length === 0"
           />
           <!-- Status only on create: an existing contract's status moves via
-               the card's confirmed status select (Signed/Expired ask first). -->
+               the card's status select (Expired asks first); Signed comes only
+               from uploading the signed document. -->
           <div v-if="!record">
             <InputSelect
               v-model="form.status"

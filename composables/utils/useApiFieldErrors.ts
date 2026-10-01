@@ -44,3 +44,16 @@ export const useApiFieldErrors = (): ShowApiFieldErrors => {
     return allShown
   }
 }
+
+// The usual page-form catch built on it: mark what the form renders, and toast
+// the API's message (else the generic one) unless every field was shown —
+// `catch (err) { showFormErrors(err, setErrors, values) }`.
+export const useApiFormErrors = () => {
+  const showFieldErrors = useApiFieldErrors()
+  const { error } = useNotify()
+  const i18n = useNuxtApp().$i18n as { t: (key: string) => string }
+
+  return (...args: Parameters<ShowApiFieldErrors>) => {
+    if (!showFieldErrors(...args)) error(getApiErrorMessage(args[0], i18n.t('global.genericError')))
+  }
+}

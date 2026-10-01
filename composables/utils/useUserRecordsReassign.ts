@@ -22,7 +22,7 @@ export const updateLosesRecords = (user: Pick<AdminUser, 'is_active' | 'role'>, 
 // who can receive a removed user's open records, how to word what moved or
 // what's still left, and how to show the self-change/last-Admin guards.
 export const useUserRecordsReassign = () => {
-  const { t, te } = useI18n()
+  const { t } = useI18n()
   const { success, warning, error } = useNotify()
   const usersStore = useUsersStore()
 
@@ -103,15 +103,19 @@ export const useUserRecordsReassign = () => {
 
   // The edit form: a 422 goes onto its inputs (role/status for the
   // self-change guard, reassign_to for a bad pick, anything else via the
-  // shared apiFieldError codes). Returns true when it matched a field.
-  const applyUserFieldErrors = (err: unknown, setErrors: (errors: Record<string, string>) => void) =>
-    applyApiFieldErrors(err, (errors) => {
-      for (const field of Object.keys(errors)) {
-        if (SELF_FIELDS.includes(field)) errors[field] = t('admin.users.errors.selfChange')
-        else if (field === 'reassign_to') errors[field] = t('admin.users.errors.reassignInvalid')
-      }
-      setErrors(errors)
-    }, t, te)
+  // shared apiFieldError codes) — useApiFieldErrors' rule, so it returns true
+  // only when every API field had an input and the caller can skip its toast.
+  const showFieldErrors = useApiFieldErrors()
+  const showUserFieldErrors = (
+    err: unknown,
+    setErrors: (errors: Record<string, string>) => void,
+    fieldNames: Record<string, unknown> | readonly string[],
+  ) => showFieldErrors(err, setErrors, fieldNames, {
+    messages: {
+      ...Object.fromEntries(SELF_FIELDS.map(field => [field, t('admin.users.errors.selfChange')])),
+      reassign_to: t('admin.users.errors.reassignInvalid'),
+    },
+  })
 
   return {
     reassignOptions,
@@ -121,6 +125,6 @@ export const useUserRecordsReassign = () => {
     notifyBulkRecordsResult,
     userGuardMessage,
     notifyUserError,
-    applyUserFieldErrors,
+    showUserFieldErrors,
   }
 }

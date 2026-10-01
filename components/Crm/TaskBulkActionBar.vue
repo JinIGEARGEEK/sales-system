@@ -13,7 +13,7 @@
           <InputSelect
             v-model="reassignTo"
             name="bulkReassignTo"
-            :options="teamMembersStore.filterOptions.filter(o => o.value === 'unassigned').concat(teamMembersStore.taskAssigneeOptions)"
+            :options="teamMembersStore.bulkReassignOptions"
             :placeholder="t('crm.tasks.index.reassignPlaceholder')"
           />
           <ButtonPrimary small block :label="t('crm.tasks.index.bulkReassign')" @click="applyReassign" />

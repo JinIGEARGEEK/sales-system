@@ -155,9 +155,7 @@ const emit = defineEmits<{
 const prefix = 'crm.components.mergeDuplicates'
 const { t } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
-const companiesStore = useCompaniesStore()
-const contactsStore = useContactsStore()
-const { merge } = useMergeDuplicates(props.entity)
+const { merge, fetchRecord, searchRecords } = useMergeDuplicates(props.entity)
 const { loading, guard } = useSubmitGuard()
 
 const entitySingular = computed(() => t(`${prefix}.entities.${props.entity}.one`))
@@ -175,13 +173,6 @@ const survivor = computed(() => records.value.find(record => record.id === survi
 const sources = computed(() => records.value.filter(record => record.id !== survivorId.value))
 const canContinue = computed(() => survivor.value !== null && sources.value.length >= 1 && sources.value.length <= MERGE_MAX_SOURCES)
 
-const unnamed = computed(() => t('global.unnamedCompany'))
-const toRecord = (record: Company | Contact): MergeRecord => (props.entity === 'company'
-  ? companyMergeRecord(record as Company, unnamed.value)
-  : contactMergeRecord(record as Contact))
-
-const fetchOne = (id: number) => (props.entity === 'company' ? companiesStore.fetchOne(id) : contactsStore.fetchOne(id))
-
 const reset = async () => {
   step.value = 'pick'
   term.value = ''
@@ -191,7 +182,7 @@ const reset = async () => {
   const extra = (props.initialSourceIds ?? []).filter(id => !records.value.some(record => record.id === id))
   for (const id of extra.slice(0, MERGE_MAX_SOURCES)) {
     try {
-      addRecord(toRecord(await fetchOne(id)))
+      addRecord(await fetchRecord(id))
     } catch (err) {
       notifyApiError(err)
     }
@@ -214,8 +205,7 @@ const removeRecord = (id: number) => {
   if (survivorId.value === id) survivorId.value = records.value[0]?.id ?? null
 }
 
-// Server-side search (the stores' `items` caches are capped at 200 rows),
-// minus the records already in the merge.
+// Server-side search, minus the records already in the merge.
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 let searchSeq = 0
 watch(term, (value) => {
@@ -230,12 +220,9 @@ watch(term, (value) => {
   searchTimer = setTimeout(async () => {
     const seq = ++searchSeq
     try {
-      const params = { search: query, per_page: 10 }
-      const { items } = props.entity === 'company' ? await companiesStore.fetchList(params) : await contactsStore.fetchList(params)
+      const found = await searchRecords(query, 10)
       if (seq !== searchSeq) return
-      results.value = (items as (Company | Contact)[])
-        .filter(item => !records.value.some(record => record.id === item.id))
-        .map(toRecord)
+      results.value = found.filter(item => !records.value.some(record => record.id === item.id))
     } catch (err) {
       notifyApiError(err)
     } finally {

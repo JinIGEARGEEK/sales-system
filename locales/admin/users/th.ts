@@ -7,7 +7,6 @@ export default {
     addStaff: 'เพิ่มพนักงาน',
     searchPlaceholder: 'ค้นหาด้วยชื่อหรืออีเมล...',
     rolePlaceholder: 'บทบาท',
-    statusPlaceholder: 'สถานะ',
     statusActive: 'ใช้งานอยู่',
     statusInactive: 'ไม่ได้ใช้งาน',
     columns: {

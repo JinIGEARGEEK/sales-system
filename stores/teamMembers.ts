@@ -1,22 +1,33 @@
+import { SALES_PIPELINE_ROLES } from '~/constants/roles'
+
 // Real API-backed store. GET /team-members returns only active users, lightweight
-// {id, name, email} — no pagination envelope.
+// {id, name, email, role} — no pagination envelope.
+const toOption = (member: TeamMember) => ({ label: member.name, value: String(member.id) })
+
+// Whether a member may own a Deal/Lead/Prospect/Task: the API's
+// validateAssignee takes an active Admin/Sales Rep/Sales Manager/Marketing
+// user and answers 422 on assigned_to for anyone else (Production).
+const canOwnRecords = (member: TeamMember) => !member.role || SALES_PIPELINE_ROLES.includes(member.role)
+
 export const useTeamMembersStore = defineStore('teamMembers', {
   state: () => ({
     items: [] as TeamMember[],
   }),
   getters: {
-    options: state => state.items.map(m => ({ label: m.name, value: String(m.id) })),
-    // Who a Task may be assigned to: an active Admin/Sales Rep/Sales Manager/
-    // Marketing user (POST /tasks, PATCH /tasks/:id and the bulk/campaign
-    // reassigns answer 422 assigned_to otherwise). The list is active users
-    // only already; Production is dropped once the API says who that is.
-    taskAssigneeOptions: state => state.items
-      .filter(m => !m.role || m.role !== 'Production')
-      .map(m => ({ label: m.name, value: String(m.id) })),
+    // Everyone, e.g. for a report filter.
+    options: state => state.items.map(toOption),
+    // An assignee picker (CrmTeamMemberSelect): only members who may own the
+    // record — see canOwnRecords.
+    assigneeOptions: state => state.items.filter(canOwnRecords).map(toOption),
+    // A bulk "Reassign to" picker: Unassigned plus assigneeOptions.
+    bulkReassignOptions: (state): Select[] => [
+      { label: 'Unassigned', value: 'unassigned' },
+      ...state.items.filter(canOwnRecords).map(toOption),
+    ],
     filterOptions: (state): Select[] => [
       { label: 'All Team Members', value: 'all' },
       { label: 'Unassigned', value: 'unassigned' },
-      ...state.items.map(m => ({ label: m.name, value: String(m.id) })),
+      ...state.items.map(toOption),
     ],
     nameById: state => (id: number | null) => state.items.find(m => m.id === id)?.name || 'Unassigned',
   },

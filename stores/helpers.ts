@@ -1,6 +1,11 @@
+// The `data` of an endpoint that answers either 200 with a body or 204
+// (axios gives '' for an empty body).
+export const optionalResponseData = <T>(body: ApiResponse<T> | '' | null | undefined): T | undefined =>
+  body && typeof body === 'object' ? body.data : undefined
+
 // The bulk-archive response body, or (for a 204) every requested id archived.
 export const toBulkArchiveResult = (ids: number[], body: ApiResponse<BulkArchiveResult> | '' | null | undefined): BulkArchiveResult => {
-  const data = body && typeof body === 'object' ? body.data : undefined
+  const data = optionalResponseData(body)
   if (!data || !Array.isArray(data.archived)) return { archived: [...ids], skipped: [] }
   return { archived: data.archived, skipped: Array.isArray(data.skipped) ? data.skipped : [] }
 }
@@ -12,6 +17,35 @@ export interface CreateOptions {
 }
 export const createParams = (options: CreateOptions) =>
   options.allowDuplicate ? { params: { allow_duplicate: true } } : undefined
+
+// GET <resourcePath>/:id, upserted into `items` — for a detail page and
+// anything that needs one specific record whether or not it made the capped
+// 200-row fetchAll cache. skipErrorRedirect: a missing record is the detail
+// page's own NotFoundState, not the app-wide error page.
+export const createFetchOneAction = <T extends { id: number }>(resourcePath: string, parseDates: (item: T) => T) => ({
+  async fetchOne (this: { items: T[] }, id: number): Promise<T> {
+    const { $api } = useNuxtApp()
+    const response = await $api.get<ApiResponse<T>>(`${resourcePath}/${id}`, { skipErrorRedirect: true })
+    const fetched = parseDates(response.data.data)
+    this.items = [...this.items.filter(item => item.id !== id), fetched]
+    return fetched
+  },
+})
+
+// POST <resourcePath>/:id/merge (Companies, Contacts): folds the sources into
+// this record. The target comes back updated (filled fields) and the sources
+// — now in Trash — leave `items`. Linked lists elsewhere are stale; callers
+// refetch them.
+export const createMergeAction = <T extends { id: number }>(resourcePath: string, parseDates: (item: T) => T) => ({
+  async merge (this: { items: T[] }, id: number, sourceIds: number[]): Promise<MergeResult<T>> {
+    const { $api } = useNuxtApp()
+    const response = await $api.post<ApiResponse<MergeResult<T>>>(`${resourcePath}/${id}/merge`, { source_ids: sourceIds })
+    const result = response.data.data
+    const target = parseDates(result.target)
+    this.items = [...this.items.filter(item => item.id !== id && !sourceIds.includes(item.id)), target]
+    return { ...result, target }
+  },
+})
 
 export const nextId = <T extends { id: number }>(items: T[]): number => Math.max(0, ...items.map(item => item.id)) + 1
 
@@ -69,7 +103,7 @@ export const createBulkResourceActions = <T extends { id: number, assigned_to: n
   },
   // PATCH /deals/bulk-archive answers 200 { archived, skipped } (a Won Deal
   // with money attached is skipped, not archived); /leads and /prospects
-  // still answer 204, which normalizes to "all archived, none skipped".
+  // answer 204, which normalizes to "all archived, none skipped".
   async bulkArchive (this: { items: T[] }, ids: number[]): Promise<BulkArchiveResult> {
     const { $api } = useNuxtApp()
     const response = await $api.patch<ApiResponse<BulkArchiveResult> | ''>(`${resourcePath}/bulk-archive`, { ids })

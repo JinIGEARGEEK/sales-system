@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { DuplicateConflict } from '~/composables/utils/useDuplicateConflict'
+import { duplicateFieldsLabel, type DuplicateConflict } from '~/composables/utils/useDuplicateConflict'
 import { MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -87,8 +87,5 @@ const mergeLink = computed(() => {
 })
 
 const entityLabel = computed(() => t(`crm.components.duplicateConflict.entities.${props.entity}`))
-const fieldsLabel = computed(() => {
-  const names = props.conflict.fields.map(f => t(`crm.components.duplicateConflict.fields.${f}`))
-  return names.length > 0 ? names.join(t('crm.components.duplicateConflict.and')) : t('crm.components.duplicateConflict.fields.email_or_phone')
-})
+const fieldsLabel = computed(() => duplicateFieldsLabel(props.conflict.fields, t))
 </script>

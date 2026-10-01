@@ -12,7 +12,8 @@ import WonDealReasonModal from '~/components/Crm/WonDealReasonModal.vue'
 // Resolves `fn`'s result, or `null` when nothing happened (explained, or the
 // reason prompt was dismissed) — the caller then reverts anything it showed
 // optimistically and skips its success toast. Every other error is rethrown
-// for the caller's usual notifier.
+// for the caller's usual notifier. `updateStage`/`update`/`remove` are the
+// guarded dealsStore writes (same arguments, minus the reason).
 export const WON_DEAL_PROTECTED = 'WON_DEAL_PROTECTED'
 export const REASON_REQUIRED = 'REASON_REQUIRED'
 
@@ -25,6 +26,7 @@ export type AskOverrideReason = (action: WonDealAction) => Promise<string | null
 export const useWonDealGuard = (options: { askReason?: AskOverrideReason } = {}) => {
   const { t } = useI18n()
   const { error } = useNotify()
+  const dealsStore = useDealsStore()
   const overlay = options.askReason ? null : useOverlay()
 
   const askReasonInModal: AskOverrideReason = async (action) => {
@@ -50,5 +52,17 @@ export const useWonDealGuard = (options: { askReason?: AskOverrideReason } = {})
     return fn(reason)
   }
 
-  return { run }
+  const updateStage = (id: number, stage: DealStage, options: { position?: number, lostReason?: LostReason } = {}) =>
+    run('unwin', reason => dealsStore.updateStage(id, stage, options.position, options.lostReason, reason))
+
+  const update = (id: number, changes: DealUpdatePayload) =>
+    run('unwin', reason => dealsStore.update(id, changes, reason))
+
+  // Resolves true once deleted.
+  const remove = (id: number) => run('delete', async (reason) => {
+    await dealsStore.remove(id, reason)
+    return true
+  })
+
+  return { run, updateStage, update, remove }
 }

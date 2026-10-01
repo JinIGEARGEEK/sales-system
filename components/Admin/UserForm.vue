@@ -80,6 +80,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { USER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -100,16 +101,19 @@ withDefaults(defineProps<{
   isSelf?: boolean
 }>(), { isSelf: false })
 
-const roleOptions = [
-  { label: t('admin.users.form.roleAdmin'), value: 'Admin' },
-  { label: t('admin.users.form.roleSalesRep'), value: 'Sales Rep' },
-  { label: t('admin.users.form.roleSalesManager'), value: 'Sales Manager' },
-  { label: t('admin.users.form.roleMarketing'), value: 'Marketing' },
-  { label: t('admin.users.form.roleProduction'), value: 'Production' },
-]
+const ROLE_LABEL_KEYS: Record<Role, string> = {
+  'Admin': 'admin.users.form.roleAdmin',
+  'Sales Rep': 'admin.users.form.roleSalesRep',
+  'Sales Manager': 'admin.users.form.roleSalesManager',
+  'Marketing': 'admin.users.form.roleMarketing',
+  'Production': 'admin.users.form.roleProduction',
+}
 
-const statusOptions = [
+// Computed so a language switch relabels them.
+const roleOptions = computed(() => USER_ROLES.map(role => ({ label: t(ROLE_LABEL_KEYS[role]), value: role })))
+
+const statusOptions = computed(() => [
   { label: t('admin.users.form.statusActive'), value: 'active' },
   { label: t('admin.users.form.statusInactive'), value: 'inactive' },
-]
+])
 </script>

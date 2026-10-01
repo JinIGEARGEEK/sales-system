@@ -151,7 +151,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import type { MergeRecord } from '~/composables/utils/useMergeDuplicates'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -174,8 +173,6 @@ const contactsStore = useContactsStore()
 // Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const canDelete = computed(() => hasRole(...MANAGER_ROLES))
-// POST /contacts/:id/merge is Admin/Sales Manager only.
-const canMerge = computed(() => hasRole(...MANAGER_ROLES))
 
 onMounted(() => {
   fetch()
@@ -293,15 +290,8 @@ const displayContacts = computed(() => rows.value.map(contact => ({
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Contact>()
 
-// Bulk "Merge": the selected rows, the first one preselected to stay (the
-// dialog lets the user pick another). The list reloads after a merge — the
-// sources are in Trash now.
-const mergeOpen = ref(false)
-const mergeCandidates = ref<MergeRecord[]>([])
-const openBulkMerge = () => {
-  mergeCandidates.value = selected.value.map(row => contactMergeRecord(row))
-  mergeOpen.value = true
-}
+// Bulk "Merge" (Admin/Sales Manager); the list reloads after a merge.
+const { canMerge, mergeOpen, mergeCandidates, openBulkMerge } = useBulkMerge(selected, row => contactMergeRecord(row))
 const onMerged = () => {
   clearSelection()
   fetch()

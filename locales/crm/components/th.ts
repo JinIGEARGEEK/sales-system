@@ -399,8 +399,9 @@ export default {
     fields: {
       email: 'อีเมล',
       phone: 'เบอร์โทร',
-      email_or_phone: 'อีเมลหรือเบอร์โทร',
     },
+    // When the 409 named neither field.
+    emailOrPhone: 'อีเมลหรือเบอร์โทร',
     and: 'และ',
     entities: {
       lead: 'Lead',

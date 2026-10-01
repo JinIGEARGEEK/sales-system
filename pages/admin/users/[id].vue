@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SubmissionContext } from 'vee-validate'
 import { useI18n } from 'vue-i18n'
 import { KEEP_RECORDS, updateLosesRecords } from '~/composables/utils/useUserRecordsReassign'
 
@@ -38,12 +39,12 @@ useHead({ title: t('admin.users.detail.pageTitle') })
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const usersStore = useUsersStore()
 const userStore = useUserStore()
-const { toReassignTo, notifyRecordsResult, userGuardMessage, applyUserFieldErrors } = useUserRecordsReassign()
+const { toReassignTo, notifyRecordsResult, notifyUserError, showUserFieldErrors } = useUserRecordsReassign()
 const goBack = useBackNavigation('/admin/users')
 
 guardMounted(() => {
@@ -69,8 +70,7 @@ const form = reactive({
 // read as dirty the moment the record loads in.
 const { markClean } = useUnsavedChangesGuard(() => form)
 
-// User loads asynchronously now (fetched on mount), so the form is (re)populated
-// once the record arrives instead of only at setup time.
+// The user loads on mount, so the form is (re)populated once it arrives.
 watch(user, (value) => {
   if (!value) return
   form.first_name = value.first_name
@@ -94,7 +94,7 @@ const losesRecords = computed(() => !!user.value && updateLosesRecords(user.valu
 
 const { loading, guard } = useSubmitGuard()
 
-const onSubmit = guard(async (_values?: unknown, ctx?: { setErrors: (errors: Record<string, string>) => void }) => {
+const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!user.value) return
   const name = `${form.first_name} ${form.last_name}`.trim()
   try {
@@ -113,9 +113,9 @@ const onSubmit = guard(async (_values?: unknown, ctx?: { setErrors: (errors: Rec
     notifyRecordsResult(name, result)
   } catch (err) {
     // 422 self-change / bad reassign_to / other fields → on the inputs;
-    // 409 last active Admin → toast.
-    if (ctx && applyUserFieldErrors(err, ctx.setErrors)) return
-    error(userGuardMessage(err) ?? getApiErrorMessage(err, t('global.genericError')))
+    // 409 last active Admin, or a field with no input → toast.
+    if (showUserFieldErrors(err, setErrors, values)) return
+    notifyUserError(err)
     return
   }
   markClean()

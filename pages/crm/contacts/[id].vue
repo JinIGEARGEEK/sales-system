@@ -206,7 +206,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.contacts.detail.pageTitle') })
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { parseTags, dateFormat } = useFormatter()
@@ -349,7 +349,7 @@ watch(contact, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
-const showFieldErrors = useApiFieldErrors()
+const showFormErrors = useApiFormErrors()
 
 const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!contact.value) return
@@ -366,7 +366,7 @@ const onSave = guard(async (values: Record<string, unknown>, { setErrors }: Subm
     markClean()
     success(t('crm.contacts.detail.updateSuccess'))
   } catch (err) {
-    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
+    showFormErrors(err, setErrors, values)
   }
 })
 </script>

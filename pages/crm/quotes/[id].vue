@@ -50,12 +50,8 @@
         </template>
       </PageHeader>
 
-      <!-- Only right after landing here from Create Quote's own "Step 1 of 2"
-      (pages/crm/quotes/create.vue navigates here with ?continue=1) — closes
-      the loop on that page's step label so it's clear this editor is step 2
-      of the same flow, not a separate page the rep ended up on by mistake.
-      Never shown again once the query param is stripped below, including on
-      a later visit to edit the same (by-then-finished) Quote. -->
+      <!-- Accepted/Rejected: read-only apart from the status select;
+      duplicating is how it's revised. -->
       <UAlert
         v-if="locked"
         class="mb-4"
@@ -68,6 +64,12 @@
         data-cy="quote-accepted-locked"
       />
 
+      <!-- Only right after landing here from Create Quote's own "Step 1 of 2"
+      (pages/crm/quotes/create.vue navigates here with ?continue=1) — closes
+      the loop on that page's step label so it's clear this editor is step 2
+      of the same flow, not a separate page the rep ended up on by mistake.
+      Never shown again once the query param is stripped below, including on
+      a later visit to edit the same (by-then-finished) Quote. -->
       <UAlert
         v-if="justCreated"
         class="mb-4"
@@ -452,7 +454,7 @@ const reloadQuote = () => quotesStore.fetchOne(quoteId).catch(notifyApiError)
 // A save failure: a 422's fields onto their inputs (item rows by key), a
 // 409 in words with Reload, anything else as the API's message.
 const reportSaveError = (err: unknown) => {
-  const setErrors = (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors
+  const setErrors = formRef.value?.setErrors
   if (setErrors && showFieldErrors(err, setErrors, quoteFormFieldNames(items.value), {
     fieldMap: quoteItemFieldMap(items.value),
   })) return

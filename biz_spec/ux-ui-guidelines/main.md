@@ -58,6 +58,8 @@
   - Sticky Navigation: ทำให้เมนูหลักติดอยู่ด้านบนเมื่อ scroll เพื่อการเข้าถึงที่รวดเร็ว
 - Form:
   - Inline Validation: แสดง error message ทันทีเมื่อผู้ใช้กรอกข้อมูลผิด
+  - Error จาก server (422) แสดงใต้ช่องที่ผิดเหมือน inline validation; ถ้ามี field ที่ไม่มีช่องในฟอร์ม ให้แจ้งด้วย toast ด้วย ห้ามให้ error หายไปเงียบ ๆ (`useApiFormErrors`, design-system.md §5.7)
+  - บันทึกไม่สำเร็จต้องอยู่หน้าเดิมพร้อมข้อมูลที่กรอกไว้ — ไม่ redirect ไปหน้า error
   - Progressive Disclosure: ซ่อน fields ที่ไม่จำเป็นจนกว่าจะมีการเลือก option ที่เกี่ยวข้อง
   - Autosave: บันทึกข้อมูลอัตโนมัติใน background เพื่อลดการสูญหาย
 - Modal dialogs: accessible focus management

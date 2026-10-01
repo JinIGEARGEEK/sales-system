@@ -612,7 +612,7 @@ watch(company, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
-const showFieldErrors = useApiFieldErrors()
+const showFormErrors = useApiFormErrors()
 
 const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!company.value) return
@@ -635,7 +635,7 @@ const onSave = guard(async (values: Record<string, unknown>, { setErrors }: Subm
     markClean()
     success(t('crm.companies.detail.updateSuccess'))
   } catch (err) {
-    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
+    showFormErrors(err, setErrors, values)
   }
 })
 

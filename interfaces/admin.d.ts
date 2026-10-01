@@ -32,7 +32,7 @@ interface AuditLogEntry {
   created_at: Date
 }
 
-// Review round 2: deactivating a user (PUT /users/:id status inactive,
+// Deactivating a user (PUT /users/:id status inactive,
 // PATCH /users/bulk-deactivate), deleting one, or moving one to Production
 // reports the open pipeline records they still own (`open_records`) and,
 // when `reassign_to` was sent, what moved (`reassigned`). "Open" = Deals with
@@ -62,15 +62,15 @@ interface AdminUserWriteResult {
   reassigned: ReassignedRecords | null
 }
 
-// DELETE /users/:id — 200 { id, open_records, reassigned? } (was 204).
+// DELETE /users/:id — 200 { id, open_records, reassigned? }.
 interface UserDeleteResult {
   id: number
   open_records: OpenRecordCounts
   reassigned?: ReassignedRecords | null
 }
 
-// PATCH /users/bulk-deactivate — 200 { open_records: [...], reassigned: [...] }
-// (was 204). bulk-activate still answers 204.
+// PATCH /users/bulk-deactivate — 200 { open_records: [...], reassigned: [...] }.
+// bulk-activate answers 204.
 interface UserBulkDeactivateResult {
   open_records: UserOpenRecords[]
   reassigned: ReassignedRecords[]

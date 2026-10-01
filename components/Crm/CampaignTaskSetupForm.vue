@@ -52,7 +52,6 @@
           v-model="form.assigned_to"
           :label="t('crm.components.createCampaignModal.assignedTo')"
           name="assigned_to"
-          for-task
         />
 
         <UCollapsible v-model:open="moreOptionsOpen">

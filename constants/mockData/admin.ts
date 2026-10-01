@@ -1,10 +1,10 @@
+import { USER_ROLES } from '../roles'
+
+// The Users list's role filter. Labels are the API's role names, matching the
+// role badges in the table.
 export const ROLE_OPTIONS = [
   { label: 'All Roles', value: 'all' },
-  { label: 'Admin', value: 'Admin' },
-  { label: 'Sales Rep', value: 'Sales Rep' },
-  { label: 'Sales Manager', value: 'Sales Manager' },
-  { label: 'Marketing', value: 'Marketing' },
-  { label: 'Production', value: 'Production' },
+  ...USER_ROLES.map(role => ({ label: role, value: role })),
 ]
 
 export const STATUS_OPTIONS = [

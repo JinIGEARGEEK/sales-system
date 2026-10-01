@@ -124,7 +124,6 @@ export default {
     noOwnerHistory: 'No reassignments yet.',
     quotesTitle: 'Quotes',
     createQuote: 'Create Quote',
-    createQuoteSuccess: 'Quote created',
     noQuotes: 'No quotes created for this deal yet.',
     validUntil: 'Valid until {date}',
     quoteStatus: 'Quote status',
