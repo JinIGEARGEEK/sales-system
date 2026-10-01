@@ -1,6 +1,6 @@
 // Real API-backed store, mirroring stores/payments.ts's own shape — a
-// PaymentInstallment is hard-deleted server-side (no soft-delete status),
-// same as Payment. Each row arrives from the server already wrapped in its
+// PaymentInstallment is hard-deleted server-side (no soft-delete status;
+// Payments, unlike these, are soft-deleted). Each row arrives from the server already wrapped in its
 // derived status (PaymentInstallmentStatus) — see that interface's own doc.
 const parseDates = (status: PaymentInstallmentStatus): PaymentInstallmentStatus => ({
   ...status,

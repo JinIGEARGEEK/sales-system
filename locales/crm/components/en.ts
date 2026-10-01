@@ -113,6 +113,14 @@ export default {
     installmentOption: 'Installment {number} · due {date} · {amount}',
     cancel: 'Cancel',
     save: 'Save Payment',
+    overpaymentTitle: 'This payment is more than the customer still owes',
+    overpaymentBody: 'Cash plus withholding tax would go past the deal\'s amount owed. Check the amount, or record it anyway (e.g. a deposit for extra work).',
+    recordAnyway: 'Record anyway',
+    errors: {
+      paidAtFuture: 'The payment date can\'t be in the future.',
+      documentNumberTaken: 'Another payment already has this document number.',
+      lostDeal: 'This deal is Lost, so it can\'t take payments.',
+    },
   },
   addPaymentInstallmentModal: {
     title: 'Add Payment Installment',
