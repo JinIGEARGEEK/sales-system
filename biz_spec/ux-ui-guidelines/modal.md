@@ -140,6 +140,8 @@ Modal ทุกหน้าแบ่งออกเป็น **3 ส่วนช
 - แปลง (Convert to Lead / Convert to Deal) → "แปลง" (`confirm-color="primary"`, ไม่ใช้สีแดงเช่นกัน เพราะไม่ใช่ action ทำลายข้อมูล)
 - ส่งใบเสนอราคา (Send Quote to Customer) → "ส่งให้ลูกค้า" (`confirm-color="primary"`, เหตุผลเดียวกับ Convert — เปลี่ยนสถานะ ไม่ใช่ลบข้อมูล — added 2026-09-10)
 - กู้คืนจากถังขยะ (Restore, `pages/admin/trash.vue`, added 2026-09-16) → "กู้คืน" (`confirm-color="success"` — เขียวเพราะเป็น action เชิงบวก ตรงข้ามกับการลบ ไม่ใช่แค่ "ไม่ใช่การทำลายข้อมูล" แบบ Convert/Send Quote ที่ใช้ `primary`)
+- เปิด Deal ที่ Won/Lost กลับมาเป็น open (ลากไป stage ที่ยังเปิดอยู่ หรือกดที่ stage stepper) → "เปิด Deal อีกครั้ง" (`CrmDealReopenConfirmModal`, `confirm-color="primary"` — added 2026-10-01)
+- ย้าย Deal ที่ Won และมีเงินผูกอยู่ออกจาก Won หรือลบทิ้ง (เฉพาะ Admin/Sales Manager) → ใช้ `CrmWonDealReasonModal` แทน ต้องกรอกเหตุผล (ไม่เกิน 500 ตัวอักษร เก็บใน audit log) ก่อนยืนยัน; Sales Rep จะเห็นข้อความอธิบายแทน (`useWonDealGuard`, added 2026-10-01)
 - ใช้ `confirmLabel` prop เพื่อกำหนดชื่อปุ่มตาม context
 
 **Confirm ก่อน action บนหน้า Detail ของ record เดียว (ไม่ใช่ list row)**
