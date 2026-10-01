@@ -166,6 +166,7 @@
       v-model:open="addPaymentOpen"
       :record="editingPayment"
       :installments="dealInstallments"
+      :tax-rates="taxRates"
       @submit="onSubmitPayment"
     />
 
@@ -176,7 +177,8 @@
 
     <CrmGeneratePaymentScheduleModal
       v-model:open="generateScheduleOpen"
-      :default-total-amount="remainingBalance"
+      :default-total-amount="unscheduledAmount"
+      :max-total-amount="scheduleLimit"
       @submit="onGenerateSchedule"
     />
 
@@ -224,6 +226,8 @@ const totalSettled = computed(() => paymentsStore.settledForDeal(dealId))
 const receivable = computed(() => dealReceivable(quotesStore.forDeal(dealId), deal.value?.value ?? 0))
 // WHT counts as settled, so it comes off the balance like cash does.
 const remainingBalance = computed(() => receivable.value.amount - totalSettled.value)
+// "Fill WHT" uses the latest Accepted Quote's WHT/VAT settings.
+const taxRates = computed(() => paymentTaxRates(quotesStore.forDeal(dealId)))
 
 const openAddPayment = () => {
   editingPayment.value = null
@@ -295,6 +299,13 @@ const onAddInstallment = async (installment: { amount: number, due_date: Date, n
 }
 
 const generateScheduleOpen = ref(false)
+// The schedule as a whole (paid installments included) is measured against
+// the receivable, the same check the API's bulk endpoint makes: Generate
+// defaults to whatever isn't scheduled yet and can't go over it. With no
+// receivable at all (no Accepted Quote, Deal value 0) there's no limit.
+const scheduledTotal = computed(() => roundSatang(dealInstallments.value.reduce((sum, s) => sum + s.installment.amount, 0)))
+const unscheduledAmount = computed(() => Math.max(0, roundSatang(receivable.value.amount - scheduledTotal.value)))
+const scheduleLimit = computed(() => receivable.value.amount > 0 ? unscheduledAmount.value : null)
 
 const onGenerateSchedule = async (installments: { amount: number, due_date: Date, note: string }[]) => {
   try {

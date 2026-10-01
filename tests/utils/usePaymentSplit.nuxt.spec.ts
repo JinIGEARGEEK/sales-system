@@ -58,4 +58,16 @@ describe('splitEqually', () => {
     expect(rows.map(r => r.amount)).toEqual([33.33, 33.33, 33.34])
     expect(rows.map(r => r.due_date.getUTCMonth())).toEqual([0, 1, 2])
   })
+
+  it('clamps a month-end start to each month\'s last day, always stepping from the start', () => {
+    // Local noon on Jan 31: Feb 28, Mar 31 (not Mar 3 / Mar 28), Apr 30.
+    const rows = splitEqually(400, 4, new Date(2026, 0, 31, 12), 1)
+    expect(rows.map(r => [r.due_date.getMonth(), r.due_date.getDate()])).toEqual([[0, 31], [1, 28], [2, 31], [3, 30]])
+  })
+
+  it('clamps with a multi-month interval and in a leap year', () => {
+    const rows = splitEqually(300, 3, new Date(2027, 11, 31, 12), 2)
+    // Dec 31 2027 -> Feb 29 2028 (leap) -> Apr 30 2028.
+    expect(rows.map(r => [r.due_date.getFullYear(), r.due_date.getMonth(), r.due_date.getDate()])).toEqual([[2027, 11, 31], [2028, 1, 29], [2028, 3, 30]])
+  })
 })

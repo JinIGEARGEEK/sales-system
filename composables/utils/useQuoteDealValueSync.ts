@@ -1,16 +1,15 @@
 import { useI18n } from 'vue-i18n'
 
-type QuoteAmounts = Pick<Quote, 'items' | 'discount_total'>
+type QuoteAmounts = Pick<Quote, 'items' | 'discount_total' | 'price_type' | 'vat_enabled' | 'wht_enabled' | 'wht_rate'>
 
 // What an accepted Quote is worth to the pipeline: its taxable amount (line
-// items after per-line discounts, minus the quote-level discount), i.e. BEFORE
-// VAT is added or WHT withheld — revenue excludes VAT, and every Deal value /
-// forecast figure in the app is pre-VAT. Same arithmetic as useQuoteTotals'
-// taxableAmount (and so the backend's ComputeQuoteTotals), rounded to satang.
-export const quoteRevenueAmount = (quote: QuoteAmounts) => {
-  const { taxableAmount } = useQuoteTotals(quote.items ?? [], quote.discount_total ?? 0, false, false, 0)
-  return roundSatang(taxableAmount)
-}
+// items after per-line discounts, minus the quote-level discount), i.e.
+// BEFORE VAT — not added for a tax-exclusive quote, backed out of the prices
+// for a tax-inclusive one — and before WHT is withheld. Revenue excludes VAT,
+// and every Deal value / forecast figure in the app is pre-VAT. It's
+// useQuoteTotals' taxableAmount (and so the backend's ComputeQuoteTotals),
+// already rounded to satang.
+export const quoteRevenueAmount = (quote: QuoteAmounts) => quoteTotalsOf(quote).taxableAmount
 
 // After a Quote moves to Accepted (quote editor Save, or the Deal's Quotes
 // tab), offer to bring the Deal's value in line with it. Bind `pending` to a
