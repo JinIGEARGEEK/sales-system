@@ -52,7 +52,7 @@
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <UCard class="ring-(--color-card-border)">
         <template #header>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.leadsByStatus') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.leadsByStatus') }}</CardTitle>
         </template>
         <div v-if="!statusRows.length" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noLeadData') }}
@@ -73,7 +73,7 @@
 
       <UCard class="ring-(--color-card-border)">
         <template #header>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.leadsBySource') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.leadsBySource') }}</CardTitle>
         </template>
         <div v-if="!(summary?.source_breakdown?.length)" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noLeadData') }}

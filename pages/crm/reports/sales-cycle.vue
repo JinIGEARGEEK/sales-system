@@ -63,7 +63,7 @@
       <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.byStage') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.byStage') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"
@@ -78,7 +78,7 @@
 
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.byRep') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.byRep') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"
@@ -93,7 +93,7 @@
 
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.bySource') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.bySource') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"

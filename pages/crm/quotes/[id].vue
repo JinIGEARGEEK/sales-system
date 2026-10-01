@@ -172,7 +172,7 @@
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.grandTotal') }}</h3>
+                <CardTitle>{{ t('crm.quotes.editor.grandTotal') }}</CardTitle>
               </div>
             </template>
             <p class="text-2xl font-black text-(--color-primary)">{{ currency(totals.grandTotal) }}</p>
@@ -181,7 +181,7 @@
           <UCard class="mt-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.attachments') }}</h3>
+                <CardTitle>{{ t('crm.quotes.editor.attachments') }}</CardTitle>
                 <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small data-cy="quote-add-attachment" @click="addAttachmentOpen = true" />
               </div>
             </template>

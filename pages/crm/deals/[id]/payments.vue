@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentsTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.paymentsTitle') }}</CardTitle>
         <ButtonPrimary
           :label="t('crm.deals.detail.addPayment')"
           icon="material-symbols:add"
@@ -110,7 +110,7 @@
 
     <ContainerTemplate class="mt-4">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentScheduleTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.paymentScheduleTitle') }}</CardTitle>
         <div class="flex gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.generateSchedule')"

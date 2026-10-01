@@ -31,7 +31,7 @@
 
     <UCard class="mt-4 ring-(--color-card-border)">
       <template #header>
-        <h3 class="text-lg font-medium">{{ t('crm.dashboard.projectsNeedingUpdate') }}</h3>
+        <CardTitle size="lg">{{ t('crm.dashboard.projectsNeedingUpdate') }}</CardTitle>
       </template>
       <div v-if="openProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.dashboard.noOpenProjects') }}

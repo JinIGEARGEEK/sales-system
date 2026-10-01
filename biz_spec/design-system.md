@@ -128,7 +128,19 @@ A responsive title scale and static body/link/button scale exist as CSS custom p
 
 Static (non-responsive) utilities: `.static-body`, `.static-body-sm`, `.static-body-xs`, `.static-body-2xs`, `.static-link` (underlined), `.static-link-sm` (underlined), `.static-button`, `.static-button-sm`.
 
-**In practice, actual pages don't use these `.title-*`/`.static-*` classes** — they use plain Tailwind (`text-xl font-black`, `text-sm`, `text-xs text-(--color-gray)`, etc.) directly. The typography-scale classes exist and work, but aren't the established convention for page content. Don't mix the two systems on the same page; follow what neighboring pages already do (plain Tailwind, per §7).
+**In practice, actual pages don't use these `.title-*`/`.static-*` classes** — they use plain Tailwind (`text-xl font-black`, `text-sm`, `text-xs text-(--color-gray)`, etc.) directly. The typography-scale classes exist and work, but aren't the established convention for page content. Don't mix the two systems on the same page; follow what neighboring pages already do (plain Tailwind, per §7). (They're used only inside the low-level `components/Table/Card/*` cell renderers.)
+
+### 3.4 Heading scale (added 2026-10-01)
+
+| Level | Where | Classes | How |
+|---|---|---|---|
+| Page title | the page's one `<h2>` | `text-xl font-black` | `PageHeader`'s `title`, or the list-page header row (§3.2) |
+| Modal title | `UModal`/`USlideover` | `text-lg font-medium` | the `title` prop — styled by `app.config.ts`'s `modal.slots.title` (§5.7) |
+| Card / section title | a `UCard`'s `#header`, a detail page's section | `text-base font-semibold` | **`<CardTitle>`** (`components/CardTitle.vue`) |
+| Dashboard widget title | `components/Dashboard/*` cards | `text-lg font-medium` | `<CardTitle size="lg">` |
+| Item title inside a card | a row/tile inside a card (a report link tile, a guideline topic) | `text-sm font-medium`/`font-semibold` | plain classes on the element |
+
+Use `<CardTitle>` (renders an `<h3>`; `as="h4"` for a nested one) instead of hand-writing `<h3 class="text-base font-semibold">` — before this, card headings drifted between `text-base font-semibold` (39×), `text-lg font-medium` (18×, all on the Dashboard), and `text-sm font-semibold` (the Sales Cycle / Forecast Accuracy report cards). The Dashboard's larger title is kept as an explicit `size="lg"` rather than flattened, since those widgets sit in a denser multi-card grid with a section header above (`DashboardSectionHeader`). Spacing utilities (`mb-4`, `flex …`) on a heading stay on a wrapper or as a class on `<CardTitle>` — it passes classes through. A few deliberately special headings keep their own classes: the Overview Pipeline zone labels (`text-base font-black`) and side-panel card name.
 
 ---
 

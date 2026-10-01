@@ -46,7 +46,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedDeals') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addDeal')"
@@ -69,7 +69,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedProjects') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedProjects') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addProject')"
@@ -105,7 +105,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.activityTitle') }}</CardTitle>
                 <ButtonPrimary
                   :label="t('crm.contacts.detail.addActivity')"
                   icon="material-symbols:add"
@@ -121,7 +121,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.tasksTitle') }}</h3>
+                  <CardTitle>{{ t('crm.contacts.detail.tasksTitle') }}</CardTitle>
                   <UBadge v-if="contactOverdueTaskCount > 0" color="error" variant="subtle">
                     {{ t('crm.contacts.detail.overdueCount', { count: contactOverdueTaskCount }) }}
                   </UBadge>

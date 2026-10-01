@@ -10,7 +10,7 @@
         :title="t('crm.deals.detail.contractRequiredWarning')"
       />
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
+        <CardTitle>{{ t('crm.contracts.detail.title') }}</CardTitle>
         <div class="flex gap-2">
           <ButtonPrimary
             :label="t('crm.contracts.detail.createContract')"

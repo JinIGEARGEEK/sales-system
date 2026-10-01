@@ -43,7 +43,7 @@
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <UCard class="ring-(--color-card-border)">
         <template #header>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsByStatus') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.prospectsByStatus') }}</CardTitle>
         </template>
         <div v-if="!statusRows.length" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noProspectData') }}
@@ -64,7 +64,7 @@
 
       <UCard class="ring-(--color-card-border)">
         <template #header>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsBySource') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.prospectsBySource') }}</CardTitle>
         </template>
         <div v-if="!(summary?.source_breakdown?.length)" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.dashboard.noProspectData') }}

@@ -152,7 +152,7 @@
 
       <ContainerTemplate class="mt-4">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-base font-semibold">{{ t('crm.leads.detail.attachmentsHeading') }}</h3>
+          <CardTitle>{{ t('crm.leads.detail.attachmentsHeading') }}</CardTitle>
           <ButtonPrimary
             v-if="canManageAttachments"
             :label="t('crm.leads.detail.addAttachment')"
@@ -170,7 +170,7 @@
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-base font-semibold">{{ t('crm.leads.detail.activityTitle') }}</h3>
+              <CardTitle>{{ t('crm.leads.detail.activityTitle') }}</CardTitle>
               <ButtonPrimary
                 v-if="canManageLead"
                 :label="t('crm.leads.detail.addActivity')"
@@ -187,7 +187,7 @@
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-semibold">{{ t('crm.leads.detail.tasksTitle') }}</h3>
+                <CardTitle>{{ t('crm.leads.detail.tasksTitle') }}</CardTitle>
                 <UBadge v-if="leadOverdueTaskCount > 0" color="error" variant="subtle">
                   {{ t('crm.leads.detail.overdueCount', { count: leadOverdueTaskCount }) }}
                 </UBadge>

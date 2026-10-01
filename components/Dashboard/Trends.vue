@@ -9,7 +9,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">
               <UIcon name="material-symbols:show-chart" class="size-4 text-(--color-info-toast)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.revenueTrend') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.revenueTrend') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.revenueTrendHint') }}</p>
         </template>
@@ -41,7 +41,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
               <UIcon name="material-symbols:trending-up" class="size-4 text-(--color-chart-violet)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.forecastTrend') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.forecastTrend') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.forecastTrendHint') }}</p>
         </template>
@@ -74,7 +74,7 @@
           <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">
             <UIcon name="material-symbols:flag-outline" class="size-4 text-(--color-success-toast)" />
           </div>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.annualRevenueTrend') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.annualRevenueTrend') }}</CardTitle>
         </div>
         <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.annualRevenueTrendHint') }}</p>
       </template>

@@ -9,7 +9,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
               <UIcon name="material-symbols:event-upcoming-outline" class="size-4 text-(--color-warning-hover)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.upcomingFollowUps') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.upcomingFollowUps') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.upcomingFollowUpsHint') }}</p>
         </template>
@@ -42,7 +42,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-danger-toast)/15">
               <UIcon name="material-symbols:notifications-outline" class="size-4 text-(--color-danger-toast)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.recentAlerts') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.recentAlerts') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.recentAlertsHint') }}</p>
         </template>
@@ -77,7 +77,7 @@
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">
                 <UIcon name="material-symbols:leaderboard-outline" class="size-4 text-(--color-success-toast)" />
               </div>
-              <h3 class="text-lg font-medium">{{ t('crm.dashboard.winRateByIndustry') }}</h3>
+              <CardTitle size="lg">{{ t('crm.dashboard.winRateByIndustry') }}</CardTitle>
             </div>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.winRateByIndustryHint') }}</p>
           </template>
@@ -107,7 +107,7 @@
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">
                 <UIcon name="material-symbols:groups-outline" class="size-4 text-(--color-info-toast)" />
               </div>
-              <h3 class="text-lg font-medium">{{ t('crm.dashboard.teamPerformance') }}</h3>
+              <CardTitle size="lg">{{ t('crm.dashboard.teamPerformance') }}</CardTitle>
             </div>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.teamPerformanceHint') }}</p>
           </template>

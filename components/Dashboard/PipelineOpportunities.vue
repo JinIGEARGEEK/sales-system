@@ -17,7 +17,7 @@
                 <div :class="['flex size-7 shrink-0 items-center justify-center rounded-full', activeTabMeta.iconBg]">
                   <UIcon :name="activeTabMeta.icon" :class="['size-4', activeTabMeta.iconColor]" />
                 </div>
-                <h3 class="text-lg font-medium">{{ t('crm.dashboard.pipelineAnalytics') }}</h3>
+                <CardTitle size="lg">{{ t('crm.dashboard.pipelineAnalytics') }}</CardTitle>
               </div>
               <UTabs v-model="activeTab" :items="tabItems" size="xs" />
             </div>
@@ -69,7 +69,7 @@
                 <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
                   <UIcon name="material-symbols:sell-outline" class="size-4 text-(--color-chart-violet)" />
                 </div>
-                <h3 class="text-lg font-medium">{{ t('crm.dashboard.upsellOpportunities') }}</h3>
+                <CardTitle size="lg">{{ t('crm.dashboard.upsellOpportunities') }}</CardTitle>
               </div>
               <InputSelect
                 v-model="upsellMinStaleDays"

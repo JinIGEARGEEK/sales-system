@@ -13,7 +13,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-primary)/10">
               <UIcon name="material-symbols:today-outline" class="size-4 text-(--color-primary)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.myTasks') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.myTasks') }}</CardTitle>
             <UBadge v-if="overdueTotal > 0" color="error" variant="subtle" :label="t('crm.dashboard.myOverdueCount', { count: overdueTotal })" />
             <UBadge color="primary" variant="subtle" :label="t('crm.dashboard.myTodayCount', { count: todayTotal })" />
           </div>
@@ -55,7 +55,7 @@
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
               <UIcon name="material-symbols:schedule-outline" class="size-4 text-(--color-warning-hover)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.myStaleDeals') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.myStaleDeals') }}</CardTitle>
             <UBadge v-if="staleDeals.length > 0" color="warning" variant="subtle" :label="String(staleDeals.length)" />
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.myStaleDealsHint') }}</p>

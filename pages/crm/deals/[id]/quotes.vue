@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.quotesTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.quotesTitle') }}</CardTitle>
         <div class="flex flex-wrap gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.createQuote')"

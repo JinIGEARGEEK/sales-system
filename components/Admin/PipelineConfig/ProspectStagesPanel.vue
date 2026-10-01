@@ -2,7 +2,7 @@
   <UCard class="mb-4" :ui="GLASS_PANEL_UI">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.prospectStages.heading') }}</h3>
+        <CardTitle>{{ t('admin.pipelineConfig.prospectStages.heading') }}</CardTitle>
         <ButtonPrimary
           :label="t('admin.pipelineConfig.prospectStages.addStage')"
           icon="material-symbols:add"

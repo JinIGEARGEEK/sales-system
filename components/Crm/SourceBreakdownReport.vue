@@ -10,7 +10,7 @@
     </div>
     <UCard class="mt-4 ring-(--color-card-border)">
       <template #header>
-        <h3 class="text-lg font-medium">{{ breakdownHeading }}</h3>
+        <CardTitle>{{ breakdownHeading }}</CardTitle>
       </template>
       <div class="flex flex-col gap-4">
         <USkeleton v-for="i in 5" :key="i" class="h-3 w-full rounded-full" />
@@ -60,7 +60,7 @@
 
     <UCard class="mt-4 ring-(--color-card-border)">
       <template #header>
-        <h3 class="text-lg font-medium">{{ breakdownHeading }}</h3>
+        <CardTitle>{{ breakdownHeading }}</CardTitle>
       </template>
       <div class="flex flex-col gap-3">
         <CrmMetricBar

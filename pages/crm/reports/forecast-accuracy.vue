@@ -38,7 +38,7 @@
 
       <UCard v-else :ui="GLASS_PANEL_UI">
         <template #header>
-          <h3 class="text-sm font-semibold">{{ t('crm.reports.forecastAccuracy.byQuarter') }}</h3>
+          <CardTitle>{{ t('crm.reports.forecastAccuracy.byQuarter') }}</CardTitle>
         </template>
         <TableData
           :columns="columns"

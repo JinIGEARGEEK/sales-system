@@ -63,7 +63,7 @@
         <div class="lg:col-span-2">
           <UCard>
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.companies.detail.summary') }}</h3>
+              <CardTitle>{{ t('crm.companies.detail.summary') }}</CardTitle>
             </template>
             <div class="flex flex-col gap-3 text-sm">
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
@@ -81,7 +81,7 @@
       <div v-else-if="activeTab === 'contacts'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.contactsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.contactsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addContact')" icon="material-symbols:add" small @click="navigateTo(`/crm/contacts/create?company_id=${company.id}`)" />
           </div>
           <div v-if="companyContacts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -110,7 +110,7 @@
       <div v-else-if="activeTab === 'deals'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.dealsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.dealsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addDeal')" icon="material-symbols:add" small @click="navigateTo(`/crm/deals/create?company_id=${company.id}`)" />
           </div>
           <div v-if="companyDeals.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -135,7 +135,7 @@
 
       <div v-else-if="activeTab === 'quotesContracts'">
         <ContainerTemplate>
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.quotesHeading') }}</h3>
+          <CardTitle class="mb-4">{{ t('crm.companies.detail.quotesHeading') }}</CardTitle>
           <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noQuotes') }}
           </div>
@@ -159,7 +159,7 @@
         </ContainerTemplate>
 
         <ContainerTemplate class="mt-4">
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.contractsHeading') }}</h3>
+          <CardTitle class="mb-4">{{ t('crm.companies.detail.contractsHeading') }}</CardTitle>
           <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noContracts') }}
           </div>
@@ -184,7 +184,7 @@
       <div v-else-if="activeTab === 'products'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.productsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.productsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addProduct')" icon="material-symbols:add" small @click="openAddCustomerProduct" />
           </div>
           <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -239,7 +239,7 @@
       <div v-else-if="activeTab === 'projects'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.projectsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.projectsHeading') }}</CardTitle>
             <ButtonPrimary v-if="canManageProjects" :label="t('crm.companies.detail.addProject')" icon="material-symbols:add" small @click="openAddProject" />
           </div>
           <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -278,7 +278,7 @@
       <div v-else-if="activeTab === 'activity'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.activityFeed') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.detail.addActivity')"
               icon="material-symbols:add"
@@ -298,7 +298,7 @@
       <div v-else-if="activeTab === 'tasks'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.tasksTitle') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.tasksTitle') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.detail.addTask')"
               icon="material-symbols:add"
@@ -320,7 +320,7 @@
       <div v-else-if="activeTab === 'attachments'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.attachmentsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.attachmentsHeading') }}</CardTitle>
             <ButtonPrimary
               v-if="canManageAttachments"
               :label="t('crm.companies.detail.addAttachment')"

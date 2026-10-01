@@ -2,7 +2,7 @@
   <UCard v-bind="$attrs" :ui="GLASS_PANEL_UI">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t(`${i18nPrefix}.heading`) }}</h3>
+        <CardTitle>{{ t(`${i18nPrefix}.heading`) }}</CardTitle>
         <ButtonPrimary
           :label="t(`${i18nPrefix}.${addLabelKey}`)"
           icon="material-symbols:add"

@@ -2,7 +2,7 @@
   <UCard :ui="GLASS_PANEL_UI">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.leadScoring.heading') }}</h3>
+        <CardTitle>{{ t('admin.pipelineConfig.leadScoring.heading') }}</CardTitle>
         <ButtonPrimary
           :label="t('admin.pipelineConfig.leadScoring.addCriterion')"
           icon="material-symbols:add"
