@@ -7,6 +7,13 @@ export default {
   previous: 'ก่อนหน้า',
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
+  // error.vue — Nuxt's error page (a page load's 404, an unexpected crash).
+  errorPage: {
+    notFoundTitle: 'ไม่พบหน้าที่ต้องการ',
+    notFoundMessage: 'ไม่พบหน้าหรือข้อมูลที่คุณกำลังค้นหา หรือข้อมูลนี้ถูกลบไปแล้ว',
+    errorTitle: 'เกิดข้อผิดพลาด',
+    errorMessage: 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณากลับไปหน้าหลักแล้วลองอีกครั้ง',
+  },
   backToList: 'กลับไปยังรายการ',
   back: 'ย้อนกลับ',
   retry: 'ลองอีกครั้ง',

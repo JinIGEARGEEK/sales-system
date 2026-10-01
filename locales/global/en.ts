@@ -7,6 +7,13 @@ const lang = {
   previous: 'Previous',
   next: 'Next',
   backToHome: 'Back To Home',
+  // error.vue — Nuxt's error page (a page load's 404, an unexpected crash).
+  errorPage: {
+    notFoundTitle: 'Page not found',
+    notFoundMessage: 'The page or record you are looking for does not exist or has been removed.',
+    errorTitle: 'Something went wrong',
+    errorMessage: 'An unexpected error occurred. Please go back to the home page and try again.',
+  },
   backToList: 'Back to list',
   back: 'Back',
   retry: 'Retry',

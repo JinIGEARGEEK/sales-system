@@ -62,6 +62,14 @@ export function applyApiFieldErrors(
   return Object.keys(errors).length > 0
 }
 
+// Whether plugins/axios.ts may navigate away on a 403/404 for this request:
+// an explicit `skipErrorRedirect` wins, else only GETs (a page's own load) do —
+// a mutation always just rejects so the form keeps the user's input.
+export function shouldRedirectOnApiError(config?: AxiosRequestConfig): boolean {
+  if (config?.skipErrorRedirect !== undefined) return !config.skipErrorRedirect
+  return (config?.method ?? 'get').toLowerCase() === 'get'
+}
+
 // CREATE / UPDATE / DELETE transactions
 export const useMutateApi = <T, D>(path: string) => {
   const { $api } = useNuxtApp()
