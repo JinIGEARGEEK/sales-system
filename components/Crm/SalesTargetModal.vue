@@ -69,7 +69,7 @@ const emptyForm = () => ({
   target_value: props.target?.target_value ?? 0,
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 // The year field shows/accepts the Buddhist-era year (2569), matching how
 // dates read everywhere else — but form.year (and the submitted payload)
@@ -86,7 +86,7 @@ const displayYear = computed({
   },
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
