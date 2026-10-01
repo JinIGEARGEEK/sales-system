@@ -2,12 +2,16 @@
 // inline changes"). Bind `pending` to a confirm modal, `resetKey` into the
 // select's :key (bumped on cancel/failure so it snaps back to the saved status),
 // and call request() from the select's update:model-value.
-export const useConfirmedStatusChange = <S extends string, T extends { id: number, status: S }>({ confirmStatuses, save }: {
+export const useConfirmedStatusChange = <S extends string, T extends { id: number, status: S }>({ confirmStatuses, save, notifyError }: {
   confirmStatuses: readonly S[]
   // Persists the change (and toasts success); a throw is reported and reverts the select.
   save: (record: T, status: S) => Promise<unknown>
+  // Reports a failed save — defaults to the API's message (notifyApiError);
+  // pass one to translate entity-specific errors (e.g. quote 409s).
+  notifyError?: (err: unknown) => void
 }) => {
   const { notifyApiError } = useApiErrorNotifier()
+  const reportError = notifyError ?? notifyApiError
 
   const pending = ref<{ record: T, status: S } | null>(null) as Ref<{ record: T, status: S } | null>
   const resetKey = ref(0)
@@ -20,7 +24,7 @@ export const useConfirmedStatusChange = <S extends string, T extends { id: numbe
     try {
       await save(record, status)
     } catch (err) {
-      notifyApiError(err)
+      reportError(err)
       resetKey.value++
     }
   }

@@ -669,6 +669,11 @@ interface Quote {
   // pre-filled. Added 2026-08-23.
   extraction_status?: 'ok' | 'partial' | 'failed' | null
   extraction_warnings?: string[] | null
+  // Revision chain (POST /quotes/:id/duplicate, Review round 2): a copy
+  // points at the chain's root quote and is numbered max + 1; an original
+  // has revision_no 0 and no revision_of_id. Shown as "Rev N".
+  revision_of_id?: number | null
+  revision_no?: number
 }
 
 // A named, deal-independent starting point for a new Quote — see the
@@ -703,6 +708,9 @@ interface Contract {
   // string, never a Date, so it can't shift a day through local time.
   // Feeds the contract_expiry notification rule (signed contracts only).
   end_date: string | null
+  // Read-only: 'expired' once a signed contract's end_date has passed
+  // (server-local day); `status` stays 'signed' (and locked).
+  effective_status?: ContractStatus
   created_at: Date
 }
 
@@ -792,6 +800,10 @@ interface PaymentPayload {
   wht_certificate_received: boolean
   document_number: string | null
   installment_id: number | null
+  // Record a payment that takes cash + WHT past the Deal's receivable (the
+  // API's 422 amount ["exceeds_receivable"] otherwise) — sent only after the
+  // user chose "Record anyway".
+  allow_overpayment?: boolean
 }
 
 // A planned installment on a Deal's payment schedule, defined before money

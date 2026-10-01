@@ -109,6 +109,19 @@ describe('stores/quotes', () => {
     expect(result.status).toBe('accepted')
   })
 
+  it('updateStatus sends only the status for a read-only (Accepted/Rejected) quote', async () => {
+    const store = useQuotesStore()
+    const existing = makeQuote({ id: 1, status: 'accepted', reference_number: 'REF-1', notes: 'hi' })
+    store.items = [existing]
+    mockApi.put.mockResolvedValueOnce(apiResponse({ ...existing, status: 'rejected' as QuoteStatus }))
+
+    const result = await store.updateStatus(1, 'rejected')
+
+    expect(mockApi.put).toHaveBeenCalledWith('/quotes/1', { status: 'rejected' })
+    expect(result.status).toBe('rejected')
+    expect(store.items.find(q => q.id === 1)?.status).toBe('rejected')
+  })
+
   it('updateStatus throws when the quote is not already loaded in items', async () => {
     const store = useQuotesStore()
 

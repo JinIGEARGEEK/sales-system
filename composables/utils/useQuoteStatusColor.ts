@@ -20,6 +20,10 @@ export const useQuoteStatusColor = () => {
   const quoteStatusLabel = (status: QuoteStatus) => statusLabelFromGroup('quote', status)
   const quoteStatusOptions = computed<Select[]>(() =>
     QUOTE_SELECTABLE_STATUSES.map(value => ({ value, label: quoteStatusLabel(value) })))
+  // Only the moves the API allows from `status` (allowedQuoteStatuses),
+  // the current one first — for an existing quote's status select.
+  const quoteStatusOptionsFor = (status: QuoteStatus): Select[] =>
+    allowedQuoteStatuses(status).map(value => ({ value, label: quoteStatusLabel(value) }))
 
-  return { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptions }
+  return { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptions, quoteStatusOptionsFor }
 }

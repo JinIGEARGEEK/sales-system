@@ -1,6 +1,7 @@
 <template>
-  <!-- Three outcomes, so not CrmConfirmDeleteModal: reject the others,
-  keep them, or close (✕/Esc) to not accept at all. -->
+  <!-- Reject the others (then accept), or Cancel/✕/Esc to not accept at
+  all. The API allows one Accepted quote per Deal (409 otherwise), so
+  "keep them Accepted" is no longer offered. -->
   <UModal
     :open="pending !== null"
     :title="t('crm.quotes.supersede.title')"
@@ -14,7 +15,7 @@
     </template>
     <template #footer>
       <div class="flex flex-wrap justify-end gap-3">
-        <ButtonPrimary :label="t('crm.quotes.supersede.keep')" outline data-cy="supersede-keep" @click="decide('keep')" />
+        <ButtonPrimary :label="t('crm.quotes.supersede.cancel')" outline data-cy="supersede-cancel" @click="decide('cancel')" />
         <ButtonPrimary :label="t('crm.quotes.supersede.reject')" data-cy="supersede-reject" @click="decide('reject')" />
       </div>
     </template>
