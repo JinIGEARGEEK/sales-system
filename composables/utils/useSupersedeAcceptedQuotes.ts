@@ -6,13 +6,14 @@
 //
 // Order matters: the others are rejected FIRST, then the new one accepted,
 // so the Deal never has two Accepted quotes at once — the API enforces one
-// Accepted Quote per Deal with a 409. The modal no longer offers 'keep'
-// (it could only fail); the decision stays for callers that still pass it,
-// and if the API refuses, its error reaches the caller's notifier.
-export type SupersedeDecision = 'reject' | 'keep' | 'cancel'
+// Accepted Quote per Deal with a 409, so there's no "keep them Accepted".
+// A rejection isn't rolled back if the acceptance then fails — the user is
+// told which quotes were rejected instead (acceptAfterResolving).
+export type SupersedeDecision = 'reject' | 'cancel'
 
 export const useSupersedeAcceptedQuotes = () => {
   const quotesStore = useQuotesStore()
+  const { warning } = useNotify()
   const pending = ref<{ others: Quote[], resolve: (decision: SupersedeDecision) => void } | null>(null)
 
   // The other Accepted quotes already in the store for this Deal.
@@ -51,13 +52,28 @@ export const useSupersedeAcceptedQuotes = () => {
   // the user cancelled, so the acceptance shouldn't happen.
   const resolveOthers = async (others: Quote[]): Promise<boolean> => {
     if (others.length === 0) return true
-    const decision = await ask(others)
-    if (decision === 'cancel') return false
-    if (decision === 'reject') await rejectAll(others)
+    if (await ask(others) === 'cancel') return false
+    await rejectAll(others)
     return true
   }
 
-  return { pending, decide, otherAccepted, loadOtherAccepted, resolveOthers }
+  // resolveOthers, then `accept` (the save that accepts the quote); resolves
+  // its result, or null when the user cancelled. If `accept` throws after others were rejected, a warning
+  // names them (they stay Rejected) and the error is rethrown for the
+  // caller's own notifier.
+  const acceptAfterResolving = async <R>(others: Quote[], accept: () => Promise<R>): Promise<R | null> => {
+    if (!(await resolveOthers(others))) return null
+    try {
+      return await accept()
+    } catch (err) {
+      if (others.length > 0) {
+        warning(useNuxtApp().$i18n.t('crm.quotes.supersede.rejectedButNotAccepted', { numbers: others.map(q => q.number || `#${q.id}`).join(', ') }))
+      }
+      throw err
+    }
+  }
+
+  return { pending, decide, otherAccepted, loadOtherAccepted, resolveOthers, acceptAfterResolving }
 }
 
 export type SupersedeAcceptedQuotes = ReturnType<typeof useSupersedeAcceptedQuotes>

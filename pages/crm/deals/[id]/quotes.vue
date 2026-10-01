@@ -280,11 +280,7 @@ const onQuoteStatusPick = async (quote: Quote, status: QuoteStatus) => {
   const others = status === 'accepted' && quote.status !== 'accepted' ? supersede.otherAccepted(dealId, quote.id) : []
   if (others.length === 0) return requestQuoteStatusChange(quote, status)
   try {
-    if (!(await supersede.resolveOthers(others))) {
-      statusSelectResetKey.value++
-      return
-    }
-    await saveQuoteStatus(quote, status)
+    if (await supersede.acceptAfterResolving(others, () => saveQuoteStatus(quote, status)) === null) statusSelectResetKey.value++
   } catch (err) {
     notifyQuoteError(err, refetchQuotes)
     statusSelectResetKey.value++

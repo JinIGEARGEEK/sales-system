@@ -73,6 +73,8 @@
       :name="selectedTemplateName"
       @confirm="onDeleteTemplate"
     />
+
+    <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
   </div>
 </template>
 
@@ -83,7 +85,7 @@ import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
 const showFieldErrors = useApiFieldErrors()
-const { quoteStatusOptions } = useQuoteStatusColor()
+const { quoteStatusOptions, quoteStatusLabel } = useQuoteStatusColor()
 
 useHead({ title: t('crm.quotes.create.pageTitle') })
 
@@ -220,6 +222,9 @@ onMounted(offerRestoreIfFound)
 const { loading, guard } = useSubmitGuard()
 
 const notifyQuoteError = useQuoteErrorNotifier()
+// Creating it as Accepted while the Deal already has an Accepted quote asks
+// to reject that one first, same as the editor and the Deal's Quotes tab.
+const supersede = useSupersedeAcceptedQuotes()
 
 const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) => {
   if (!deal.value) return
@@ -227,14 +232,17 @@ const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) =>
   // template's pricing PUT below couldn't follow a create in that status:
   // create it as a Draft and let that PUT move it to the chosen status.
   const deferStatus = !!appliedTemplateOverrides.value && isQuoteLocked(form.status)
+  const dealIdValue = deal.value.id
   let created
   try {
-    created = await quotesStore.add(deal.value.id, {
+    const others = form.status === 'accepted' ? await supersede.loadOtherAccepted(dealIdValue, 0) : []
+    created = await supersede.acceptAfterResolving(others, () => quotesStore.add(dealIdValue, {
       items: serializeQuoteItems(items.value),
       scope_of_work: form.scope_of_work,
       validity_date: form.validity_date ? new Date(form.validity_date) : null,
       status: deferStatus ? 'draft' : form.status,
-    })
+    }))
+    if (!created) return
   } catch (err) {
     // A 422's fields (item qty/price/discount, validity_date) onto their
     // inputs; a 409 (e.g. another quote already Accepted) in words.
@@ -269,7 +277,11 @@ const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) =>
       }
       await quotesStore.update(created.id, updatePayload)
     } catch {
-      error(t('crm.quotes.create.templateApplyFailed'))
+      // With a deferred status the quote is still a Draft — say so, or the
+      // rep would think it was Accepted/Rejected as picked.
+      error(deferStatus
+        ? t('crm.quotes.create.templateAndStatusFailed', { status: quoteStatusLabel(form.status) })
+        : t('crm.quotes.create.templateApplyFailed'))
     }
   }
 
