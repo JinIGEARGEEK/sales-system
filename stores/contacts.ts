@@ -101,6 +101,17 @@ export const useContactsStore = defineStore('contacts', {
       await $api.delete(`/contacts/${id}`)
       this.items = this.items.filter(c => c.id !== id)
     },
+    // Folds duplicates into this record (POST /contacts/:id/merge): the target comes
+    // back updated (filled fields), and the sources — now in Trash — leave
+    // `items`. Linked lists elsewhere are stale; callers refetch them.
+    async merge (id: number, sourceIds: number[]): Promise<MergeResult<Contact>> {
+      const { $api } = useNuxtApp()
+      const response = await $api.post<ApiResponse<MergeResult<Contact>>>(`/contacts/${id}/merge`, { source_ids: sourceIds })
+      const result = response.data.data
+      const target = parseDates(result.target)
+      this.items = [...this.items.filter(c => c.id !== id && !sourceIds.includes(c.id)), target]
+      return { ...result, target }
+    },
     ...createTrashActions<Contact>('/contacts', parseDates),
   },
 })

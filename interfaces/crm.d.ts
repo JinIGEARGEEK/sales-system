@@ -150,6 +150,26 @@ interface Contact {
   created_at: Date
 }
 
+// POST /companies/:id/merge and POST /contacts/:id/merge (Admin/Sales
+// Manager), body { source_ids } (1–20 ids of the same type, not the target):
+// the sources' linked records move to the target, the target's empty fields
+// are filled from them, and the sources go to Trash. `moved` counts what moved
+// per kind (e.g. deals, contacts, activities) plus `total`; `filled` names
+// the target fields that were empty and got a source's value; `conflicts` are
+// fields where a source had a different value — the target kept its own.
+interface MergeConflict {
+  field: string
+  source_id: number
+  value: unknown
+}
+
+interface MergeResult<T> {
+  target: T
+  moved: Record<string, number> & { total: number }
+  filled: string[]
+  conflicts: MergeConflict[]
+}
+
 // stores/companies.ts / stores/contacts.ts update() parameter types — same
 // reasoning as LeadUpdatePayload below: PUT /companies/:id and
 // PUT /contacts/:id overwrite these fields unconditionally, so they're
@@ -163,6 +183,9 @@ interface TeamMember {
   id: number
   name: string
   email: string
+  // Not sent by GET /team-members yet; when it is, a Production user is left
+  // out of task assignee pickers (the API's 422 on assigned_to otherwise).
+  role?: Role
 }
 
 interface Lead {

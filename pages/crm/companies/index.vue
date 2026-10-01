@@ -116,6 +116,26 @@
       :entity-label="t('crm.companies.index.entityLabel')"
       @create-campaign="openCampaignModal(selected)"
       @cancel="clearSelection"
+    >
+      <!-- Two or more picked: fold them into one (Admin/Sales Manager). -->
+      <ButtonPrimary
+        v-if="canMerge && selectedIds.length >= 2"
+        outline
+        small
+        fit-content
+        icon="material-symbols:merge"
+        :label="t('crm.components.mergeDuplicates.bulkMerge')"
+        data-cy="bulk-merge-button"
+        @click="openBulkMerge"
+      />
+    </CrmCampaignBulkActionBar>
+
+    <CrmMergeDuplicatesModal
+      v-if="canMerge"
+      v-model:open="mergeOpen"
+      entity="company"
+      :candidates="mergeCandidates"
+      @merged="onMerged"
     />
 
     <CrmConfirmDeleteModal
@@ -142,6 +162,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
+import type { MergeRecord } from '~/composables/utils/useMergeDuplicates'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -165,6 +186,8 @@ const industryOptionsStore = useIndustryOptionsStore()
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const canDelete = computed(() => hasRole(...MANAGER_ROLES))
+// POST /companies/:id/merge is Admin/Sales Manager only.
+const canMerge = computed(() => hasRole(...MANAGER_ROLES))
 
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
@@ -277,6 +300,20 @@ const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModa
   clearSelection,
 )
 const openCampaignModal = (companies: Company[]) => openCampaignModalFor(companies.map(company => ({ type: 'company', id: company.id, name: companyName(company.name) })))
+
+// Bulk "Merge": the selected rows, the first one preselected to stay (the
+// dialog lets the user pick another). The list reloads after a merge — the
+// sources are in Trash now.
+const mergeOpen = ref(false)
+const mergeCandidates = ref<MergeRecord[]>([])
+const openBulkMerge = () => {
+  mergeCandidates.value = selected.value.map(row => companyMergeRecord(row, t('global.unnamedCompany')))
+  mergeOpen.value = true
+}
+const onMerged = () => {
+  clearSelection()
+  fetch()
+}
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),

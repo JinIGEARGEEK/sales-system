@@ -8,6 +8,14 @@
         <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         <template #actions>
           <div class="flex flex-wrap gap-2">
+            <ButtonPrimary
+              v-if="canMerge"
+              :label="t('crm.components.mergeDuplicates.open')"
+              outline
+              icon="material-symbols:merge"
+              data-cy="company-merge-open"
+              @click="openMerge"
+            />
             <ButtonPrimary :label="t('crm.components.campaignBulkActionBar.addToCampaign')" outline icon="material-symbols:campaign-outline" @click="openCampaignModal" />
           </div>
         </template>
@@ -300,6 +308,15 @@
         :type-options="['win_back', 'upsell']"
         @submit="onSubmitCampaign"
       />
+
+      <CrmMergeDuplicatesModal
+        v-if="canMerge"
+        v-model:open="mergeOpen"
+        entity="company"
+        :target="companyMergeRecord(company, t('global.unnamedCompany'))"
+        :initial-source-ids="mergeInitialIds"
+        @merged="reloadAfterMerge"
+      />
     </div>
 
     <DetailSkeleton v-else-if="recordPending" />
@@ -428,6 +445,22 @@ const tabItems = computed(() => [
   { label: companyOverdueTaskCount.value > 0 ? `${t('crm.companies.detail.tabs.tasks')} (${companyOverdueTaskCount.value})` : t('crm.companies.detail.tabs.tasks'), value: 'tasks' },
   { label: t('crm.companies.detail.tabs.attachments'), value: 'attachments' },
 ])
+
+// "Merge duplicates…" (Admin/Sales Manager): this Company survives. After a
+// merge its contacts/deals/products/projects/activities/tasks/attachments
+// have grown, so every tab's data is re-read (the record itself came back
+// from the merge, with its empty fields filled).
+const { canMerge, mergeOpen, mergeInitialIds, openMerge } = useDetailMerge()
+const tasksStore = useTasksStore()
+const reloadAfterMerge = () => {
+  fetchCompanyContacts()
+  fetchCompanyDeals()
+  activitiesStore.fetchForRelated('company', companyId).catch(notifyApiError)
+  customerProductsStore.fetchForCompany(companyId).catch(notifyApiError)
+  projectsStore.fetchForCompany(companyId).catch(notifyApiError)
+  attachmentsStore.fetchForRelated('company', companyId).catch(notifyApiError)
+  tasksStore.fetchForRelated('company', companyId).catch(notifyApiError)
+}
 
 const companyContacts = ref<Contact[]>([])
 const fetchCompanyContacts = async () => {

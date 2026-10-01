@@ -5,13 +5,23 @@
         <UBadge v-if="contact.is_primary" color="primary" variant="subtle">{{ t('crm.contacts.detail.primaryBadge') }}</UBadge>
         <UBadge v-for="tag in contact.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
         <template #actions>
-          <ButtonPrimary
-            :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
-            icon="material-symbols:campaign-outline"
-            outline
-            data-cy="contact-add-to-campaign"
-            @click="openCampaignModal"
-          />
+          <div class="flex flex-wrap gap-2">
+            <ButtonPrimary
+              v-if="canMerge"
+              :label="t('crm.components.mergeDuplicates.open')"
+              icon="material-symbols:merge"
+              outline
+              data-cy="contact-merge-open"
+              @click="openMerge"
+            />
+            <ButtonPrimary
+              :label="t('crm.components.campaignBulkActionBar.addToCampaign')"
+              icon="material-symbols:campaign-outline"
+              outline
+              data-cy="contact-add-to-campaign"
+              @click="openCampaignModal"
+            />
+          </div>
         </template>
       </PageHeader>
 
@@ -174,6 +184,15 @@
       :type-options="['new_channel']"
       @submit="onSubmitCampaign"
     />
+
+    <CrmMergeDuplicatesModal
+      v-if="canMerge && contact"
+      v-model:open="mergeOpen"
+      entity="contact"
+      :target="contactMergeRecord(contact)"
+      :initial-source-ids="mergeInitialIds"
+      @merged="reloadAfterMerge"
+    />
   </div>
 </template>
 
@@ -243,9 +262,7 @@ const roleTitleOptions = computed<Select[]>(() => {
 // the Company the contact belongs to. Fetched once that company id is known,
 // since the contact itself loads asynchronously.
 const companyDeals = ref<Deal[]>([])
-watch(() => contact.value?.company_id, async (companyId) => {
-  if (!companyId) return
-  projectsStore.fetchForCompany(companyId).catch(notifyApiError)
+const fetchCompanyDeals = async (companyId: number) => {
   // Scoped to this Contact's own Company, not a blanket dealsStore.fetchAll()
   // — that cache is capped at 200 rows, newest-first, system-wide (see
   // stores/companies.ts's fetchAll doc), so an older Deal belonging to this
@@ -256,7 +273,23 @@ watch(() => contact.value?.company_id, async (companyId) => {
     return { items: [] as Deal[] }
   })
   companyDeals.value = items
+}
+watch(() => contact.value?.company_id, (companyId) => {
+  if (!companyId) return
+  projectsStore.fetchForCompany(companyId).catch(notifyApiError)
+  fetchCompanyDeals(companyId)
 }, { immediate: true })
+
+// "Merge duplicates…" (Admin/Sales Manager): this Contact survives. The
+// record itself came back from the merge (empty fields filled); its deals,
+// activities and tasks have grown, so those are re-read.
+const { canMerge, mergeOpen, mergeInitialIds, openMerge } = useDetailMerge()
+const tasksStore = useTasksStore()
+const reloadAfterMerge = () => {
+  if (contact.value) fetchCompanyDeals(contact.value.company_id)
+  activitiesStore.fetchForRelated('contact', contactId).catch(notifyApiError)
+  tasksStore.fetchForRelated('contact', contactId).catch(notifyApiError)
+}
 
 const linkedDeals = computed(() => companyDeals.value.filter(d => d.contact_id === contactId))
 // A Project's linked deal always belongs to this same Company, so

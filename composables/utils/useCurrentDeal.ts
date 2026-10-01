@@ -28,7 +28,12 @@ export const useCurrentDeal = () => {
   // show "Deal not found" (pages/crm/deals/[id].vue) despite existing.
   // fetchOne is harmless to call even when already cached elsewhere (e.g.
   // from a list page) — it just re-fetches and upserts the same record.
-  if (!deal.value && !pendingDealFetches.has(dealId)) {
+  //
+  // Also re-read a cached Deal whose value follows a quote but came from a
+  // list response: only single-deal responses carry value_quote_number (the
+  // "From accepted quote Q-…" hint needs it).
+  const needsFetch = !deal.value || (deal.value.value_quote_id && deal.value.value_quote_number === undefined)
+  if (needsFetch && !pendingDealFetches.has(dealId)) {
     pendingDealFetches.add(dealId)
     dealsStore.fetchOne(dealId).catch(notifyLoadError).finally(() => pendingDealFetches.delete(dealId))
   }
