@@ -7,38 +7,24 @@
     />
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.salesCycle.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
-            size="xs"
-            class="w-full sm:w-64"
-          />
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.salesCycle.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.salesCycle.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.salesCycle.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.salesCycle.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :label="t('crm.reports.salesCycle.filterSalesRep')"
+          name="salesRepFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+      </CrmReportFilterBar>
 
       <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <CrmStatCard

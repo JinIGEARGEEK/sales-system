@@ -11,30 +11,16 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputText
-            v-model="companyTagFilter"
-            :label="t('crm.reports.projectsAtRisk.filterCompanyTag')"
-            :placeholder="t('crm.reports.projectsAtRisk.filterCompanyTagPlaceholder')"
-            name="companyTagFilter"
-            size="xs"
-            class="w-full sm:w-48"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.projectsAtRisk.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.projectsAtRisk.clearFilters')" @clear="clearFilters">
+        <InputText
+          v-model="companyTagFilter"
+          :label="t('crm.reports.projectsAtRisk.filterCompanyTag')"
+          :placeholder="t('crm.reports.projectsAtRisk.filterCompanyTagPlaceholder')"
+          name="companyTagFilter"
+          size="xs"
+          class="w-full sm:w-48"
+        />
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -55,7 +41,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
