@@ -327,6 +327,7 @@ export default {
   },
   globalSearch: {
     placeholder: 'ค้นหา Deal บริษัท ผู้ติดต่อ Lead Prospect หรือใบเสนอราคา...',
+    ariaLabel: 'ค้นหาข้อมูลทั้งหมด',
     noResults: 'ไม่พบผลลัพธ์ที่ตรงกัน',
     deals: 'Deal',
     companies: 'บริษัท',

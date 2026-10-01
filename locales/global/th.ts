@@ -16,6 +16,7 @@ export default {
   },
   backToList: 'กลับไปยังรายการ',
   back: 'ย้อนกลับ',
+  infoAbout: 'เกี่ยวกับ{name}',
   retry: 'ลองอีกครั้ง',
   goToStageSetting: 'ไปที่การตั้งค่าขั้นตอน',
   noAccessTitle: 'จำกัดการเข้าถึง',

@@ -23,6 +23,7 @@
           v-model="modelValue"
           icon="material-symbols:search"
           :placeholder="t('admin.guideline.searchPlaceholder')"
+          :aria-label="t('admin.guideline.searchAriaLabel')"
           class="w-full"
           autocomplete="off"
           @focus="isSearchFocused = true"

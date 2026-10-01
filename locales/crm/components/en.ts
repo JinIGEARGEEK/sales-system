@@ -333,6 +333,7 @@ export default {
   },
   globalSearch: {
     placeholder: 'Search deals, companies, contacts, leads, prospects, quotes...',
+    ariaLabel: 'Search all records',
     noResults: 'No matches found.',
     deals: 'Deals',
     companies: 'Companies',

@@ -17,6 +17,8 @@ const lang = {
   backToList: 'Back to list',
   back: 'Back',
   retry: 'Retry',
+  // Accessible name of an info-icon button that opens an explanatory tooltip.
+  infoAbout: 'About {name}',
   goToStageSetting: 'Go to stage setting',
   // Shared default for <AccessGate> — pages/crm/reports/*.vue pass their own
   // more specific accessDeniedTitle/Message instead of these; admin-only
