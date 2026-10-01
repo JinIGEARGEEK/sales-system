@@ -22,6 +22,46 @@ export function apiErrorHasFieldCode(err: unknown, field: string, code: string):
   return Array.isArray(codes) && codes.includes(code)
 }
 
+// The backend's machine-readable `error.code` (e.g. "CONFLICT",
+// "WON_DEAL_PROTECTED", "REASON_REQUIRED"), or undefined.
+export function getApiErrorCode(err: unknown): string | undefined {
+  if (!isAxiosError(err)) return undefined
+  return err.response?.data?.error?.code as string | undefined
+}
+
+// The backend's `error.fields` map (field → code list) from a 422 or a
+// duplicate 409, or undefined when there is none.
+export function getApiErrorFields(err: unknown): Record<string, string[]> | undefined {
+  if (!isAxiosError(err)) return undefined
+  const fields = err.response?.data?.error?.fields
+  return fields && typeof fields === 'object' ? fields as Record<string, string[]> : undefined
+}
+
+// Puts a 422's `error.fields` onto the form's own inputs (vee-validate
+// `setErrors` from the <Form @submit> handler's second argument), translated
+// via `global.apiFieldError.<code>` with a generic fallback. `fieldMap`
+// renames API fields to the form's Field names where they differ
+// (e.g. { assigned_to: 'assignedTo' }). Returns true when at least one field
+// matched, so the caller can skip its generic toast.
+export function applyApiFieldErrors(
+  err: unknown,
+  setErrors: (errors: Record<string, string>) => void,
+  t: (key: string) => string,
+  te: (key: string) => boolean,
+  fieldMap: Record<string, string> = {},
+): boolean {
+  const fields = getApiErrorFields(err)
+  if (!fields) return false
+  const errors: Record<string, string> = {}
+  for (const [field, codes] of Object.entries(fields)) {
+    const code = codes?.[0] ?? 'invalid'
+    const key = `global.apiFieldError.${code}`
+    errors[fieldMap[field] ?? field] = te(key) ? t(key) : t('global.apiFieldError.invalid')
+  }
+  setErrors(errors)
+  return Object.keys(errors).length > 0
+}
+
 // CREATE / UPDATE / DELETE transactions
 export const useMutateApi = <T, D>(path: string) => {
   const { $api } = useNuxtApp()

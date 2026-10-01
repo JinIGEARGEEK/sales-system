@@ -64,6 +64,13 @@ const lang = {
     searching: 'Searching...',
     noResults: 'No matches found',
   },
+  apiFieldError: {
+    invalid: 'This value is not valid.',
+    required: 'This field is required.',
+    duplicate: 'A record with this value already exists.',
+    not_found: 'Not found.',
+    exceeds_receivable: 'This is more than the customer still owes.',
+  },
   sessionExpired: 'Your session has expired. Please sign in again.',
   unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
   leaveConfirm: {
