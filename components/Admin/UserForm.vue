@@ -104,6 +104,7 @@ const roleOptions = [
   { label: t('admin.users.form.roleAdmin'), value: 'Admin' },
   { label: t('admin.users.form.roleSalesRep'), value: 'Sales Rep' },
   { label: t('admin.users.form.roleSalesManager'), value: 'Sales Manager' },
+  { label: t('admin.users.form.roleMarketing'), value: 'Marketing' },
   { label: t('admin.users.form.roleProduction'), value: 'Production' },
 ]
 

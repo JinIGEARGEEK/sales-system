@@ -51,6 +51,7 @@ export default {
     roleAdmin: 'Admin',
     roleSalesRep: 'Sales Rep',
     roleSalesManager: 'Sales Manager',
+    roleMarketing: 'Marketing',
     roleProduction: 'Production',
     status: 'Status',
     statusPlaceholder: 'Select status',

@@ -51,6 +51,7 @@ export default {
     roleAdmin: 'ผู้ดูแลระบบ',
     roleSalesRep: 'พนักงานขาย',
     roleSalesManager: 'ผู้จัดการฝ่ายขาย',
+    roleMarketing: 'การตลาด',
     roleProduction: 'ฝ่ายผลิต',
     status: 'สถานะ',
     statusPlaceholder: 'เลือกสถานะ',
