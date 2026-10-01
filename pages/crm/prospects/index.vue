@@ -113,12 +113,15 @@
         :empty-action-label="t('crm.prospects.index.addProspect')"
         empty-action-to="/crm/prospects/create"
         :filtered="hasActiveFilters"
+        :sort-field="sortField"
+        :sort-dir="sortDir"
         @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @sort="onSort"
         @view-detail="onViewDetail"
-        @edit="onEdit"
+        @log-activity="onLogActivity"
+        @add-task="onAddTask"
         @convert="onConvert"
         @view-lead="onViewLead"
         @delete="requestDelete"
@@ -276,14 +279,8 @@ const onAddInColumn = (status: string) => {
 
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at', companyName: 'company_name' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => { if (viewMode.value === 'list') refetchFromStart() })
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -305,7 +302,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Prospect>(params => prospectsStore.fetchList(params), buildParams)
+} = useServerListPage<Prospect>(params => prospectsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(viewMode, (mode) => {
   if (mode === 'list' && rows.value.length === 0) fetch()
@@ -348,7 +345,7 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.prospects.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.prospects.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      ...rowQuickActions.value,
       { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === prospectStagesStore.disqualifiedStageName },
       { label: t('crm.prospects.index.actions.viewLead'), emitName: 'viewLead', isBorderBottom: true, hideIf: row => !row.converted_lead_id },
       { label: t('crm.prospects.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
@@ -360,9 +357,7 @@ const onViewDetail = (row: Prospect) => {
   navigateTo(`/crm/prospects/${row.id}`)
 }
 
-const onEdit = (row: Prospect) => {
-  navigateTo(`/crm/prospects/${row.id}`)
-}
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('prospect')
 
 const onConvert = async (row: Prospect) => {
   try {

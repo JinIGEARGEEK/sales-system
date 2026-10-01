@@ -87,7 +87,7 @@ const {
   fetch,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<APIKey>(params => apiKeysStore.fetchList(params), () => ({}))
+} = useServerListPage<APIKey>(params => apiKeysStore.fetchList(params), () => ({}), 10, { syncQuery: true })
 
 guardMounted(() => {
   fetch()

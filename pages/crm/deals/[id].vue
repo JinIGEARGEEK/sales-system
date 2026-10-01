@@ -4,24 +4,54 @@
       <PageHeader :title="deal.title" @back="goBack()">
         <UBadge :color="stageBadgeColor" variant="subtle">{{ deal.stage }}</UBadge>
         <template #actions>
-          <div v-if="deal.status === 'open'" class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-2">
+            <!-- Quick Add's modals, prefilled with this Deal (useQuickAdd). -->
             <ButtonPrimary
-              :label="t('crm.deals.detail.markLost')"
-              icon="material-symbols:cancel-outline"
-              color="error"
+              v-if="canLogActivity"
+              :label="t('crm.deals.detail.logActivity')"
+              icon="material-symbols:edit-note-outline"
               outline
-              data-cy="deal-mark-lost"
-              @click="markLostOpen = true"
+              data-cy="deal-log-activity"
+              @click="openActivity({ type: 'deal', id: deal.id })"
             />
             <ButtonPrimary
-              :label="t('crm.deals.detail.markWon')"
-              icon="material-symbols:check-circle-outline"
-              data-cy="deal-mark-won"
-              @click="markWonConfirmOpen = true"
+              v-if="canAddTask"
+              :label="t('crm.deals.detail.addTask')"
+              icon="material-symbols:task-alt"
+              outline
+              data-cy="deal-add-task"
+              @click="openTask({ type: 'deal', id: deal.id })"
             />
+            <template v-if="deal.status === 'open'">
+              <ButtonPrimary
+                :label="t('crm.deals.detail.markLost')"
+                icon="material-symbols:cancel-outline"
+                color="error"
+                outline
+                data-cy="deal-mark-lost"
+                @click="requestLost(pipelineStagesStore.lostStageName)"
+              />
+              <ButtonPrimary
+                :label="t('crm.deals.detail.markWon')"
+                icon="material-symbols:check-circle-outline"
+                data-cy="deal-mark-won"
+                @click="markWonConfirmOpen = true"
+              />
+            </template>
           </div>
         </template>
       </PageHeader>
+
+      <!-- Click a stage to move the Deal there (PATCH /deals/:id/stage), with
+           the same Lost-reason prompt / Won hand-off as the board. -->
+      <CrmDealStageStepper
+        v-if="stepperStages.length > 0"
+        class="mb-4"
+        :stages="stepperStages"
+        :current="deal.stage"
+        :disabled="stageMoving"
+        @select="onStepperSelect"
+      />
 
       <div ref="tabStripRef" class="mb-4 overflow-x-auto scrollbar-hide" data-cy="deal-tab-strip">
         <UTabs :model-value="activeTab" :items="tabItems" :ui="{ list: 'w-max min-w-full', trigger: 'grow-0 shrink-0' }" @update:model-value="onTabChange" />
@@ -55,6 +85,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { SALES_PIPELINE_ROLES, TASK_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -158,13 +189,54 @@ const onMarkWon = async () => {
 // Same PATCH /deals/:id/stage + lost_reason the Kanban board's drop into
 // Lost sends, so a loss recorded here reads the same in reports.
 const markLostOpen = ref(false)
+const lostTargetStage = ref('')
+const requestLost = (stage: string) => {
+  lostTargetStage.value = stage
+  markLostOpen.value = true
+}
 const onMarkLost = async (reason: LostReason) => {
   if (!deal.value) return
   try {
-    await dealsStore.updateStage(deal.value.id, pipelineStagesStore.lostStageName as DealStage, undefined, reason)
+    await dealsStore.updateStage(deal.value.id, (lostTargetStage.value || pipelineStagesStore.lostStageName) as DealStage, undefined, reason)
     success(t('crm.deals.detail.markLostSuccess'))
   } catch (err) {
     notifyStageChangeError(err)
+  }
+}
+
+const { hasRole } = useRole()
+const canLogActivity = computed(() => hasRole(...SALES_PIPELINE_ROLES))
+const canAddTask = computed(() => hasRole(...TASK_ROLES))
+const { openActivity, openTask } = useQuickAdd()
+
+// Stage stepper: every active stage in configured order. Won goes through
+// the header's Mark Won confirm (follow-up task + Create Project, contract
+// gate via notifyStageChangeError), Lost through the lost-reason prompt, and
+// any other stage moves straight away. The store's updated Deal flows into
+// the Overview form, which keeps any unsaved edits to other fields.
+const stepperStages = computed(() => pipelineStagesStore.items
+  .filter(s => s.is_active)
+  .sort((a, b) => a.sort_order - b.sort_order))
+const stageMoving = ref(false)
+const onStepperSelect = async (stage: string) => {
+  if (!deal.value || stage === deal.value.stage || stageMoving.value) return
+  const row = pipelineStagesStore.byName(stage)
+  if (row?.is_won_stage) {
+    markWonConfirmOpen.value = true
+    return
+  }
+  if (row?.is_lost_stage) {
+    requestLost(stage)
+    return
+  }
+  stageMoving.value = true
+  try {
+    await dealsStore.updateStage(deal.value.id, stage as DealStage)
+    success(t('crm.deals.detail.stageChangeSuccess', { stage }))
+  } catch (err) {
+    notifyStageChangeError(err)
+  } finally {
+    stageMoving.value = false
   }
 }
 </script>

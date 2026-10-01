@@ -1,5 +1,6 @@
 const lang = {
   noData: 'No Data',
+  allChannels: 'All Channels',
   loading: 'Loading...',
   genericError: 'Something went wrong. Please try again.',
   currencySymbol: '฿',
@@ -41,6 +42,8 @@ const lang = {
   },
   table: {
     selectAll: 'Select All',
+    selectAllRows: 'Select all rows',
+    selectRow: 'Select row {n}',
     actions: 'Actions',
     empty: {
       filteredTitle: 'No results match your filters',

@@ -285,16 +285,46 @@ const form = reactive({
 // Re-baselined (markClean) once each loaded Deal has been hydrated into the
 // form below, and after every successful save — the snapshot taken here is
 // usually the still-empty pre-load form.
-const { markClean } = useUnsavedChangesGuard(() => form)
+const { markClean, isDirty } = useUnsavedChangesGuard(() => form)
+const { info } = useNotify()
+
+// The form's non-stage fields as the given Deal would fill them.
+const nonStageFields = (value: Deal) => JSON.stringify([
+  value.title,
+  value.value,
+  value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : '',
+  value.assigned_to ? String(value.assigned_to) : '',
+  value.business_unit || '',
+  value.business_unit_item || '',
+])
+const formNonStageFields = () => JSON.stringify([form.title, form.value, form.expected_close_date, form.assigned_to, form.business_unit, form.business_unit_item])
 
 // Deal loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time. `hydrating` suppresses
 // the business_unit/stage watchers below during this — otherwise setting
 // business_unit/stage here would immediately wipe/re-default fields set a
 // couple lines later.
+//
+// The same Deal changing underneath an edited form (the header's stage
+// stepper / Mark Won / Mark Lost, added 2026-10-01) only takes the stage and
+// its derived fields, so typed-but-unsaved edits elsewhere survive — and the
+// form stays dirty, so leaving still asks.
 let hydrating = false
+let hydratedId: number | null = null
 watch(deal, (value) => {
   if (!value) return
+  if (hydratedId === value.id && isDirty() && formNonStageFields() !== nonStageFields(value)) {
+    hydrating = true
+    const stageChanged = form.stage !== value.stage
+    form.stage = value.stage
+    form.probability = value.probability ?? stageDefaultProbability(value.stage)
+    form.lost_reason = value.lost_reason || ''
+    form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
+    nextTick(() => { hydrating = false })
+    if (stageChanged) info(t('crm.deals.detail.stageChangedKeptEdits', { stage: value.stage }))
+    return
+  }
+  hydratedId = value.id
   hydrating = true
   form.title = value.title
   form.value = value.value

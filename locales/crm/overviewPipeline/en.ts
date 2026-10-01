@@ -44,6 +44,10 @@ export default {
     search: 'Search name or company',
     allSources: 'All sources',
     allTags: 'All tags',
+    assignee: 'Assignee',
+    source: 'Source',
+    businessUnit: 'Business Unit',
+    tag: 'Tag',
     clear: 'Clear filters',
   },
   summary: {

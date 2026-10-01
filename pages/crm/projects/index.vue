@@ -44,6 +44,8 @@
         empty-icon="material-symbols:folder-open-outline"
         :empty-action-label="canManageProjects ? t('crm.projects.index.addProject') : undefined"
         :filtered="hasActiveProjectFilters"
+        :sort-field="projectSortField"
+        :sort-dir="projectSortDir"
         @empty-action="openAddProject"
         @clear-filters="clearProjectFilters"
         @change-page="onChangeProjectPage"
@@ -248,13 +250,8 @@ const PROJECT_SORT_VALUE: Record<string, (p: Project) => string | number> = {
   targetEndDateDisplay: p => p.target_end_date ? p.target_end_date.getTime() : 0,
 }
 
-const projectSortField = ref('')
-const projectSortDir = ref<'asc' | 'desc'>('asc')
-
-const onSortProjects = (field: string, direction: 'asc' | 'desc') => {
-  projectSortField.value = field
-  projectSortDir.value = direction
-}
+// Client-side sort, still kept in the URL (`?sort=`) like the server lists.
+const { sortField: projectSortField, sortDir: projectSortDir, onSort: onSortProjects } = useQuerySyncedSort()
 
 const projectRows = computed(() => {
   const rows = filteredProjects.value.map(project => ({

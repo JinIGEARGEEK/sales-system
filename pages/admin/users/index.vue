@@ -141,7 +141,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<AdminUser>(params => usersStore.fetchList(params), buildParams)
+} = useServerListPage<AdminUser>(params => usersStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 guardMounted(fetch)
 

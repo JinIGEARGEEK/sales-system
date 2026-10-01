@@ -165,7 +165,7 @@ const leadSourcesStore = useLeadSourcesStore()
 // DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants) — the Kanban board's columns
 // and this filter both read from the same store.
 const channelFilterOptions = computed(() => [
-  { label: 'All Channels', value: 'all' },
+  { label: t('global.allChannels'), value: 'all' },
   ...leadSourcesStore.activeOptions,
 ])
 
