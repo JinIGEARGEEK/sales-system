@@ -2,14 +2,16 @@
 // inline changes"). Bind `pending` to a confirm modal, `resetKey` into the
 // select's :key (bumped on cancel/failure so it snaps back to the saved status),
 // and call request() from the select's update:model-value.
-export const useConfirmedStatusChange = <S extends string, T extends { id: number, status: S }>({ confirmStatuses, save, notifyError }: {
+// A function declaration so unimport doesn't read the `, T` type parameter
+// as an exported name (see useScopedFetch).
+export function useConfirmedStatusChange<S extends string, T extends { id: number, status: S }> ({ confirmStatuses, save, notifyError }: {
   confirmStatuses: readonly S[]
   // Persists the change (and toasts success); a throw is reported and reverts the select.
   save: (record: T, status: S) => Promise<unknown>
   // Reports a failed save — defaults to the API's message (notifyApiError);
   // pass one to translate entity-specific errors (e.g. quote 409s).
   notifyError?: (err: unknown) => void
-}) => {
+}) {
   const { notifyApiError } = useApiErrorNotifier()
   const reportError = notifyError ?? notifyApiError
 
