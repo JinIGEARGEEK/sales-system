@@ -19,6 +19,7 @@
           :maxlength="props.maxlength"
           :aria-invalid="errors.length > 0"
           :aria-describedby="errors.length ? errorId : undefined"
+          :aria-label="inputAriaLabel(props)"
           class="w-full"
           :ui="{ base: 'text-base' }"
         >

@@ -166,9 +166,9 @@ const emptyForm = () => ({
   milestones: defaultMilestones(),
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 const equalPreview = computed(() => {
   if (!form.firstDueDate || form.count < 2) return []

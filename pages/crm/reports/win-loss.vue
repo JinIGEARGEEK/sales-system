@@ -20,22 +20,24 @@
           size="xs"
           class="w-full sm:w-64"
         />
-        <InputSelect
-          v-model="salesRepFilter"
-          :options="salesRepOptions"
-          :label="t('crm.reports.winLoss.filterSalesRep')"
-          name="salesRepFilter"
-          size="xs"
-          class="w-full sm:w-56"
-        />
-        <InputText
-          v-model="companyTagFilter"
-          :label="t('crm.reports.winLoss.filterCompanyTag')"
-          :placeholder="t('crm.reports.winLoss.filterCompanyTagPlaceholder')"
-          name="companyTagFilter"
-          size="xs"
-          class="w-full sm:w-40"
-        />
+        <CrmMoreFilters :count="secondaryFilterCount">
+          <InputSelect
+            v-model="salesRepFilter"
+            :options="salesRepOptions"
+            :label="t('crm.reports.winLoss.filterSalesRep')"
+            name="salesRepFilter"
+            size="xs"
+            class="w-full sm:w-56"
+          />
+          <InputText
+            v-model="companyTagFilter"
+            :label="t('crm.reports.winLoss.filterCompanyTag')"
+            :placeholder="t('crm.reports.winLoss.filterCompanyTagPlaceholder')"
+            name="companyTagFilter"
+            size="xs"
+            class="w-full sm:w-40"
+          />
+        </CrmMoreFilters>
       </CrmReportFilterBar>
 
       <UAlert
@@ -94,24 +96,36 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const dateRange = ref<{ start: string, end: string } | null>(null)
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4), like Source Performance: a shared link,
+// a refresh or a back-button return reopens the same window. The range
+// travels as two YYYY-MM-DD strings straight from the date picker.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  dateRange.value = null
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: dateFrom, default: '' },
+    { ref: dateTo, default: '' },
+    { ref: salesRepFilter, secondary: true },
+    { ref: companyTagFilter, default: '', secondary: true },
+  ],
+})
 
 const rows = ref<WinLossReasonRow[]>([])
 const loading = ref(false)
 
 const reportParams = () => ({
-  date_from: dateRange.value?.start,
-  date_to: dateRange.value?.end,
+  date_from: dateFrom.value || undefined,
+  date_to: dateTo.value || undefined,
   assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
   company_tag: companyTagFilter.value || undefined,
 })
@@ -130,7 +144,7 @@ const fetchReport = async () => {
 }
 
 guardMounted(fetchReport)
-watch([dateRange, salesRepFilter], fetchReport)
+watch([dateFrom, dateTo, salesRepFilter], fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 watch(companyTagFilter, () => {

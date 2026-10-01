@@ -22,6 +22,7 @@
         :size="props.size"
         :aria-invalid="errors.length > 0"
         :aria-describedby="errors.length ? errorId : undefined"
+        :aria-label="inputAriaLabel(props)"
         class="w-full"
         :class="{ 'text-sm': props.small }"
         @update:model-value="emit('update:model-value', $event)"

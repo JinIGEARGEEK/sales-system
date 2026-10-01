@@ -99,7 +99,7 @@ const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
   try {
-    await contactsStore.add({
+    const created = await contactsStore.add({
       name: form.name,
       company_id: form.company_id ?? 0,
       role_title: form.role_title,
@@ -112,7 +112,7 @@ const onSubmit = guard(async () => {
     })
     success(t('crm.contacts.create.createSuccess'))
     markClean()
-    navigateTo('/crm/contacts')
+    navigateTo(`/crm/contacts/${created.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

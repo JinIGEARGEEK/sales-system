@@ -150,7 +150,7 @@ const emptyForm = () => ({
 // filterCompanyId is used inside an immediate watch further down, which
 // evaluates it synchronously right there, so `form` must already exist by
 // then, not just by the time the rest of the script has finished running.
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 // Which company to filter the Deal picker by: the one currently picked in the
 // Company field when it's shown, otherwise the fixed `companyId` the parent
@@ -204,7 +204,7 @@ watch(() => form.company_id, () => {
   form.deal_id = ''
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler

@@ -40,6 +40,7 @@
               :key="`contract-status-${contract.id}-${statusSelectResetKey}`"
               :model-value="contract.status"
               :options="contractStatusOptions"
+              :aria-label="t('crm.contracts.detail.contractStatus')"
               small
               class="w-32 shrink-0"
               :name="`contract-status-${contract.id}`"

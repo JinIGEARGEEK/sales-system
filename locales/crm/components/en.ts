@@ -2,6 +2,9 @@ export default {
   pipelineBoard: {
     noItems: 'No items',
     addInColumn: 'Add here',
+    moveMenu: 'Move to another stage',
+    moveTo: 'Move to {stage}',
+    stageSelect: 'Stage',
     stageDescriptions: {
       lead: 'New potential customer',
       qualified: 'Confirmed as a good fit',
@@ -237,9 +240,20 @@ export default {
     editTask: 'Edit task',
     removeTask: 'Delete task',
     removeSuccess: 'Task deleted',
-    confirmDoneTitle: 'Mark task as done?',
-    confirmDoneBody: 'Mark "{title}" as done?',
+    // Still the bulk Mark done confirm's button (Tasks page) — a single task
+    // is marked done at once, with an Undo on the toast.
     confirmDoneButton: 'Mark as Done',
+    markDoneSuccess: 'Task marked done',
+    reopenSuccess: 'Task reopened',
+    undo: 'Undo',
+    snoozeLabel: 'Snooze task, due {date}',
+    snoozeMenuTitle: 'Snooze until',
+    snooze: {
+      tomorrow: 'Tomorrow',
+      threeDays: '+3 days',
+      nextWeek: 'Next week',
+    },
+    snoozeSuccess: 'Task snoozed to {date}',
     priority: {
       low: 'Low',
       medium: 'Medium',
@@ -312,14 +326,22 @@ export default {
     createCampaign: 'Create Campaign',
     addToCampaign: 'Add to Campaign',
   },
+  // List-row menu shortcuts into Quick Add (useRowQuickActions) and the
+  // Deals table's Create quote.
+  rowActions: {
+    logActivity: 'Log Activity',
+    addTask: 'Add Task',
+    createQuote: 'Create Quote',
+  },
   globalSearch: {
-    placeholder: 'Search deals, companies, contacts, leads, prospects...',
+    placeholder: 'Search deals, companies, contacts, leads, prospects, quotes...',
     noResults: 'No matches found.',
     deals: 'Deals',
     companies: 'Companies',
     contacts: 'Contacts',
     leads: 'Leads',
     prospects: 'Prospects',
+    quotes: 'Quotes',
   },
   // Shared by the Deals table and Leads list's "toggle bulk-select mode"
   // button — both used to declare their own copy of this identical pair.

@@ -4,6 +4,7 @@ export default {
     createContract: 'สร้างสัญญา',
     createSuccess: 'สร้างสัญญาสำเร็จ',
     noContracts: 'ยังไม่มีสัญญาที่สร้างสำหรับ Deal นี้',
+    contractStatus: 'สถานะสัญญา',
     uploadSignedDocument: 'อัปโหลดเอกสารที่ลงนามแล้ว',
     uploadSuccess: 'อัปโหลดเอกสารที่ลงนามแล้วสำเร็จ',
     updateStatusSuccess: 'อัปเดตสถานะสัญญาสำเร็จ',

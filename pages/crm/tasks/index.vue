@@ -28,11 +28,11 @@
           <InputText v-model="search" :placeholder="t('crm.tasks.index.searchPlaceholder')" name="search" />
         </div>
         <div class="w-full sm:w-40">
-          <InputSelect v-model="statusFilter" :options="TASK_STATUS_FILTER_OPTIONS" name="statusFilter" />
+          <InputSelect v-model="statusFilter" :options="TASK_STATUS_FILTER_OPTIONS" :aria-label="t('crm.tasks.index.filterStatus')" name="statusFilter" />
         </div>
         <CrmMoreFilters :count="secondaryFilterCount">
           <div class="w-full sm:w-48">
-            <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" name="assigneeFilter" />
+            <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :aria-label="t('crm.tasks.index.filterAssignee')" name="assigneeFilter" />
           </div>
           <div class="w-full sm:w-48">
             <InputSelect
@@ -98,7 +98,7 @@
             :tasks="enrich(group.items)"
             :selectable="isSelectMode"
             :selected-ids="selectedIds"
-            @toggle="onToggleTask"
+            @changed="onTaskChanged"
             @removed="refresh"
             @edit="openEditTask"
             @update:selected-ids="onGroupSelection(group.items, $event)"
@@ -125,8 +125,9 @@
       @cancel="selectedIds = []"
     />
 
-    <!-- Same confirm-before-done rule as a single task's Mark done button
-    (TaskList's own confirm), now with the count. -->
+    <!-- Bulk Mark done still confirms with the count: unlike a single task's
+    toggle (instant, with an Undo toast), it changes many rows at once and
+    has no one-click reversal. -->
     <CrmConfirmDeleteModal
       v-model:open="bulkDoneConfirmOpen"
       :title="t('crm.tasks.index.bulkConfirmDoneTitle')"
@@ -247,15 +248,9 @@ const enrich = (tasks: Task[]) => tasks.map(task => ({
   campaignLabel: task.campaign_id ? campaignsStore.nameById(task.campaign_id) : undefined,
 }))
 
-// A toggle can move a task to another group (pending <-> done), so re-read.
-const onToggleTask = async (id: number) => {
-  try {
-    await tasksStore.toggleDone(id)
-    await refresh()
-  } catch (err) {
-    notifyApiError(err)
-  }
-}
+// CrmTaskList saves a done toggle / its Undo / a snooze itself; each can move
+// the task to another group (pending <-> done, overdue -> upcoming), so re-read.
+const onTaskChanged = () => refresh()
 
 // ── Create task (with related-record picker) ──────────────────────
 
