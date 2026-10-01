@@ -5,10 +5,10 @@
 // and call `decide()` from it.
 //
 // Order matters: the others are rejected FIRST, then the new one accepted,
-// so the Deal never has two Accepted quotes at once (the API may enforce one
-// Accepted Quote per Deal with a 409). Declining keeps them Accepted and
-// accepts anyway — if the API refuses that, its error reaches the caller's
-// notifier like any other.
+// so the Deal never has two Accepted quotes at once — the API enforces one
+// Accepted Quote per Deal with a 409. The modal no longer offers 'keep'
+// (it could only fail); the decision stays for callers that still pass it,
+// and if the API refuses, its error reaches the caller's notifier.
 export type SupersedeDecision = 'reject' | 'keep' | 'cancel'
 
 export const useSupersedeAcceptedQuotes = () => {

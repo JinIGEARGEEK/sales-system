@@ -6,6 +6,18 @@
     @update:open="onUpdateOpen"
   >
     <template #body>
+      <!-- 422 exceeds_receivable: explained here, Save becomes "Record
+           anyway" (resends with allow_overpayment) until the amount or WHT
+           changes. -->
+      <div
+        v-if="overpaymentPending"
+        class="mb-3 rounded-lg border border-(--color-warning-hover)/50 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-bg) px-3 py-2 text-sm"
+        role="alert"
+        data-cy="payment-overpayment-warning"
+      >
+        <p class="font-medium">{{ t('crm.components.addPaymentModal.overpaymentTitle') }}</p>
+        <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.components.addPaymentModal.overpaymentBody') }}</p>
+      </div>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputText
@@ -72,7 +84,12 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addPaymentModal.cancel')" cancel data-cy="payment-cancel" @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" :loading="loading" data-cy="payment-save" @click="onSave" />
+        <ButtonPrimary
+          :label="overpaymentPending ? t('crm.components.addPaymentModal.recordAnyway') : t('crm.components.addPaymentModal.save')"
+          :loading="loading"
+          data-cy="payment-save"
+          @click="onSave"
+        />
       </div>
     </template>
   </UModal>
@@ -109,7 +126,9 @@ const whtFillHint = computed(() => {
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payment: PaymentPayload]
+  // `report` puts an API error onto this form (usePaymentSaveErrors) and
+  // returns true when it did — the parent then skips its own toast.
+  submit: [payment: PaymentPayload, report: PaymentErrorReporter]
 }>()
 
 // InputSelect can't carry an empty-string value (Reka's SelectItem rejects it).
@@ -128,6 +147,13 @@ const emptyForm = () => ({
 })
 
 const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
+
+const { overpaymentPending, report, withOverpayment, reset: resetSaveErrors } = usePaymentSaveErrors(
+  () => (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors,
+)
+watch(() => props.open, (value) => { if (value) resetSaveErrors() })
+// A new amount/WHT needs checking again before it can be forced through.
+watch(() => [form.amount, form.wht_amount], resetSaveErrors)
 
 const installmentOptions = computed<Select[]>(() => {
   const statuses = props.installments ?? []
@@ -155,11 +181,11 @@ const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value)
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const submitAndClose = useAwaitableSubmit<[PaymentPayload, PaymentErrorReporter]>(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
   const wht = Number(form.wht_amount) || 0
   const documentNumber = form.document_number.trim()
-  await submitAndClose({
+  await submitAndClose(withOverpayment({
     amount: Number(form.amount),
     paid_at: new Date(form.paid_at),
     method: form.method,
@@ -168,7 +194,7 @@ const onSubmit = guard(async () => {
     wht_certificate_received: wht > 0 ? form.wht_certificate_received : false,
     document_number: documentNumber || null,
     installment_id: form.installment_id === NO_INSTALLMENT ? null : Number(form.installment_id),
-  })
+  }), report)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

@@ -25,6 +25,20 @@
       </template>
     </UAlert>
 
+    <!-- The Lead was converted meanwhile (another tab/user, or a double
+         submit): converting again is a 409 — point at the Deal it became. -->
+    <UAlert
+      v-if="alreadyConverted"
+      class="mb-4"
+      color="warning"
+      variant="subtle"
+      icon="material-symbols:info-outline"
+      :title="t('crm.deals.create.alreadyConvertedTitle')"
+      :description="t('crm.deals.create.alreadyConvertedBody')"
+      :actions="alreadyConverted.dealId ? [{ label: t('crm.deals.create.openExistingDeal'), to: `/crm/deals/${alreadyConverted.dealId}`, color: 'primary', variant: 'solid', icon: 'material-symbols:open-in-new' }] : undefined"
+      data-cy="deal-create-already-converted"
+    />
+
     <ContainerTemplate>
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -55,6 +69,18 @@
               :options="businessUnitItemOptions"
             />
           </div>
+          <!-- Creating straight into a Lost stage needs the reason, same as
+               moving a Deal there later (the API rejects it without one). -->
+          <InputSelect
+            v-if="isLostStage(form.stage)"
+            v-model="form.lost_reason"
+            :options="LOST_REASON_OPTIONS"
+            :label="t('crm.deals.detail.lostReason')"
+            :placeholder="t('crm.deals.detail.lostReasonPlaceholder')"
+            name="lost_reason"
+            rules="required"
+            data-cy="deal-create-lost-reason"
+          />
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -68,9 +94,11 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, findDuplicateDeals, stageDefaultForecastCategory } from '~/constants/mockData'
+import type { SubmissionContext } from 'vee-validate'
+import { isAxiosError } from 'axios'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, findDuplicateDeals, stageDefaultForecastCategory } from '~/constants/mockData'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 useHead({ title: t('crm.deals.create.pageTitle') })
 
@@ -136,7 +164,12 @@ const form = reactive({
   assigned_to: '',
   business_unit: '' as BusinessUnit | '',
   business_unit_item: '',
+  lost_reason: '' as LostReason | '',
 })
+
+// By the stage row's flag, so a renamed Lost stage still asks (same rule as
+// the detail page's Overview form).
+const isLostStage = (stage: string) => pipelineStagesStore.isLostStage(stage)
 // The stage list may still be loading at setup; once it lands, swap an
 // unset/stale default for the real first open stage (never overriding a
 // stage the user already picked or came in with via ?stage=).
@@ -249,6 +282,7 @@ watch(() => form.company_id, () => {
 // forecast_category watcher, still freely editable afterwards.
 watch(() => form.stage, (newStage) => {
   form.forecast_category = stageDefaultForecastCategory(newStage)
+  if (!isLostStage(newStage)) form.lost_reason = ''
 })
 
 // Keyed by the originating Lead (or 'new' for a plain create): a Deal
@@ -270,7 +304,24 @@ const { onDealWon } = useDealWonHandoff()
 
 const { loading, guard } = useSubmitGuard()
 
-const onSubmit = guard(async () => {
+// The inputs above, by name — where a 422's `fields` can be shown.
+const DEAL_FORM_FIELDS = ['title', 'company_id', 'contact_id', 'value', 'stage', 'forecast_category', 'expected_close_date', 'assigned_to', 'business_unit', 'lost_reason']
+
+// Set when converting the Lead answered 409 (already converted), with the
+// Deal it became once the re-read Lead says which.
+const alreadyConverted = ref<{ dealId: number | null } | null>(null)
+const showAlreadyConverted = async (leadId: number) => {
+  alreadyConverted.value = { dealId: null }
+  try {
+    const lead = await leadsStore.fetchOne(leadId)
+    alreadyConverted.value = { dealId: lead.converted_deal_id ?? null }
+  } catch {
+    // The banner still explains it; there's just no link to offer.
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) => {
   try {
     // Shared by both branches below — only company_id/contact_id/status/
     // lead_id differ between a plain create and a Lead-originated one.
@@ -289,7 +340,7 @@ const onSubmit = guard(async () => {
       // The stage's server-side default (PipelineStage.default_probability);
       // null lets the API apply that same default itself.
       probability: pipelineStagesStore.defaultProbability(form.stage),
-      lost_reason: null,
+      lost_reason: isLostStage(form.stage) && form.lost_reason ? form.lost_reason : null,
       forecast_category: form.forecast_category || stageDefaultForecastCategory(form.stage),
     }
 
@@ -331,6 +382,17 @@ const onSubmit = guard(async () => {
     // "Add Deal") — that's where the next actions (quote, task, activity) are.
     navigateTo(`/crm/deals/${created.id}`)
   } catch (err) {
+    if (originatingLead.value && isAxiosError(err) && err.response?.status === 409) {
+      await showAlreadyConverted(originatingLead.value.id)
+      return
+    }
+    // A 422's fields (assigned_to no longer an active sales user, a missing
+    // lost_reason, …) go onto their inputs; the Won gate keeps its own toast.
+    if (!apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')
+      && actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
+      fields: DEAL_FORM_FIELDS,
+      messages: { assigned_to: t('crm.deals.create.assigneeInvalid') },
+    })) return
     notifyStageChangeError(err)
   }
 })

@@ -206,12 +206,20 @@ const onCreateQuote = (row: Deal) => {
 }
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Deal>()
+// A Won Deal with money attached: explained (non-manager) or asks a manager
+// for the reason and retries.
+const wonDealGuard = useWonDealGuard()
 
 const confirmDelete = async () => {
   if (target.value) {
     try {
       const { id, title } = target.value
-      await dealsStore.remove(id)
+      closeDelete()
+      const deleted = await wonDealGuard.run('delete', async (reason) => {
+        await dealsStore.remove(id, reason)
+        return true
+      })
+      if (!deleted) return
       notifyDeletedWithUndo({ id, name: title, restore: restoreId => dealsStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {

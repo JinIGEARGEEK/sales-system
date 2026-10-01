@@ -9,7 +9,10 @@
         @click="openAddActivity"
       />
     </div>
-    <CrmActivityTimeline :items="dealActivity" />
+    <div v-if="activityLoading && dealActivity.length === 0" class="flex flex-col gap-3" data-cy="activity-loading">
+      <USkeleton v-for="i in 4" :key="`activity-skeleton-${i}`" class="h-14 w-full rounded-lg" />
+    </div>
+    <CrmActivityTimeline v-else :items="dealActivity" />
 
     <div v-if="stageHistory.length > 0" class="mt-6">
       <CardTitle class="mb-4">{{ t('crm.deals.detail.stageHistoryTitle') }}</CardTitle>
@@ -55,8 +58,10 @@ const dealId = Number(route.params.id)
 const dealActivity = computed(() => activitiesStore.forRelated('deal', dealId))
 const stageHistory = ref<DealStageChangeEntry[]>([])
 
+// Skeletons (not the timeline's empty state) until the first fetch settles.
+const activityLoading = ref(true)
 onMounted(() => {
-  activitiesStore.fetchForRelated('deal', dealId).catch(notifyApiError)
+  activitiesStore.fetchForRelated('deal', dealId).catch(notifyApiError).finally(() => { activityLoading.value = false })
   fetchDealStageHistory(dealId).then((entries) => { stageHistory.value = entries }).catch(notifyApiError)
 })
 

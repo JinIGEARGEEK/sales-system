@@ -1,4 +1,6 @@
-// Real API-backed store. Payments are hard-deleted server-side (no soft-delete status).
+// Real API-backed store. Payments are soft-deleted server-side (deleted_at,
+// audited; Review round 2) — a deleted one drops out of the list, totals and
+// installment statuses, and there's no restore in the UI.
 // `amount` is cash received net of withholding tax; `wht_amount` also counts
 // as settled (GET /deals/:dealId/payments returns total_paid / total_wht; its
 // total_settled = paid + WHT is derived here instead, as settledForDeal).
