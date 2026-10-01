@@ -206,8 +206,8 @@ interface TeamMember {
   id: number
   name: string
   email: string
-  // Not sent by GET /team-members yet; when it is, a Production user is left
-  // out of task assignee pickers (the API's 422 on assigned_to otherwise).
+  // Assignee pickers leave out a role that can't own records (Production);
+  // optional so a member without one is still offered.
   role?: Role
 }
 
@@ -1054,9 +1054,9 @@ interface ForecastAccuracyQuarter {
   accuracy_ratio: number
 }
 
-// PATCH /deals/bulk-archive (Review round 2): 200 { archived, skipped }. A Won
-// Deal with money attached (a Payment, an installment or a signed Contract)
-// is skipped, not archived. Lead/Prospect bulk-archive still answer 204,
+// PATCH /deals/bulk-archive: 200 { archived, skipped }. A Won Deal with money
+// attached (a Payment, an installment or a signed Contract) is skipped, not
+// archived. Lead/Prospect bulk-archive answer 204,
 // which stores/helpers.ts normalizes to "everything archived".
 type BulkArchiveSkipReason = 'won_deal_with_money'
 interface BulkArchiveSkip {

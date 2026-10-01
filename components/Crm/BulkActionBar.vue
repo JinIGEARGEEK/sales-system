@@ -11,7 +11,7 @@
           <InputSelect
             v-model="reassignTo"
             name="bulkReassignTo"
-            :options="teamMembersStore.filterOptions.filter(o => o.value !== 'all')"
+            :options="teamMembersStore.bulkReassignOptions"
             :placeholder="t('crm.components.bulkActionBar.reassignPlaceholder')"
           />
           <ButtonPrimary small block :label="t('crm.components.bulkActionBar.reassignApply')" @click="applyReassign" />
