@@ -46,7 +46,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedDeals') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addDeal')"
@@ -69,7 +69,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedProjects') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedProjects') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addProject')"
@@ -98,14 +98,14 @@
                     {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                   </p>
                 </div>
-                <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
+                <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
               </button>
             </div>
           </UCard>
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.activityTitle') }}</CardTitle>
                 <ButtonPrimary
                   :label="t('crm.contacts.detail.addActivity')"
                   icon="material-symbols:add"
@@ -121,7 +121,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.tasksTitle') }}</h3>
+                  <CardTitle>{{ t('crm.contacts.detail.tasksTitle') }}</CardTitle>
                   <UBadge v-if="contactOverdueTaskCount > 0" color="error" variant="subtle">
                     {{ t('crm.contacts.detail.overdueCount', { count: contactOverdueTaskCount }) }}
                   </UBadge>
@@ -135,7 +135,7 @@
                 />
               </div>
             </template>
-            <CrmTaskList :tasks="contactTasks" @toggle="onToggleTask" @edit="openEditTask" />
+            <CrmTaskList :tasks="contactTasks" @edit="openEditTask" />
           </UCard>
         </div>
       </div>
@@ -179,6 +179,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -190,7 +191,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { parseTags, dateFormat } = useFormatter()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const { hasRole } = useRole()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
@@ -276,14 +277,14 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(
   computed(() => contact.value?.company_id ?? null),
   'crm.contacts.detail.addProjectSuccess',
   'crm.contacts.detail.updateProjectSuccess',
 )
 
-const { tasks: contactTasks, overdueCount: contactOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
+const { tasks: contactTasks, overdueCount: contactOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask } = useTaskList('contact', contactId, 'crm.contacts.detail.addTaskSuccess', 'crm.contacts.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('contact', contactId, 'crm.contacts.detail.addActivitySuccess')
 
 const form = reactive({
@@ -315,8 +316,9 @@ watch(contact, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!contact.value) return
   try {
     await contactsStore.update(contact.value.id, {
@@ -331,7 +333,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.contacts.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 </script>

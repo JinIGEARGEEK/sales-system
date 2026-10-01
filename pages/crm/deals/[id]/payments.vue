@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentsTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.paymentsTitle') }}</CardTitle>
         <ButtonPrimary
           :label="t('crm.deals.detail.addPayment')"
           icon="material-symbols:add"
@@ -16,33 +16,35 @@
            toward the balance as soon as it's recorded, certificate (50 ทวิ)
            or not — the certificate flag is tracked separately, not a gate. -->
       <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalPaid') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-paid">{{ currency(totalPaid) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalWht') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-wht">{{ currency(totalWht) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalSettled') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-settled">{{ currency(totalSettled) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.remainingBalance') }}</p>
-          <p class="text-lg font-semibold">
-            {{ remainingBalance > 0 ? currency(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
-          </p>
-          <p class="text-xs text-(--color-gray)" data-cy="payments-receivable-source">
-            {{ currency(receivable.amount) }} ·
-            {{ receivable.fromQuote ? t('crm.reports.outstandingBalance.receivableSource.quote') : t('crm.reports.outstandingBalance.receivableSource.dealValue') }}
-          </p>
-        </div>
+        <CrmStatCard :label="t('crm.deals.detail.totalPaid')" reserve-hint-space>
+          <span data-cy="payments-total-paid">{{ currency(totalPaid) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.totalWht')" reserve-hint-space>
+          <span data-cy="payments-total-wht">{{ currency(totalWht) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.totalSettled')" reserve-hint-space>
+          <span data-cy="payments-total-settled">{{ currency(totalSettled) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.remainingBalance')" reserve-hint-space>
+          {{ remainingBalance > 0 ? currency(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
+          <template #hint>
+            <span data-cy="payments-receivable-source">
+              {{ currency(receivable.amount) }} ·
+              {{ receivable.fromQuote ? t('crm.reports.outstandingBalance.receivableSource.quote') : t('crm.reports.outstandingBalance.receivableSource.dealValue') }}
+            </span>
+          </template>
+        </CrmStatCard>
       </div>
 
-      <div v-if="dealPayments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.deals.detail.noPayments') }}
+      <div v-if="paymentsLoading && dealPayments.length === 0" class="flex flex-col gap-2" data-cy="payments-loading">
+        <USkeleton v-for="i in 3" :key="`payment-skeleton-${i}`" class="h-10 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealPayments.length === 0"
+        :title="t('crm.deals.detail.noPayments')"
+        icon="material-symbols:payments-outline"
+        data-cy-suffix="-payments"
+      />
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-200 text-sm" data-cy="payments-table">
           <thead>
@@ -54,7 +56,7 @@
               <th class="py-2 pr-3 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnInstallment') }}</th>
               <th class="py-2 pr-3 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnMethod') }}</th>
               <th class="py-2 pr-3 font-normal">{{ t('crm.deals.detail.columnNote') }}</th>
-              <th class="py-2" />
+              <th class="py-2"><span class="sr-only">{{ t('global.table.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -99,6 +101,7 @@
                   color="error"
                   size="xs"
                   :aria-label="t('crm.deals.detail.removePayment')"
+                  :data-cy="`payment-delete-${payment.id}`"
                   @click="requestDelete(payment)"
                 />
               </td>
@@ -110,7 +113,7 @@
 
     <ContainerTemplate class="mt-4">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.paymentScheduleTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.paymentScheduleTitle') }}</CardTitle>
         <div class="flex gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.generateSchedule')"
@@ -128,9 +131,15 @@
         </div>
       </div>
 
-      <div v-if="dealInstallments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.deals.detail.noInstallments') }}
+      <div v-if="installmentsLoading && dealInstallments.length === 0" class="flex flex-col gap-2" data-cy="installments-loading">
+        <USkeleton v-for="i in 3" :key="`installment-skeleton-${i}`" class="h-10 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealInstallments.length === 0"
+        :title="t('crm.deals.detail.noInstallments')"
+        icon="material-symbols:calendar-month-outline"
+        data-cy-suffix="-installments"
+      />
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-120 text-sm">
           <thead>
@@ -139,7 +148,7 @@
               <th class="py-2 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnAmount') }}</th>
               <th class="py-2 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnStatus') }}</th>
               <th class="py-2 font-normal">{{ t('crm.deals.detail.columnNote') }}</th>
-              <th class="py-2" />
+              <th class="py-2"><span class="sr-only">{{ t('global.table.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -170,6 +179,7 @@
       v-model:open="addPaymentOpen"
       :record="editingPayment"
       :installments="dealInstallments"
+      :tax-rates="taxRates"
       @submit="onSubmitPayment"
     />
 
@@ -180,7 +190,8 @@
 
     <CrmGeneratePaymentScheduleModal
       v-model:open="generateScheduleOpen"
-      :default-total-amount="remainingBalance"
+      :default-total-amount="unscheduledAmount"
+      :max-total-amount="scheduleLimit"
       @submit="onGenerateSchedule"
     />
 
@@ -204,7 +215,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const { currency, dateFormat } = useFormatter()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const paymentsStore = usePaymentsStore()
 const paymentInstallmentsStore = usePaymentInstallmentsStore()
@@ -212,9 +223,12 @@ const quotesStore = useQuotesStore()
 
 const { dealId, deal } = useCurrentDeal()
 
+// Skeletons (not the empty states) until each first fetch settles.
+const paymentsLoading = ref(true)
+const installmentsLoading = ref(true)
 onMounted(() => {
-  paymentsStore.fetchForDeal(dealId).catch(notifyApiError)
-  paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError)
+  paymentsStore.fetchForDeal(dealId).catch(notifyApiError).finally(() => { paymentsLoading.value = false })
+  paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError).finally(() => { installmentsLoading.value = false })
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 
@@ -228,6 +242,8 @@ const totalSettled = computed(() => paymentsStore.settledForDeal(dealId))
 const receivable = computed(() => dealReceivable(quotesStore.forDeal(dealId), deal.value?.value ?? 0))
 // WHT counts as settled, so it comes off the balance like cash does.
 const remainingBalance = computed(() => receivable.value.amount - totalSettled.value)
+// "Fill WHT" uses the latest Accepted Quote's WHT/VAT settings.
+const taxRates = computed(() => paymentTaxRates(quotesStore.forDeal(dealId)))
 
 const openAddPayment = () => {
   editingPayment.value = null
@@ -243,7 +259,10 @@ const openEditPayment = (payment: Payment) => {
 // installment first), so they're re-read after every payment change.
 const refreshInstallments = () => paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError)
 
-const onSubmitPayment = async (payment: PaymentPayload) => {
+// `report` (from CrmAddPaymentModal) shows a 422/409 on the form itself —
+// e.g. the overpayment warning with "Record anyway" — so the dialog stays
+// open; anything it doesn't cover is toasted here.
+const onSubmitPayment = async (payment: PaymentPayload, report?: PaymentErrorReporter) => {
   try {
     if (editingPayment.value) {
       await paymentsStore.update(editingPayment.value.id, payment)
@@ -254,9 +273,22 @@ const onSubmitPayment = async (payment: PaymentPayload) => {
     }
     refreshInstallments()
   } catch (err) {
-    notifyApiError(err)
+    if (!report?.(err)) notifyApiError(err)
     return false
   }
+}
+
+// The API refuses a schedule that would add up to more than the receivable
+// (422 installments ["exceeds_receivable"]) — e.g. when an Accepted quote
+// changed since this page loaded. Said in words, and the totals re-read.
+const notifyInstallmentError = (err: unknown) => {
+  if (apiErrorHasFieldCode(err, 'installments', 'exceeds_receivable') || apiErrorHasFieldCode(err, 'amount', 'exceeds_receivable')) {
+    error(t('crm.deals.detail.scheduleExceedsReceivable'))
+    quotesStore.fetchForDeal(dealId).catch(notifyApiError)
+    refreshInstallments()
+    return
+  }
+  notifyApiError(err)
 }
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Payment>()
@@ -293,19 +325,26 @@ const onAddInstallment = async (installment: { amount: number, due_date: Date, n
     await paymentInstallmentsStore.add(dealId, installment)
     success(t('crm.deals.detail.addInstallmentSuccess'))
   } catch (err) {
-    notifyApiError(err)
+    notifyInstallmentError(err)
     return false
   }
 }
 
 const generateScheduleOpen = ref(false)
+// The schedule as a whole (paid installments included) is measured against
+// the receivable, the same check the API's bulk endpoint makes: Generate
+// defaults to whatever isn't scheduled yet and can't go over it. With no
+// receivable at all (no Accepted Quote, Deal value 0) there's no limit.
+const scheduledTotal = computed(() => roundSatang(dealInstallments.value.reduce((sum, s) => sum + s.installment.amount, 0)))
+const unscheduledAmount = computed(() => Math.max(0, roundSatang(receivable.value.amount - scheduledTotal.value)))
+const scheduleLimit = computed(() => receivable.value.amount > 0 ? unscheduledAmount.value : null)
 
 const onGenerateSchedule = async (installments: { amount: number, due_date: Date, note: string }[]) => {
   try {
     await paymentInstallmentsStore.bulkAdd(dealId, installments)
     success(t('crm.deals.detail.generateScheduleSuccess', { count: installments.length }))
   } catch (err) {
-    notifyApiError(err)
+    notifyInstallmentError(err)
     return false
   }
 }

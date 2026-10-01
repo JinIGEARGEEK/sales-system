@@ -6,8 +6,18 @@
       @back="goBack()"
     />
 
+    <CrmDuplicateConflictAlert
+      v-if="conflict"
+      :conflict="conflict"
+      entity="prospect"
+      base-path="/crm/prospects"
+      :name-of="id => prospectsStore.items.find(p => p.id === id)?.name"
+      :loading="loading"
+      @create-anyway="createAnyway"
+      @dismiss="dismiss"
+    />
     <UAlert
-      v-if="duplicateProspects.length > 0"
+      v-else-if="duplicateProspects.length > 0"
       class="mb-4"
       color="warning"
       variant="subtle"
@@ -90,7 +100,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.prospects.create.pageTitle') })
 
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const route = useRoute()
 const prospectsStore = useProspectsStore()
@@ -133,29 +143,27 @@ const duplicateProspects = computed(() => findDuplicateProspects(prospectsStore.
 
 const { markClean } = useUnsavedChangesGuard(() => form)
 
-const { loading, guard } = useSubmitGuard()
-
-const onSubmit = guard(async () => {
-  try {
-    await prospectsStore.add({
-      name: form.name,
-      company_id: form.company_id,
-      email: form.email,
-      phone: form.phone,
-      source: form.source,
-      status: form.status,
-      notes: form.notes,
-      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      business_unit: form.business_unit || null,
-      business_unit_item: form.business_unit_item || null,
-      converted_lead_id: null,
-      created_at: new Date(),
-    })
+// Same server-side duplicate/422 handling as pages/crm/leads/create.vue.
+const { conflict, loading, onSubmit, createAnyway, dismiss } = useCreateWithDuplicateCheck({
+  create: allowDuplicate => prospectsStore.add({
+    name: form.name,
+    company_id: form.company_id,
+    email: form.email,
+    phone: form.phone,
+    source: form.source,
+    status: form.status,
+    notes: form.notes,
+    assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+    business_unit: form.business_unit || null,
+    business_unit_item: form.business_unit_item || null,
+    converted_lead_id: null,
+    created_at: new Date(),
+  }, { allowDuplicate }),
+  onCreated: (created) => {
     success(t('crm.prospects.create.createSuccess'))
     markClean()
-    navigateTo('/crm/prospects')
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
+    navigateTo(`/crm/prospects/${created.id}`)
+  },
+  resetOn: () => [form.email, form.phone],
 })
 </script>

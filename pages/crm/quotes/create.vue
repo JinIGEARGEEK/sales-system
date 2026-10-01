@@ -45,7 +45,7 @@
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
-          <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
+          <InputSelect v-model="form.status" :options="quoteStatusOptions" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
         </div>
 
         <InputTextarea
@@ -78,10 +78,11 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
+import type { SubmissionContext } from 'vee-validate'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
+const { quoteStatusOptions } = useQuoteStatusColor()
 
 useHead({ title: t('crm.quotes.create.pageTitle') })
 
@@ -217,18 +218,30 @@ onMounted(offerRestoreIfFound)
 
 const { loading, guard } = useSubmitGuard()
 
-const onSubmit = guard(async () => {
+const notifyQuoteError = useQuoteErrorNotifier()
+
+const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) => {
   if (!deal.value) return
+  // An Accepted/Rejected quote is read-only once it exists, so the
+  // template's pricing PUT below couldn't follow a create in that status:
+  // create it as a Draft and let that PUT move it to the chosen status.
+  const deferStatus = !!appliedTemplateOverrides.value && isQuoteLocked(form.status)
   let created
   try {
     created = await quotesStore.add(deal.value.id, {
       items: serializeQuoteItems(items.value),
       scope_of_work: form.scope_of_work,
       validity_date: form.validity_date ? new Date(form.validity_date) : null,
-      status: form.status,
+      status: deferStatus ? 'draft' : form.status,
     })
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    // A 422's fields (item qty/price/discount, validity_date) onto their
+    // inputs; a 409 (e.g. another quote already Accepted) in words.
+    if (actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
+      fields: quoteFormFieldNames(items.value),
+      fieldMap: quoteItemFieldMap(items.value),
+    })) return
+    notifyQuoteError(err)
     return
   }
 
@@ -247,7 +260,7 @@ const onSubmit = guard(async () => {
         items: created.items,
         scope_of_work: created.scope_of_work,
         validity_date: created.validity_date,
-        status: created.status,
+        status: deferStatus ? form.status : created.status,
         reference_number: created.reference_number ?? null,
         issue_date: created.issue_date,
         credit_days: created.credit_days,

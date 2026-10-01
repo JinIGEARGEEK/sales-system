@@ -90,7 +90,7 @@
 
         <div class="mt-4">
           <div class="mb-1 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.create.contactsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.create.contactsHeading') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.create.addContact')"
               icon="material-symbols:add"
@@ -156,13 +156,14 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
 useHead({ title: t('crm.companies.create.pageTitle') })
 
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { parseTags } = useFormatter()
 const companiesStore = useCompaniesStore()
@@ -208,8 +209,9 @@ const removeContactRow = (index: number) => {
 const { markClean } = useUnsavedChangesGuard(() => [form, contacts.value])
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSubmit = guard(async () => {
+const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   try {
     const company = await companiesStore.add({
       name: form.name,
@@ -246,13 +248,23 @@ const onSubmit = guard(async () => {
     )
 
     success(t('crm.companies.create.createSuccess'))
-    if (results.some(r => r.status === 'rejected')) {
+    // A contact whose email/phone matches an existing one (in any Company)
+    // is a 409 now — say so, rather than a vague "couldn't be added".
+    const rejected = results.filter(r => r.status === 'rejected')
+    const duplicateNames = contactRows
+      .filter((_, i) => { const r = results[i]; return r?.status === 'rejected' && getDuplicateConflict(r.reason) })
+      .map(c => c.name)
+    if (duplicateNames.length > 0) {
+      warning(t('crm.companies.create.contactDuplicateSkipped', { count: duplicateNames.length, names: duplicateNames.join(', ') }))
+    }
+    if (rejected.length > duplicateNames.length) {
       error(t('crm.companies.create.contactCreateFailed'))
     }
     markClean()
-    navigateTo('/crm/companies')
+    navigateTo(`/crm/companies/${company.id}`)
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    // A 422 on the Company itself marks its inputs; anything else toasts.
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 </script>

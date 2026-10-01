@@ -26,7 +26,7 @@ export const useLeadScoringCriteriaStore = defineStore('leadScoringCriteria', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<LeadScoringCriterion, 'id' | 'created_at'>>): Promise<LeadScoringCriterion> {
+    async update (id: number, changes: LeadScoringCriterionUpdatePayload): Promise<LeadScoringCriterion> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<LeadScoringCriterion>>(`/admin/lead-scoring-criteria/${id}`, changes)
       const updated = parseDates(response.data.data)

@@ -5,7 +5,12 @@
         <CrmStatusPill v-model="form.mode" :options="modeOptions" class="mb-3" data-cy="payment-schedule-mode" />
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <InputText v-model.number="form.totalAmount" :label="t('crm.components.generatePaymentScheduleModal.totalAmount')" type="number" name="totalAmount" rules="required" />
+          <div>
+            <InputText v-model.number="form.totalAmount" :label="t('crm.components.generatePaymentScheduleModal.totalAmount')" type="number" name="totalAmount" rules="required" data-cy="payment-schedule-total" />
+            <p v-if="exceedsLimit" class="mt-1 text-sm text-(--color-danger-toast)" role="alert" data-cy="payment-schedule-exceeds">
+              {{ t('crm.components.generatePaymentScheduleModal.exceedsReceivable', { amount: currency(props.maxTotalAmount ?? 0) }) }}
+            </p>
+          </div>
           <template v-if="form.mode === 'equal'">
             <InputText v-model.number="form.count" :label="t('crm.components.generatePaymentScheduleModal.count')" type="number" name="count" rules="required|min_value:2" />
             <InputDatePicker v-model="form.firstDueDate" :label="t('crm.components.generatePaymentScheduleModal.firstDueDate')" name="firstDueDate" rules="required" />
@@ -46,7 +51,7 @@
             />
             <div class="col-span-2 flex items-center justify-between gap-2 sm:col-span-1 sm:flex-col sm:items-end sm:pt-6">
               <span class="text-sm font-medium whitespace-nowrap" :data-cy="`milestone-amount-${index}`">
-                {{ t('global.currencySymbol') }}{{ priceFormat(percentagePreview[index]?.amount ?? 0) }}
+                {{ currency(percentagePreview[index]?.amount ?? 0) }}
               </span>
               <UButton
                 v-if="form.milestones.length > 1"
@@ -91,7 +96,7 @@
                 <tr v-for="(row, index) in equalPreview" :key="index" class="border-b border-(--color-light-gray-2) last:border-b-0">
                   <td class="p-2 text-(--color-gray)">{{ index + 1 }}</td>
                   <td class="p-2">{{ dateFormat(row.due_date) }}</td>
-                  <td class="p-2 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(row.amount) }}</td>
+                  <td class="p-2 text-right">{{ currency(row.amount) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -112,12 +117,16 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormat, dateFormat, toDateInputValue } = useFormatter()
+const { dateFormat, toDateInputValue, currency } = useFormatter()
 
 const props = defineProps<{
   open: boolean
-  // Defaults totalAmount to the Deal's remaining balance when the modal opens.
+  // Defaults totalAmount to the part of the Deal's receivable not yet
+  // covered by installments when the modal opens.
   defaultTotalAmount: number
+  // The most this schedule may total (receivable − already scheduled);
+  // null = no limit. The API rejects a batch over it, so Save is blocked.
+  maxTotalAmount?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -135,11 +144,7 @@ const modeOptions = computed<Select[]>(() => [
 let milestoneKey = 0
 // Placeholder due dates a month apart from today, so the rows are usable as
 // soon as the mode is picked; each is meant to be edited to the real date.
-const milestoneDueDate = (monthsAhead: number) => {
-  const date = new Date()
-  date.setMonth(date.getMonth() + monthsAhead)
-  return toDateInputValue(date)
-}
+const milestoneDueDate = (monthsAhead: number) => toDateInputValue(addMonths(new Date(), monthsAhead))
 const defaultMilestoneLabel = (index: number, count: number) => {
   if (index === 0) return t('crm.components.generatePaymentScheduleModal.milestoneDeposit')
   if (index === count - 1) return t('crm.components.generatePaymentScheduleModal.milestoneFinal')
@@ -154,16 +159,16 @@ const defaultMilestones = () => DEFAULT_MILESTONE_PERCENTS.map((percent, index) 
 
 const emptyForm = () => ({
   mode: 'equal' as SplitMode,
-  totalAmount: props.defaultTotalAmount,
+  totalAmount: roundSatang(props.defaultTotalAmount),
   count: 3,
   firstDueDate: '',
   intervalMonths: 1,
   milestones: defaultMilestones(),
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 const equalPreview = computed(() => {
   if (!form.firstDueDate || form.count < 2) return []
@@ -191,7 +196,11 @@ const removeMilestone = (index: number) => form.milestones.splice(index, 1)
 
 // Awaits the caller's save; stays open (form intact) if it resolves false.
 const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const exceedsLimit = computed(() => props.maxTotalAmount !== null && props.maxTotalAmount !== undefined
+  && roundSatang(Number(form.totalAmount) || 0) > props.maxTotalAmount + 0.005)
+
 const onSubmit = guard(async () => {
+  if (exceedsLimit.value) return
   if (form.mode === 'percentage' && (!percentageValid.value || percentagePreview.value.length === 0)) return
   await submitAndClose(form.mode === 'percentage' ? percentagePreview.value : equalPreview.value)
 })

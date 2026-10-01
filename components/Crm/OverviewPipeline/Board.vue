@@ -26,7 +26,7 @@
               <UIcon :name="OVERVIEW_ZONES[zone.key].icon" class="size-4" />
             </span>
             <div class="flex min-w-0 items-baseline gap-2" :class="isCollapsed(zone.key) ? 'md:rotate-180 md:flex-row-reverse md:[writing-mode:vertical-rl]' : ''">
-              <h3 class="text-base font-black">{{ zoneLabel(zone.key) }}</h3>
+              <h3 class="text-base font-medium">{{ zoneLabel(zone.key) }}</h3>
               <span class="text-xs text-(--color-gray) tabular-nums">{{ zoneMeta(zone) }}</span>
             </div>
             <UBadge v-if="!isCollapsed(zone.key)" size="sm" variant="subtle" color="neutral" :label="t(`crm.overviewPipeline.zoneOwner.${zone.key}`)" />
@@ -82,7 +82,7 @@
                   <span class="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-xs font-medium text-white tabular-nums">{{ numberFormat(lane.count) }}</span>
                 </div>
                 <template v-if="zone.key === 'deal'">
-                  <span class="text-xs font-semibold text-white tabular-nums">{{ t('global.currencySymbol') }}{{ priceFormatCompact(lane.value) }}</span>
+                  <span class="text-xs font-medium text-white tabular-nums">{{ currencyCompact(lane.value) }}</span>
                   <!-- An open Deal lane's share of open pipeline value, so the
                   biggest money columns stand out without reading each figure. -->
                   <UTooltip v-if="!lane.terminal" :text="t('crm.overviewPipeline.laneShare', { pct: lanePct(zone, lane) })">
@@ -148,7 +148,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { numberFormat, priceFormatCompact } = useFormatter()
+const { numberFormat, currencyCompact } = useFormatter()
 const { getColumnColor, getStageDescription, headerTintOf, bodyTintOf, borderTintOf } = usePipelineStageColors()
 
 // Lanes are colored and described per entity (a Leads "New" lane gets the
@@ -181,7 +181,7 @@ const lanePct = (zone: PipelineOverviewZone, lane: PipelineOverviewLane) => {
 const zoneMeta = (zone: PipelineOverviewZone) => {
   const { count, value } = zoneOpenTotals(zone)
   const label = t('crm.overviewPipeline.zoneOpenCount', { count: numberFormat(count) })
-  return zone.key === 'deal' ? `${label} · ${t('global.currencySymbol')}${priceFormatCompact(value)}` : label
+  return zone.key === 'deal' ? `${label} · ${currencyCompact(value)}` : label
 }
 
 // Jump-to from the page's toolbar: on phones switch the visible zone, on

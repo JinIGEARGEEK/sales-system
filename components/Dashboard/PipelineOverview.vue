@@ -13,9 +13,9 @@
         icon="material-symbols:account-balance-wallet-outline"
         icon-class="text-(--color-accent-green)"
         icon-bg-class="bg-(--color-accent-green)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-accent-green)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-accent-green)/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
+        {{ currencyCompact(openPipelineValue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -24,9 +24,9 @@
         icon="material-symbols:query-stats"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
+        {{ currencyCompact(forecastedRevenue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -34,8 +34,8 @@
         :tooltip="t('crm.dashboard.winRateTooltip')"
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
         :icon-bg-class="winRate >= 50 ? 'bg-(--color-success-toast)/25' : 'bg-(--color-gray)/25'"
-        :value-class="winRate >= 50 ? 'text-(--color-success-toast)' : 'text-(--color-black)'"
-        :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-gray)]/20 to-transparent'"
+        :value-class="winRate >= 50 ? 'text-(--color-success-text)' : 'text-(--color-black)'"
+        :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-gray)/20 to-transparent'"
       >
         {{ winRate }}%
       </CrmStatCard>
@@ -46,7 +46,7 @@
         icon="material-symbols:work-outline"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
       >
         {{ openDealsCount }} <span class="text-sm font-normal text-(--color-gray)">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
@@ -57,9 +57,9 @@
         icon="material-symbols:workspace-premium-outline"
         icon-class="text-(--color-success-toast)"
         icon-bg-class="bg-(--color-success-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-success-toast)/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
+        {{ currencyCompact(wonValue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -68,9 +68,9 @@
         icon="material-symbols:payments-outline"
         icon-class="text-(--color-chart-violet)"
         icon-bg-class="bg-(--color-chart-violet)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-chart-violet)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-chart-violet)/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
+        {{ currencyCompact(avgDealSize) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -79,7 +79,7 @@
         icon="material-symbols:schedule-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
       >
         {{ t('crm.dashboard.avgSalesCycleDays', { days: avgSalesCycleDays }) }}
       </CrmStatCard>
@@ -89,13 +89,19 @@
         :tooltip="t('crm.dashboard.pipelineCoverageTooltip')"
         :icon="isPipelineHealthy ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
         :icon-bg-class="isPipelineHealthy ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
-        :value-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :hint-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :accent-glass-class="isPipelineHealthy ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
+        :value-class="isPipelineHealthy ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
+        :hint-class="isPipelineHealthy ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
+        :accent-glass-class="isPipelineHealthy ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent'"
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
         <template #hint>
-          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${t('global.currencySymbol')}${priceFormatCompact(quarterlySalesTarget)}` }) }}
+          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { value: currencyCompact(quarterPipelineValue), target: currencyCompact(quarterlySalesTarget) }) }}
+          <span v-if="overduePipelineCount > 0" class="block text-(--color-danger-text)">
+            {{ t('crm.dashboard.overduePipeline', { value: currencyCompact(overduePipelineValue), count: overduePipelineCount }) }}
+          </span>
+          <span v-if="undatedPipelineCount > 0" class="block text-(--color-gray)">
+            {{ t('crm.dashboard.undatedPipeline', { value: currencyCompact(undatedPipelineValue), count: undatedPipelineCount }) }}
+          </span>
         </template>
       </CrmStatCard>
       <CrmStatCard
@@ -104,13 +110,13 @@
         :tooltip="t('crm.dashboard.annualRevenueGoalTooltip')"
         :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
         :icon-bg-class="isAnnualGoalOnTrack ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
-        :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
+        :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
+        :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
+        :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent'"
       >
         {{ annualGoalProgressPercent }}%
         <template #hint>
-          {{ t(isAnnualGoalOnTrack ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.annualRevenueGoalHint', { actual: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueActual)}`, goal: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueGoal)}` }) }}
+          {{ t(isAnnualGoalOnTrack ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.annualRevenueGoalHint', { actual: currencyCompact(annualRevenueActual), goal: currencyCompact(annualRevenueGoal) }) }}
         </template>
       </CrmStatCard>
     </div>
@@ -121,9 +127,12 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
-defineProps<{
+const props = defineProps<{
+  // GET /dashboard/summary still pending with nothing loaded yet — every
+  // card shows a skeleton instead of ฿0 / 0%.
+  loading?: boolean
   openPipelineValue: number
   forecastedRevenue: number
   winRate: number
@@ -132,6 +141,11 @@ defineProps<{
   avgDealSize: number
   avgSalesCycleDays: number
   pipelineCoverageRatio: number
+  quarterPipelineValue: number
+  overduePipelineValue: number
+  overduePipelineCount: number
+  undatedPipelineValue: number
+  undatedPipelineCount: number
   isPipelineHealthy: boolean
   quarterlySalesTarget: number
   annualGoalProgressPercent: number
@@ -139,4 +153,6 @@ defineProps<{
   annualRevenueActual: number
   annualRevenueGoal: number
 }>()
+
+provideStatCardLoading(computed(() => props.loading))
 </script>

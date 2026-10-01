@@ -12,15 +12,23 @@
             <InputSelect v-model="form.category" :options="categoryOptions" :label="t('crm.components.addAttachmentModal.category')" name="category" rules="required" />
 
             <template v-if="mode === 'file'">
+              <!-- sr-only, not `hidden`: see ImportContactsModal. -->
               <label
-                class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
+                class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1) has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-(--color-focus)"
               >
                 <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
                 <span class="text-sm font-medium">{{ fileName || t('crm.components.addAttachmentModal.chooseFile') }}</span>
                 <span class="text-xs text-(--color-gray)">{{ t('crm.components.addAttachmentModal.acceptedFormats') }}</span>
-                <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv" class="hidden" @change="onFileChange" >
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv"
+                  class="sr-only"
+                  :aria-invalid="!!fileError || undefined"
+                  :aria-describedby="fileError ? 'attachment-file-error' : undefined"
+                  @change="onFileChange"
+                >
               </label>
-              <p v-if="fileError" class="text-xs text-(--color-danger-toast)">{{ fileError }}</p>
+              <p v-if="fileError" id="attachment-file-error" class="text-xs text-(--color-danger-text)">{{ fileError }}</p>
             </template>
 
             <template v-else>
@@ -74,7 +82,9 @@ const emptyForm = () => ({
   external_url: '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm, {
+  extraState: () => selectedFile.value?.name ?? null,
+})
 
 watch(() => props.open, (value) => {
   if (value) {
@@ -85,7 +95,7 @@ watch(() => props.open, (value) => {
   }
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Mirrors the backend's 10 MB cap (utils.MaxUploadSize) so an oversized file
 // is rejected client-side instead of round-tripping to get a 413.

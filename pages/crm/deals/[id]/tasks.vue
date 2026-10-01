@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.tasksTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.tasksTitle') }}</CardTitle>
         <ButtonPrimary
           :label="t('crm.deals.detail.addTask')"
           icon="material-symbols:add"
@@ -10,7 +10,7 @@
           @click="openAddTask"
         />
       </div>
-      <CrmTaskList :tasks="dealTasks" @toggle="onToggleTask" @edit="openEditTask" />
+      <CrmTaskList :tasks="dealTasks" :loading="tasksLoading && dealTasks.length === 0" @edit="openEditTask" />
     </ContainerTemplate>
 
     <CrmAddTaskModal
@@ -30,5 +30,5 @@ const { t } = useI18n()
 const route = useRoute()
 const dealId = Number(route.params.id)
 
-const { tasks: dealTasks, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
+const { tasks: dealTasks, loading: tasksLoading, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask } = useTaskList('deal', dealId, 'crm.deals.detail.addTaskSuccess', 'crm.deals.detail.editTaskSuccess')
 </script>

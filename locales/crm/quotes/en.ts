@@ -40,6 +40,8 @@ export default {
     whtEnabled: 'Withholding Tax',
     whtRateLabel: 'Withholding Tax Rate (%)',
     whtRatePlaceholder: 'Rate %',
+    amountBeforeVat: 'Amount before VAT',
+    vatIncluded: 'VAT (7%, included)',
     grandTotal: 'Grand Total',
     notes: 'Notes',
     notesPlaceholder: 'Printed on the exported PDF (payment terms, validity terms, etc.)',
@@ -84,5 +86,33 @@ export default {
     extractionPartialTitle: 'Pre-filled from the uploaded PDF — please review',
     extractionFailedTitle: 'Could not read this PDF automatically — fields below are blank, fill them in manually',
     continueEditingTitle: 'Quote created — step 2: add reference number, VAT/WHT, discounts, and notes below to finish it up',
+    acceptedLockedTitle: 'This quote is Accepted, so its items and prices are locked',
+    acceptedLockedDescription: 'The deal\'s amount owed is based on it. To change the prices, duplicate it and send the new quote instead.',
+    duplicateToRevise: 'Duplicate to revise',
+    rejectedLockedTitle: 'This quote is Rejected, so it can\'t be changed',
+    rejectedLockedDescription: 'A rejected quote is final. To offer the customer something new, duplicate it and send the new quote instead.',
+    acceptedStatusHint: 'An Accepted quote can only be moved to Rejected.',
+    revisionOf: 'Revision of {number}',
+  },
+  // "Rev N" for a quote duplicated from another (revision_no > 0).
+  revision: {
+    label: 'Rev {n}',
+  },
+  // 409s from PUT/DELETE /quotes/:id (the lifecycle rules).
+  conflict: {
+    changedMeanwhile: 'This quote was changed by someone else meanwhile. Reload it and try again.',
+    readOnly: 'This quote is Accepted or Rejected and can\'t be changed any more. Reload it to see the saved version.',
+    otherAccepted: 'Quote {number} is already Accepted on this deal. Mark it as Rejected before accepting this one.',
+    expired: 'This quote has expired and can\'t be accepted. Move it back to Draft with a new due date, or duplicate it.',
+    transition: 'This quote can\'t be moved to that status. Reload it to see its current status.',
+    deleteNonDraft: 'Only draft quotes can be deleted.',
+    reload: 'Reload',
+  },
+  // Accepting a quote while others on the same deal are already Accepted.
+  supersede: {
+    title: 'Another quote is already Accepted',
+    description: 'A deal can have only one Accepted quote — the amount owed is based on it. Mark these as Rejected to accept this one?',
+    cancel: 'Cancel',
+    reject: 'Mark as Rejected',
   },
 }

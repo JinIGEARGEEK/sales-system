@@ -93,8 +93,9 @@ type AttachmentCategory = 'Quotation' | 'Proposal' | 'Estimation' | 'Plan' | 'Su
 // 'prospect' added 2026-09-01 — carried over to 'lead' by
 // POST /prospects/:id/convert, same as 'lead' is carried to 'deal'.
 type AttachmentRelatedType = 'lead' | 'deal' | 'company' | 'project' | 'quote' | 'prospect'
-// Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default; a labeling/
-// expectation field only, doesn't change how VAT is computed (see useQuoteTotals).
+// Added 2026-08-23 (quotation-builder rebuild) — 'excl_tax' is the default (7% VAT added on
+// top). Since 2026-10-01 'incl_tax' with VAT on backs VAT out of the prices instead of adding
+// it again (see useQuoteTotals / the API's ComputeQuoteTotals).
 type QuotePriceType = 'excl_tax' | 'incl_tax'
 
 interface Company {
@@ -148,6 +149,15 @@ interface Contact {
   deleted_at?: Date | null
   created_at: Date
 }
+
+// stores/companies.ts / stores/contacts.ts update() parameter types — same
+// reasoning as LeadUpdatePayload below: PUT /companies/:id and
+// PUT /contacts/:id overwrite these fields unconditionally, so they're
+// required rather than Partial<...>. Optional ones are those the backend keeps
+// when omitted: a Company's status/branch_code/postal_code, and a Contact's
+// status and company_id (0 also means "keep").
+type CompanyUpdatePayload = Required<Pick<Company, 'name' | 'industry' | 'size' | 'revenue_size' | 'website' | 'tags' | 'notes' | 'legal_name' | 'address' | 'tax_id'>> & Partial<Pick<Company, 'status' | 'branch_code' | 'postal_code'>>
+type ContactUpdatePayload = Required<Pick<Contact, 'name' | 'email' | 'phone' | 'role_title' | 'tags' | 'is_primary'>> & Partial<Pick<Contact, 'status' | 'company_id'>>
 
 interface TeamMember {
   id: number
@@ -310,6 +320,10 @@ interface Deal {
   // create and on every real stage change; drives the Overview Pipeline's
   // days-in-stage figures (FR-CRM-123).
   stage_entered_at?: string | null
+  // When the Deal became Won (ISO string), null while it isn't — server-set on
+  // every move into won, cleared on a reopen. What the dashboard counts "won
+  // this period" by. Read-only, never sent.
+  won_at?: string | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -327,6 +341,12 @@ interface PipelineStage {
   is_lost_stage: boolean
   // Overview Pipeline stale threshold in days; null means the default (14).
   stale_days?: number | null
+  // Read-only, server-derived (utils.DefaultProbabilityFor): the probability a
+  // Deal entering this stage gets when none is sent — 100 Won, 0 Lost, else
+  // spread 10..90 across the open funnel. The single source for the Deal
+  // forms' probability prefill; depends on every open stage, so the store
+  // refetches the list after a stage write.
+  default_probability?: number
   created_at: Date
 }
 
@@ -433,6 +453,17 @@ interface LeadScoringCriterion {
   created_at: Date
 }
 
+// Admin config update() parameter types. Each handler overwrites the required
+// fields here on every PUT (or rejects a request without `name`), and keeps the
+// optional ones when omitted — so, as with LeadUpdatePayload, a call site that
+// leaves out a required field is a compile error, not a zeroed-out column.
+// OptionUpdatePayload covers the seven name + is_active option lists, which
+// share one backend handler (option_crud.go).
+type OptionUpdatePayload = Pick<IndustryOption, 'name'> & Partial<Pick<IndustryOption, 'is_active'>>
+type PipelineStageUpdatePayload = Pick<PipelineStage, 'name' | 'sort_order' | 'is_won_stage' | 'is_lost_stage'> & Partial<Pick<PipelineStage, 'is_active' | 'stale_days'>>
+type ProspectStageUpdatePayload = Pick<ProspectStage, 'name' | 'sort_order' | 'is_disqualified_stage'> & Partial<Pick<ProspectStage, 'is_active' | 'stale_days'>>
+type LeadScoringCriterionUpdatePayload = Pick<LeadScoringCriterion, 'name' | 'field' | 'match_value' | 'weight'> & Partial<Pick<LeadScoringCriterion, 'is_active'>>
+
 // GET /leads/:id/score-breakdown (FR-CRM-007) — same total as Lead.score,
 // plus which active LeadScoringCriterion rows matched and contributed, so a
 // rep can see why a Lead scored what it did without needing Admin access to
@@ -498,6 +529,10 @@ interface AppSettings {
   // the only place that's visible from the app itself.
   smtp_configured: boolean
 }
+
+// stores/appSettings.ts update() parameter type: PATCH /settings requires both
+// revenue figures on every call and keeps the rest when omitted.
+type AppSettingsUpdatePayload = Pick<AppSettings, 'quarterly_sales_target' | 'annual_revenue_goal'> & Partial<Pick<AppSettings, 'lead_scoring_mql_threshold' | 'require_signed_contract_before_won' | 'weekly_digest_enabled'>>
 
 // An Admin-configurable target for one specific (year, quarter) period —
 // GET/POST/PATCH/DELETE /admin/sales-targets, FR-CRM-092. Overrides
@@ -566,6 +601,10 @@ interface Tag {
   status: TagStatus
   created_at: Date
 }
+
+// stores/tags.ts update() parameter type: PUT /tags/:id overwrites name,
+// category and description, and keeps status when omitted.
+type TagUpdatePayload = Pick<Tag, 'name' | 'category' | 'description'> & Partial<Pick<Tag, 'status'>>
 
 // Editable-row shape used by components/Crm/QuoteItemsEditor.vue and the
 // Quote create/edit pages — a superset of QuoteItem with the UI-only `key`
@@ -640,6 +679,11 @@ interface Quote {
   // pre-filled. Added 2026-08-23.
   extraction_status?: 'ok' | 'partial' | 'failed' | null
   extraction_warnings?: string[] | null
+  // Revision chain (POST /quotes/:id/duplicate, Review round 2): a copy
+  // points at the chain's root quote and is numbered max + 1; an original
+  // has revision_no 0 and no revision_of_id. Shown as "Rev N".
+  revision_of_id?: number | null
+  revision_no?: number
 }
 
 // A named, deal-independent starting point for a new Quote — see the
@@ -667,13 +711,21 @@ interface Contract {
   id: number
   deal_id: number
   quote_id: number | null
+  // The stored status — what the Won gate (useContractGate) checks and the
+  // only status ever sent back.
   status: ContractStatus
+  // Read-only, server-derived: 'expired' once a signed contract's end_date has
+  // passed, else `status`. Display it; never send it (status stays 'signed').
+  effective_status?: ContractStatus
   signed_file_url: string | null
   signed_date: Date | null
   // Date-only (added 2026-09-27): kept as the API's 'YYYY-MM-DD' prefix
   // string, never a Date, so it can't shift a day through local time.
   // Feeds the contract_expiry notification rule (signed contracts only).
   end_date: string | null
+  // Read-only: 'expired' once a signed contract's end_date has passed
+  // (server-local day); `status` stays 'signed' (and locked).
+  effective_status?: ContractStatus
   created_at: Date
 }
 
@@ -763,6 +815,10 @@ interface PaymentPayload {
   wht_certificate_received: boolean
   document_number: string | null
   installment_id: number | null
+  // Record a payment that takes cash + WHT past the Deal's receivable (the
+  // API's 422 amount ["exceeds_receivable"] otherwise) — sent only after the
+  // user chose "Record anyway".
+  allow_overpayment?: boolean
 }
 
 // A planned installment on a Deal's payment schedule, defined before money
@@ -807,6 +863,13 @@ interface Task {
   // outreach across many Companies) — null/undefined for every other Task.
   campaign_id?: number | null
 }
+
+// stores/tasks.ts update() parameter type. PATCH /tasks/:id (despite the verb)
+// overwrites all five fields unconditionally (TaskHandler.Update in
+// sales-system-api), so none is optional — editing one field of a loaded Task
+// goes through fullTaskUpdatePayload(). status has its own toggle endpoint;
+// related_type/related_id are immutable.
+type TaskUpdatePayload = Pick<Task, 'title' | 'description' | 'due_date' | 'priority' | 'assigned_to'>
 
 // A batch of Tasks created together against a set of targets (see
 // CampaignTarget/CampaignType above).
@@ -853,6 +916,10 @@ interface DashboardSummary {
   won_value: number
   win_rate: number
   open_deals_count: number
+  // The filter bar's "Showing X of Y deals": Deals matching every filter
+  // (created in the date window) and all Deals.
+  deals_count: number
+  total_deals_count: number
   forecasted_revenue: number
   // Same probability-weighted formula as forecasted_revenue, split by open
   // Deals' ForecastCategory — breaks the single blended figure above into
@@ -860,7 +927,17 @@ interface DashboardSummary {
   forecast_by_category: { commit: number, best_case: number, pipeline: number }
   avg_deal_size: number
   avg_sales_cycle_days: number
+  // quarter_pipeline_value ÷ quarterly_sales_target: only open deals expected
+  // to close this quarter (server-local), not the whole open pipeline.
   pipeline_coverage_ratio: number
+  quarter_pipeline_value: number
+  // Open deals whose expected_close_date is before today (any quarter).
+  overdue_pipeline_value: number
+  overdue_pipeline_count: number
+  // Open deals with no (readable) expected_close_date — left out of coverage
+  // and forecast_trend, reported here so they don't silently disappear.
+  undated_pipeline_value: number
+  undated_pipeline_count: number
   quarterly_sales_target: number
   // Company-wide annual revenue goal (FR-CRM-091), Admin-configurable via
   // AppSettings above — annual_revenue_actual is Won Deal value since Jan 1
@@ -876,10 +953,12 @@ interface DashboardSummary {
   annual_revenue_trend: { label: string, actual: number, goal_pace: number }[]
   revenue_trend: { label: string, value: number }[]
   // Forward-looking counterpart to revenue_trend: probability-weighted value of
-  // open deals bucketed by ExpectedCloseDate month (next 6 months). Deals with no
-  // expected_close_date are excluded from every point, so these points may sum to
-  // less than forecasted_revenue above — don't present this as the full forecast.
-  forecast_trend: { label: string, value: number }[]
+  // open deals bucketed by ExpectedCloseDate month (next 6 months), with the
+  // dashboard filters applied. Overdue open deals land in the first (current
+  // month) point; its `overdue` is that part of `value` (0 on the others).
+  // Undated deals are excluded, so the points may sum to less than
+  // forecasted_revenue above — don't present this as the full forecast.
+  forecast_trend: { label: string, value: number, overdue: number }[]
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number, activity_count: number }[]
@@ -910,4 +989,18 @@ interface ForecastAccuracyQuarter {
   sales_target: number
   actual_won_to_date: number
   accuracy_ratio: number
+}
+
+// PATCH /deals/bulk-archive (Review round 2): 200 { archived, skipped }. A Won
+// Deal with money attached (a Payment, an installment or a signed Contract)
+// is skipped, not archived. Lead/Prospect bulk-archive still answer 204,
+// which stores/helpers.ts normalizes to "everything archived".
+type BulkArchiveSkipReason = 'won_deal_with_money'
+interface BulkArchiveSkip {
+  id: number
+  reason: BulkArchiveSkipReason | string
+}
+interface BulkArchiveResult {
+  archived: number[]
+  skipped: BulkArchiveSkip[]
 }

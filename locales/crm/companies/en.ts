@@ -7,7 +7,7 @@ export default {
     addCompany: 'Add Company',
     exportCsv: 'Export CSV',
     import: 'Import',
-    importSuccess: 'Imported {companies} companies and {contacts} contacts',
+    importSuccess: '{companies} companies and {contacts} contacts imported',
     searchPlaceholder: 'Search by name, website or Tax ID...',
     allIndustries: 'All Industries',
     industryPlaceholder: 'Industry',
@@ -42,7 +42,7 @@ export default {
     },
     entityLabel: 'companies',
     campaignCreateSuccess: 'Campaign "{name}" created with {count} tasks',
-    campaignAddSuccess: 'Added {count} tasks to "{name}"',
+    campaignAddSuccess: '{count} tasks added to "{name}"',
   },
   create: {
     pageTitle: 'Add Company',
@@ -78,6 +78,7 @@ export default {
     contactRowLabel: 'Contact {index}',
     removeContact: 'Delete this contact',
     contactCreateFailed: 'Company created, but some contacts could not be added.',
+    contactDuplicateSkipped: 'Company created. {count} contacts were not added because a contact with the same email or phone already exists: {names}',
   },
   taxFields: {
     taxId: 'Tax ID',

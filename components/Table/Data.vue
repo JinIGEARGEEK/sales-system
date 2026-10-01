@@ -30,6 +30,7 @@
           <UCheckbox
             v-if="hasSelectColumn"
             :model-value="selected.includes(row)"
+            :aria-label="t('global.table.selectRow', { n: rowIndex + 1 })"
             class="pt-0.5"
             @update:model-value="toggleRowSelection(row)"
           />
@@ -92,7 +93,7 @@
                 v-for="col in prop.columns"
                 :key="col.field"
                 :class="[
-                  'text-(--color-black) px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg',
+                  'text-(--color-black) px-2 text-sm font-medium first:rounded-l-lg last:rounded-r-lg',
                   col.type === TABLE_CARD_TYPE.ACTION ? 'text-center' : 'text-left',
                 ]"
                 :style="columnStyle(col)"
@@ -101,6 +102,7 @@
                 <div v-if="col.type === TABLE_CARD_TYPE.SELECTED">
                   <UCheckbox
                     v-model="isSelectAll"
+                    :aria-label="t('global.table.selectAllRows')"
                     @update:model-value="onSelectAll"
                   />
                 </div>
@@ -112,10 +114,10 @@
                     :data-cy="`sort-${col.field}`"
                     @click="onSort(col.field)"
                   >
-                    <b>{{ col.label }}</b>
+                    <span>{{ col.label }}</span>
                     <UIcon :name="sortIcon(col.field)" class="inline size-4" aria-hidden="true" />
                   </button>
-                  <b v-else>{{ col.label }}</b>
+                  <span v-else>{{ col.label }}</span>
                   <!-- Nuxt UI's Tooltip defaults to a fixed-height, single-line
                   (`truncate`/`nowrap`) content box, sized for short labels —
                   a longer explanation (e.g. classificationTooltip's MQL/SQL
@@ -128,7 +130,15 @@
                     :text="col.tooltip"
                     :ui="{ content: 'h-auto max-w-[min(20rem,80vw)] px-2.5 py-1.5', text: 'whitespace-normal' }"
                   >
-                    <UIcon name="material-symbols:info-outline" class="inline size-4 text-(--color-gray)" />
+                    <!-- A real button so keyboard users can reach it (the
+                    tooltip opens on focus too) and it has a name. -->
+                    <button
+                      type="button"
+                      class="inline-flex rounded-full align-middle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+                      :aria-label="t('global.infoAbout', { name: col.label })"
+                    >
+                      <UIcon name="material-symbols:info-outline" class="size-4 text-(--color-gray)" aria-hidden="true" />
+                    </button>
                   </UTooltip>
                 </div>
               </th>
@@ -167,6 +177,7 @@
                   <div v-else-if="col.type === TABLE_CARD_TYPE.SELECTED">
                     <UCheckbox
                       :model-value="selected.includes(row)"
+                      :aria-label="t('global.table.selectRow', { n: rowIndex + 1 })"
                       @update:model-value="toggleRowSelection(row)"
                     />
                   </div>
@@ -297,6 +308,18 @@ const prop = defineProps({
     type: Boolean,
     default: false,
   },
+  // Controlled sort (added 2026-10-01): pass the page's current sort column
+  // `field` ('' = unsorted) and direction — e.g. from useQuerySyncedSort, so
+  // a sort restored from the URL shows on the headers. Left undefined, the
+  // table tracks the last clicked header itself, as before.
+  sortField: {
+    type: String,
+    default: undefined,
+  },
+  sortDir: {
+    type: String as PropType<'asc' | 'desc'>,
+    default: undefined,
+  },
 })
 
 const { t } = useI18n()
@@ -336,6 +359,13 @@ const emit = defineEmits([
   'restore',
   'addToCampaign',
   'revoke',
+  'viewDeal',
+  'viewLead',
+  'viewCompany',
+  // Row-menu shortcuts (useRowQuickActions; createQuote on the Deals table).
+  'logActivity',
+  'addTask',
+  'createQuote',
   // Empty state: the CTA button (when no `emptyActionTo`), and the filtered
   // variant's Clear filters button.
   'emptyAction',
@@ -421,8 +451,13 @@ const getActionMenuItems = (col: TableDataColumn, row: TableRowData, _rowIndex: 
   return groups
 }
 
-const innerField = ref('')
-const innerSortBy = ref('desc')
+const innerField = ref(prop.sortField ?? '')
+const innerSortBy = ref<string>(prop.sortDir ?? 'desc')
+
+watch(() => [prop.sortField, prop.sortDir] as const, ([field, dir]) => {
+  if (field !== undefined) innerField.value = field
+  if (dir !== undefined) innerSortBy.value = dir
+})
 
 const onSort = (field: string) => {
   innerSortBy.value = innerField.value === field && innerSortBy.value === 'asc' ? 'desc' : 'asc'

@@ -25,6 +25,11 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   // Thai tax ID: 13 digits with a valid check digit, dashes/spaces allowed.
   defineRule('tax_id', (value: string) => !value || isValidThaiTaxId(value))
+
+  // An amount above zero. A `thousands` InputText hands the validator its
+  // formatted text ("250,000"), which min_value reads as NaN — strip the
+  // separators first.
+  defineRule('positive_amount', (value: unknown) => Number(String(value ?? '').replace(/,/g, '')) > 0)
 })
 
 configure({
@@ -35,6 +40,7 @@ configure({
         required: 'กรุณาระบุ {field}',
         phone: 'รูปแบบเบอร์โทรไม่ถูกต้อง',
         tax_id: 'เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลักที่ถูกต้อง',
+        positive_amount: '{field} ต้องมากกว่า 0',
       },
     },
     en: {
@@ -42,6 +48,7 @@ configure({
         ...en.messages,
         phone: 'รูปแบบเบอร์โทรไม่ถูกต้อง',
         tax_id: 'Tax ID must be a valid 13-digit number',
+        positive_amount: '{field} must be more than 0',
       },
     },
   }),

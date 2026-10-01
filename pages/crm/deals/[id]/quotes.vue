@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.quotesTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.quotesTitle') }}</CardTitle>
         <div class="flex flex-wrap gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.createQuote')"
@@ -27,29 +27,43 @@
         </div>
       </div>
 
-      <div v-if="dealQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.deals.detail.noQuotes') }}
+      <div v-if="loading && dealQuotes.length === 0" class="flex flex-col gap-3" data-cy="quotes-loading">
+        <USkeleton v-for="i in 2" :key="`quote-skeleton-${i}`" class="h-24 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealQuotes.length === 0"
+        :title="t('crm.deals.detail.noQuotes')"
+        icon="material-symbols:request-quote-outline"
+      />
       <div v-else class="flex flex-col gap-3">
         <div v-for="quote in dealQuotes" :key="quote.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <!-- Wraps below ~400px: select + validity text + action icons don't
                fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
-            <!-- Uploaded (PDF) quotes have no structured-items editor page of
-            their own (pages/crm/quotes/[id].vue is items-only), so this is
-            the only place their status can move past Draft. -->
-            <InputSelect
-              v-else
-              :key="`quote-status-${quote.id}-${statusSelectResetKey}`"
-              :model-value="quote.status"
-              :options="QUOTE_STATUS_OPTIONS"
-              small
-              class="w-36 shrink-0"
-              :name="`quote-status-${quote.id}`"
-              :data-cy="`quote-status-${quote.id}`"
-              @update:model-value="(value: string) => requestQuoteStatusChange(quote, value as QuoteStatus)"
-            />
+            <div class="flex min-w-0 flex-wrap items-center gap-2">
+              <span v-if="quote.number" class="text-sm font-medium">{{ quote.number }}</span>
+              <UBadge v-if="quote.revision_no" size="sm" color="neutral" variant="outline" :data-cy="`quote-revision-${quote.id}`">
+                {{ t('crm.quotes.revision.label', { n: quote.revision_no }) }}
+              </UBadge>
+              <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
+              <!-- Uploaded (PDF) quotes have no structured-items editor page of
+              their own (pages/crm/quotes/[id].vue is items-only), so this is
+              the only place their status can move past Draft — offering only
+              the moves the API allows from the saved status. -->
+              <InputSelect
+                v-else
+                :key="`quote-status-${quote.id}-${statusSelectResetKey}`"
+                :model-value="storedQuoteStatus(quote.status)"
+                :options="quoteStatusOptionsFor(quote.status)"
+                :aria-label="t('crm.deals.detail.quoteStatus')"
+                small
+                class="w-36 shrink-0"
+                :name="`quote-status-${quote.id}`"
+                :disable="quote.status === 'rejected'"
+                :data-cy="`quote-status-${quote.id}`"
+                @update:model-value="(value: string) => onQuoteStatusPick(quote, value as QuoteStatus)"
+              />
+            </div>
             <div class="flex min-w-0 flex-wrap items-center gap-3">
               <span class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.validUntil', { date: quote.validity_date ? dateFormat(quote.validity_date.toISOString()) : '-' }) }}</span>
               <template v-if="!quote.file_name">
@@ -104,12 +118,15 @@
                 size="xs"
                 :aria-label="t('crm.deals.detail.viewPdf')"
               />
+              <!-- Only a Draft can be deleted (the API answers 409 otherwise). -->
               <UButton
+                v-if="quote.status === 'draft'"
                 icon="material-symbols:delete-outline"
                 variant="ghost"
                 color="error"
                 size="xs"
                 :aria-label="t('crm.deals.detail.removeQuotation')"
+                :data-cy="`quote-delete-${quote.id}`"
                 @click="requestDelete(quote)"
               />
             </div>
@@ -123,7 +140,7 @@
                   <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-(--color-light-gray-2)">
                     <td class="max-w-60 truncate py-1">{{ item.description }}</td>
                     <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
-                    <td class="py-1 text-right whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">{{ currency(item.price * item.qty) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -148,6 +165,8 @@
 
     <CrmDealValueSyncModal :sync="dealValueSync" />
 
+    <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
+
     <CrmConfirmDeleteModal
       v-model:open="open"
       :body="target ? t('crm.deals.detail.removeQuotationConfirmBody', { name: target.file_name || target.number || `#${target.id}` }) : ''"
@@ -159,22 +178,25 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
-const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat, currency } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
+const notifyQuoteError = useQuoteErrorNotifier()
 
 const { dealId, deal } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
+// Skeletons (not the empty state) until the first fetch settles.
+const loading = ref(true)
+const refetchQuotes = () => quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 onMounted(() => {
-  quotesStore.fetchForDeal(dealId).catch(notifyApiError)
+  refetchQuotes().finally(() => { loading.value = false })
 })
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -217,14 +239,13 @@ const confirmRemoveQuote = async () => {
     await quotesStore.remove(target.value.id)
     success(t('crm.deals.detail.removeQuotationSuccess'))
   } catch (err) {
-    notifyApiError(err)
+    notifyQuoteError(err, refetchQuotes)
   } finally {
     closeDelete()
   }
 }
 
 const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
-const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
 
 // Accepting a quote offers to update the Deal's value to match it (pre-VAT —
 // see quoteRevenueAmount).
@@ -238,13 +259,35 @@ const {
   confirm: confirmQuoteStatusChange,
 } = useConfirmedStatusChange<QuoteStatus, Quote>({
   confirmStatuses: CONFIRMED_QUOTE_STATUSES,
-  save: async (quote, status) => {
-    // updateStatus rebuilds the full PUT payload from the loaded Quote.
-    const updated = await quotesStore.updateStatus(quote.id, status)
-    success(t('crm.deals.detail.updateQuoteStatusSuccess'))
-    if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
-  },
+  save: (quote, status) => saveQuoteStatus(quote, status),
+  notifyError: err => notifyQuoteError(err, refetchQuotes),
 })
+
+// updateStatus rebuilds the full PUT payload from the loaded Quote.
+const saveQuoteStatus = async (quote: Quote, status: QuoteStatus) => {
+  const updated = await quotesStore.updateStatus(quote.id, status)
+  success(t('crm.deals.detail.updateQuoteStatusSuccess'))
+  if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
+}
+
+// Accepting while another quote on this Deal is already Accepted asks
+// whether to reject those first — that question replaces the generic
+// confirm (it confirms the acceptance too); otherwise the usual flow.
+const supersede = useSupersedeAcceptedQuotes()
+const onQuoteStatusPick = async (quote: Quote, status: QuoteStatus) => {
+  const others = status === 'accepted' && quote.status !== 'accepted' ? supersede.otherAccepted(dealId, quote.id) : []
+  if (others.length === 0) return requestQuoteStatusChange(quote, status)
+  try {
+    if (!(await supersede.resolveOthers(others))) {
+      statusSelectResetKey.value++
+      return
+    }
+    await saveQuoteStatus(quote, status)
+  } catch (err) {
+    notifyQuoteError(err, refetchQuotes)
+    statusSelectResetKey.value++
+  }
+}
 
 const { duplicatingId, duplicateQuote: onDuplicateQuote } = useDuplicateQuote()
 

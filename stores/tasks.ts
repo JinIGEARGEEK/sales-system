@@ -7,6 +7,18 @@ const parseDates = (task: Task): Task => ({
   created_at: new Date(task.created_at),
 })
 
+// PATCH /tasks/:id replaces every editable field (TaskUpdatePayload), so an
+// update() built from a loaded Task resends them all with just `changes`
+// swapped in — same as fullCompanyUpdatePayload() in stores/companies.ts.
+export const fullTaskUpdatePayload = (task: Task, changes: Partial<TaskUpdatePayload> = {}): TaskUpdatePayload => ({
+  title: task.title,
+  description: task.description,
+  due_date: task.due_date,
+  priority: task.priority,
+  assigned_to: task.assigned_to,
+  ...changes,
+})
+
 // In-flight fetchForRelated requests, keyed by related_type:related_id.
 const relatedFetches = new Map<string, Promise<Task[]>>()
 
@@ -64,7 +76,7 @@ export const useTasksStore = defineStore('tasks', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }): Promise<Task> {
+    async update (id: number, changes: TaskUpdatePayload): Promise<Task> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Task>>(`/tasks/${id}`, changes)
       const updated = parseDates(response.data.data)

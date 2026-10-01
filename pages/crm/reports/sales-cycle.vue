@@ -7,38 +7,24 @@
     />
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.salesCycle.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
-            size="xs"
-            class="w-full sm:w-64"
-          />
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.salesCycle.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.salesCycle.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.salesCycle.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.salesCycle.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :label="t('crm.reports.salesCycle.filterSalesRep')"
+          name="salesRepFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+      </CrmReportFilterBar>
 
       <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <CrmStatCard
@@ -63,7 +49,7 @@
       <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.byStage') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.byStage') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"
@@ -78,7 +64,7 @@
 
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.byRep') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.byRep') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"
@@ -93,7 +79,7 @@
 
         <UCard :ui="GLASS_PANEL_UI">
           <template #header>
-            <h3 class="text-sm font-semibold">{{ t('crm.reports.salesCycle.bySource') }}</h3>
+            <CardTitle>{{ t('crm.reports.salesCycle.bySource') }}</CardTitle>
           </template>
           <TableData
             :columns="bucketColumns"
@@ -137,15 +123,23 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const dateRange = ref<{ start: string, end: string } | null>(null)
-const salesRepFilter = ref('all')
+// URL-synced (design-system §5.4), like Source Performance: a shared link,
+// a refresh or a back-button return reopens the same window. The range
+// travels as two YYYY-MM-DD strings straight from the date picker.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all')
-
-const clearFilters = () => {
-  dateRange.value = null
-  salesRepFilter.value = 'all'
-}
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: dateFrom, default: '' }, { ref: dateTo, default: '' }, { ref: salesRepFilter }],
+})
 
 const report = ref<SalesCycleReport | null>(null)
 const loading = ref(false)
@@ -174,8 +168,8 @@ const bucketColumns = computed<TableDataColumn[]>(() => [
 ])
 
 const reportParams = () => ({
-  date_from: dateRange.value?.start,
-  date_to: dateRange.value?.end,
+  date_from: dateFrom.value || undefined,
+  date_to: dateTo.value || undefined,
   assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
 })
 
@@ -193,5 +187,5 @@ const fetchReport = async () => {
 }
 
 guardMounted(fetchReport)
-watch([dateRange, salesRepFilter], fetchReport)
+watch([dateFrom, dateTo, salesRepFilter], fetchReport)
 </script>

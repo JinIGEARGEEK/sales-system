@@ -11,13 +11,16 @@
   >
     <template #body>
       <div class="flex flex-col gap-4">
+        <!-- sr-only, not `hidden`: a display:none input can't take focus, so
+        the picker was mouse-only. The label stays the visible target and
+        shows the focus ring for it. -->
         <label
-          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
+          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1) has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-(--color-focus)"
         >
           <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
           <span class="text-sm font-medium">{{ fileName || t('crm.components.importModal.chooseFile') }}</span>
           <span class="text-xs text-(--color-gray)">{{ t('crm.components.importModal.acceptedFormats') }}</span>
-          <input type="file" accept=".csv,.xls,.xlsx" class="hidden" :disabled="importing" @change="onFileChange" >
+          <input type="file" accept=".csv,.xls,.xlsx" class="sr-only" :disabled="importing" @change="onFileChange" >
         </label>
 
         <UAlert
@@ -27,6 +30,23 @@
           icon="material-symbols:error-outline"
           :title="error"
         />
+
+        <UAlert
+          v-if="importResult"
+          color="warning"
+          variant="subtle"
+          icon="material-symbols:warning-outline"
+          :title="t('crm.components.importModal.resultSummary', { companies: importResult.companies, contacts: importResult.contacts, count: importResult.rowErrors.length })"
+          data-cy="import-contacts-row-errors"
+        >
+          <template #description>
+            <ul class="mt-1 list-disc pl-5">
+              <li v-for="rowError in importResult.rowErrors" :key="`${rowError.row}-${rowError.message}`">
+                {{ t('crm.components.importModal.rowError', { row: rowError.row, name: rowError.name, message: rowError.message }) }}
+              </li>
+            </ul>
+          </template>
+        </UAlert>
 
         <div v-if="preview" class="flex flex-col gap-2 rounded-lg bg-(--color-light-gray-1) p-3 text-sm">
           <p>{{ t('crm.components.importModal.previewSummary', { rows: preview.totalRows }) }}</p>
@@ -40,7 +60,7 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <ButtonPrimary :label="t('crm.components.importModal.cancel')" cancel :disabled="importing" @click="onUpdateOpen(false)" />
+        <ButtonPrimary :label="importResult ? t('crm.components.importModal.close') : t('crm.components.importModal.cancel')" cancel :disabled="importing" @click="onUpdateOpen(false)" />
         <ButtonPrimary
           :label="t('crm.components.importModal.confirmImport')"
           :disabled="importing || !preview || preview.newCompanies + preview.newContacts === 0"
@@ -58,7 +78,7 @@
 import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -101,6 +121,8 @@ const RECORD_TYPE_TAG: Record<string, string> = {
 }
 
 interface ParsedRow {
+  // 1-based spreadsheet row, for the per-row error list after an import.
+  sheetRow: number
   recordType: string
   name: string
   address1: string
@@ -132,6 +154,15 @@ const parsedRows = ref<ParsedRow[]>([])
 const taxIdMatches = ref(new Map<string, Company | null>())
 let latestParseId = 0
 const preview = ref<{ totalRows: number, newCompanies: number, existingCompanies: number, newContacts: number, skipped: number } | null>(null)
+// Set once an import finished with rows the API refused (a duplicate
+// contact, a 422 field, a company that no longer exists): the modal stays
+// open on this list instead of closing, so nothing is dropped silently.
+interface ImportRowError {
+  row: number
+  name: string
+  message: string
+}
+const importResult = ref<{ companies: number, contacts: number, rowErrors: ImportRowError[] } | null>(null)
 
 const onUpdateOpen = (value: boolean) => {
   if (!value) {
@@ -140,6 +171,7 @@ const onUpdateOpen = (value: boolean) => {
     parsedRows.value = []
     taxIdMatches.value = new Map()
     preview.value = null
+    importResult.value = null
   }
   emit('update:open', value)
 }
@@ -202,7 +234,7 @@ const lookupTaxIdMatches = async (rows: ParsedRow[]) => {
 
 // The Company fields an existing record is missing that this row can fill.
 const backfillFor = (company: Company, row: ParsedRow) => {
-  const changes: Partial<Company> = {}
+  const changes: Partial<CompanyUpdatePayload> = {}
   const address = joinAddress(row)
   if (!company.tax_id && row.validTaxId) changes.tax_id = row.validTaxId
   if (!company.branch_code && row.validBranchCode) changes.branch_code = row.validBranchCode
@@ -214,6 +246,7 @@ const backfillFor = (company: Company, row: ParsedRow) => {
 const onFileChange = async (event: Event) => {
   error.value = ''
   preview.value = null
+  importResult.value = null
   parsedRows.value = []
 
   const input = event.target as HTMLInputElement
@@ -255,10 +288,11 @@ const onFileChange = async (event: Event) => {
 
     const dataRows = rows.slice(headerRowIndex + 1)
     const result: ParsedRow[] = []
-    for (const row of dataRows) {
+    for (const [offset, row] of dataRows.entries()) {
       const name = cell(row, headerIndex, 'name')
       if (!name) continue
       result.push({
+        sheetRow: headerRowIndex + 2 + offset,
         recordType: cell(row, headerIndex, 'recordType'),
         name,
         address1: cell(row, headerIndex, 'address1'),
@@ -341,11 +375,33 @@ const buildNotes = (row: ParsedRow) => {
 // and both create it, leaving duplicates.
 const importing = ref(false)
 
+// A 409/422 on one row is that row's problem (bad or duplicate data), so it
+// goes in the per-row list and the import carries on; anything else (network,
+// 5xx, 403) still stops the run below. Returns null for the latter.
+const rowFailureText = (err: unknown): string | null => {
+  const code = getApiErrorCode(err)
+  if (code !== 'VALIDATION_ERROR' && code !== 'CONFLICT') return null
+  const fields = getApiErrorFields(err)
+  if (fields?.company_id?.includes('not_found')) return t('crm.components.importModal.rowCompanyNotFound')
+  if (!fields || Object.keys(fields).length === 0) return getApiErrorMessage(err, t('global.genericError'))
+  return Object.entries(fields).map(([field, codes]) => {
+    const labelKey = `crm.components.importModal.fields.${field}`
+    const codeKey = `global.apiFieldError.${codes?.[0] ?? 'invalid'}`
+    return `${te(labelKey) ? t(labelKey) : field}: ${te(codeKey) ? t(codeKey) : t('global.apiFieldError.invalid')}`
+  }).join(' ')
+}
+
+const duplicateFieldsText = (fields: string[]) => fields.length > 0
+  ? fields.map(f => t(`crm.components.duplicateConflict.fields.${f}`)).join(t('crm.components.duplicateConflict.and'))
+  : t('crm.components.duplicateConflict.fields.email_or_phone')
+
 const onConfirm = async () => {
   if (importing.value) return
   importing.value = true
   let companiesCreated = 0
   let contactsCreated = 0
+  const rowErrors: ImportRowError[] = []
+  const fail = (row: ParsedRow, message: string) => rowErrors.push({ row: row.sheetRow, name: row.name, message })
 
   try {
     for (const row of parsedRows.value) {
@@ -353,24 +409,31 @@ const onConfirm = async () => {
 
       let company = findExistingCompany(row)
       if (!company) {
-        company = await companiesStore.add({
-          name: row.name,
-          industry: '',
-          size: '',
-          revenue_size: '',
-          website: '',
-          tags: tag ? [tag] : [],
-          notes: buildNotes(row),
-          status: 'active',
-          legal_name: null,
-          address: joinAddress(row) || null,
-          tax_id: row.validTaxId || null,
-          branch_code: row.validBranchCode || null,
-          postal_code: row.validPostalCode || null,
-          created_at: new Date(),
-          updated_at: new Date(),
-          last_activity_at: null,
-        })
+        try {
+          company = await companiesStore.add({
+            name: row.name,
+            industry: '',
+            size: '',
+            revenue_size: '',
+            website: '',
+            tags: tag ? [tag] : [],
+            notes: buildNotes(row),
+            status: 'active',
+            legal_name: null,
+            address: joinAddress(row) || null,
+            tax_id: row.validTaxId || null,
+            branch_code: row.validBranchCode || null,
+            postal_code: row.validPostalCode || null,
+            created_at: new Date(),
+            updated_at: new Date(),
+            last_activity_at: null,
+          })
+        } catch (err) {
+          const message = rowFailureText(err)
+          if (message === null) throw err
+          fail(row, t('crm.components.importModal.rowCompanyFailed', { message }))
+          continue
+        }
         companiesCreated += 1
       } else {
         const changes = backfillFor(company, row)
@@ -378,7 +441,7 @@ const onConfirm = async () => {
           try {
             // Full-record PUT (the API overwrites every field): resend the
             // whole Company with only the blanks filled in.
-            company = await companiesStore.update(company.id, { ...company, ...changes })
+            company = await companiesStore.update(company.id, fullCompanyUpdatePayload(company, changes))
           } catch {
             // Best-effort — e.g. a size option since deactivated fails the
             // PUT's validation; keep importing the rest.
@@ -394,18 +457,32 @@ const onConfirm = async () => {
           c => c.company_id === company!.id && c.name.trim().toLowerCase() === row.contactName.trim().toLowerCase(),
         )
         if (!alreadyLinked) {
-          await contactsStore.add({
-            company_id: company.id,
-            name: row.contactName,
-            email: row.email,
-            phone: row.mobile || row.officePhone,
-            role_title: '',
-            tags: [],
-            status: 'active',
-            is_primary: false,
-            created_at: new Date(),
-          })
-          contactsCreated += 1
+          try {
+            await contactsStore.add({
+              company_id: company.id,
+              name: row.contactName,
+              email: row.email,
+              phone: row.mobile || row.officePhone,
+              role_title: '',
+              tags: [],
+              status: 'active',
+              is_primary: false,
+              created_at: new Date(),
+            })
+            contactsCreated += 1
+          } catch (err) {
+            // POST /contacts is a 409 when another Contact (any Company) has
+            // the same email/phone. An import never forces a duplicate in —
+            // the row is listed so the user can check the existing one.
+            const duplicate = getDuplicateConflict(err)
+            if (duplicate) {
+              fail(row, t('crm.components.importModal.rowDuplicateContact', { contact: row.contactName, fields: duplicateFieldsText(duplicate.fields) }))
+              continue
+            }
+            const message = rowFailureText(err)
+            if (message === null) throw err
+            fail(row, t('crm.components.importModal.rowContactFailed', { contact: row.contactName, message }))
+          }
         }
       }
     }
@@ -421,6 +498,14 @@ const onConfirm = async () => {
   }
 
   emit('imported', { companies: companiesCreated, contacts: contactsCreated })
+  if (rowErrors.length > 0) {
+    // Stay open on the per-row list; the parsed file is spent, so Import is
+    // disabled until another file is picked.
+    importResult.value = { companies: companiesCreated, contacts: contactsCreated, rowErrors }
+    preview.value = null
+    parsedRows.value = []
+    return
+  }
   onUpdateOpen(false)
 }
 </script>

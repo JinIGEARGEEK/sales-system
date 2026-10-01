@@ -4,6 +4,7 @@ export default {
     createContract: 'สร้างสัญญา',
     createSuccess: 'สร้างสัญญาสำเร็จ',
     noContracts: 'ยังไม่มีสัญญาที่สร้างสำหรับ Deal นี้',
+    contractStatus: 'สถานะสัญญา',
     uploadSignedDocument: 'อัปโหลดเอกสารที่ลงนามแล้ว',
     uploadSuccess: 'อัปโหลดเอกสารที่ลงนามแล้วสำเร็จ',
     updateStatusSuccess: 'อัปเดตสถานะสัญญาสำเร็จ',
@@ -26,6 +27,13 @@ export default {
     downloadPdf: 'ดาวน์โหลดเป็น PDF',
     linkedQuote: 'เชื่อมโยงกับใบเสนอราคา #{id}',
     noLinkedQuote: 'ไม่มีใบเสนอราคาที่เชื่อมโยง',
+    signedLocked: 'เซ็นแล้ว — ล็อกไว้ แก้สถานะ ใบเสนอราคาที่เชื่อมโยง และวันสิ้นสุดไม่ได้ ไฟล์เพิ่มเติมให้แนบในไฟล์แนบ',
+    lockedConflict: 'สัญญานี้เซ็นแล้วและถูกล็อกไว้ จึงแก้ไขไม่ได้ ระบบได้โหลดรายการใหม่แล้ว',
+    signedViaUploadHint: 'สัญญาจะเป็น "เซ็นแล้ว" เมื่ออัปโหลดเอกสารที่เซ็นแล้ว',
+    endDateBeforeUploadTitle: 'ตั้งวันสิ้นสุดก่อนหรือไม่?',
+    endDateBeforeUploadBody: 'เมื่ออัปโหลดเอกสารที่เซ็นแล้ว สัญญาจะถูกล็อกและเพิ่มวันสิ้นสุดไม่ได้อีก หากไม่มีวันสิ้นสุด จะไม่มีการแจ้งเตือนก่อนสัญญาหมดอายุ',
+    setEndDate: 'ตั้งวันสิ้นสุด',
+    uploadWithoutEndDate: 'อัปโหลดโดยไม่ตั้ง',
   },
   components: {
     addContractModal: {

@@ -51,6 +51,10 @@ const props = defineProps<{
   // (those fix relatedType/relatedId via useTaskList and never pass this).
   // Never shown in edit mode regardless, since the relation can't change.
   showRelatedPicker?: boolean
+  // Prefills the Relates-to picker in add mode (still changeable) — Quick
+  // Add passes the record the user is looking at or acting on (useQuickAdd).
+  defaultRelatedType?: TaskRelatedType | null
+  defaultRelatedId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -65,19 +69,20 @@ const emptyForm = () => ({
   due_date: props.task?.due_date ? toDateInputValue(props.task.due_date) : '',
   priority: props.task?.priority ?? ('medium' as TaskPriority),
   assigned_to: props.task?.assigned_to ? String(props.task.assigned_to) : '',
-  related_type: '' as TaskRelatedType | '',
-  related_id: '',
+  related_type: (props.defaultRelatedType ?? '') as TaskRelatedType | '',
+  related_id: props.defaultRelatedId ? String(props.defaultRelatedId) : '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, showApiFieldErrors, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save, so `loading` spins Save until it lands, the
 // guard turns away a second click meanwhile, and a failed save (handler
-// resolves `false` or throws) keeps the dialog open.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
-const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update')
+// resolves `false`/submitFailure() or throws) keeps the dialog open — a
+// submitFailure's 422 fields also land on the matching inputs.
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'submit', showApiFieldErrors)
+const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update', showApiFieldErrors)
 const onSubmit = guard(async () => {
   const shared = {
     title: form.title,

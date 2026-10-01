@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-6">
-      <h2 class="text-xl font-black">{{ t('crm.dashboard.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.dashboard.heading') }}</h2>
       <p class="text-sm text-(--color-gray)">{{ t('crm.dashboard.subheading') }}</p>
     </div>
 
@@ -22,8 +22,8 @@
         :sales-rep-filter="salesRepFilter"
         :sales-rep-options="salesRepOptions"
         :company-tag-filter="companyTagFilter"
-        :filtered-count="filteredDeals.length"
-        :total-count="dealsStore.items.length"
+        :filtered-count="summary?.deals_count ?? 0"
+        :total-count="summary?.total_deals_count ?? 0"
         @update:date-range="dateRange = $event"
         @apply-preset="applyPeriodPreset"
         @update:business-unit-filter="businessUnitFilter = $event"
@@ -43,6 +43,7 @@
       alerts and the rest. -->
       <template v-if="canViewSalesPipelineWidgets">
         <DashboardPipelineOverview
+          :loading="summaryPending && !summary"
           :open-pipeline-value="openPipelineValue"
           :forecasted-revenue="forecastedRevenue"
           :win-rate="winRate"
@@ -51,6 +52,11 @@
           :avg-deal-size="avgDealSize"
           :avg-sales-cycle-days="avgSalesCycleDays"
           :pipeline-coverage-ratio="pipelineCoverageRatio"
+          :quarter-pipeline-value="summary?.quarter_pipeline_value ?? 0"
+          :overdue-pipeline-value="summary?.overdue_pipeline_value ?? 0"
+          :overdue-pipeline-count="summary?.overdue_pipeline_count ?? 0"
+          :undated-pipeline-value="summary?.undated_pipeline_value ?? 0"
+          :undated-pipeline-count="summary?.undated_pipeline_count ?? 0"
           :is-pipeline-healthy="isPipelineHealthy"
           :quarterly-sales-target="quarterlySalesTarget"
           :annual-goal-progress-percent="annualGoalProgressPercent"
@@ -142,7 +148,6 @@
 import { useI18n } from 'vue-i18n'
 import {
   BUSINESS_UNIT_FILTER_OPTIONS,
-  isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
@@ -212,12 +217,12 @@ onMounted(() => {
 // Admin-configurable stage/source lists (replaces the previously hardcoded
 // DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants).
 const channelFilterOptions = computed(() => [
-  { label: 'All Channels', value: 'all' },
+  { label: t('global.allChannels'), value: 'all' },
   ...leadSourcesStore.activeOptions,
 ])
 
 const { $api } = useNuxtApp()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
@@ -250,7 +255,21 @@ const recentAlerts = computed(() => notificationLogStore.items.filter(
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
-const { dateRange, activePreset, applyPeriodPreset, isDealInRange } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)
+// Every Dashboard filter is URL-synced (design-system §5.4/§5.7), so a shared
+// link, a refresh or a back-button return from a drill-down reopens the same
+// view. The range travels as two YYYY-MM-DD strings straight from the picker /
+// presetRange(); numbers travel as strings and are converted at use.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const syncedDateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
+
+const { dateRange, activePreset, applyPeriodPreset } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES, syncedDateRange)
 
 const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodAll'), value: 'all' },
@@ -261,15 +280,19 @@ const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodLast12Months'), value: 'last12' },
 ])
 
-const businessUnitFilter = ref('all')
-const channelFilter = ref('all')
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+const businessUnitFilter = useQuerySyncedRef('business_unit')
+const channelFilter = useQuerySyncedRef('channel')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 // Upsell Opportunities widget's own filter (added 2026-09-09) — independent
 // of the Deal-side filters above (date range/business unit/channel/rep/tag),
 // same reasoning as the widget itself being Company-centric, not Deal-scoped.
 // Options mirror the request: 30/60/90/120 days, 6 months, 1 year+.
-const upsellMinStaleDays = ref(60)
+const upsellStaleDaysParam = useQuerySyncedRef('upsell_stale_days', '60', 0, ['30', '60', '90', '120', '180', '365'])
+const upsellMinStaleDays = computed({
+  get: () => Number(upsellStaleDaysParam.value),
+  set: (value: number) => { upsellStaleDaysParam.value = String(value) },
+})
 
 // teamMembersStore.filterOptions already provides a correct "All Team
 // Members" catch-all — reuse it instead of reimplementing it here (the
@@ -285,20 +308,23 @@ const clearFilters = () => {
   companyTagFilter.value = ''
 }
 
-// Kept for the toolbar's "Showing X of Y deals" count and the "no deals match" alert
-// only — every metric widget below comes from GET /dashboard/summary instead.
-const filteredDeals = computed(() => {
-  return dealsStore.items.filter((deal) => {
-    if (!isDealInRange(deal)) return false
-    if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
-    if (channelFilter.value !== 'all' && deal.channel !== channelFilter.value) return false
-    return true
-  })
-})
-
+// The toolbar's "Showing X of Y deals" comes from the summary too
+// (deals_count/total_deals_count), so it applies exactly the filters every
+// widget does — Sales Rep and Company tag included — instead of re-filtering
+// the capped deals cache client-side.
 const summary = ref<DashboardSummary | null>(null)
 
+// Filters can change faster than the summary answers (preset clicks, the
+// debounced tag box): only the latest request may land, so a slow response
+// for an older filter set can't overwrite a newer one — the same sequence
+// guard as useScopedFetch.
+let summaryRequestId = 0
+// The KPI cards show skeletons while this is true and nothing has loaded
+// yet; a later refetch keeps the previous figures on screen instead.
+const summaryPending = ref(false)
 const fetchSummary = async () => {
+  const requestId = ++summaryRequestId
+  summaryPending.value = true
   try {
     const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
       params: {
@@ -311,9 +337,11 @@ const fetchSummary = async () => {
         upsell_min_stale_days: upsellMinStaleDays.value,
       },
     })
-    summary.value = response.data.data
+    if (requestId === summaryRequestId) summary.value = response.data.data
   } catch (err) {
-    notifyFetchError(err)
+    if (requestId === summaryRequestId) notifyFetchError(err)
+  } finally {
+    if (requestId === summaryRequestId) summaryPending.value = false
   }
 }
 
@@ -425,11 +453,9 @@ const fetchUpcomingTasks = async () => {
 watch([canViewSalesPipelineWidgets, canViewProspectSummary], fetchUpcomingTasks, { immediate: true })
 
 const upcomingTasks = computed(() => {
-  const now = new Date()
   return upcomingTaskRows.value.map(task => ({
     ...task,
     ...resolveRelated(task.related_type, task.related_id),
-    isOverdue: isTaskOverdue(task, now),
     assignedToName: teamMembersStore.nameById(task.assigned_to),
   }))
 })
@@ -597,21 +623,21 @@ const outcomeDonutSegments = computed(() => [
   {
     label: t('crm.dashboard.outcomeWon'),
     value: wonValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(wonValue.value)}`,
+    valueLabel: currencyCompact(wonValue.value),
     colorVar: 'var(--color-success-toast)',
     icon: 'material-symbols:check-circle-outline',
   },
   {
     label: t('crm.dashboard.outcomeLost'),
     value: lostValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(lostValue.value)}`,
+    valueLabel: currencyCompact(lostValue.value),
     colorVar: 'var(--color-danger-toast)',
     icon: 'material-symbols:cancel-outline',
   },
   {
     label: t('crm.dashboard.outcomeOpen'),
     value: openPipelineValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(openPipelineValue.value)}`,
+    valueLabel: currencyCompact(openPipelineValue.value),
     colorVar: 'var(--color-gray)',
     icon: 'material-symbols:radio-button-unchecked',
   },
@@ -626,10 +652,10 @@ const outcomeDonutSegmentsPreview = computed(() => outcomeDonutSegments.value.ma
   return {
     ...seg,
     value: sampleValue,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(sampleValue)}`,
+    valueLabel: currencyCompact(sampleValue),
   }
 }))
-const outcomeTotalPreviewLabel = computed(() => `${t('global.currencySymbol')}${priceFormatCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0))}`)
+const outcomeTotalPreviewLabel = computed(() => currencyCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0)))
 
 const revenueTrend = computed(() => {
   const points = summary.value?.revenue_trend ?? []

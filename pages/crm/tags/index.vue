@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-black">{{ t('crm.tags.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.tags.index.heading') }}</h2>
       <ButtonPrimary
         :label="t('crm.tags.index.addTag')"
         icon="material-symbols:add"
@@ -47,12 +47,13 @@
       :empty-action-label="t('crm.tags.index.addTag')"
       empty-action-to="/crm/tags/create"
       :filtered="hasActiveFilters"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
       @delete="requestDelete"
     />
 
@@ -75,6 +76,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.tags.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const tagsStore = useTagsStore()
@@ -93,14 +95,8 @@ const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
 // Matches the backend's ApplySort allowlist for GET /tags (name/created_at only).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -121,7 +117,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Tag>(params => tagsStore.fetchList(params), buildParams)
+} = useServerListPage<Tag>(params => tagsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 onMounted(fetch)
 
@@ -131,9 +127,7 @@ watch([categoryFilter, statusFilter], () => refetchFromStart())
 const displayTags = computed(() => rows.value.map(tag => ({
   ...tag,
   categoryBadge: toBadge(tag.category),
-  statusBadge: tag.status === 'active'
-    ? toBadge(t('crm.tags.index.statusActive'), 'success')
-    : toBadge(t('crm.tags.index.statusInactive')),
+  statusBadge: activeBadge(tag.status === 'active', t('crm.tags.index.statusActive'), t('crm.tags.index.statusInactive')),
   createdDate: dateFormat(tag.created_at.toISOString()),
 })))
 
@@ -149,8 +143,7 @@ const columns = computed<TableDataColumn[]>(() => [
     field: 'action',
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('crm.tags.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.tags.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
+      { label: t('crm.tags.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: true },
       { label: t('crm.tags.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -159,10 +152,6 @@ const columns = computed<TableDataColumn[]>(() => [
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Tag>()
 
 const onViewDetail = (row: Tag) => {
-  navigateTo(`/crm/tags/${row.id}`)
-}
-
-const onEdit = (row: Tag) => {
   navigateTo(`/crm/tags/${row.id}`)
 }
 

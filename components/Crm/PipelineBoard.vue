@@ -31,7 +31,17 @@
         :style="{ backgroundColor: getColumnTint(String(column.value), entity) }"
         @click.self="onEmptyAreaClick(column.value)"
       >
-        <template v-for="(item, idx) in grouped[column.value] || []" :key="`${item._type}-${item.id}`">
+        <!-- First load: placeholder cards instead of an empty lane that
+             would read as "nothing here". -->
+        <template v-if="loading">
+          <USkeleton
+            v-for="i in SKELETON_CARDS"
+            :key="`skeleton-${column.value}-${i}`"
+            class="h-[104px] w-full rounded-lg"
+            :data-cy="`pipeline-skeleton-${column.value}`"
+          />
+        </template>
+        <template v-for="(item, idx) in loading ? [] : grouped[column.value] || []" :key="`${item._type}-${item.id}`">
           <!-- Trello-style "insert here" gap — invisible until hovered, sits
                above every card (including the first) so a card can be added
                ahead of any existing one, not just appended at the bottom. -->
@@ -57,19 +67,37 @@
             class="-my-1 h-1 shrink-0 rounded-full bg-(--color-primary)"
           />
 
-          <div
-            draggable="true"
-            role="button"
-            tabindex="0"
-            :data-cy="`pipeline-card-${item._type}-${item.id}`"
-            class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
-            @dragstart="onDragStart(item)"
-            @dragend="onDragEnd"
-            @dragover.prevent.stop="onCardDragOver($event, String(column.value), idx)"
-            @click="emit('select', item)"
-            @keydown.enter.space.prevent="emit('select', item)"
-          >
-            <slot name="card" :item="item" />
+          <div class="group relative">
+            <div
+              draggable="true"
+              role="button"
+              tabindex="0"
+              :data-cy="`pipeline-card-${item._type}-${item.id}`"
+              class="flex min-h-[104px] cursor-grab flex-col justify-between rounded-lg border border-(--color-card-border) bg-white p-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+              @dragstart="onDragStart(item)"
+              @dragend="onDragEnd"
+              @dragover.prevent.stop="onCardDragOver($event, String(column.value), idx)"
+              @click="emit('select', item)"
+              @keydown.enter.space.prevent="emit('select', item)"
+            >
+              <slot name="card" :item="item" />
+            </div>
+            <!-- Non-drag move (keyboard / no mouse): a sibling of the card, not
+                 inside it, so it isn't a button nested in a button. Hidden
+                 until the card is hovered or anything in it has focus. Emits
+                 the same `move` as a drop, so the caller's lost-reason /
+                 Won hand-off applies. -->
+            <UDropdownMenu :items="moveMenuItems(item)" :content="{ align: 'end' }">
+              <UButton
+                icon="material-symbols:more-horiz"
+                variant="ghost"
+                color="neutral"
+                size="xs"
+                class="absolute right-1 bottom-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                :aria-label="t('crm.components.pipelineBoard.moveMenu')"
+                :data-cy="`pipeline-move-${item._type}-${item.id}`"
+              />
+            </UDropdownMenu>
           </div>
         </template>
         <div
@@ -81,7 +109,7 @@
              alone, in an empty lane), same as Trello's persistent "+ Add a
              card" rather than only appearing once the lane is empty. -->
         <button
-          v-if="allowQuickAdd"
+          v-if="allowQuickAdd && !loading"
           type="button"
           :data-cy="`pipeline-add-${column.value}`"
           class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
@@ -90,7 +118,7 @@
           <UIcon name="material-symbols:add" class="size-4" />
           {{ t('crm.components.pipelineBoard.addInColumn') }}
         </button>
-        <div v-else-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
+        <div v-else-if="!loading && !grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 
@@ -137,8 +165,11 @@
         class="flex flex-col gap-2 p-3 backdrop-blur-xl"
         :style="{ backgroundColor: getColumnTint(String(column.value), entity) }"
       >
+        <template v-if="loading">
+          <USkeleton v-for="i in SKELETON_CARDS" :key="`mobile-skeleton-${column.value}-${i}`" class="h-24 w-full rounded-lg" />
+        </template>
         <div
-          v-for="item in grouped[column.value] || []"
+          v-for="item in loading ? [] : grouped[column.value] || []"
           :key="`${item._type}-${item.id}`"
           class="flex flex-col gap-2 rounded-lg border border-(--color-card-border) bg-white p-3"
         >
@@ -158,6 +189,7 @@
             label-key="label"
             size="xs"
             class="self-end"
+            :aria-label="t('crm.components.pipelineBoard.stageSelect')"
             @update:model-value="(value) => onMobileMove(item, value)"
           />
         </div>
@@ -167,7 +199,7 @@
              gets the always-visible bottom "+ Add" row, same as the desktop
              lane's static one. -->
         <button
-          v-if="allowQuickAdd"
+          v-if="allowQuickAdd && !loading"
           type="button"
           class="flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg py-2 text-xs text-(--color-gray) transition-colors hover:text-(--color-black)"
           @click="emitAddInColumn(column.value)"
@@ -175,7 +207,7 @@
           <UIcon name="material-symbols:add" class="size-4" />
           {{ t('crm.components.pipelineBoard.addInColumn') }}
         </button>
-        <div v-else-if="!grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
+        <div v-else-if="!loading && !grouped[column.value]?.length" class="py-4 text-center text-xs text-(--color-gray)">
           {{ t('crm.components.pipelineBoard.noItems') }}
         </div>
 
@@ -219,7 +251,12 @@ const props = defineProps<{
   // entity's own config, so a same-named stage of another entity can't leak
   // its color in (see usePipelineStageColors).
   entity?: StageEntity
+  // The caller's first fetch is still in flight: every lane shows skeleton
+  // cards (and no "+ Add"/"No items" row) until it settles.
+  loading?: boolean
 }>()
+
+const SKELETON_CARDS = 3
 
 const { getColumnHeaderTint, getColumnTint, getColumnBorderTint, getStageDescription } = usePipelineStageColors()
 
@@ -351,6 +388,15 @@ const toggleExpanded = (value: string) => {
     collapsedColumns.value.add(value)
   }
 }
+
+// Desktop card's "Move to…" menu: every other column. No position, like the
+// mobile select — the backend appends to the target lane's end.
+const moveMenuItems = (item: PipelineCard) => props.columns
+  .filter(column => String(column.value) !== item._lane)
+  .map(column => ({
+    label: t('crm.components.pipelineBoard.moveTo', { stage: column.label }),
+    onSelect: () => emit('move', item, String(column.value)),
+  }))
 
 const onMobileMove = (item: PipelineCard, value: string | number) => {
   if (String(value) !== item._lane) emit('move', item, String(value))

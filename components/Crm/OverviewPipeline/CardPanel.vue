@@ -16,10 +16,10 @@
     <div class="flex min-h-16 items-center gap-1.5 p-4 sm:px-6">
       <div v-if="selection" class="flex min-w-0 flex-1 items-start gap-3">
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
+          <p class="text-xs font-medium tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
             {{ t(`crm.overviewPipeline.panel.kind.${selection.zone}`) }} · #{{ selection.card.id }}
           </p>
-          <h3 class="mt-0.5 text-lg font-semibold text-balance">{{ selection.card.name || '—' }}</h3>
+          <h3 class="mt-0.5 text-lg font-medium text-balance">{{ selection.card.name || '—' }}</h3>
           <div class="mt-1.5 flex flex-wrap items-center gap-1 text-xs">
             <template v-for="(step, index) in lineage" :key="step">
               <UIcon v-if="index > 0" name="material-symbols:chevron-right" class="size-4 text-(--color-gray)" />
@@ -62,7 +62,7 @@
           <template v-if="selection.zone === 'deal'">
             <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.value') }}</dt>
             <dd class="tabular-nums">
-              <span class="font-semibold">{{ currency(selection.card.value) }}</span>
+              <span class="font-medium">{{ currency(selection.card.value) }}</span>
               <span v-if="selection.card.probability !== null" class="text-(--color-dark-gray)"> · {{ t('crm.overviewPipeline.panel.probability', { value: selection.card.probability }) }}</span>
             </dd>
           </template>
@@ -94,7 +94,7 @@
         </p>
 
         <div>
-          <p class="mb-2 text-xs font-semibold tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.panel.recentActivity') }}</p>
+          <p class="mb-2 text-xs font-medium tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.panel.recentActivity') }}</p>
           <ul v-if="recentActivities.length" class="flex flex-col gap-2.5">
             <li v-for="activity in recentActivities" :key="activity.id" class="grid grid-cols-[1.75rem_1fr] gap-2 text-sm">
               <span class="grid size-7 place-items-center rounded-full bg-(--color-light-gray-1) text-(--color-dark-gray)">
@@ -233,9 +233,15 @@ watch(() => [props.open, props.selection?.zone, props.selection?.card.id] as con
 }, { immediate: true })
 
 const moving = ref(false)
-// Returns the moved Deal (for the Won hand-off below); Lead/Prospect moves return nothing.
-const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null> => {
-  if (zone === 'deal') return dealsStore.updateStage(id, stage as DealStage, undefined, lostReason)
+// Returns the moved Deal (for the Won hand-off below); Lead/Prospect moves
+// return null. `false`: a protected Won Deal didn't move (useWonDealGuard
+// explained why, or the manager dismissed the reason prompt).
+const wonDealGuard = useWonDealGuard()
+const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null | false> => {
+  if (zone === 'deal') {
+    const moved = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(id, stage as DealStage, undefined, lostReason, reason))
+    return moved ?? false
+  }
   if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)
   else await prospectsStore.updateStatus(id, stage)
   return null
@@ -278,6 +284,7 @@ const performMove = async (stage: string, reason?: LostReason) => {
   moving.value = true
   try {
     const moved = await moveTo(zone, card.id, stage, reason)
+    if (moved === false) return
     emit('changed')
     const wonHandoff = moved?.status === 'won' && current.lane.kind !== 'won'
     if (wonHandoff) onDealWon(moved)

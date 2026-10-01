@@ -32,7 +32,7 @@ export const useLeadSourcesStore = defineStore('leadSources', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<LeadSourceOption, 'id' | 'created_at'>>): Promise<LeadSourceOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<LeadSourceOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<LeadSourceOption>>(`/admin/lead-sources/${id}`, changes)
       const updated = parseDates(response.data.data)

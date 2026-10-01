@@ -48,9 +48,11 @@ export const useLeadsStore = defineStore('leads', {
     // Loads a single Lead by id directly (GET /leads/:id) — for the Lead
     // detail page and anything else that needs one specific Lead regardless
     // of whether it made fetchAll's capped 200-row cache.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Lead> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`)
+      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(l => l.id !== id), fetched]
       return fetched
@@ -59,9 +61,11 @@ export const useLeadsStore = defineStore('leads', {
     // computeAndClassify runs on every Create/Update) — excluded from the
     // create payload type since the client never supplies them, only reads
     // them back off the response.
-    async add (lead: Omit<Lead, 'id' | 'score' | 'classification' | 'position'>): Promise<Lead> {
+    // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
+    // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
+    async add (lead: Omit<Lead, 'id' | 'score' | 'classification' | 'position'>, options: CreateOptions = {}): Promise<Lead> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Lead>>('/leads', lead)
+      const response = await $api.post<ApiResponse<Lead>>('/leads', lead, createParams(options))
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created

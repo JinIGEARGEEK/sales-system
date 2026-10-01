@@ -42,7 +42,7 @@ export const useProspectStagesStore = defineStore('prospectStages', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<ProspectStage, 'id' | 'created_at'>>): Promise<ProspectStage> {
+    async update (id: number, changes: ProspectStageUpdatePayload): Promise<ProspectStage> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<ProspectStage>>(`/admin/prospect-stages/${id}`, changes)
       const updated = parseDates(response.data.data)

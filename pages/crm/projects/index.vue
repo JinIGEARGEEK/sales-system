@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black">{{ t('crm.projects.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.projects.index.heading') }}</h2>
     </div>
 
     <UTabs v-model="activeTab" :items="tabItems" class="mb-4" />
@@ -44,6 +44,8 @@
         empty-icon="material-symbols:folder-open-outline"
         :empty-action-label="canManageProjects ? t('crm.projects.index.addProject') : undefined"
         :filtered="hasActiveProjectFilters"
+        :sort-field="projectSortField"
+        :sort-dir="projectSortDir"
         @empty-action="openAddProject"
         @clear-filters="clearProjectFilters"
         @change-page="onChangeProjectPage"
@@ -128,7 +130,6 @@
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -136,7 +137,8 @@ const { t } = useI18n()
 useHead({ title: t('crm.projects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { activeBadge } = useActiveStatusBadge()
+const { projectStatusBadgeColor, projectStatusLabel, projectStatusOptions } = useProjectStatusColor()
 const { success, error } = useNotify()
 const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
@@ -154,6 +156,9 @@ const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 // Matches the backend's /projects/export and /products/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
+// Production is 403 on /companies* (spec §1.7); the list already carries
+// company_name, so only the "View company" jump goes.
+const canViewCompany = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const onExportProjects = () => downloadCsvBlob('/projects/export', 'projects.csv')
 const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv')
 
@@ -213,7 +218,7 @@ const { hasActive: hasActiveProjectFilters, clear: clearProjectFilters } = useLi
 
 const statusFilterOptions = computed(() => [
   { label: t('crm.projects.index.allStatuses'), value: 'all' },
-  ...PROJECT_STATUS_OPTIONS,
+  ...projectStatusOptions.value,
 ])
 
 const filteredProjects = computed(() => {
@@ -248,13 +253,8 @@ const PROJECT_SORT_VALUE: Record<string, (p: Project) => string | number> = {
   targetEndDateDisplay: p => p.target_end_date ? p.target_end_date.getTime() : 0,
 }
 
-const projectSortField = ref('')
-const projectSortDir = ref<'asc' | 'desc'>('asc')
-
-const onSortProjects = (field: string, direction: 'asc' | 'desc') => {
-  projectSortField.value = field
-  projectSortDir.value = direction
-}
+// Client-side sort, still kept in the URL (`?sort=`) like the server lists.
+const { sortField: projectSortField, sortDir: projectSortDir, onSort: onSortProjects } = useQuerySyncedSort()
 
 const projectRows = computed(() => {
   const rows = filteredProjects.value.map(project => ({
@@ -263,7 +263,7 @@ const projectRows = computed(() => {
     // the placeholder keeps the cell identifiable. (Absent entirely only
     // when the endpoint didn't join it — left alone then.)
     company_name: project.company_name === undefined ? undefined : companyName(project.company_name),
-    statusBadge: toBadge(project.status, projectStatusBadgeColor(project.status)),
+    statusBadge: toBadge(projectStatusLabel(project.status), projectStatusBadgeColor(project.status)),
     targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
     expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
     expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',
@@ -298,7 +298,8 @@ const projectColumns = computed<TableDataColumn[]>(() => [
     field: 'action',
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false },
+      // Production gets 403 on every /companies* route, so no company link.
+      ...(canViewCompany.value ? [{ label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false }] : []),
       { label: t('crm.projects.index.edit'), emitName: 'edit', isBorderBottom: false },
     ],
   },
@@ -313,7 +314,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(null, 'crm.projects.index.addProjectSuccess', 'crm.projects.index.updateProjectSuccess')
 
 const {
@@ -354,10 +355,7 @@ const filteredProducts = computed(() => {
 
 const productRows = computed(() => filteredProducts.value.map(product => ({
   ...product,
-  statusBadge: toBadge(
-    product.is_active ? t('admin.products.statusActive') : t('admin.products.statusInactive'),
-    product.is_active ? 'success' : 'neutral',
-  ),
+  statusBadge: activeBadge(product.is_active, t('admin.products.statusActive'), t('admin.products.statusInactive')),
 })))
 
 const productColumns = computed<TableDataColumn[]>(() => [

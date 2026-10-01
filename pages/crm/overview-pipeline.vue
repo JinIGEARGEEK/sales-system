@@ -5,7 +5,7 @@
         <!-- Same header layout as the Kanban pages (Deals/Leads/Prospects):
         heading left, actions right. -->
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-xl font-black">{{ t('crm.overviewPipeline.heading') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('crm.overviewPipeline.heading') }}</h2>
           <div class="flex flex-wrap items-center gap-2">
             <span v-if="fetchedAtLabel" class="text-xs text-(--color-gray)">{{ fetchedAtLabel }}</span>
             <UTooltip :text="t('crm.overviewPipeline.refresh')">
@@ -52,16 +52,16 @@
                 <InputText v-model="search" :placeholder="t('crm.overviewPipeline.filters.search')" name="overviewSearch" />
               </div>
               <div class="w-full lg:w-44">
-                <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" name="overviewAssignee" />
+                <InputSelect v-model="assigneeFilter" :options="teamMembersStore.filterOptions" :aria-label="t('crm.overviewPipeline.filters.assignee')" name="overviewAssignee" />
               </div>
               <div class="w-full lg:w-44">
-                <InputSelect v-model="sourceFilter" :options="sourceOptions" name="overviewSource" />
+                <InputSelect v-model="sourceFilter" :options="sourceOptions" :aria-label="t('crm.overviewPipeline.filters.source')" name="overviewSource" />
               </div>
               <div class="w-full lg:w-44">
-                <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" name="overviewBusinessUnit" />
+                <InputSelect v-model="businessUnitFilter" :options="BUSINESS_UNIT_FILTER_OPTIONS" :aria-label="t('crm.overviewPipeline.filters.businessUnit')" name="overviewBusinessUnit" />
               </div>
               <div class="w-full lg:w-40">
-                <InputSelect v-model="tagFilter" :options="tagOptions" name="overviewTag" />
+                <InputSelect v-model="tagFilter" :options="tagOptions" :aria-label="t('crm.overviewPipeline.filters.tag')" name="overviewTag" />
               </div>
               <UButton v-if="hasFilters" color="neutral" variant="link" icon="material-symbols:filter-alt-off-outline" :label="t('crm.overviewPipeline.filters.clear')" @click="clearFilters" />
             </div>

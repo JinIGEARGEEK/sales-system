@@ -61,9 +61,9 @@ const emptyForm = () => ({
   is_disqualified_stage: props.stage?.is_disqualified_stage ?? false,
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // "Converted" is a reserved, system-set stage (see ProspectStage's own doc)
 // — the backend rejects it too, but catching it here avoids a round trip

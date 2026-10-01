@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-4">
-    <h3 v-if="setupHeading" class="text-base font-semibold">{{ setupHeading }}</h3>
+    <CardTitle v-if="setupHeading">{{ setupHeading }}</CardTitle>
     <Form ref="formRef">
       <div class="grid grid-cols-1 gap-3">
         <CrmStatusPill v-model="form.mode" :options="modeOptions" data-cy="campaign-mode-toggle" />
@@ -86,7 +86,7 @@
     </Form>
 
     <div>
-      <h3 v-if="reviewHeading" class="mb-2 text-base font-semibold">{{ reviewHeading }}</h3>
+      <CardTitle v-if="reviewHeading" class="mb-2">{{ reviewHeading }}</CardTitle>
       <p class="text-sm text-(--color-black)">
         {{ t('crm.components.createCampaignModal.reviewSummary', { count: targets.length, date: dueDateDisplay, name: assignedToName }) }}
       </p>

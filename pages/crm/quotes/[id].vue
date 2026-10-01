@@ -2,10 +2,27 @@
   <div class="p-5">
     <div v-if="quote && deal">
       <PageHeader :title="quote.number || `#${quote.id}`" @back="navigateTo(`/crm/deals/${deal.id}/quotes`)">
-        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
+        <UBadge v-if="quote.revision_no" color="neutral" variant="outline" data-cy="quote-revision">{{ t('crm.quotes.revision.label', { n: quote.revision_no }) }}</UBadge>
+        <NuxtLink
+          v-if="quote.revision_of_id"
+          :to="`/crm/quotes/${quote.revision_of_id}`"
+          class="text-xs text-(--color-primary) hover:underline"
+          data-cy="quote-revision-of"
+        >
+          {{ t('crm.quotes.detail.revisionOf', { number: revisionOfLabel }) }}
+        </NuxtLink>
         <template #actions>
           <div class="flex flex-wrap gap-2">
-            <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
+            <ButtonPrimary
+              :label="t('crm.quotes.detail.save')"
+              outline
+              icon="material-symbols:edit-outline"
+              :loading="loading"
+              :disabled="locked && form.status === storedQuoteStatus(quote.status)"
+              data-cy="quote-save"
+              @click="onSaveClick"
+            />
             <ButtonPrimary
               :label="t('crm.quotes.detail.duplicate')"
               outline
@@ -39,6 +56,18 @@
       of the same flow, not a separate page the rep ended up on by mistake.
       Never shown again once the query param is stripped below, including on
       a later visit to edit the same (by-then-finished) Quote. -->
+      <UAlert
+        v-if="locked"
+        class="mb-4"
+        color="info"
+        variant="subtle"
+        icon="material-symbols:lock-outline"
+        :title="quote.status === 'rejected' ? t('crm.quotes.detail.rejectedLockedTitle') : t('crm.quotes.detail.acceptedLockedTitle')"
+        :description="quote.status === 'rejected' ? t('crm.quotes.detail.rejectedLockedDescription') : t('crm.quotes.detail.acceptedLockedDescription')"
+        :actions="[{ label: t('crm.quotes.detail.duplicateToRevise'), icon: 'material-symbols:content-copy-outline', color: 'primary', variant: 'solid', loading: duplicatingId !== null, onClick: () => duplicateQuote(quote!.id) }]"
+        data-cy="quote-accepted-locked"
+      />
+
       <UAlert
         v-if="justCreated"
         class="mb-4"
@@ -110,32 +139,55 @@
                 </div>
               </div>
 
+              <!-- Status offers only the moves the API allows from the saved
+              one (allowedQuoteStatuses) — and is the one thing an
+              Accepted/Rejected quote still lets you change. -->
               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <InputSelect
+                    v-model="form.status"
+                    :options="quoteStatusOptionsFor(quote.status)"
+                    :label="t('crm.quotes.editor.status')"
+                    name="status"
+                    rules="required"
+                    :disable="quote.status === 'rejected'"
+                    data-cy="quote-status"
+                  />
+                  <p v-if="quote.status === 'accepted'" class="mt-1 text-xs text-(--color-gray)">{{ t('crm.quotes.detail.acceptedStatusHint') }}</p>
+                </div>
+              </div>
+
+              <!-- A disabled <fieldset> disables every control inside it
+              (inputs, selects, checkboxes, add/remove buttons): an
+              Accepted/Rejected quote is fully read-only (`locked`) — the API
+              refuses any change but its status with a 409. -->
+              <fieldset class="mt-3 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2" :disabled="locked" data-cy="quote-details-fieldset">
                 <InputText v-model="form.reference_number" :label="t('crm.quotes.editor.referenceNumber')" :placeholder="t('crm.quotes.editor.referenceNumberPlaceholder')" name="reference_number" />
-                <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
                 <InputDatePicker v-model="form.issue_date" :label="t('crm.quotes.editor.issueDate')" name="issue_date" />
                 <InputText v-model.number="form.credit_days" type="number" :label="t('crm.quotes.editor.creditDays')" name="credit_days" rules="min_value:0" />
                 <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
-                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" />
-              </div>
+                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" :disable="locked" />
+              </fieldset>
 
-              <InputTextarea
-                v-model="form.scope_of_work"
-                :label="t('crm.quotes.editor.scopeOfWork')"
-                :placeholder="t('crm.quotes.editor.scopeOfWorkPlaceholder')"
-                name="scope_of_work"
-                rows="4"
-                class="mt-3"
-              />
+              <fieldset class="min-w-0" :disabled="locked">
+                <InputTextarea
+                  v-model="form.scope_of_work"
+                  :label="t('crm.quotes.editor.scopeOfWork')"
+                  :placeholder="t('crm.quotes.editor.scopeOfWorkPlaceholder')"
+                  name="scope_of_work"
+                  rows="4"
+                  class="mt-3"
+                />
+              </fieldset>
 
-              <div class="mt-4">
+              <fieldset class="mt-4 min-w-0" :disabled="locked" data-cy="quote-pricing-fieldset">
                 <CrmQuoteItemsEditor v-model="items" />
-              </div>
+              </fieldset>
 
               <!-- Discount/VAT/WHT toggles + the live totals breakdown —
               mirrors utils.ComputeQuoteTotals on the backend exactly (see
               useQuoteTotals) so this and the exported PDF never disagree. -->
-              <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <fieldset class="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2" :disabled="locked">
                 <InputText v-model.number="form.discount_total" type="number" :label="t('crm.quotes.editor.discountTotal')" name="discount_total" rules="min_value:0" />
                 <div class="flex items-end gap-4">
                   <UCheckbox v-model="form.vat_enabled" :label="t('crm.quotes.editor.vatEnabled')" />
@@ -150,38 +202,39 @@
                   name="wht_rate"
                   rules="min_value:0"
                 />
-              </div>
+              </fieldset>
 
               <div class="mt-4 flex flex-col gap-1 border-t border-(--color-light-gray-2) pt-3 text-sm">
-                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.subtotal) }}</span></div>
-                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.discountTotal) }}</span></div>
-                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.vat) }}</span></div>
-                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.wht) }}</span></div>
-                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</span></div>
+                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ currency(totals.subtotal) }}</span></div>
+                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ currency(totals.discountTotal) }}</span></div>
+                <div v-if="vatIncluded" class="flex justify-between" data-cy="quote-pre-vat"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.amountBeforeVat') }}</span><span>{{ currency(totals.taxableAmount) }}</span></div>
+                <div v-if="form.vat_enabled" class="flex justify-between" data-cy="quote-vat"><span class="text-(--color-gray)">{{ vatIncluded ? t('crm.quotes.editor.vatIncluded') : t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
+                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ currency(totals.wht) }}</span></div>
+                <div class="flex justify-between text-base font-medium"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
               </div>
 
-              <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <fieldset class="mt-4 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2" :disabled="locked">
                 <InputTextarea v-model="form.notes" :label="t('crm.quotes.editor.notes')" :placeholder="t('crm.quotes.editor.notesPlaceholder')" name="notes" rows="3" />
                 <InputTextarea v-model="form.internal_notes" :label="t('crm.quotes.editor.internalNotes')" :placeholder="t('crm.quotes.editor.internalNotesPlaceholder')" name="internal_notes" rows="3" />
-              </div>
+              </fieldset>
             </Form>
           </ContainerTemplate>
         </div>
 
         <div class="lg:col-span-2">
-          <UCard>
-            <template #header>
-              <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.grandTotal') }}</h3>
-              </div>
-            </template>
-            <p class="text-2xl font-black text-(--color-primary)">{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</p>
-          </UCard>
+          <CrmStatCard
+            :label="t('crm.quotes.editor.grandTotal')"
+            icon="material-symbols:payments-outline"
+            icon-class="text-(--color-primary)"
+            value-class="text-(--color-primary)"
+          >
+            {{ currency(totals.grandTotal) }}
+          </CrmStatCard>
 
           <UCard class="mt-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.attachments') }}</h3>
+                <CardTitle>{{ t('crm.quotes.editor.attachments') }}</CardTitle>
                 <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small data-cy="quote-add-attachment" @click="addAttachmentOpen = true" />
               </div>
             </template>
@@ -204,6 +257,8 @@
       />
 
       <CrmDealValueSyncModal :sync="dealValueSync" />
+
+      <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
     </div>
 
     <DetailSkeleton v-else-if="recordPending" />
@@ -213,10 +268,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 useHead({ title: t('crm.quotes.detail.pageTitle') })
 
@@ -234,8 +288,9 @@ if (justCreated.value) {
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
-const { priceFormat } = useFormatter()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { currency } = useFormatter()
+const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
+const notifyQuoteError = useQuoteErrorNotifier()
 const { companyName, isUnnamed } = useCompanyName()
 
 const quotesStore = useQuotesStore()
@@ -341,7 +396,10 @@ watch(quote, (value) => {
   if (!value) return
   form.scope_of_work = value.scope_of_work
   form.validity_date = value.validity_date ? value.validity_date.toISOString().slice(0, 10) : ''
-  form.status = value.status
+  // 'expired' is read-derived (the API's EffectiveStatus: a Sent quote past
+  // its validity date), never a value PUT accepts — edit it as the Sent it's
+  // stored as. The header badge still shows Expired.
+  form.status = value.status === 'expired' ? 'sent' : value.status
   form.reference_number = value.reference_number ?? ''
   form.issue_date = value.issue_date ? value.issue_date.toISOString().slice(0, 10) : ''
   form.credit_days = value.credit_days
@@ -364,7 +422,44 @@ watch(quote, (value) => {
   markClean()
 }, { immediate: true })
 
-const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.vat_enabled, form.wht_enabled, form.wht_rate))
+const totals = computed(() => useQuoteTotals(items.value, form.discount_total, form.price_type, form.vat_enabled, form.wht_enabled, form.wht_rate))
+// Tax-inclusive prices with VAT on: VAT is backed out of them, so the
+// breakdown shows the pre-VAT amount and the VAT it contains.
+const vatIncluded = computed(() => form.vat_enabled && form.price_type === 'incl_tax')
+
+// An Accepted or Rejected Quote is final — the Deal's receivable and revenue
+// come from the Accepted one, and the API refuses (409) any change to either
+// but an allowed status move (Accepted → Rejected). To revise it, duplicate
+// it. Keyed on the saved status.
+const locked = computed(() => !!quote.value && isQuoteLocked(quote.value.status))
+
+// "Revision of QT…" — the root's number when it's loaded (the Deal's quotes
+// are fetched below once this one turns out to be a revision).
+const revisionOfLabel = computed(() => {
+  const rootId = quote.value?.revision_of_id
+  if (!rootId) return ''
+  return quotesStore.items.find(q => q.id === rootId)?.number || `#${rootId}`
+})
+watch(() => quote.value?.revision_of_id, (rootId) => {
+  if (rootId && quote.value && !quotesStore.items.some(q => q.id === rootId)) {
+    quotesStore.fetchForDeal(quote.value.deal_id, quoteId).catch(notifyApiError)
+  }
+}, { immediate: true })
+
+// Re-reads the saved Quote (the conflict toast's Reload); the populate
+// watcher above refills the form from it.
+const reloadQuote = () => quotesStore.fetchOne(quoteId).catch(notifyApiError)
+
+// A save failure: a 422's fields onto their inputs (item rows by key), a
+// 409 in words with Reload, anything else as the API's message.
+const reportSaveError = (err: unknown) => {
+  const setErrors = (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors
+  if (setErrors && applyFormApiFieldErrors(err, setErrors, t, te, {
+    fields: quoteFormFieldNames(items.value),
+    fieldMap: quoteItemFieldMap(items.value),
+  })) return
+  notifyQuoteError(err, reloadQuote)
+}
 
 const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload => ({
   items: serializeQuoteItems(items.value),
@@ -387,16 +482,28 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
 // (pre-VAT — see quoteRevenueAmount).
 const dealValueSync = useQuoteDealValueSync()
 
+const supersede = useSupersedeAcceptedQuotes()
+
 const onSave = guard(async () => {
   if (!quote.value) return
-  const wasAccepted = quote.value.status === 'accepted'
+  const current = quote.value
+  const wasAccepted = current.status === 'accepted'
   try {
-    const updated = await quotesStore.update(quote.value.id, buildUpdatePayload())
+    // Accepting while another quote on the Deal is Accepted: offer to reject
+    // those first (then accept this one).
+    if (!wasAccepted && form.status === 'accepted') {
+      const others = await supersede.loadOtherAccepted(current.deal_id, current.id)
+      if (!(await supersede.resolveOthers(others))) return
+    }
+    // Read-only quotes send their status alone (quotesStore.updateStatus).
+    const updated = isQuoteLocked(current.status)
+      ? await quotesStore.updateStatus(current.id, form.status)
+      : await quotesStore.update(current.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
     if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    reportSaveError(err)
   }
 })
 
@@ -448,7 +555,7 @@ const onConfirmSend = guard(async () => {
     markClean()
     success(t('crm.quotes.detail.sendSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    reportSaveError(err)
   } finally {
     closeSendConfirm()
   }

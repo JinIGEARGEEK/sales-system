@@ -6,6 +6,18 @@
     @update:open="onUpdateOpen"
   >
     <template #body>
+      <!-- 422 exceeds_receivable: explained here, Save becomes "Record
+           anyway" (resends with allow_overpayment) until the amount or WHT
+           changes. -->
+      <div
+        v-if="overpaymentPending"
+        class="mb-3 rounded-lg border border-(--color-warning-hover)/50 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-bg) px-3 py-2 text-sm"
+        role="alert"
+        data-cy="payment-overpayment-warning"
+      >
+        <p class="font-medium">{{ t('crm.components.addPaymentModal.overpaymentTitle') }}</p>
+        <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.components.addPaymentModal.overpaymentBody') }}</p>
+      </div>
       <Form ref="formRef" @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputText
@@ -35,9 +47,9 @@
               data-cy="payment-wht-fill"
               @click="fillWht"
             >
-              {{ t('crm.components.addPaymentModal.whtFill') }}
+              {{ t('crm.components.addPaymentModal.whtFill', { rate: whtRate }) }}
             </UButton>
-            <p class="text-xs text-(--color-gray)">{{ t('crm.components.addPaymentModal.whtFillHint') }}</p>
+            <p class="text-xs text-(--color-gray)">{{ whtFillHint }}</p>
           </div>
           <InputSelect v-model="form.method" :options="PAYMENT_METHOD_OPTIONS" :label="t('crm.components.addPaymentModal.method')" name="method" rules="required" />
           <div v-if="Number(form.wht_amount) > 0" class="sm:col-span-2">
@@ -72,7 +84,12 @@
     <template #footer>
       <div class="flex justify-end gap-3">
         <ButtonPrimary :label="t('crm.components.addPaymentModal.cancel')" cancel data-cy="payment-cancel" @click="onUpdateOpen(false)" />
-        <ButtonPrimary :label="t('crm.components.addPaymentModal.save')" :loading="loading" data-cy="payment-save" @click="onSave" />
+        <ButtonPrimary
+          :label="overpaymentPending ? t('crm.components.addPaymentModal.recordAnyway') : t('crm.components.addPaymentModal.save')"
+          :loading="loading"
+          data-cy="payment-save"
+          @click="onSave"
+        />
       </div>
     </template>
   </UModal>
@@ -83,7 +100,7 @@ import { useI18n } from 'vue-i18n'
 import { PAYMENT_METHOD_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
-const { dateFormat, priceFormat, toDateInputValue } = useFormatter()
+const { dateFormat, toDateInputValue, currency } = useFormatter()
 
 const props = defineProps<{
   open: boolean
@@ -92,11 +109,26 @@ const props = defineProps<{
   // The Deal's installment statuses, in due-date order — the link picker
   // offers the unpaid ones (plus whichever one the record is already on).
   installments?: PaymentInstallmentStatus[]
+  // The Deal's tax rates for "Fill WHT" (paymentTaxRates: its latest
+  // Accepted Quote's, else 3% WHT at 7% VAT).
+  taxRates?: PaymentTaxRates
 }>()
+
+const whtRate = computed(() => props.taxRates?.whtRate ?? DEFAULT_WHT_PERCENT)
+const vatRate = computed(() => props.taxRates?.vatRate ?? VAT_PERCENT)
+// Cash received = base × (1 + VAT − WHT), so WHT = cash ÷ that factor × WHT.
+const whtFillHint = computed(() => {
+  const params = { vat: vatRate.value, rate: whtRate.value, divisor: ((100 + vatRate.value - whtRate.value) / 100).toFixed(2) }
+  return vatRate.value > 0
+    ? t('crm.components.addPaymentModal.whtFillHint', params)
+    : t('crm.components.addPaymentModal.whtFillHintNoVat', params)
+})
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payment: PaymentPayload]
+  // `report` puts an API error onto this form (usePaymentSaveErrors) and
+  // returns true when it did — the parent then skips its own toast.
+  submit: [payment: PaymentPayload, report: PaymentErrorReporter]
 }>()
 
 // InputSelect can't carry an empty-string value (Reka's SelectItem rejects it).
@@ -114,7 +146,14 @@ const emptyForm = () => ({
   installment_id: props.record?.installment_id ? String(props.record.installment_id) : NO_INSTALLMENT,
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
+
+const { overpaymentPending, report, withOverpayment, reset: resetSaveErrors } = usePaymentSaveErrors(
+  () => (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors,
+)
+watch(() => props.open, (value) => { if (value) resetSaveErrors() })
+// A new amount/WHT needs checking again before it can be forced through.
+watch(() => [form.amount, form.wht_amount], resetSaveErrors)
 
 const installmentOptions = computed<Select[]>(() => {
   const statuses = props.installments ?? []
@@ -126,7 +165,7 @@ const installmentOptions = computed<Select[]>(() => {
       label: t('crm.components.addPaymentModal.installmentOption', {
         number: numbers.get(s.installment.id),
         date: dateFormat(s.installment.due_date),
-        amount: `${t('global.currencySymbol')}${priceFormat(s.installment.amount)}`,
+        amount: currency(s.installment.amount),
       }),
       value: String(s.installment.id),
     })),
@@ -134,19 +173,19 @@ const installmentOptions = computed<Select[]>(() => {
 })
 
 const fillWht = () => {
-  form.wht_amount = whtFromNetReceived(Number(form.amount))
+  form.wht_amount = whtFromNetReceived(Number(form.amount), whtRate.value, vatRate.value)
 }
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
 // resolves `false` or throws.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+const submitAndClose = useAwaitableSubmit<[PaymentPayload, PaymentErrorReporter]>(() => onUpdateOpen(false))
 const onSubmit = guard(async () => {
   const wht = Number(form.wht_amount) || 0
   const documentNumber = form.document_number.trim()
-  await submitAndClose({
+  await submitAndClose(withOverpayment({
     amount: Number(form.amount),
     paid_at: new Date(form.paid_at),
     method: form.method,
@@ -155,7 +194,7 @@ const onSubmit = guard(async () => {
     wht_certificate_received: wht > 0 ? form.wht_certificate_received : false,
     document_number: documentNumber || null,
     installment_id: form.installment_id === NO_INSTALLMENT ? null : Number(form.installment_id),
-  })
+  }), report)
 })
 
 const onSave = () => validateThenSubmit(onSubmit)

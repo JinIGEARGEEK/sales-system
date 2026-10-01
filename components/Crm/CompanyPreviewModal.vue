@@ -3,7 +3,7 @@
     <template #body>
       <div v-if="company" class="flex flex-col gap-4">
         <div class="flex flex-wrap items-center gap-2">
-          <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
+          <UBadge :color="activeStatusColor(company.status === 'active')" variant="subtle">
             {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
           </UBadge>
           <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>

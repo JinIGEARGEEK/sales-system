@@ -1,13 +1,22 @@
 export default {
   noData: 'ไม่มีข้อมูล',
+  allChannels: 'ทุกช่องทาง',
   loading: 'Loading...',
   genericError: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
   currencySymbol: '฿',
   previous: 'ก่อนหน้า',
   next: 'ถัดไป',
   backToHome: 'กลับหน้าแรก',
+  // error.vue — Nuxt's error page (a page load's 404, an unexpected crash).
+  errorPage: {
+    notFoundTitle: 'ไม่พบหน้าที่ต้องการ',
+    notFoundMessage: 'ไม่พบหน้าหรือข้อมูลที่คุณกำลังค้นหา หรือข้อมูลนี้ถูกลบไปแล้ว',
+    errorTitle: 'เกิดข้อผิดพลาด',
+    errorMessage: 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณากลับไปหน้าหลักแล้วลองอีกครั้ง',
+  },
   backToList: 'กลับไปยังรายการ',
   back: 'ย้อนกลับ',
+  infoAbout: 'เกี่ยวกับ{name}',
   retry: 'ลองอีกครั้ง',
   goToStageSetting: 'ไปที่การตั้งค่าขั้นตอน',
   noAccessTitle: 'จำกัดการเข้าถึง',
@@ -38,6 +47,8 @@ export default {
   },
   table: {
     selectAll: 'เลือกทั้งหมด',
+    selectAllRows: 'เลือกทุกแถว',
+    selectRow: 'เลือกแถวที่ {n}',
     actions: 'การจัดการ',
     empty: {
       filteredTitle: 'ไม่พบรายการที่ตรงกับตัวกรอง',
@@ -58,6 +69,13 @@ export default {
     searching: 'กำลังค้นหา...',
     noResults: 'ไม่พบข้อมูลที่ตรงกัน',
   },
+  apiFieldError: {
+    invalid: 'ค่านี้ไม่ถูกต้อง',
+    required: 'กรุณากรอกข้อมูลนี้',
+    duplicate: 'มีข้อมูลนี้อยู่ในระบบแล้ว',
+    not_found: 'ไม่พบข้อมูล',
+    exceeds_receivable: 'จำนวนนี้มากกว่ายอดที่ลูกค้าค้างชำระ',
+  },
   sessionExpired: 'เซสชันของคุณหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง',
   unsavedChangesConfirm: 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการออกจากหน้านี้และละทิ้งการเปลี่ยนแปลงหรือไม่?',
   leaveConfirm: {
@@ -75,4 +93,32 @@ export default {
   fewerFilters: 'ซ่อนตัวกรอง',
   draftFound: 'พบแบบร่างที่คุณยังทำไม่เสร็จ ต้องการกู้คืนหรือไม่?',
   draftRestore: 'กู้คืนแบบร่าง',
+  status: {
+    quote: {
+      draft: 'ฉบับร่าง',
+      sent: 'ส่งแล้ว',
+      accepted: 'ยอมรับแล้ว',
+      rejected: 'ถูกปฏิเสธ',
+      expired: 'หมดอายุ',
+    },
+    contract: {
+      draft: 'ฉบับร่าง',
+      sent: 'ส่งแล้ว',
+      signed: 'ลงนามแล้ว',
+      expired: 'หมดอายุ',
+    },
+    project: {
+      notStarted: 'ยังไม่เริ่ม',
+      inProgress: 'กำลังดำเนินการ',
+      onHold: 'พักไว้ชั่วคราว',
+      completed: 'เสร็จสิ้น',
+      cancelled: 'ยกเลิกแล้ว',
+    },
+    customerProduct: {
+      interested: 'สนใจ',
+      trial: 'ทดลองใช้',
+      active: 'ใช้งานอยู่',
+      churned: 'เลิกใช้',
+    },
+  },
 }

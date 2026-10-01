@@ -21,6 +21,7 @@
         :size="props.size"
         :aria-invalid="errors.length > 0"
         :aria-describedby="errors.length ? errorId : undefined"
+        :aria-label="inputAriaLabel(props)"
         value-key="value"
         label-key="label"
         class="w-full"

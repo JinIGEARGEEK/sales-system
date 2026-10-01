@@ -3,13 +3,13 @@
     <DashboardSectionHeader :title="t('crm.dashboard.sectionTrends')" />
 
     <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">
               <UIcon name="material-symbols:show-chart" class="size-4 text-(--color-info-toast)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.revenueTrend') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.revenueTrend') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.revenueTrendHint') }}</p>
         </template>
@@ -19,9 +19,9 @@
           </div>
           <div v-for="bucket in revenueTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -35,13 +35,13 @@
         </div>
       </UCard>
 
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
               <UIcon name="material-symbols:trending-up" class="size-4 text-(--color-chart-violet)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.forecastTrend') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.forecastTrend') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.forecastTrendHint') }}</p>
         </template>
@@ -51,9 +51,9 @@
           </div>
           <div v-for="bucket in forecastTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="bucket.overdue > 0 ? `${bucket.label}: ${currencyCompact(bucket.value)} · ${t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) })}` : `${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -63,18 +63,21 @@
               </div>
             </UTooltip>
             <span class="text-xs text-(--color-gray)">{{ bucket.label }}</span>
+            <span v-if="bucket.overdue > 0" class="-mt-1 text-[11px] text-(--color-danger-text)">
+              {{ t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) }) }}
+            </span>
           </div>
         </div>
       </UCard>
     </div>
 
-    <UCard class="ring-[var(--color-card-border)]">
+    <UCard>
       <template #header>
         <div class="flex items-center gap-2">
           <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">
             <UIcon name="material-symbols:flag-outline" class="size-4 text-(--color-success-toast)" />
           </div>
-          <h3 class="text-lg font-medium">{{ t('crm.dashboard.annualRevenueTrend') }}</h3>
+          <CardTitle size="lg">{{ t('crm.dashboard.annualRevenueTrend') }}</CardTitle>
         </div>
         <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.annualRevenueTrendHint') }}</p>
       </template>
@@ -84,9 +87,9 @@
         </div>
         <div v-for="bucket in annualRevenueTrendChart" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
           <span class="text-xs font-medium" :class="bucket.actual > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-            {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.actual) }}
+            {{ currencyCompact(bucket.actual) }}
           </span>
-          <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.actual)} (${t('crm.dashboard.annualRevenueTrendPaceLabel', { pace: `${t('global.currencySymbol')}${priceFormatCompact(bucket.goal_pace)}` })})`">
+          <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.actual)} (${t('crm.dashboard.annualRevenueTrendPaceLabel', { pace: currencyCompact(bucket.goal_pace) })})`">
             <div class="relative flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
               <div
                 class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -110,11 +113,11 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   revenueTrend: { label: string, value: number, percent: number }[]
-  forecastTrend: { label: string, value: number, percent: number }[]
+  forecastTrend: { label: string, value: number, overdue: number, percent: number }[]
   annualRevenueTrendChart: { label: string, actual: number, goal_pace: number, actualPercent: number, goalPacePercent: number }[]
 }>()
 </script>

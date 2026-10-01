@@ -2,6 +2,9 @@ export default {
   pipelineBoard: {
     noItems: 'No items',
     addInColumn: 'Add here',
+    moveMenu: 'Move to another stage',
+    moveTo: 'Move to {stage}',
+    stageSelect: 'Stage',
     stageDescriptions: {
       lead: 'New potential customer',
       qualified: 'Confirmed as a good fit',
@@ -88,6 +91,22 @@ export default {
     errorParseFailed: 'Could not read this file. Please check it is a valid CSV, XLS, or XLSX export.',
     cancel: 'Cancel',
     confirmImport: 'Import',
+    close: 'Close',
+    resultSummary: 'Imported {companies} companies and {contacts} contacts. {count} rows were not fully imported:',
+    rowError: 'Row {row} ({name}): {message}',
+    rowDuplicateContact: 'contact {contact} not added: a contact with the same {fields} already exists',
+    rowCompanyNotFound: 'its company no longer exists',
+    rowCompanyFailed: 'company not created: {message}',
+    rowContactFailed: 'contact {contact} not added: {message}',
+    fields: {
+      company_id: 'Company',
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      tax_id: 'Tax ID',
+      branch_code: 'Branch code',
+      postal_code: 'Postal code',
+    },
   },
   addPaymentModal: {
     title: 'Add Payment',
@@ -98,8 +117,9 @@ export default {
     method: 'Payment Method',
     note: 'Note',
     whtAmount: 'Withholding Tax (THB)',
-    whtFill: 'Fill 3% WHT',
-    whtFillHint: 'Assumes 7% VAT: WHT = amount received ÷ 1.04 × 3%.',
+    whtFill: 'Fill {rate}% WHT',
+    whtFillHint: 'Assumes {vat}% VAT: WHT = amount received ÷ {divisor} × {rate}%.',
+    whtFillHintNoVat: 'No VAT on this deal: WHT = amount received ÷ {divisor} × {rate}%.',
     whtCertificateReceived: '50 ทวิ certificate received',
     whtCertificateHint: 'Tick once the withholding tax certificate arrives.',
     documentNumber: 'FlowAccount Document No.',
@@ -109,6 +129,14 @@ export default {
     installmentOption: 'Installment {number} · due {date} · {amount}',
     cancel: 'Cancel',
     save: 'Save Payment',
+    overpaymentTitle: 'This payment is more than the customer still owes',
+    overpaymentBody: 'Cash plus withholding tax would go past the deal\'s amount owed. Check the amount, or record it anyway (e.g. a deposit for extra work).',
+    recordAnyway: 'Record anyway',
+    errors: {
+      paidAtFuture: 'The payment date can\'t be in the future.',
+      documentNumberTaken: 'Another payment already has this document number.',
+      lostDeal: 'This deal is Lost, so it can\'t take payments.',
+    },
   },
   addPaymentInstallmentModal: {
     title: 'Add Payment Installment',
@@ -137,6 +165,7 @@ export default {
     removeMilestone: 'Remove row',
     percentTotal: 'Total: {total}%',
     percentMustTotal100: 'Percentages must add up to 100%, and each row must be more than 0%.',
+    exceedsReceivable: 'More than the {amount} not yet scheduled — the whole schedule can\'t exceed what the customer owes.',
     cancel: 'Cancel',
     save: 'Create Schedule',
   },
@@ -235,9 +264,20 @@ export default {
     editTask: 'Edit task',
     removeTask: 'Delete task',
     removeSuccess: 'Task deleted',
-    confirmDoneTitle: 'Mark task as done?',
-    confirmDoneBody: 'Mark "{title}" as done?',
+    // Still the bulk Mark done confirm's button (Tasks page) — a single task
+    // is marked done at once, with an Undo on the toast.
     confirmDoneButton: 'Mark as Done',
+    markDoneSuccess: 'Task marked done',
+    reopenSuccess: 'Task reopened',
+    undo: 'Undo',
+    snoozeLabel: 'Snooze task, due {date}',
+    snoozeMenuTitle: 'Snooze until',
+    snooze: {
+      tomorrow: 'Tomorrow',
+      threeDays: '+3 days',
+      nextWeek: 'Next week',
+    },
+    snoozeSuccess: 'Task snoozed to {date}',
     priority: {
       low: 'Low',
       medium: 'Medium',
@@ -310,14 +350,23 @@ export default {
     createCampaign: 'Create Campaign',
     addToCampaign: 'Add to Campaign',
   },
+  // List-row menu shortcuts into Quick Add (useRowQuickActions) and the
+  // Deals table's Create quote.
+  rowActions: {
+    logActivity: 'Log Activity',
+    addTask: 'Add Task',
+    createQuote: 'Create Quote',
+  },
   globalSearch: {
-    placeholder: 'Search deals, companies, contacts, leads, prospects...',
+    placeholder: 'Search deals, companies, contacts, leads, prospects, quotes...',
+    ariaLabel: 'Search all records',
     noResults: 'No matches found.',
     deals: 'Deals',
     companies: 'Companies',
     contacts: 'Contacts',
     leads: 'Leads',
     prospects: 'Prospects',
+    quotes: 'Quotes',
   },
   // Shared by the Deals table and Leads list's "toggle bulk-select mode"
   // button — both used to declare their own copy of this identical pair.
@@ -344,6 +393,29 @@ export default {
     archiveSuccess: '{count} {entity} archived',
     archiveUndo: 'Undo',
     archiveRestoreSuccess: '{count} {entity} restored',
+    archiveSkipped: '{count} {entity} not archived: {names}',
+    archiveSkipReason: {
+      won_deal_with_money: 'A Won deal with a payment, installment or signed contract can\'t be archived in bulk. A manager can delete it on its own page, with a reason.',
+      unknown: 'The server kept it.',
+    },
     cancel: 'Cancel',
+  },
+  duplicateConflict: {
+    title: 'This {entity} may already exist',
+    matched: 'Another record has the same {fields}:',
+    fields: {
+      email: 'email',
+      phone: 'phone',
+      email_or_phone: 'email or phone',
+    },
+    and: ' and ',
+    entities: {
+      lead: 'lead',
+      prospect: 'prospect',
+      contact: 'contact',
+    },
+    recordFallback: '{entity} #{id}',
+    createAnyway: 'Create anyway',
+    dismiss: 'Keep editing',
   },
 }

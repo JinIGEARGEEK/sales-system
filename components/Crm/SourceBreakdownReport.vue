@@ -8,9 +8,9 @@
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <USkeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
     </div>
-    <UCard class="mt-4 ring-(--color-card-border)">
+    <UCard class="mt-4">
       <template #header>
-        <h3 class="text-lg font-medium">{{ breakdownHeading }}</h3>
+        <CardTitle>{{ breakdownHeading }}</CardTitle>
       </template>
       <div class="flex flex-col gap-4">
         <USkeleton v-for="i in 5" :key="i" class="h-3 w-full rounded-full" />
@@ -58,9 +58,9 @@
       </CrmStatCard>
     </div>
 
-    <UCard class="mt-4 ring-(--color-card-border)">
+    <UCard class="mt-4">
       <template #header>
-        <h3 class="text-lg font-medium">{{ breakdownHeading }}</h3>
+        <CardTitle>{{ breakdownHeading }}</CardTitle>
       </template>
       <div class="flex flex-col gap-3">
         <CrmMetricBar

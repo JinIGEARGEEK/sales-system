@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 class="text-xl font-black">{{ t('crm.activities.index.heading') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('crm.activities.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('crm.activities.index.subheading') }}</p>
         </div>
         <ButtonPrimary
@@ -160,7 +160,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<ActivityFeedItem>(params => activitiesStore.fetchFeed(params), buildParams)
+} = useServerListPage<ActivityFeedItem>(params => activitiesStore.fetchFeed(params), buildParams, 10, { syncQuery: true })
 
 watch(search, () => refetchDebounced())
 watch([typeFilter, relatedTypeFilter], () => refetchFromStart())
@@ -220,7 +220,7 @@ const onSubmitActivity = async (payload: ActivityFormSubmit) => {
   const saved = await logActivity(payload.related_type, payload.related_id, payload, t('crm.activities.index.addActivitySuccess'))
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).
-  if (saved) await fetch().catch(notifyApiError)
+  if (saved === true) await fetch().catch(notifyApiError)
   return saved
 }
 </script>

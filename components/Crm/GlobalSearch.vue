@@ -8,6 +8,7 @@
         size="md"
         icon="material-symbols:search"
         :placeholder="t('crm.components.globalSearch.placeholder')"
+        :aria-label="t('crm.components.globalSearch.ariaLabel')"
         class="w-full"
         :ui="{
           base: 'rounded-full bg-white/10 backdrop-blur-md text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:bg-white/15 focus-visible:bg-white/15 py-1.5',
@@ -74,6 +75,7 @@ const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const leadsStore = useLeadsStore()
 const prospectsStore = useProspectsStore()
+const quotesStore = useQuotesStore()
 
 // Deals/Companies/Contacts/Leads aren't a primary destination for Production
 // (same SALES_PIPELINE_ROLES exclusion as layouts/default.vue's nav) — this
@@ -135,7 +137,7 @@ const onGlobalKeydown = (event: KeyboardEvent) => {
   }
 }
 
-// All five groups search the server live as the rep types (useDebouncedSearch)
+// Every group searches the server live as the rep types (useDebouncedSearch)
 // instead of filtering a preloaded-but-capped store cache — fetchAll() is
 // capped at 200 rows, newest-first, per entity (see stores/companies.ts's
 // fetchAll doc for the full explanation), so an older Deal/Company/Contact/
@@ -172,8 +174,16 @@ const prospectSearch = useDebouncedSearch(async (term: string) => {
   return items
 }, { shouldSearch: shouldSearchProspects })
 
-// One input drives all five independent debounced searches.
+// Quotes by number / reference number (GET /quotes, salesPipelineRoles —
+// the same gate as Deals, so it shares shouldSearch).
+const quoteSearch = useDebouncedSearch(async (term: string) => {
+  const { items } = await quotesStore.search({ search: term, per_page: RESULT_LIMIT })
+  return items
+}, { shouldSearch })
+
+// One input drives every independent debounced search.
 watch(query, (value) => {
+  quoteSearch.term.value = value
   dealSearch.term.value = value
   companySearch.term.value = value
   contactSearch.term.value = value
@@ -225,6 +235,15 @@ const resultGroups = computed(() => {
       key: 'prospects',
       label: t('crm.components.globalSearch.prospects'),
       items: prospectSearch.results.value.map(prospect => ({ path: `/crm/prospects/${prospect.id}`, label: prospect.name, sublabel: prospect.status })),
+    },
+    {
+      key: 'quotes',
+      label: t('crm.components.globalSearch.quotes'),
+      items: quoteSearch.results.value.map(quote => ({
+        path: `/crm/quotes/${quote.id}`,
+        label: [quote.number || `#${quote.id}`, quote.reference_number].filter(Boolean).join(' · '),
+        sublabel: quote.deal_title,
+      })),
     },
   ]
 })

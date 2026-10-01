@@ -2,7 +2,7 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
       <div class="mb-4">
-        <h2 class="text-xl font-black">{{ t('admin.trash.title') }}</h2>
+        <h2 class="text-xl font-medium">{{ t('admin.trash.title') }}</h2>
         <p class="text-sm text-(--color-gray)">{{ t('admin.trash.subtitle') }}</p>
       </div>
 
@@ -125,7 +125,7 @@ const { t } = useI18n()
 
 useHead({ title: t('admin.trash.title') })
 
-const { dateFormat, priceFormatCompact } = useFormatter()
+const { dateFormat, currencyCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const dealsStore = useDealsStore()
@@ -217,7 +217,7 @@ const {
 const dealsRows = computed(() => dealsStore.trashItems.map(deal => ({
   ...deal,
   companyName: companiesStore.nameById(deal.company_id),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
+  valueDisplay: currencyCompact(deal.value),
   deletedAtDisplay: deal.deleted_at ? dateFormat(deal.deleted_at) : '-',
 })))
 

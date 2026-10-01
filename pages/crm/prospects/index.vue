@@ -2,7 +2,7 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-black">{{ t('crm.prospects.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.prospects.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <!-- View switcher — shared component; see CrmViewModeToggle. -->
         <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.prospects.index.viewKanban')" :list-label="t('crm.prospects.index.viewList')" />
@@ -113,12 +113,15 @@
         :empty-action-label="t('crm.prospects.index.addProspect')"
         empty-action-to="/crm/prospects/create"
         :filtered="hasActiveFilters"
+        :sort-field="sortField"
+        :sort-dir="sortDir"
         @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @sort="onSort"
         @view-detail="onViewDetail"
-        @edit="onEdit"
+        @log-activity="onLogActivity"
+        @add-task="onAddTask"
         @convert="onConvert"
         @view-lead="onViewLead"
         @delete="requestDelete"
@@ -157,7 +160,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.prospects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
 const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
@@ -276,14 +279,8 @@ const onAddInColumn = (status: string) => {
 
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at', companyName: 'company_name' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => { if (viewMode.value === 'list') refetchFromStart() })
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -305,7 +302,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Prospect>(params => prospectsStore.fetchList(params), buildParams)
+} = useServerListPage<Prospect>(params => prospectsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(viewMode, (mode) => {
   if (mode === 'list' && rows.value.length === 0) fetch()
@@ -348,7 +345,7 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.prospects.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.prospects.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      ...rowQuickActions.value,
       { label: t('crm.prospects.index.actions.convert'), emitName: 'convert', isBorderBottom: true, hideIf: row => !!row.converted_lead_id || row.status === prospectStagesStore.disqualifiedStageName },
       { label: t('crm.prospects.index.actions.viewLead'), emitName: 'viewLead', isBorderBottom: true, hideIf: row => !row.converted_lead_id },
       { label: t('crm.prospects.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
@@ -360,9 +357,7 @@ const onViewDetail = (row: Prospect) => {
   navigateTo(`/crm/prospects/${row.id}`)
 }
 
-const onEdit = (row: Prospect) => {
-  navigateTo(`/crm/prospects/${row.id}`)
-}
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('prospect')
 
 const onConvert = async (row: Prospect) => {
   try {
@@ -372,7 +367,28 @@ const onConvert = async (row: Prospect) => {
     success(t('crm.prospects.index.prospectConvertedToLead'))
     navigateTo(`/crm/leads/${lead.id}`)
   } catch (err) {
+    if (getApiErrorCode(err) === 'CONFLICT' && await showAlreadyConverted(row.id)) return
     error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+// A 409 means someone else converted it since this list loaded. Refetching
+// swaps the row's Convert action for View Lead (and drops it from the
+// Kanban cache, which excludes converted Prospects); the toast links to the
+// Lead too. Resolves false when the refetch doesn't show a Lead, so the
+// caller toasts as usual.
+const showAlreadyConverted = async (id: number): Promise<boolean> => {
+  try {
+    const { converted_lead_id: leadId } = await prospectsStore.fetchOne(id)
+    if (!leadId) return false
+    warning(t('crm.prospects.index.alreadyConverted'), {
+      label: t('crm.prospects.index.actions.viewLead'),
+      onClick: () => navigateTo(`/crm/leads/${leadId}`),
+    })
+    Promise.all([fetch(), prospectsStore.fetchAll({ exclude_converted: true })]).catch(notifyApiError)
+    return true
+  } catch {
+    return false
   }
 }
 

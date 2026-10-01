@@ -40,7 +40,7 @@
             name="name"
             rules="required"
           />
-          <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
+          <InputSelect v-model="form.status" :options="projectStatusOptions" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
           <InputText v-if="!earlyStage" v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_proposal_date" :label="t('crm.components.addProjectModal.expectedProposalDate')" name="expected_proposal_date" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_start_date" :label="t('crm.components.addProjectModal.expectedStartDate')" name="expected_start_date" />
@@ -60,9 +60,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { projectStatusOptions } = useProjectStatusColor()
 const { toDateInputValue } = useFormatter()
 
 const props = defineProps<{
@@ -150,7 +150,7 @@ const emptyForm = () => ({
 // filterCompanyId is used inside an immediate watch further down, which
 // evaluates it synchronously right there, so `form` must already exist by
 // then, not just by the time the rest of the script has finished running.
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, showApiFieldErrors, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 // Which company to filter the Deal picker by: the one currently picked in the
 // Company field when it's shown, otherwise the fixed `companyId` the parent
@@ -204,12 +204,13 @@ watch(() => form.company_id, () => {
   form.deal_id = ''
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
-// resolves `false` or throws.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+// resolves `false`/submitFailure() or throws — a submitFailure's 422 fields
+// also land on the matching inputs.
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'submit', showApiFieldErrors)
 const onSubmit = guard(async () => {
   if (productionEditor.value) {
     await submitAndClose({

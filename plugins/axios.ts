@@ -1,5 +1,18 @@
 import axios from 'axios'
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    // Whether a 403/404 answer may navigate away from the current page (403 →
+    // home, 404 → the error page). Defaults to "skip" for POST/PUT/PATCH/
+    // DELETE — a failed form submit must stay put with the form intact and let
+    // the caller's catch show the message — and to "redirect" for GET, which
+    // is almost always the page's own load. Set `skipErrorRedirect: true` on
+    // a GET that isn't (a picker lookup, a background widget) to just reject.
+    // See shouldRedirectOnApiError in composables/utils/useAPI.ts.
+    skipErrorRedirect?: boolean
+  }
+}
+
 let loading = 0
 
 const sleep = (ms: number) => {
@@ -66,10 +79,11 @@ export default defineNuxtPlugin((nuxtApp) => {
       warning(t('global.sessionExpired'))
       const redirect = router.currentRoute.value.fullPath
       router.push({ path: '/login', query: redirect !== '/' ? { redirect } : undefined })
-    } else if (error.response?.status === 403) {
+    } else if (error.response?.status === 403 && shouldRedirectOnApiError(error.config)) {
       router.push('/')
-    } else if (error.response?.status === 404) {
-      router.push('/error404')
+    } else if (error.response?.status === 404 && shouldRedirectOnApiError(error.config)) {
+      // Nuxt's own error page (error.vue) — there's no /error404 route.
+      showError({ statusCode: 404 })
     }
     // Always reject (even after triggering a redirect above) so callers' own
     // try/catch runs against the real error instead of an incidental crash

@@ -29,7 +29,7 @@ export const useAppSettingsStore = defineStore('appSettings', {
       const response = await $api.post<ApiResponse<{ sent_to: string }>>('/admin/weekly-digest/test')
       return response.data.data.sent_to
     },
-    async update (changes: Partial<Omit<AppSettings, 'id'>>): Promise<AppSettings> {
+    async update (changes: AppSettingsUpdatePayload): Promise<AppSettings> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<AppSettings>>('/admin/settings', changes)
       this.settings = response.data.data

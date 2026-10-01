@@ -1,7 +1,7 @@
 <template>
   <ContainerTemplate>
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-base font-semibold">{{ t('crm.deals.detail.activityTitle') }}</h3>
+      <CardTitle>{{ t('crm.deals.detail.activityTitle') }}</CardTitle>
       <ButtonPrimary
         :label="t('crm.deals.detail.addActivity')"
         icon="material-symbols:add"
@@ -9,10 +9,13 @@
         @click="openAddActivity"
       />
     </div>
-    <CrmActivityTimeline :items="dealActivity" />
+    <div v-if="activityLoading && dealActivity.length === 0" class="flex flex-col gap-3" data-cy="activity-loading">
+      <USkeleton v-for="i in 4" :key="`activity-skeleton-${i}`" class="h-14 w-full rounded-lg" />
+    </div>
+    <CrmActivityTimeline v-else :items="dealActivity" />
 
     <div v-if="stageHistory.length > 0" class="mt-6">
-      <h3 class="mb-4 text-base font-semibold">{{ t('crm.deals.detail.stageHistoryTitle') }}</h3>
+      <CardTitle class="mb-4">{{ t('crm.deals.detail.stageHistoryTitle') }}</CardTitle>
       <div class="flex flex-col gap-3">
         <div v-for="entry in stageHistory" :key="entry.id" class="flex gap-3 border-b border-(--color-light-gray-2) pb-3 last:border-none">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-light-gray-1)">
@@ -55,8 +58,10 @@ const dealId = Number(route.params.id)
 const dealActivity = computed(() => activitiesStore.forRelated('deal', dealId))
 const stageHistory = ref<DealStageChangeEntry[]>([])
 
+// Skeletons (not the timeline's empty state) until the first fetch settles.
+const activityLoading = ref(true)
 onMounted(() => {
-  activitiesStore.fetchForRelated('deal', dealId).catch(notifyApiError)
+  activitiesStore.fetchForRelated('deal', dealId).catch(notifyApiError).finally(() => { activityLoading.value = false })
   fetchDealStageHistory(dealId).then((entries) => { stageHistory.value = entries }).catch(notifyApiError)
 })
 

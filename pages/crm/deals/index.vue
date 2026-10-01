@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-black">{{ t('crm.deals.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.deals.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.deals.index.viewKanban')" :list-label="t('crm.deals.index.viewList')" />
 
@@ -61,6 +61,7 @@
       :columns="pipelineStagesStore.activeOptions"
       :items="pipelineItems"
       :column-counts="columnCounts"
+      :loading="boardLoading"
       allow-quick-add
       @move="onMove"
       @select="onSelect"
@@ -84,7 +85,7 @@
             <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
-            {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
+            {{ currencyCompact(item.value) }}
           </p>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -131,12 +132,24 @@
       @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
+    <!-- A Won/Lost deal dropped on an open stage is reopened (status open,
+         lost_reason cleared) — confirmed first; cancelling leaves the card. -->
+    <CrmConfirmDeleteModal
+      :open="pendingReopen !== null"
+      :title="t('crm.deals.index.reopenConfirmTitle')"
+      :body="pendingReopen ? t(pendingReopen.item.status === 'won' ? 'crm.deals.index.reopenConfirmBodyWon' : 'crm.deals.index.reopenConfirmBodyLost', { title: pendingReopen.item.title, stage: pendingReopen.newStage }) : ''"
+      :confirm-label="t('crm.deals.index.reopenConfirm')"
+      confirm-color="primary"
+      @update:open="(value: boolean) => { if (!value) pendingReopen = null }"
+      @confirm="onConfirmReopen"
+    />
     <CrmWonHandoffProjectModal :handoff="wonHandoff" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { isAxiosError } from 'axios'
 import { MANAGER_ROLES } from '~/constants/roles'
 import {
   BUSINESS_UNIT_FILTER_OPTIONS,
@@ -148,9 +161,9 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const { companyLabelById } = useCompanyName()
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { hasRole } = useRole()
 const downloadCsvBlob = useDownloadCsvBlob()
@@ -165,7 +178,7 @@ const leadSourcesStore = useLeadSourcesStore()
 // DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants) — the Kanban board's columns
 // and this filter both read from the same store.
 const channelFilterOptions = computed(() => [
-  { label: 'All Channels', value: 'all' },
+  { label: t('global.allChannels'), value: 'all' },
   ...leadSourcesStore.activeOptions,
 ])
 
@@ -253,12 +266,18 @@ const loadMoreDeals = async (stageName: string) => {
   }
 }
 
+// Skeleton cards until the first per-stage fetch settles, so an empty lane
+// isn't shown as "no deals" while it's still loading.
+const boardLoading = ref(true)
+
 onMounted(async () => {
   try {
     if (pipelineStagesStore.items.length === 0) await pipelineStagesStore.fetchAll()
     await loadAllStageDeals()
   } catch (err) {
     notifyApiError(err)
+  } finally {
+    boardLoading.value = false
   }
   leadsStore.fetchAll({ exclude_converted: true }).catch(notifyApiError)
   if (companiesStore.items.length === 0) companiesStore.fetchAll().catch(notifyApiError)
@@ -378,7 +397,7 @@ const leadLane = (lead: Lead): string => {
 }
 
 // Status a Lead should take when dropped directly on one of its own lanes.
-// Dropping past "Qualified" (Proposal Sent/Negotiation/Won) instead triggers
+// Dropping past "Qualified" (Proposal Sent/Negotiation) instead triggers
 // a real conversion — see the `else` branch of onMove below. Keyed by the
 // same lane values leadLane() returns, so the lost-flagged column's key must
 // also track pipelineStagesStore.lostStageName rather than a hardcoded "Lost".
@@ -442,11 +461,35 @@ const onConfirmLostReason = (reason: LostReason) => {
   if (pending) moveDeal(pending.item, pending.newStage, pending.position, reason)
 }
 
+// Resolved through the stage row's flags (an Admin can rename or add stages),
+// falling back to the store's Lost stage name before the config has loaded.
+// By the stage row's is_lost_stage flag, like the Deal detail page.
+const isLostStageName = (stage: string) => pipelineStagesStore.isLostStage(stage)
+const isOpenStageName = (stage: string) => {
+  const row = pipelineStagesStore.byName(stage)
+  return row ? !row.is_won_stage && !row.is_lost_stage : stage !== pipelineStagesStore.lostStageName && stage !== pipelineStagesStore.wonStageName
+}
+
+// Dropping a Won/Lost deal on an open stage reopens it (the API sets status
+// open and clears lost_reason) — asked first, like the other hard-to-undo
+// moves on this board.
+const pendingReopen = ref<{ item: Deal & { _type: 'deal' }, newStage: string, position?: number } | null>(null)
+const onConfirmReopen = async () => {
+  const pending = pendingReopen.value
+  pendingReopen.value = null
+  if (pending) await moveDeal(pending.item, pending.newStage, pending.position)
+}
+
 const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string, position?: number) => {
   if (item._type === 'deal') {
-    if (item.stage !== newStage && newStage === pipelineStagesStore.lostStageName) {
+    const stageChanged = item.stage !== newStage
+    if (stageChanged && isLostStageName(newStage)) {
       pendingLostMove.value = { item, newStage, position }
       lostReasonOpen.value = true
+      return
+    }
+    if (stageChanged && item.status !== 'open' && isOpenStageName(newStage)) {
+      pendingReopen.value = { item, newStage, position }
       return
     }
     await moveDeal(item, newStage, position)
@@ -455,12 +498,18 @@ const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead'
   await moveLead(item, newStage, position)
 }
 
+// Moving a Won deal with money attached out of Won: explained, or a
+// manager is asked for a reason and the move retried (useWonDealGuard).
+const wonDealGuard = useWonDealGuard()
+
 const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, position?: number, lostReason?: LostReason) => {
   const originStage = item.stage
   const stageChanged = originStage !== newStage
   if (!stageChanged && position === undefined) return
   try {
-    const updated = await dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason)
+    const updated = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason, reason))
+    // Explained or dismissed: nothing moved, the card stays where it was.
+    if (!updated) return
     // A same-stage drop is just a within-lane reorder — no stage actually
     // changed, so skip the "moved to X" toast (misleading when nothing
     // moved between columns) and only refetch the one affected bucket.
@@ -483,7 +532,8 @@ const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, positi
     ])
   } catch (err) {
     // Nothing was mutated optimistically, so there's nothing to roll back —
-    // the card simply stays put in its origin column.
+    // the card simply stays put in its origin column (the mobile stage
+    // select is bound to the card's lane, so it snaps back too).
     notifyStageChangeError(err)
   }
 }
@@ -507,6 +557,16 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
     }
+    return
+  }
+
+  // Dropped on the Won lane: a Won Deal needs a real value and counts as
+  // revenue the moment it exists, so don't auto-create one at value 0 —
+  // open the Deal create form prefilled from the Lead with the Won stage
+  // (the same ?lead_id= conversion the Lead's own "Convert to Deal" uses).
+  // Saving there converts the Lead and runs the Won hand-off.
+  if (pipelineStagesStore.isWonStage(newStage)) {
+    navigateTo({ path: '/crm/deals/create', query: { lead_id: String(lead.id), stage: newStage } })
     return
   }
 
@@ -541,17 +601,26 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     // the drag gesture. Land the rep straight on the new Deal's own edit page
     // right after, where value is a required field front and center, instead
     // of leaving a $0 Deal sitting unnoticed on the board.
-    // Dropped straight into Won: same hand-off as a Deal moved there — the
-    // follow-up task now, and Create Project on the Deal page it lands on.
-    if (deal.status === 'won') {
-      await onDealWon(deal, { promptProject: false })
-      navigateTo({ path: `/crm/deals/${deal.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
-      return
-    }
     navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
+    if (isAxiosError(err) && err.response?.status === 409) {
+      await notifyAlreadyConverted(lead.id)
+      return
+    }
     error(getApiErrorMessage(err, t('global.genericError')))
   }
+}
+
+// Converting a Lead that was converted meanwhile is a 409: say so, link to
+// the Deal it became, and drop the stale card.
+const notifyAlreadyConverted = async (leadId: number) => {
+  const fresh = await leadsStore.fetchOne(leadId).catch(() => null)
+  const dealId = fresh?.converted_deal_id ?? null
+  leadsStore.items = leadsStore.items.filter(l => l.id !== leadId || !dealId)
+  warning(
+    t('crm.deals.create.alreadyConvertedToast'),
+    dealId ? { label: t('crm.deals.create.openExistingDeal'), onClick: () => navigateTo(`/crm/deals/${dealId}`) } : undefined,
+  )
 }
 
 const onSelect = (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' })) => {

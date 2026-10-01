@@ -17,14 +17,16 @@
           />
           <!-- Status only on create: an existing contract's status moves via
                the card's confirmed status select (Signed/Expired ask first). -->
-          <InputSelect
-            v-if="!record"
-            v-model="form.status"
-            :options="CONTRACT_STATUS_OPTIONS"
-            :label="t('crm.contracts.components.addContractModal.status')"
-            name="status"
-            rules="required"
-          />
+          <div v-if="!record">
+            <InputSelect
+              v-model="form.status"
+              :options="contractEditableStatusOptions"
+              :label="t('crm.contracts.components.addContractModal.status')"
+              name="status"
+              rules="required"
+            />
+            <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.contracts.detail.signedViaUploadHint') }}</p>
+          </div>
           <div :class="{ 'sm:col-span-2': !record }">
             <InputDatePicker
               v-model="form.end_date"
@@ -54,9 +56,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CONTRACT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { contractEditableStatusOptions } = useContractStatusColor()
 
 const props = defineProps<{
   open: boolean
@@ -79,7 +81,7 @@ const emptyForm = () => ({
   end_date: props.record?.end_date ?? '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => ({
   label: t('crm.contracts.detail.linkedQuote', { id: quote.id }),
@@ -96,7 +98,7 @@ watch(() => props.open, (value) => {
   if (preferred) form.quote_id = preferred.id
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler

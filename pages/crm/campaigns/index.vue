@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 class="text-xl font-black">{{ t('crm.campaigns.index.heading') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('crm.campaigns.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('crm.campaigns.index.subheading') }}</p>
         </div>
         <ButtonPrimary
@@ -27,7 +27,7 @@
         data-cy="campaigns-empty"
       >
         <UIcon name="material-symbols:campaign-outline" class="size-10 text-(--color-gray)" />
-        <p class="text-base font-semibold">{{ t('crm.campaigns.index.emptyTitle') }}</p>
+        <p class="text-base font-medium">{{ t('crm.campaigns.index.emptyTitle') }}</p>
         <p class="max-w-md text-sm text-(--color-gray)">{{ t('crm.campaigns.index.emptyDescription') }}</p>
         <ButtonPrimary
           class="mt-2"
@@ -42,7 +42,7 @@
         <ContainerTemplate v-for="campaign in campaignsStore.items" :key="campaign.id">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <NuxtLink :to="`/crm/tasks?campaign_id=${campaign.id}`" class="text-base font-semibold hover:underline" :data-cy="`campaign-link-${campaign.id}`">
+              <NuxtLink :to="`/crm/tasks?campaign_id=${campaign.id}`" class="text-base font-medium hover:underline" :data-cy="`campaign-link-${campaign.id}`">
                 {{ campaign.name }}
               </NuxtLink>
               <p class="text-xs text-(--color-gray)">

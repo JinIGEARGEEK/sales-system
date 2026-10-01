@@ -131,6 +131,46 @@ describe('stores/deals', () => {
     expect(store.items.map(d => d.id)).toEqual([2])
   })
 
+  it('bulkArchive drops only the archived ids and returns the skipped ones (200 body)', async () => {
+    const store = useDealsStore()
+    store.items = [makeDeal({ id: 1 }), makeDeal({ id: 2 }), makeDeal({ id: 3 })]
+    mockApi.patch.mockResolvedValueOnce({ data: { data: { archived: [1, 3], skipped: [{ id: 2, reason: 'won_deal_with_money' }] } } })
+
+    const result = await store.bulkArchive([1, 2, 3])
+
+    expect(mockApi.patch).toHaveBeenCalledWith('/deals/bulk-archive', { ids: [1, 2, 3] })
+    expect(result).toEqual({ archived: [1, 3], skipped: [{ id: 2, reason: 'won_deal_with_money' }] })
+    expect(store.items.map(d => d.id)).toEqual([2])
+  })
+
+  it('bulkArchive treats a 204 (no body) as every id archived', async () => {
+    const store = useDealsStore()
+    store.items = [makeDeal({ id: 1 }), makeDeal({ id: 2 })]
+    mockApi.patch.mockResolvedValueOnce({ data: '' })
+
+    const result = await store.bulkArchive([1, 2])
+
+    expect(result).toEqual({ archived: [1, 2], skipped: [] })
+    expect(store.items).toEqual([])
+  })
+
+  it('update, updateStage and remove pass a manager\'s override reason as ?reason=', async () => {
+    const store = useDealsStore()
+    const deal = makeDeal({ id: 1, status: 'won' })
+    store.items = [deal]
+    mockApi.put.mockResolvedValueOnce(apiResponse(makeDeal({ id: 1, status: 'open' })))
+    mockApi.patch.mockResolvedValueOnce(apiResponse(makeDeal({ id: 1, stage: 'Lost', status: 'lost' })))
+    mockApi.delete.mockResolvedValueOnce({})
+
+    await store.update(1, fullDealUpdatePayload(deal, { stage: 'Negotiation', status: 'open' }), 'Wrong stage')
+    await store.updateStage(1, 'Lost', undefined, 'price', 'Customer pulled out')
+    await store.remove(1, 'Duplicate')
+
+    expect(mockApi.put).toHaveBeenCalledWith('/deals/1', expect.objectContaining({ stage: 'Negotiation' }), { params: { reason: 'Wrong stage' } })
+    expect(mockApi.patch).toHaveBeenCalledWith('/deals/1/stage', { stage: 'Lost', lost_reason: 'price' }, { params: { reason: 'Customer pulled out' } })
+    expect(mockApi.delete).toHaveBeenCalledWith('/deals/1', { params: { reason: 'Duplicate' } })
+  })
+
   it('receiveConverted parses dates and pushes a Deal from lead conversion into items without an API call', () => {
     const store = useDealsStore()
     const converted = makeDeal({ id: 3, expected_close_date: '2026-05-01T00:00:00.000Z' as unknown as Date })

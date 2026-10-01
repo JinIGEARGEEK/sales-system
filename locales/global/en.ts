@@ -1,14 +1,24 @@
 const lang = {
   noData: 'No Data',
+  allChannels: 'All Channels',
   loading: 'Loading...',
   genericError: 'Something went wrong. Please try again.',
   currencySymbol: '฿',
   previous: 'Previous',
   next: 'Next',
   backToHome: 'Back To Home',
+  // error.vue — Nuxt's error page (a page load's 404, an unexpected crash).
+  errorPage: {
+    notFoundTitle: 'Page not found',
+    notFoundMessage: 'The page or record you are looking for does not exist or has been removed.',
+    errorTitle: 'Something went wrong',
+    errorMessage: 'An unexpected error occurred. Please go back to the home page and try again.',
+  },
   backToList: 'Back to list',
   back: 'Back',
   retry: 'Retry',
+  // Accessible name of an info-icon button that opens an explanatory tooltip.
+  infoAbout: 'About {name}',
   goToStageSetting: 'Go to stage setting',
   // Shared default for <AccessGate> — pages/crm/reports/*.vue pass their own
   // more specific accessDeniedTitle/Message instead of these; admin-only
@@ -41,6 +51,8 @@ const lang = {
   },
   table: {
     selectAll: 'Select All',
+    selectAllRows: 'Select all rows',
+    selectRow: 'Select row {n}',
     actions: 'Actions',
     empty: {
       filteredTitle: 'No results match your filters',
@@ -61,6 +73,13 @@ const lang = {
     searching: 'Searching...',
     noResults: 'No matches found',
   },
+  apiFieldError: {
+    invalid: 'This value is not valid.',
+    required: 'This field is required.',
+    duplicate: 'A record with this value already exists.',
+    not_found: 'Not found.',
+    exceeds_receivable: 'This is more than the customer still owes.',
+  },
   sessionExpired: 'Your session has expired. Please sign in again.',
   unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
   leaveConfirm: {
@@ -78,6 +97,37 @@ const lang = {
   fewerFilters: 'Fewer filters',
   draftFound: 'We found a draft you didn\'t finish. Restore it?',
   draftRestore: 'Restore draft',
+  // Display labels for record statuses, shared by every badge, select and
+  // table cell that shows one — read through the use*StatusColor composables'
+  // *StatusLabel()/*StatusOptions, never printed as the raw enum value.
+  status: {
+    quote: {
+      draft: 'Draft',
+      sent: 'Sent',
+      accepted: 'Accepted',
+      rejected: 'Rejected',
+      expired: 'Expired',
+    },
+    contract: {
+      draft: 'Draft',
+      sent: 'Sent',
+      signed: 'Signed',
+      expired: 'Expired',
+    },
+    project: {
+      notStarted: 'Not Started',
+      inProgress: 'In Progress',
+      onHold: 'On Hold',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
+    customerProduct: {
+      interested: 'Interested',
+      trial: 'Trial',
+      active: 'Active',
+      churned: 'Churned',
+    },
+  },
 }
 
 export default lang

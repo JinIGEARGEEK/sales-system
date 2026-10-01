@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="company">
       <PageHeader :title="companyName(company.name)" @back="navigateTo('/crm/companies')">
-        <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
+        <UBadge :color="activeStatusColor(company.status === 'active')" variant="subtle">
           {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
         </UBadge>
         <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
@@ -63,12 +63,12 @@
         <div class="lg:col-span-2">
           <UCard>
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.companies.detail.summary') }}</h3>
+              <CardTitle>{{ t('crm.companies.detail.summary') }}</CardTitle>
             </template>
             <div class="flex flex-col gap-3 text-sm">
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
-              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ currencyCompact(openDealsValue) }}</span></div>
               <div class="flex justify-between gap-2">
                 <span class="text-(--color-gray)">{{ t('crm.companies.detail.lastContact') }}</span>
                 <UBadge :color="lastContact.color" variant="subtle" class="shrink-0 whitespace-nowrap">{{ lastContact.label }}</UBadge>
@@ -79,21 +79,16 @@
       </div>
 
       <div v-else-if="activeTab === 'contacts'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.contactsHeading') }}</h3>
-            <ButtonPrimary :label="t('crm.companies.detail.addContact')" icon="material-symbols:add" small @click="navigateTo(`/crm/contacts/create?company_id=${company.id}`)" />
-          </div>
-          <div v-if="companyContacts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noContacts') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <NuxtLink
-              v-for="contact in companyContacts"
-              :key="contact.id"
-              :to="`/crm/contacts/${contact.id}`"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
-            >
+        <CrmRelatedList
+          :title="t('crm.companies.detail.contactsHeading')"
+          :items="companyContacts"
+          :add-label="t('crm.companies.detail.addContact')"
+          :empty-title="t('crm.companies.detail.noContacts')"
+          empty-icon="material-symbols:person-outline"
+          @add="navigateTo(`/crm/contacts/create?company_id=${company.id}`)"
+        >
+          <template #row="{ item: contact, rowClass }">
+            <NuxtLink :to="`/crm/contacts/${contact.id}`" :class="rowClass">
               <div>
                 <p class="flex items-center gap-2 text-sm font-medium">
                   {{ contact.name }}
@@ -103,49 +98,40 @@
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
       </div>
 
       <div v-else-if="activeTab === 'deals'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.dealsHeading') }}</h3>
-            <ButtonPrimary :label="t('crm.companies.detail.addDeal')" icon="material-symbols:add" small @click="navigateTo(`/crm/deals/create?company_id=${company.id}`)" />
-          </div>
-          <div v-if="companyDeals.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noDeals') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <NuxtLink
-              v-for="deal in companyDeals"
-              :key="deal.id"
-              :to="`/crm/deals/${deal.id}`"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
-            >
+        <CrmRelatedList
+          :title="t('crm.companies.detail.dealsHeading')"
+          :items="companyDeals"
+          :add-label="t('crm.companies.detail.addDeal')"
+          :empty-title="t('crm.companies.detail.noDeals')"
+          empty-icon="material-symbols:work-outline"
+          @add="navigateTo(`/crm/deals/create?company_id=${company.id}`)"
+        >
+          <template #row="{ item: deal, rowClass }">
+            <NuxtLink :to="`/crm/deals/${deal.id}`" :class="rowClass">
               <div>
                 <p class="text-sm font-medium">{{ deal.title }}</p>
-                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
+                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ currencyCompact(deal.value) }}</p>
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
       </div>
 
       <div v-else-if="activeTab === 'quotesContracts'">
-        <ContainerTemplate>
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.quotesHeading') }}</h3>
-          <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noQuotes') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <NuxtLink
-              v-for="quote in companyQuotes"
-              :key="quote.id"
-              :to="`/crm/deals/${quote.deal_id}/quotes`"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
-            >
+        <CrmRelatedList
+          :title="t('crm.companies.detail.quotesHeading')"
+          :items="companyQuotes"
+          :empty-title="t('crm.companies.detail.noQuotes')"
+          empty-icon="material-symbols:request-quote-outline"
+        >
+          <template #row="{ item: quote, rowClass }">
+            <NuxtLink :to="`/crm/deals/${quote.deal_id}/quotes`" :class="rowClass">
               <div>
                 <p class="text-sm font-medium">{{ quote.number || `#${quote.id}` }}</p>
                 <p class="text-xs text-(--color-gray)">
@@ -153,51 +139,43 @@
                   <template v-if="quote.validity_date"> · {{ t('crm.companies.detail.validUntil', { date: dateFormat(quote.validity_date.toISOString()) }) }}</template>
                 </p>
               </div>
-              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
             </NuxtLink>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
 
-        <ContainerTemplate class="mt-4">
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.contractsHeading') }}</h3>
-          <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noContracts') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <NuxtLink
-              v-for="contract in companyContracts"
-              :key="contract.id"
-              :to="`/crm/deals/${contract.deal_id}/contracts`"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 hover:bg-(--color-light-gray-1)"
-            >
+        <CrmRelatedList
+          class="mt-4"
+          :title="t('crm.companies.detail.contractsHeading')"
+          :items="companyContracts"
+          :empty-title="t('crm.companies.detail.noContracts')"
+          empty-icon="material-symbols:contract-outline"
+        >
+          <template #row="{ item: contract, rowClass }">
+            <NuxtLink :to="`/crm/deals/${contract.deal_id}/contracts`" :class="rowClass">
               <div>
                 <p class="text-sm font-medium">{{ t('crm.companies.detail.fromDeal', { title: dealTitleById(contract.deal_id) }) }}</p>
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
                 <p v-if="contract.end_date" class="text-xs text-(--color-gray)">{{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}</p>
               </div>
-              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contract.status }}</UBadge>
+              <UBadge :color="contractStatusBadgeColor(contract.effective_status ?? contract.status)" variant="subtle">{{ contractStatusLabel(contract.effective_status ?? contract.status) }}</UBadge>
             </NuxtLink>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
       </div>
 
       <div v-else-if="activeTab === 'products'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.productsHeading') }}</h3>
-            <ButtonPrimary :label="t('crm.companies.detail.addProduct')" icon="material-symbols:add" small @click="openAddCustomerProduct" />
-          </div>
-          <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noProducts') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <button
-              v-for="{ record, renewal } in companyProductRows"
-              :key="record.id"
-              type="button"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
-              @click="openEditCustomerProduct(record)"
-            >
+        <CrmRelatedList
+          :title="t('crm.companies.detail.productsHeading')"
+          :items="companyProductRows"
+          :item-key="row => row.record.id"
+          :add-label="t('crm.companies.detail.addProduct')"
+          :empty-title="t('crm.companies.detail.noProducts')"
+          empty-icon="material-symbols:inventory-2-outline"
+          @add="openAddCustomerProduct"
+        >
+          <template #row="{ item: { record, renewal }, rowClass }">
+            <button type="button" :class="rowClass" @click="openEditCustomerProduct(record)">
               <div class="min-w-0">
                 <p class="text-sm font-medium">{{ record.product.name }}</p>
                 <p class="text-xs text-(--color-gray)">
@@ -220,11 +198,11 @@
                 >
                   {{ renewal.label }}
                 </UBadge>
-                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
+                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ customerProductStatusLabel(record.status) }}</UBadge>
               </div>
             </button>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
 
         <CrmAddCustomerProductModal
           v-model:open="addCustomerProductOpen"
@@ -237,22 +215,16 @@
       </div>
 
       <div v-else-if="activeTab === 'projects'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.projectsHeading') }}</h3>
-            <ButtonPrimary v-if="canManageProjects" :label="t('crm.companies.detail.addProject')" icon="material-symbols:add" small @click="openAddProject" />
-          </div>
-          <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-            {{ t('crm.companies.detail.noProjects') }}
-          </div>
-          <div v-else class="flex flex-col gap-2">
-            <button
-              v-for="project in companyProjects"
-              :key="project.id"
-              type="button"
-              class="flex items-center justify-between rounded-lg border border-(--color-light-gray-2) px-4 py-3 text-left hover:bg-(--color-light-gray-1)"
-              @click="openEditProject(project)"
-            >
+        <CrmRelatedList
+          :title="t('crm.companies.detail.projectsHeading')"
+          :items="companyProjects"
+          :add-label="canManageProjects ? t('crm.companies.detail.addProject') : undefined"
+          :empty-title="t('crm.companies.detail.noProjects')"
+          empty-icon="material-symbols:folder-outline"
+          @add="openAddProject"
+        >
+          <template #row="{ item: project, rowClass }">
+            <button type="button" :class="rowClass" @click="openEditProject(project)">
               <div>
                 <p class="text-sm font-medium">{{ project.name }}</p>
                 <p v-if="project.deal_id" class="text-xs text-(--color-gray)">
@@ -262,10 +234,10 @@
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
               </div>
-              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
+              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
             </button>
-          </div>
-        </ContainerTemplate>
+          </template>
+        </CrmRelatedList>
 
         <CrmAddProjectModal
           v-model:open="addProjectOpen"
@@ -276,18 +248,13 @@
       </div>
 
       <div v-else-if="activeTab === 'activity'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
-            <ButtonPrimary
-              :label="t('crm.companies.detail.addActivity')"
-              icon="material-symbols:add"
-              small
-              @click="openAddActivity"
-            />
-          </div>
+        <CrmRelatedList
+          :title="t('crm.companies.detail.activityFeed')"
+          :add-label="t('crm.companies.detail.addActivity')"
+          @add="openAddActivity"
+        >
           <CrmActivityTimeline :items="companyActivity" />
-        </ContainerTemplate>
+        </CrmRelatedList>
 
         <CrmAddActivityModal
           v-model:open="addActivityOpen"
@@ -296,18 +263,13 @@
       </div>
 
       <div v-else-if="activeTab === 'tasks'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.tasksTitle') }}</h3>
-            <ButtonPrimary
-              :label="t('crm.companies.detail.addTask')"
-              icon="material-symbols:add"
-              small
-              @click="openAddTask"
-            />
-          </div>
-          <CrmTaskList :tasks="companyTasks" @toggle="onToggleTask" @edit="openEditTask" />
-        </ContainerTemplate>
+        <CrmRelatedList
+          :title="t('crm.companies.detail.tasksTitle')"
+          :add-label="t('crm.companies.detail.addTask')"
+          @add="openAddTask"
+        >
+          <CrmTaskList :tasks="companyTasks" @edit="openEditTask" />
+        </CrmRelatedList>
 
         <CrmAddTaskModal
           v-model:open="addTaskOpen"
@@ -318,19 +280,13 @@
       </div>
 
       <div v-else-if="activeTab === 'attachments'">
-        <ContainerTemplate>
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.attachmentsHeading') }}</h3>
-            <ButtonPrimary
-              v-if="canManageAttachments"
-              :label="t('crm.companies.detail.addAttachment')"
-              icon="material-symbols:add"
-              small
-              @click="addAttachmentOpen = true"
-            />
-          </div>
+        <CrmRelatedList
+          :title="t('crm.companies.detail.attachmentsHeading')"
+          :add-label="canManageAttachments ? t('crm.companies.detail.addAttachment') : undefined"
+          @add="addAttachmentOpen = true"
+        >
           <CrmAttachmentList :attachments="companyAttachments" @remove="onRemoveAttachment" />
-        </ContainerTemplate>
+        </CrmRelatedList>
 
         <CrmAddAttachmentModal
           v-model:open="addAttachmentOpen"
@@ -353,6 +309,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
@@ -362,10 +319,10 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat, priceFormatCompact, parseTags, dateFormat } = useFormatter()
-const { contractStatusBadgeColor } = useContractStatusColor()
-const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { parseTags, dateFormat, currency, currencyCompact } = useFormatter()
+const { contractStatusBadgeColor, contractStatusLabel } = useContractStatusColor()
+const { customerProductStatusBadgeColor, customerProductStatusLabel } = useCustomerProductStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -383,7 +340,7 @@ const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
 const contractsStore = useContractsStore()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel } = useQuoteStatusColor()
 const activitiesStore = useActivitiesStore()
 const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()
@@ -514,7 +471,7 @@ const lastContact = computed(() => {
   return lastContactInfo(latest)
 })
 
-const { tasks: companyTasks, overdueCount: companyOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
+const { tasks: companyTasks, overdueCount: companyOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask } = useTaskList('company', companyId, 'crm.companies.detail.addTaskSuccess', 'crm.companies.detail.editTaskSuccess')
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('company', companyId, 'crm.companies.detail.addActivitySuccess')
 
 const companyProducts = computed(() => customerProductsStore.forCompany(companyId))
@@ -541,7 +498,7 @@ const companyProductRows = computed(() => companyProducts.value.map(record => ({
   renewal: record.status === 'Active' ? countdownBadge(record.renewal_date, RENEWAL_LABEL_KEYS, t) : null,
 })))
 const customerProductPriceLabel = (record: CustomerProduct) => {
-  const price = record.price !== null ? `${t('global.currencySymbol')}${priceFormat(record.price)}` : ''
+  const price = record.price !== null ? currency(record.price) : ''
   const cycle = record.billing_cycle ? t(`crm.components.addCustomerProductModal.billingCycleOptions.${record.billing_cycle}`) : ''
   return [price, cycle].filter(Boolean).join(' / ')
 }
@@ -573,7 +530,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(companyId, 'crm.companies.detail.addProjectSuccess', 'crm.companies.detail.updateProjectSuccess')
 
 const { companyName } = useCompanyName()
@@ -622,8 +579,9 @@ watch(company, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!company.value) return
   try {
     await companiesStore.update(company.value.id, {
@@ -644,7 +602,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.companies.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 

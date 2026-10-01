@@ -7,6 +7,8 @@ export default {
     noTasksMatch: 'No tasks match your filters.',
     addTask: 'Add Task',
     addTaskSuccess: 'Task added',
+    filterStatus: 'Status',
+    filterAssignee: 'Assignee',
     filterBusinessUnit: 'Business Unit',
     filterCampaign: 'Campaign',
     allCampaigns: 'All Campaigns',

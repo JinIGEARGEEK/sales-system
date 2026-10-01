@@ -10,10 +10,10 @@
     >
       <div>
         <div v-if="label" class="mb-1 text-sm">
-          <label :for="fieldId" :class="errors.length ? 'text-(--color-danger-toast)' : 'text-(--color-black)'">
+          <label :for="fieldId" :class="errors.length ? 'text-(--color-danger-text)' : 'text-(--color-black)'">
             {{ label }}
           </label>
-          <span v-if="rules.includes('required')" class="text-(--color-danger-toast)">*</span>
+          <span v-if="rules.includes('required')" class="text-(--color-danger-text)">*</span>
           <!-- Optional inline addition after the label text (e.g. an info
           tooltip explaining a non-obvious field) — most callers don't pass
           this, so it renders nothing by default. -->
@@ -22,7 +22,7 @@
         <p v-if="hint" class="mb-1 text-xs text-(--color-dark-gray)">{{ hint }}</p>
         <slot :field="field" :errors="errors" :field-id="fieldId" :error-id="errorId" />
         <slot name="footer" :errors="errors">
-          <div v-if="errors.length" :id="errorId" class="text-xs text-(--color-danger-toast) mt-1" :data-cy="`error-input-${dataCy}`">
+          <div v-if="errors.length" :id="errorId" class="text-xs text-(--color-danger-text) mt-1" :data-cy="`error-input-${dataCy}`">
             {{ errors[0] }}
           </div>
         </slot>

@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-black">{{ t('crm.companies.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.companies.index.heading') }}</h2>
       <div class="flex flex-wrap gap-2">
         <ButtonPrimary
           outline
@@ -97,12 +97,15 @@
       :empty-action-label="t('crm.companies.index.addCompany')"
       empty-action-to="/crm/companies/create"
       :filtered="hasActiveFilters"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
+      @log-activity="onLogActivity"
+      @add-task="onAddTask"
       @add-to-campaign="(row: Company) => openCampaignModal([row])"
       @delete="requestDelete"
     />
@@ -148,6 +151,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { lastContactInfo, CONTACT_STALE_TIER_DAYS } = useLastContact()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
@@ -160,6 +164,7 @@ const industryOptionsStore = useIndustryOptionsStore()
 
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
+const canDelete = computed(() => hasRole(...MANAGER_ROLES))
 
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
@@ -215,14 +220,8 @@ const tagOptions = computed(() => [...new Set(companiesStore.items.flatMap(c => 
 // understands (created_at/name/industry).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -246,7 +245,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams)
+} = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(search, () => refetchDebounced())
 watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilter], () => refetchFromStart())
@@ -265,9 +264,7 @@ const displayCompanies = computed(() => rows.value.map((company) => {
     ...company,
     name: companyName(company.name),
     tagsDisplay: company.tags?.join(', ') || '-',
-    statusBadge: company.status === 'active'
-      ? toBadge(t('crm.companies.index.statusActive'), 'success')
-      : toBadge(t('crm.companies.index.statusArchived')),
+    statusBadge: activeBadge(company.status === 'active', t('crm.companies.index.statusActive'), t('crm.companies.index.statusArchived')),
     createdDate: dateFormat(company.created_at.toISOString()),
     lastContactBadge: toBadge(contact.label, contact.color),
   }
@@ -297,9 +294,10 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.companies.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.companies.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
-      { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
-      { label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
+      ...rowQuickActions.value,
+      { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: canDelete.value },
+      // DELETE is Admin/Sales Manager only (403 for Sales Rep/Marketing).
+      ...(canDelete.value ? [{ label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false }] : []),
     ],
   },
 ])
@@ -310,9 +308,7 @@ const onViewDetail = (row: Company) => {
   navigateTo(`/crm/companies/${row.id}`)
 }
 
-const onEdit = (row: Company) => {
-  navigateTo(`/crm/companies/${row.id}`)
-}
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('company')
 
 const confirmDelete = async () => {
   if (target.value) {

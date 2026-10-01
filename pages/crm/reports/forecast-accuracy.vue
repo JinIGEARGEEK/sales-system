@@ -9,17 +9,17 @@
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <div v-if="latestQuarter" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <CrmStatCard :label="t('crm.reports.forecastAccuracy.latestForecastLabel')" icon="material-symbols:query-stats">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(latestQuarter.weighted_forecast) }}
+          {{ currencyCompact(latestQuarter.weighted_forecast) }}
           <template #hint>{{ t('crm.reports.forecastAccuracy.forQuarter', { year: latestQuarter.year, quarter: latestQuarter.quarter }) }}</template>
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.forecastAccuracy.latestActualLabel')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(latestQuarter.actual_won_to_date) }}
+          {{ currencyCompact(latestQuarter.actual_won_to_date) }}
           <template #hint>{{ t('crm.reports.forecastAccuracy.asOf', { date: latestQuarter.snapshot_date }) }}</template>
         </CrmStatCard>
         <CrmStatCard
           :label="t('crm.reports.forecastAccuracy.accuracyLabel')"
           :icon="isAccurate(latestQuarter) ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
-          :value-class="isAccurate(latestQuarter) ? 'text-(--color-success-toast)' : 'text-(--color-warning-hover)'"
+          :value-class="isAccurate(latestQuarter) ? 'text-(--color-success-text)' : 'text-(--color-warning-hover)'"
         >
           {{ Math.round(latestQuarter.accuracy_ratio * 100) }}%
           <template #hint>{{ t('crm.reports.forecastAccuracy.accuracyHint') }}</template>
@@ -38,7 +38,7 @@
 
       <UCard v-else :ui="GLASS_PANEL_UI">
         <template #header>
-          <h3 class="text-sm font-semibold">{{ t('crm.reports.forecastAccuracy.byQuarter') }}</h3>
+          <CardTitle>{{ t('crm.reports.forecastAccuracy.byQuarter') }}</CardTitle>
         </template>
         <TableData
           :columns="columns"
@@ -68,7 +68,7 @@ const goBack = useBackNavigation('/crm/reports')
 
 const { $api } = useNuxtApp()
 const { error } = useNotify()
-const { priceFormatCompact, toBadge } = useFormatter()
+const { toBadge, currencyCompact } = useFormatter()
 
 const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
 
@@ -86,8 +86,8 @@ const isAccurate = (q: ForecastAccuracyQuarter) => Math.abs(q.accuracy_ratio - 1
 const displayQuarters = computed(() => [...quarters.value].reverse().map(q => ({
   ...q,
   periodLabel: t('crm.reports.forecastAccuracy.periodLabel', { year: q.year, quarter: q.quarter }),
-  weightedForecastLabel: `${t('global.currencySymbol')}${priceFormatCompact(q.weighted_forecast)}`,
-  actualLabel: `${t('global.currencySymbol')}${priceFormatCompact(q.actual_won_to_date)}`,
+  weightedForecastLabel: currencyCompact(q.weighted_forecast),
+  actualLabel: currencyCompact(q.actual_won_to_date),
   accuracyBadge: isAccurate(q)
     ? toBadge(`${Math.round(q.accuracy_ratio * 100)}%`, 'success')
     : toBadge(`${Math.round(q.accuracy_ratio * 100)}%`, 'warning'),

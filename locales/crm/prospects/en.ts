@@ -16,6 +16,7 @@ export default {
     assigneePlaceholder: 'Assigned To',
     prospectStatusUpdated: 'Prospect moved to {status}',
     prospectConvertedToLead: 'Prospect converted to a Lead',
+    alreadyConverted: 'This Prospect was already converted to a Lead',
     entityLabel: 'prospects',
     convertInfoBody: 'How Prospects become Leads: click Convert to Lead whenever it\'s ready, from its detail page or this list\'s row actions — no special stage required, just that it isn\'t Disqualified.',
     columns: {
@@ -92,6 +93,7 @@ export default {
     prospectNotFound: 'Prospect not found.',
     updateSuccess: 'Prospect updated',
     convertSuccess: 'Prospect converted to a Lead',
+    alreadyConverted: 'This Prospect was already converted to a Lead',
     activityTitle: 'Activity',
     addActivity: 'Log Activity',
     addActivitySuccess: 'Activity logged',

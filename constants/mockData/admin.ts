@@ -3,6 +3,7 @@ export const ROLE_OPTIONS = [
   { label: 'Admin', value: 'Admin' },
   { label: 'Sales Rep', value: 'Sales Rep' },
   { label: 'Sales Manager', value: 'Sales Manager' },
+  { label: 'Marketing', value: 'Marketing' },
   { label: 'Production', value: 'Production' },
 ]
 

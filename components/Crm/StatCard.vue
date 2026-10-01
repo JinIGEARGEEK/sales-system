@@ -1,6 +1,15 @@
 <template>
-  <component :is="linkTag" :to="linkTo" :class="to ? 'block transition-shadow hover:shadow-md' : ''">
-    <UCard class="relative overflow-hidden ring-[var(--color-card-border)]" :ui="{ body: 'p-3' }">
+  <!-- With `active` set (true/false) the card is a toggle button with
+  aria-pressed — e.g. the Outstanding Balance aging tiles that filter the
+  table below; the caller's @click falls through to the button. -->
+  <component
+    :is="isToggle ? 'button' : linkTag"
+    :to="isToggle ? undefined : linkTo"
+    :type="isToggle ? 'button' : undefined"
+    :aria-pressed="isToggle ? active : undefined"
+    :class="isToggle || to ? 'block w-full text-left transition-shadow hover:shadow-md' : ''"
+  >
+    <UCard class="relative h-full overflow-hidden" :class="active ? 'ring-2 ring-(--color-primary)' : ''" :ui="{ body: 'p-3' }" :aria-busy="isLoading || undefined">
       <div
         v-if="accentGlassClass"
         class="absolute inset-y-0 left-0 w-1/2 backdrop-blur-md"
@@ -9,12 +18,30 @@
       <div class="relative flex items-center justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-1">
-            <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
+            <!-- `#label` replaces the plain label text (e.g. a status badge). -->
+            <slot name="label">
+              <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
+            </slot>
             <UTooltip v-if="tooltip" :text="tooltip">
-              <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
+              <!-- Focusable, so the explanation is reachable by keyboard. Not
+              inside a toggle/link card's own <button>/<a> — nested
+              interactive content is invalid there; the label's `title` and
+              the card itself carry the meaning. -->
+              <button
+                v-if="!isToggle && !to"
+                type="button"
+                class="inline-flex shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+                :aria-label="label ? t('global.infoAbout', { name: label }) : tooltip"
+              >
+                <UIcon name="material-symbols:info-outline" class="size-3 text-(--color-gray)" aria-hidden="true" />
+              </button>
+              <UIcon v-else name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
             </UTooltip>
           </div>
-          <p class="mt-0.5 text-xl font-medium" :class="valueClass">
+          <!-- While loading, a skeleton instead of the slot — a value computed
+          from not-yet-loaded data reads as a real ฿0 / 0%. -->
+          <USkeleton v-if="isLoading" class="mt-1.5 mb-1 h-5 w-20" />
+          <p v-else class="mt-0.5 text-xl font-medium" :class="valueClass">
             <slot />
           </p>
           <!-- `reserveHintSpace` (opt-in, not global): reserves this line's
@@ -29,7 +56,7 @@
             class="mt-0.5 text-[11px] leading-tight"
             :class="[hintClass, { 'min-h-3.5': reserveHintSpace }]"
           >
-            <slot name="hint" />
+            <slot v-if="!isLoading" name="hint" />
           </p>
         </div>
         <div v-if="icon" class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="iconBgClass">
@@ -41,10 +68,15 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
+  // Required unless the `#label` slot is used instead.
   label: {
     type: String,
-    required: true,
+    default: '',
   },
   // Optional Material Symbols icon, shown as a colored chip — pairs a
   // color-only health signal (valueClass) with a shape, not just a hue.
@@ -65,7 +97,7 @@ const props = defineProps({
     default: 'bg-(--color-light-gray-1)',
   },
   // A frosted-glass gradient panel covering the card's left ~50% width,
-  // e.g. 'bg-gradient-to-r from-[var(--color-accent-green)]/40 to-transparent'.
+  // e.g. 'bg-gradient-to-r from-(--color-accent-green)/40 to-transparent'.
   // UCard's own `overflow-hidden` clips it to the card's rounded corners.
   accentGlassClass: {
     type: String,
@@ -105,7 +137,25 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Set (true/false) to render the card as a toggle button with
+  // aria-pressed and a primary ring while pressed; leave unset for a plain
+  // or link card.
+  active: {
+    type: Boolean,
+    default: undefined,
+  },
+  // Shows a skeleton in place of the value (and hides the hint). Also
+  // inherited from a parent grid's provideStatCardLoading().
+  loading: {
+    type: Boolean,
+    default: false,
+  },
 })
+
+const groupLoading = injectStatCardLoading()
+const isLoading = computed(() => props.loading || groupLoading.value)
+
+const isToggle = computed(() => props.active !== undefined)
 
 const { linkTag, linkTo } = useOptionalLink(toRef(props, 'to'))
 </script>

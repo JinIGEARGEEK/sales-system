@@ -27,12 +27,16 @@
       :empty-action-label="emptyActionLabel"
       :empty-action-to="emptyActionTo"
       :filtered="filtered"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="emit('clearFilters')"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
+      @log-activity="onLogActivity"
+      @add-task="onAddTask"
+      @create-quote="onCreateQuote"
       @delete="requestDelete"
     />
 
@@ -87,7 +91,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
+const { dateFormat, toBadge, currencyCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
 const { companyLabelById } = useCompanyName()
@@ -114,14 +118,8 @@ const { stageBadgeColor } = useDealStageColor()
 // understands (created_at/title/value, plus the join-backed company_name).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: props.search || undefined,
@@ -144,7 +142,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams)
+} = useServerListPage<Deal>(params => dealsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(() => props.search, () => refetchDebounced())
 watch([() => props.assigneeFilter, () => props.businessUnitFilter, () => props.channelFilter, () => props.stageFilter], () => refetchFromStart())
@@ -169,7 +167,7 @@ watch(rows, (visibleDeals) => {
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
   companyName: companyLabelById(deal.company_id),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
+  valueDisplay: currencyCompact(deal.value),
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
   createdDate: dateFormat(deal.created_at.toISOString()),
@@ -190,7 +188,8 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.deals.table.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.deals.table.actions.edit'), emitName: 'edit', isBorderBottom: true },
+      ...rowQuickActions.value,
+      { label: t('crm.components.rowActions.createQuote'), emitName: 'createQuote', isBorderBottom: true },
       { label: t('crm.deals.table.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
   },
@@ -200,17 +199,27 @@ const onViewDetail = (row: Deal) => {
   navigateTo(`/crm/deals/${row.id}`)
 }
 
-const onEdit = (row: Deal) => {
-  navigateTo(`/crm/deals/${row.id}`)
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('deal')
+
+const onCreateQuote = (row: Deal) => {
+  navigateTo(`/crm/quotes/create?deal_id=${row.id}`)
 }
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Deal>()
+// A Won Deal with money attached: explained (non-manager) or asks a manager
+// for the reason and retries.
+const wonDealGuard = useWonDealGuard()
 
 const confirmDelete = async () => {
   if (target.value) {
     try {
       const { id, title } = target.value
-      await dealsStore.remove(id)
+      closeDelete()
+      const deleted = await wonDealGuard.run('delete', async (reason) => {
+        await dealsStore.remove(id, reason)
+        return true
+      })
+      if (!deleted) return
       notifyDeletedWithUndo({ id, name: title, restore: restoreId => dealsStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {
@@ -247,13 +256,22 @@ const { notifyArchivedWithUndo } = useBulkArchiveUndo()
 const onBulkArchive = async () => {
   const ids = [...selectedIds.value]
   try {
-    await dealsStore.bulkArchive(ids)
+    const titleById = new Map(rows.value.map(d => [d.id, d.title]))
+    const result = await dealsStore.bulkArchive(ids)
     // Notify (and clear selection) right after the archive itself succeeds —
     // matching onBulkReassign/onBulkTag above — rather than after the refetch
     // below, so a refetch failure can't misreport an already-successful
-    // archive as a generic error with no success/undo feedback.
+    // archive as a generic error with no success/undo feedback. Undo covers
+    // only what the server archived; protected Won deals come back as skipped.
     selected.value = []
-    notifyArchivedWithUndo({ ids, entity: t('crm.deals.index.entityLabel'), restore: dealsStore.restore, refetch: fetch })
+    notifyArchivedWithUndo({
+      ids: result.archived,
+      skipped: result.skipped,
+      nameOf: id => titleById.get(id),
+      entity: t('crm.deals.index.entityLabel'),
+      restore: dealsStore.restore,
+      refetch: fetch,
+    })
     await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

@@ -43,7 +43,7 @@
                         format (rather than always assuming/prefixing "+")
                         still reads correctly for a 0 or negative weight, should
                         one ever exist. -->
-                        <span class="shrink-0 font-medium text-(--color-success-toast)">{{ formatSignedWeight(criterion.weight) }}</span>
+                        <span class="shrink-0 font-medium text-(--color-success-text)">{{ formatSignedWeight(criterion.weight) }}</span>
                       </li>
                     </ul>
                     <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
@@ -152,7 +152,7 @@
 
       <ContainerTemplate class="mt-4">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-base font-semibold">{{ t('crm.leads.detail.attachmentsHeading') }}</h3>
+          <CardTitle>{{ t('crm.leads.detail.attachmentsHeading') }}</CardTitle>
           <ButtonPrimary
             v-if="canManageAttachments"
             :label="t('crm.leads.detail.addAttachment')"
@@ -170,7 +170,7 @@
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-base font-semibold">{{ t('crm.leads.detail.activityTitle') }}</h3>
+              <CardTitle>{{ t('crm.leads.detail.activityTitle') }}</CardTitle>
               <ButtonPrimary
                 v-if="canManageLead"
                 :label="t('crm.leads.detail.addActivity')"
@@ -187,7 +187,7 @@
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-semibold">{{ t('crm.leads.detail.tasksTitle') }}</h3>
+                <CardTitle>{{ t('crm.leads.detail.tasksTitle') }}</CardTitle>
                 <UBadge v-if="leadOverdueTaskCount > 0" color="error" variant="subtle">
                   {{ t('crm.leads.detail.overdueCount', { count: leadOverdueTaskCount }) }}
                 </UBadge>
@@ -202,7 +202,7 @@
               />
             </div>
           </template>
-          <CrmTaskList :tasks="leadTasks" @toggle="onToggleTask" @edit="openEditTask" />
+          <CrmTaskList :tasks="leadTasks" @edit="openEditTask" />
         </UCard>
       </div>
 
@@ -247,6 +247,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
@@ -355,7 +356,7 @@ const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadI
 
 const leadActivity = computed(() => activitiesStore.forRelated('lead', leadId))
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('lead', leadId, 'crm.leads.detail.addActivitySuccess')
-const { tasks: leadTasks, overdueCount: leadOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
+const { tasks: leadTasks, overdueCount: leadOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
 
@@ -452,8 +453,9 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 )
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!lead.value) return
   try {
     await leadsStore.update(lead.value.id, {
@@ -472,7 +474,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.leads.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 

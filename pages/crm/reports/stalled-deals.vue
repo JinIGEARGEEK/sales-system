@@ -16,23 +16,24 @@
           {{ displayRows.length }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.totalValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totalValueAtRisk) }}
+          {{ currencyCompact(totalValueAtRisk) }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.oldest')" icon="material-symbols:schedule-outline">
           {{ t('crm.reports.stalledDeals.daysStalled', { days: oldestDaysStalled }) }}
         </CrmStatCard>
       </div>
 
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputText
-            v-model.number="minDays"
-            type="number"
-            :label="t('crm.reports.stalledDeals.filterMinDays')"
-            name="minDays"
-            size="xs"
-            class="w-full sm:w-80"
-          />
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.stalledDeals.clearFilters')" @clear="clearFilters">
+        <InputText
+          :model-value="minDaysParam"
+          type="number"
+          :label="t('crm.reports.stalledDeals.filterMinDays')"
+          name="minDays"
+          size="xs"
+          class="w-full sm:w-80"
+          @update:model-value="minDaysParam = String($event ?? '')"
+        />
+        <CrmMoreFilters :count="secondaryFilterCount">
           <InputSelect
             v-model="salesRepFilter"
             :options="salesRepOptions"
@@ -49,20 +50,8 @@
             size="xs"
             class="w-full sm:w-40"
           />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.stalledDeals.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+        </CrmMoreFilters>
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -72,6 +61,8 @@
         :total="displayRows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-deal="onViewDeal"
@@ -83,7 +74,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
@@ -95,7 +85,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, dateFormat, toBadge, severityColor } = useFormatter()
+const { dateFormat, toBadge, severityColor, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -110,17 +100,22 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const minDays = ref(14)
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view. min_days travels as a string and is
+// converted at use; the two free-text inputs debounce their URL write like
+// their refetch below.
+const minDaysParam = useQuerySyncedRef('min_days', '14', 400)
+const minDays = computed(() => Number(minDaysParam.value) || 0)
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => minDays.value !== 14 || salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  minDays.value = 14
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: minDaysParam, default: '14' },
+    { ref: salesRepFilter, secondary: true },
+    { ref: companyTagFilter, default: '', secondary: true },
+  ],
+})
 
 const results = ref<StalledDealRow[]>([])
 const loading = ref(false)
@@ -147,11 +142,16 @@ const fetchReport = async () => {
 guardMounted(fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
-watch([minDays, companyTagFilter], () => {
+watch([minDaysParam, companyTagFilter], () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(fetchReport, 400)
 })
-watch(salesRepFilter, fetchReport)
+// Runs after the debounced watcher in the same flush (watchers fire in
+// creation order), so Clear filters fetches once instead of twice.
+watch(salesRepFilter, () => {
+  clearTimeout(debounceTimer)
+  fetchReport()
+})
 
 const onExport = () => downloadCsvBlob('/reports/stalled-deals/export', 'stalled-deals.csv', reportParams())
 
@@ -163,7 +163,7 @@ const { companyName } = useCompanyName()
 const displayRows = computed(() => results.value.map(row => ({
   ...row,
   company_name: companyName(row.company_name),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.value)}`,
+  valueDisplay: currencyCompact(row.value),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   lastActivityDisplay: dateFormat(row.last_activity_at),
   daysStalledBadge: toBadge(

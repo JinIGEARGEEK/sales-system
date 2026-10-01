@@ -54,6 +54,8 @@ export const useProjectsStore = defineStore('projects', {
       this.items.push(created)
       return created
     },
+    // PUT /projects/:id is a real partial merge server-side (only keys present
+    // change; `deal_id`/`target_end_date: null` clears), so Partial is correct here.
     async update (id: number, changes: Partial<Omit<Project, 'id' | 'company_id'>>): Promise<Project> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<Project>>(`/projects/${id}`, changes)

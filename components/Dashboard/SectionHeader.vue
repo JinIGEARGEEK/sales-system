@@ -1,6 +1,6 @@
 <template>
   <h3 class="mb-2 flex items-center justify-between border-b border-(--color-light-gray-2) pb-2">
-    <span class="text-sm font-semibold text-(--color-black)">{{ title }}</span>
+    <span class="text-sm font-medium text-(--color-black)">{{ title }}</span>
     <NuxtLink
       v-if="linkTo"
       :to="linkTo"

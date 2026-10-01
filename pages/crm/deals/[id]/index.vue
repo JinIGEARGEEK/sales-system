@@ -32,7 +32,9 @@
               <UBadge v-if="form.forecast_category" class="mt-1" :color="forecastCategoryColor(form.forecast_category)" variant="subtle">{{ form.forecast_category }}</UBadge>
             </div>
             <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.detail.expectedCloseDate')" name="expected_close_date" />
-            <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+            <!-- current-assignee: a Sales Rep/Marketing user may only keep the
+                 stored owner or claim the deal (PUT /deals/:id is 403 otherwise). -->
+            <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" :current-assignee="deal?.assigned_to ?? null" />
             <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
               <InputSelect
                 v-model="form.business_unit"
@@ -69,7 +71,7 @@
     <div class="lg:col-span-2">
       <UCard>
         <template #header>
-          <h3 class="text-base font-semibold">{{ t('crm.deals.detail.linkedRecords') }}</h3>
+          <CardTitle>{{ t('crm.deals.detail.linkedRecords') }}</CardTitle>
         </template>
         <div class="flex flex-col gap-1 text-sm">
           <NuxtLink
@@ -112,7 +114,7 @@
 
       <UCard v-if="canViewOwnerHistory" class="mt-4">
         <template #header>
-          <h3 class="text-base font-semibold">{{ t('crm.deals.detail.ownerHistory') }}</h3>
+          <CardTitle>{{ t('crm.deals.detail.ownerHistory') }}</CardTitle>
         </template>
         <div v-if="ownerHistory.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.deals.detail.noOwnerHistory') }}
@@ -145,9 +147,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
+import type { SubmissionContext } from 'vee-validate'
+import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, stageDefaultForecastCategory } from '~/constants/mockData'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 const { success } = useNotify()
 const notifyStageChangeError = useStageChangeErrorNotifier()
@@ -175,7 +178,7 @@ const canViewOwnerHistory = computed(() => hasRole('Admin', 'Sales Manager'))
 // admin-renamed Lost stage still shows/requires lost_reason), falling back to
 // the literal "Lost" name if the store hasn't loaded that row yet — same
 // resolution useDealStageColor.stageBadgeColor uses.
-const isLostStage = (stage: string) => pipelineStagesStore.byName(stage)?.is_lost_stage ?? stage === 'Lost'
+const isLostStage = (stage: string) => pipelineStagesStore.isLostStage(stage)
 
 // Colors the Probability progress bar by simple magnitude thresholds — not
 // stage-derived like forecastCategoryColor, since a rep can freely override
@@ -273,7 +276,9 @@ const form = reactive({
   title: deal.value?.title || '',
   value: deal.value?.value || 0,
   stage: deal.value?.stage || 'Lead',
-  probability: deal.value?.probability ?? stageDefaultProbability(deal.value?.stage || 'Lead'),
+  // undefined (an empty input) when neither the Deal nor the stage config has
+  // a number yet; saved as null, and the API applies the stage default.
+  probability: (deal.value?.probability ?? pipelineStagesStore.defaultProbability(deal.value?.stage || 'Lead') ?? undefined) as number | undefined,
   lost_reason: deal.value?.lost_reason || '',
   forecast_category: deal.value?.forecast_category || stageDefaultForecastCategory(deal.value?.stage || 'Lead'),
   expected_close_date: deal.value?.expected_close_date ? deal.value.expected_close_date.toISOString().slice(0, 10) : '',
@@ -285,21 +290,51 @@ const form = reactive({
 // Re-baselined (markClean) once each loaded Deal has been hydrated into the
 // form below, and after every successful save — the snapshot taken here is
 // usually the still-empty pre-load form.
-const { markClean } = useUnsavedChangesGuard(() => form)
+const { markClean, isDirty } = useUnsavedChangesGuard(() => form)
+const { info } = useNotify()
+
+// The form's non-stage fields as the given Deal would fill them.
+const nonStageFields = (value: Deal) => JSON.stringify([
+  value.title,
+  value.value,
+  value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : '',
+  value.assigned_to ? String(value.assigned_to) : '',
+  value.business_unit || '',
+  value.business_unit_item || '',
+])
+const formNonStageFields = () => JSON.stringify([form.title, form.value, form.expected_close_date, form.assigned_to, form.business_unit, form.business_unit_item])
 
 // Deal loads asynchronously now (fetched on mount), so the form is (re)populated
 // once the record arrives instead of only at setup time. `hydrating` suppresses
 // the business_unit/stage watchers below during this — otherwise setting
 // business_unit/stage here would immediately wipe/re-default fields set a
 // couple lines later.
+//
+// The same Deal changing underneath an edited form (the header's stage
+// stepper / Mark Won / Mark Lost, added 2026-10-01) only takes the stage and
+// its derived fields, so typed-but-unsaved edits elsewhere survive — and the
+// form stays dirty, so leaving still asks.
 let hydrating = false
+let hydratedId: number | null = null
 watch(deal, (value) => {
   if (!value) return
+  if (hydratedId === value.id && isDirty() && formNonStageFields() !== nonStageFields(value)) {
+    hydrating = true
+    const stageChanged = form.stage !== value.stage
+    form.stage = value.stage
+    form.probability = value.probability ?? pipelineStagesStore.defaultProbability(value.stage) ?? undefined
+    form.lost_reason = value.lost_reason || ''
+    form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
+    nextTick(() => { hydrating = false })
+    if (stageChanged) info(t('crm.deals.detail.stageChangedKeptEdits', { stage: value.stage }))
+    return
+  }
+  hydratedId = value.id
   hydrating = true
   form.title = value.title
   form.value = value.value
   form.stage = value.stage
-  form.probability = value.probability ?? stageDefaultProbability(value.stage)
+  form.probability = value.probability ?? pipelineStagesStore.defaultProbability(value.stage) ?? undefined
   form.lost_reason = value.lost_reason || ''
   form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
   form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
@@ -326,36 +361,53 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 // afterwards too.
 watch(() => form.stage, (newStage) => {
   if (hydrating) return
-  form.probability = stageDefaultProbability(newStage)
+  // The server's default for the new stage (PipelineStage.default_probability);
+  // left empty when stages haven't loaded, and the API then applies it on save.
+  form.probability = pipelineStagesStore.defaultProbability(newStage) ?? undefined
   form.forecast_category = stageDefaultForecastCategory(newStage)
   if (!isLostStage(newStage)) form.lost_reason = ''
 })
 
 const { loading, guard } = useSubmitGuard()
+// The inputs above, by name — where a 422's `fields` can be shown.
+const DEAL_FORM_FIELDS = ['title', 'value', 'stage', 'probability', 'forecast_category', 'expected_close_date', 'assigned_to', 'business_unit', 'lost_reason']
+// Saving a Won deal with money attached into another stage: explained, or a
+// manager gives a reason and the save is retried (useWonDealGuard).
+const wonDealGuard = useWonDealGuard()
 
-const onSave = guard(async () => {
+const onSave = guard(async (_values?: unknown, actions?: SubmissionContext) => {
   if (!deal.value) return
   const wasWon = deal.value.status === 'won'
   try {
     // Company/Contact/Channel aren't editable here but the full-record PUT
     // needs them, so they come from the current record.
-    const updated = await dealsStore.update(deal.value.id, fullDealUpdatePayload(deal.value, {
+    const id = deal.value.id
+    const payload = fullDealUpdatePayload(deal.value, {
       title: form.title,
       value: Number(form.value) || 0,
       stage: form.stage as DealStage,
-      status: dealStatusForStage(form.stage as DealStage),
-      probability: form.probability,
+      status: pipelineStagesStore.statusForStage(form.stage),
+      probability: typeof form.probability === 'number' ? form.probability : null,
       lost_reason: isLostStage(form.stage) ? (form.lost_reason as LostReason || null) : null,
       forecast_category: form.forecast_category as ForecastCategory || null,
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-    }))
+    })
+    const updated = await wonDealGuard.run('unwin', reason => dealsStore.update(id, payload, reason))
+    if (!updated) return
     markClean()
     success(t('crm.deals.detail.updateSuccess'))
     if (!wasWon && updated.status === 'won') await onDealWon(updated)
   } catch (err) {
+    // A 422's fields (assigned_to no longer an active sales user, a missing
+    // lost_reason, …) go onto their inputs; the Won gate keeps its own toast.
+    if (!apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')
+      && actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
+      fields: DEAL_FORM_FIELDS,
+      messages: { assigned_to: t('crm.deals.create.assigneeInvalid') },
+    })) return
     notifyStageChangeError(err)
   }
 })

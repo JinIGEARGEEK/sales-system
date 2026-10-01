@@ -10,14 +10,14 @@
         different views of the same stage_breakdown data, and a rep only
         ever looks at one view at a time. Cuts this section from 4 cards
         across 2 rows down to 2 cards in 1 row. -->
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div class="flex items-center gap-2">
                 <div :class="['flex size-7 shrink-0 items-center justify-center rounded-full', activeTabMeta.iconBg]">
                   <UIcon :name="activeTabMeta.icon" :class="['size-4', activeTabMeta.iconColor]" />
                 </div>
-                <h3 class="text-lg font-medium">{{ t('crm.dashboard.pipelineAnalytics') }}</h3>
+                <CardTitle size="lg">{{ t('crm.dashboard.pipelineAnalytics') }}</CardTitle>
               </div>
               <UTabs v-model="activeTab" :items="tabItems" size="xs" />
             </div>
@@ -54,7 +54,7 @@
             <CrmDonutChart
               v-else
               :segments="outcomeDonutSegments"
-              :total-label="`${t('global.currencySymbol')}${priceFormatCompact(outcomeTotal)}`"
+              :total-label="currencyCompact(outcomeTotal)"
               :total-sub-label="t('crm.dashboard.outcomeSplitTotal')"
             />
           </div>
@@ -62,14 +62,14 @@
       </div>
 
       <div class="lg:col-span-2">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
                   <UIcon name="material-symbols:sell-outline" class="size-4 text-(--color-chart-violet)" />
                 </div>
-                <h3 class="text-lg font-medium">{{ t('crm.dashboard.upsellOpportunities') }}</h3>
+                <CardTitle size="lg">{{ t('crm.dashboard.upsellOpportunities') }}</CardTitle>
               </div>
               <InputSelect
                 v-model="upsellMinStaleDays"
@@ -112,7 +112,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   upsellCandidates: { company: Company, contact: { color: LastContactColor, label: string } }[]

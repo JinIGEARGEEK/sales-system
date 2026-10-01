@@ -9,24 +9,11 @@ export const DEAL_STAGE_COLORS: Record<DealStage, string> = {
   Lost: '#E2445C',
 }
 
-export const dealStatusForStage = (stage: DealStage): DealStatus => {
-  if (stage === 'Won') return 'won'
-  if (stage === 'Lost') return 'lost'
-  return 'open'
-}
-
-// Mirrors the backend's StageDefaultProbability (internal/models/deal.go) —
-// prefills Deal.probability per-stage, always manually overridable.
-const STAGE_DEFAULT_PROBABILITY: Record<DealStage, number> = {
-  Lead: 10,
-  Qualified: 30,
-  'Proposal Sent': 50,
-  Negotiation: 75,
-  Won: 100,
-  Lost: 0,
-}
-
-export const stageDefaultProbability = (stage: string): number => STAGE_DEFAULT_PROBABILITY[stage as DealStage] ?? 10
+// A stage's default probability and the status it implies come from the
+// pipeline stage config (usePipelineStagesStore's defaultProbability/
+// statusForStage, backed by the API's PipelineStage.default_probability and
+// is_won_stage/is_lost_stage) — not a table here, which drifted from the
+// server's funnel-position defaults.
 
 // Mirrors the backend's StageDefaultForecastCategory (internal/models/deal.go)
 // — prefills Deal.forecast_category per-stage, always manually overridable.

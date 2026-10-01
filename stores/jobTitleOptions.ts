@@ -31,7 +31,7 @@ export const useJobTitleOptionsStore = defineStore('jobTitleOptions', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<JobTitleOption, 'id' | 'created_at'>>): Promise<JobTitleOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<JobTitleOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<JobTitleOption>>(`/admin/job-titles/${id}`, changes)
       const updated = parseDates(response.data.data)

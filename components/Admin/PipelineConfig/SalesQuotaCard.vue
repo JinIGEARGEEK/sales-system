@@ -1,7 +1,7 @@
 <template>
   <UCard class="mb-4" :ui="GLASS_PANEL_UI">
     <template #header>
-      <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.salesQuota.heading') }}</h3>
+      <CardTitle>{{ t('admin.pipelineConfig.salesQuota.heading') }}</CardTitle>
     </template>
 
     <Form ref="salesQuotaFormRef" @submit="onSubmitSalesQuota">

@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-black">{{ t('crm.leads.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.leads.index.heading') }}</h2>
       <div class="flex items-center gap-2">
         <ButtonPrimary
           v-if="canBulkManage || canCreateCampaign"
@@ -65,12 +65,15 @@
       :empty-action-label="scopeFilter === 'converted' ? undefined : t('crm.leads.index.addLead')"
       :empty-action-to="scopeFilter === 'converted' ? undefined : '/crm/leads/create'"
       :filtered="hasActiveFilters"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
+      @log-activity="onLogActivity"
+      @add-task="onAddTask"
       @convert="onConvert"
       @view-deal="onViewDeal"
       @add-to-campaign="(row: Lead) => openCampaignModal([row])"
@@ -183,14 +186,8 @@ const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear
 // company_name sort).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at', companyName: 'company_name' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -217,7 +214,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Lead>(params => leadsStore.fetchList(params), buildParams)
+} = useServerListPage<Lead>(params => leadsStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 onMounted(() => {
   fetch()
@@ -335,7 +332,7 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.leads.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.leads.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      ...rowQuickActions.value,
       { label: t('crm.leads.index.actions.convert'), emitName: 'convert', isBorderBottom: false, hideIf: row => !!row.converted_deal_id },
       { label: t('crm.leads.index.actions.viewDeal'), emitName: 'viewDeal', isBorderBottom: false, hideIf: row => !row.converted_deal_id },
       { label: t('crm.leads.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
@@ -348,9 +345,7 @@ const onViewDetail = (row: Lead) => {
   navigateTo(`/crm/leads/${row.id}`)
 }
 
-const onEdit = (row: Lead) => {
-  navigateTo(`/crm/leads/${row.id}`)
-}
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('lead')
 
 const onConvert = (row: Lead) => {
   navigateTo(`/crm/deals/create?lead_id=${row.id}`)

@@ -3,6 +3,7 @@ export default {
   subtitle: 'How each role uses this system, from lead intake through renewal and upsell.',
   legendHint: 'Highlighted words are the record types you\'ll create or update. The chip above each step shows where to find it in the sidebar.',
   searchPlaceholder: 'Search guideline, e.g. "renewal", "payment", "lead"...',
+  searchAriaLabel: 'Search the guideline',
   clearSearch: 'Clear search',
   noResultsTitle: 'No matching guideline found',
   roleTabs: {

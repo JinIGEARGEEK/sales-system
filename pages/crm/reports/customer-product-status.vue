@@ -11,8 +11,8 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.customerProductStatus.clearFilters')" @clear="clearFilters">
+        <CrmMoreFilters :count="secondaryFilterCount">
           <InputSelect
             v-model="productFilter"
             :options="productOptions"
@@ -21,36 +21,24 @@
             size="xs"
             class="w-full sm:w-48"
           />
-          <InputSelect
-            v-model="statusFilter"
-            :options="statusOptions"
-            :label="t('crm.reports.customerProductStatus.filterStatus')"
-            name="statusFilter"
-            size="xs"
-            class="w-full sm:w-40"
-          />
-          <InputText
-            v-model="companyTagFilter"
-            :label="t('crm.reports.customerProductStatus.filterCompanyTag')"
-            :placeholder="t('crm.reports.customerProductStatus.filterCompanyTagPlaceholder')"
-            name="companyTagFilter"
-            size="xs"
-            class="w-full sm:w-48"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.customerProductStatus.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+        </CrmMoreFilters>
+        <InputSelect
+          v-model="statusFilter"
+          :options="statusOptions"
+          :label="t('crm.reports.customerProductStatus.filterStatus')"
+          name="statusFilter"
+          size="xs"
+          class="w-full sm:w-40"
+        />
+        <InputText
+          v-model="companyTagFilter"
+          :label="t('crm.reports.customerProductStatus.filterCompanyTag')"
+          :placeholder="t('crm.reports.customerProductStatus.filterCompanyTagPlaceholder')"
+          name="companyTagFilter"
+          size="xs"
+          class="w-full sm:w-48"
+        />
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -60,6 +48,8 @@
         :total="rows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
       />
@@ -70,9 +60,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { CUSTOMER_PRODUCT_STATUS_OPTIONS } from '~/constants/mockData/products'
 
 const { t } = useI18n()
 
@@ -85,7 +73,7 @@ const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateFormat, toBadge } = useFormatter()
 const { companyName } = useCompanyName()
-const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
+const { customerProductStatusBadgeColor, customerProductStatusLabel, customerProductStatusOptions } = useCustomerProductStatusColor()
 const productsStore = useProductsStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -102,22 +90,24 @@ const productOptions = computed(() => [
 
 const statusOptions = computed(() => [
   { label: t('crm.reports.customerProductStatus.allStatuses'), value: 'all' },
-  ...CUSTOMER_PRODUCT_STATUS_OPTIONS,
+  ...customerProductStatusOptions.value,
 ])
 
-const productFilter = ref('all')
-const statusFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view. Status is the primary filter and
+// the company-tag text box stands in for search; Product collapses behind
+// "More filters" on mobile.
+const productFilter = useQuerySyncedRef('product_id')
+const statusFilter = useQuerySyncedRef('status')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => {
-  return productFilter.value !== 'all' || statusFilter.value !== 'all' || Boolean(companyTagFilter.value)
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: productFilter, secondary: true },
+    { ref: statusFilter },
+    { ref: companyTagFilter, default: '' },
+  ],
 })
-
-const clearFilters = () => {
-  productFilter.value = 'all'
-  statusFilter.value = 'all'
-  companyTagFilter.value = ''
-}
 
 const results = ref<CustomerByProductStatusRow[]>([])
 const loading = ref(false)
@@ -159,7 +149,7 @@ const rows = computed(() => {
     ...row,
     company_name: companyName(row.company_name),
     productName: productName(row.product_id),
-    statusBadge: toBadge(row.status, customerProductStatusBadgeColor(row.status)),
+    statusBadge: toBadge(customerProductStatusLabel(row.status), customerProductStatusBadgeColor(row.status)),
     startDateDisplay: dateFormat(row.start_date),
   }))
 })

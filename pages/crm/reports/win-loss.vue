@@ -11,16 +11,16 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.winLoss.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
-            size="xs"
-            class="w-full sm:w-64"
-          />
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.winLoss.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.winLoss.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <CrmMoreFilters :count="secondaryFilterCount">
           <InputSelect
             v-model="salesRepFilter"
             :options="salesRepOptions"
@@ -37,20 +37,8 @@
             size="xs"
             class="w-full sm:w-40"
           />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.winLoss.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+        </CrmMoreFilters>
+      </CrmReportFilterBar>
 
       <UAlert
         v-if="!loading && rows.length === 0"
@@ -71,7 +59,7 @@
           :icon-class="row.reason === 'won' ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
           :icon-bg-class="row.reason === 'won' ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         >
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}
+          {{ currencyCompact(row.value) }}
           <template #hint>{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</template>
         </CrmStatCard>
       </div>
@@ -82,7 +70,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import { lostReasonLabel } from '~/constants/mockData'
 
 const { t } = useI18n()
@@ -94,7 +81,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -109,24 +96,36 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const dateRange = ref<{ start: string, end: string } | null>(null)
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+// URL-synced (design-system §5.4), like Source Performance: a shared link,
+// a refresh or a back-button return reopens the same window. The range
+// travels as two YYYY-MM-DD strings straight from the date picker.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const dateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
-const hasActiveFilters = computed(() => Boolean(dateRange.value) || salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  dateRange.value = null
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-}
+const { secondaryCount: secondaryFilterCount, hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [
+    { ref: dateFrom, default: '' },
+    { ref: dateTo, default: '' },
+    { ref: salesRepFilter, secondary: true },
+    { ref: companyTagFilter, default: '', secondary: true },
+  ],
+})
 
 const rows = ref<WinLossReasonRow[]>([])
 const loading = ref(false)
 
 const reportParams = () => ({
-  date_from: dateRange.value?.start,
-  date_to: dateRange.value?.end,
+  date_from: dateFrom.value || undefined,
+  date_to: dateTo.value || undefined,
   assigned_to: salesRepFilter.value !== 'all' ? salesRepFilter.value : undefined,
   company_tag: companyTagFilter.value || undefined,
 })
@@ -145,7 +144,7 @@ const fetchReport = async () => {
 }
 
 guardMounted(fetchReport)
-watch([dateRange, salesRepFilter], fetchReport)
+watch([dateFrom, dateTo, salesRepFilter], fetchReport)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 watch(companyTagFilter, () => {

@@ -6,8 +6,18 @@
       @back="goBack()"
     />
 
+    <CrmDuplicateConflictAlert
+      v-if="conflict"
+      :conflict="conflict"
+      entity="lead"
+      base-path="/crm/leads"
+      :name-of="id => leadsStore.items.find(l => l.id === id)?.name"
+      :loading="loading"
+      @create-anyway="createAnyway"
+      @dismiss="dismiss"
+    />
     <UAlert
-      v-if="duplicateLeads.length > 0"
+      v-else-if="duplicateLeads.length > 0"
       class="mb-4"
       color="warning"
       variant="subtle"
@@ -95,7 +105,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.leads.create.pageTitle') })
 
-const { success, error } = useNotify()
+const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const leadsStore = useLeadsStore()
 const leadSourcesStore = useLeadSourcesStore()
@@ -133,30 +143,30 @@ const duplicateLeads = computed(() => findDuplicateLeads(leadsStore.items, form.
 
 const { markClean } = useUnsavedChangesGuard(() => form)
 
-const { loading, guard } = useSubmitGuard()
-
-const onSubmit = guard(async () => {
-  try {
-    await leadsStore.add({
-      name: form.name,
-      company_id: form.company_id,
-      email: form.email,
-      phone: form.phone,
-      source: form.source as LeadSource,
-      status: form.status as LeadStatus,
-      notes: form.notes,
-      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      business_unit: form.business_unit || null,
-      business_unit_item: form.business_unit_item || null,
-      ...toReferredByPayload(form),
-      converted_deal_id: null,
-      created_at: new Date(),
-    })
+// A same-email/phone 409 shows CrmDuplicateConflictAlert above (links to the
+// match + "Create anyway"); a 422 (e.g. an inactive assigned_to) lands on the
+// field itself — see useCreateWithDuplicateCheck.
+const { conflict, loading, onSubmit, createAnyway, dismiss } = useCreateWithDuplicateCheck({
+  create: allowDuplicate => leadsStore.add({
+    name: form.name,
+    company_id: form.company_id,
+    email: form.email,
+    phone: form.phone,
+    source: form.source as LeadSource,
+    status: form.status as LeadStatus,
+    notes: form.notes,
+    assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+    business_unit: form.business_unit || null,
+    business_unit_item: form.business_unit_item || null,
+    ...toReferredByPayload(form),
+    converted_deal_id: null,
+    created_at: new Date(),
+  }, { allowDuplicate }),
+  onCreated: (created) => {
     success(t('crm.leads.create.createSuccess'))
     markClean()
-    navigateTo('/crm/leads')
-  } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
-  }
+    navigateTo(`/crm/leads/${created.id}`)
+  },
+  resetOn: () => [form.email, form.phone],
 })
 </script>

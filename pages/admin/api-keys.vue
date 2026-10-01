@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-black">{{ t('admin.apiKeys.index.heading') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('admin.apiKeys.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('admin.apiKeys.index.subheading') }}</p>
         </div>
         <ButtonPrimary
@@ -71,7 +71,8 @@ useHead({ title: t('admin.apiKeys.index.pageTitle') })
 // /admin/api-keys' RequireRoles(Admin) on the backend.
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
-const { dateFormat, toBadge } = useFormatter()
+const { dateFormat } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const apiKeysStore = useApiKeysStore()
@@ -87,7 +88,7 @@ const {
   fetch,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<APIKey>(params => apiKeysStore.fetchList(params), () => ({}))
+} = useServerListPage<APIKey>(params => apiKeysStore.fetchList(params), () => ({}), 10, { syncQuery: true })
 
 guardMounted(() => {
   fetch()
@@ -110,9 +111,7 @@ const displayKeys = computed(() => rows.value.map(key => ({
   ...key,
   ownerName: ownerNameById.value.get(key.owner_user_id) ?? '-',
   keyPrefixDisplay: `${key.key_prefix}···`,
-  statusBadge: key.is_active
-    ? toBadge(t('admin.apiKeys.index.statusActive'), 'success')
-    : toBadge(t('admin.apiKeys.index.statusRevoked')),
+  statusBadge: activeBadge(key.is_active, t('admin.apiKeys.index.statusActive'), t('admin.apiKeys.index.statusRevoked')),
   lastUsedDisplay: key.last_used_at ? dateFormat(key.last_used_at) : t('admin.apiKeys.index.neverUsed'),
   createdDate: dateFormat(key.created_at),
 })))

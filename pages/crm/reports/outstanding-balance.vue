@@ -11,61 +11,49 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.outstandingBalance.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <InputText
-            v-model="companyTagFilter"
-            :label="t('crm.reports.outstandingBalance.filterCompanyTag')"
-            :placeholder="t('crm.reports.outstandingBalance.filterCompanyTagPlaceholder')"
-            name="companyTagFilter"
-            size="xs"
-            class="w-full sm:w-48"
-          />
-          <div v-if="hasActiveFilters || bucketFilter !== 'all'" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.outstandingBalance.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
+      <CrmReportFilterBar :show-clear="hasActiveFilters || bucketFilter !== 'all'" :clear-label="t('crm.reports.outstandingBalance.clearFilters')" @clear="clearFilters">
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :label="t('crm.reports.outstandingBalance.filterSalesRep')"
+          name="salesRepFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+        <InputText
+          v-model="companyTagFilter"
+          :label="t('crm.reports.outstandingBalance.filterCompanyTag')"
+          :placeholder="t('crm.reports.outstandingBalance.filterCompanyTagPlaceholder')"
+          name="companyTagFilter"
+          size="xs"
+          class="w-full sm:w-48"
+        />
+        <template #trailing>
           <span v-if="results.length > 0" class="ml-auto text-xs text-(--color-gray)">
             {{ t('crm.reports.outstandingBalance.totalOutstanding', { amount: currencyCompact(totalOutstanding) }) }}
           </span>
-        </div>
-      </UCard>
+        </template>
+      </CrmReportFilterBar>
 
       <!-- Aging summary: outstanding money by how long its oldest unpaid
            installment has been overdue. A tile filters the table below. -->
       <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" data-cy="aging-summary">
-        <button
+        <CrmStatCard
           v-for="bucket in agingSummary"
           :key="bucket.bucket"
-          type="button"
-          :aria-pressed="bucketFilter === bucket.bucket"
+          :active="bucketFilter === bucket.bucket"
           :data-cy="`aging-bucket-${bucket.bucket}`"
-          class="rounded-lg border bg-white p-3 text-left transition hover:bg-(--color-light-gray-1)"
-          :class="bucketFilter === bucket.bucket ? 'border-(--color-primary) ring-1 ring-(--color-primary)' : 'border-(--color-light-gray-2)'"
+          reserve-hint-space
           @click="toggleBucket(bucket.bucket)"
         >
-          <div class="flex items-center justify-between gap-2">
+          <template #label>
             <UBadge size="sm" :color="agingBucketColor(bucket.bucket)" variant="subtle">{{ t(`crm.reports.outstandingBalance.agingBucket.${bucket.bucket}`) }}</UBadge>
-            <span class="text-xs text-(--color-gray)">{{ t('crm.reports.outstandingBalance.dealCount', { count: bucket.count }) }}</span>
-          </div>
-          <p class="mt-2 text-lg font-semibold" :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ currencyCompact(bucket.outstanding) }}</p>
-        </button>
+          </template>
+          <span :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ currencyCompact(bucket.outstanding) }}</span>
+          <template #hint>
+            {{ t('crm.reports.outstandingBalance.dealCount', { count: bucket.count }) }}
+          </template>
+        </CrmStatCard>
       </div>
 
       <TableData
@@ -76,6 +64,8 @@
         :total="rows.length"
         :total-page="totalPage"
         :per-page="perPage"
+        :filtered="hasActiveFilters"
+        @clear-filters="clearFilters"
         @change-page="onChangePage"
         @change-per-page="onChangePerPage"
         @view-deal="onViewDeal"
@@ -87,7 +77,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
@@ -115,20 +104,18 @@ const salesRepOptions = computed(() => [
   ...teamMembersStore.options,
 ])
 
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
-
-const hasActiveFilters = computed(() => salesRepFilter.value !== 'all' || Boolean(companyTagFilter.value))
-
-const clearFilters = () => {
-  salesRepFilter.value = 'all'
-  companyTagFilter.value = ''
-  bucketFilter.value = 'all'
-}
+// URL-synced (design-system §5.4) so a shared link, a refresh or a
+// back-button return reopens the same view.
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 
 // Client-side: the API has no bucket filter, and the summary tiles above
 // always show every bucket of the current server-side filter.
 const bucketFilter = useQuerySyncedRef<AgingBucket | 'all'>('bucket', 'all', 0, ['all', ...AGING_BUCKETS])
+
+const { hasActive: hasActiveFilters, clear: clearFilters } = useListFilters({
+  filters: [{ ref: salesRepFilter }, { ref: companyTagFilter, default: '' }, { ref: bucketFilter }],
+})
 const toggleBucket = (bucket: AgingBucket) => {
   bucketFilter.value = bucketFilter.value === bucket ? 'all' : bucket
 }

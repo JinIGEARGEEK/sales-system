@@ -17,6 +17,10 @@ export default {
     viewList: 'List',
     entityLabel: 'deals',
     loadMoreDeals: 'Load more ({count} more)',
+    reopenConfirmTitle: 'Reopen this deal?',
+    reopenConfirmBodyWon: '"{title}" is Won. Moving it to {stage} reopens it as an open deal.',
+    reopenConfirmBodyLost: '"{title}" is Lost. Moving it to {stage} reopens it and clears its lost reason.',
+    reopenConfirm: 'Reopen deal',
   },
   table: {
     searchPlaceholder: 'Search by title or company...',
@@ -61,12 +65,24 @@ export default {
     createSuccess: 'Deal created',
     duplicateWarningTitle: 'Possible duplicate deal',
     duplicateWarningBody: 'This company already has an open deal:',
+    assigneeInvalid: 'Pick an active member of the sales team.',
+    alreadyConvertedTitle: 'This lead has already been converted',
+    alreadyConvertedBody: 'It became a deal already, so it can\'t be converted again.',
+    openExistingDeal: 'Open the deal',
+    alreadyConvertedToast: 'This lead was already converted to a deal',
   },
   detail: {
     pageTitle: 'Deal Detail',
     markWon: 'Mark Won',
     markLost: 'Mark Lost',
     markLostSuccess: 'Deal marked as Lost',
+    stageChangeSuccess: 'Deal moved to {stage}',
+    stageStepper: {
+      label: 'Deal stage',
+      moveTo: 'Move to {stage}',
+    },
+    logActivity: 'Log Activity',
+    stageChangedKeptEdits: 'Stage updated to {stage} — your other unsaved edits are kept',
     markWonConfirmTitle: 'Mark this deal as Won?',
     markWonConfirmBody: '"{title}" moves to the Won stage. A kickoff follow-up task is created, and you\'ll be offered a Project for it.',
     dealValueUpdateTitle: 'Update deal value?',
@@ -113,6 +129,7 @@ export default {
     createQuoteSuccess: 'Quote created',
     noQuotes: 'No quotes created for this deal yet.',
     validUntil: 'Valid until {date}',
+    quoteStatus: 'Quote status',
     uploadQuotation: 'Upload Quotation (PDF)',
     invalidFileType: 'Please upload a PDF file.',
     fileTooLarge: 'File is too large (max 10 MB).',
@@ -170,6 +187,7 @@ export default {
     removeInstallmentSuccess: 'Installment deleted',
     generateSchedule: 'Generate Schedule',
     generateScheduleSuccess: '{count} installments generated',
+    scheduleExceedsReceivable: 'The payment schedule would add up to more than the customer owes. Lower the amounts and try again.',
     tasksTitle: 'Tasks',
     addTask: 'Add Task',
     addTaskSuccess: 'Task added',
@@ -191,6 +209,25 @@ export default {
     updateSuccess: 'Deal updated',
     markWonSuccess: 'Deal marked as Won',
     wonFollowUpTaskTitle: 'Schedule kickoff call',
-    wonFollowUpTaskCreated: 'Follow-up task created: Schedule kickoff call',
+    wonFollowUpTaskCreated: 'Kickoff call follow-up task added',
+  },
+  // A Won deal with payments, installments or a signed contract
+  // (useWonDealGuard).
+  wonDeal: {
+    protected: {
+      delete: 'This deal is Won and has payments, installments or a signed contract, so only an Admin or Sales Manager can delete it.',
+      unwin: 'This deal is Won and has payments, installments or a signed contract, so only an Admin or Sales Manager can move it out of Won.',
+    },
+    reasonModal: {
+      title: {
+        delete: 'Delete a Won deal?',
+        unwin: 'Move a Won deal out of Won?',
+      },
+      description: 'This deal has payments, installments or a signed contract. Say why; the reason is kept in the audit log.',
+      label: 'Reason',
+      placeholder: 'e.g. The customer cancelled the contract',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+    },
   },
 }

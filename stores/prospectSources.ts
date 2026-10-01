@@ -32,7 +32,7 @@ export const useProspectSourcesStore = defineStore('prospectSources', {
       this.items.push(created)
       return created
     },
-    async update (id: number, changes: Partial<Omit<ProspectSourceOption, 'id' | 'created_at'>>): Promise<ProspectSourceOption> {
+    async update (id: number, changes: OptionUpdatePayload): Promise<ProspectSourceOption> {
       const { $api } = useNuxtApp()
       const response = await $api.patch<ApiResponse<ProspectSourceOption>>(`/admin/prospect-sources/${id}`, changes)
       const updated = parseDates(response.data.data)

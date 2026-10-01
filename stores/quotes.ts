@@ -1,5 +1,5 @@
 // Real API-backed store, scoped one deal at a time. Quotes are hard-deleted
-// server-side. PDF export (GET /quotes/:id/export-pdf) is called directly via
+// server-side, and only Drafts can be deleted (409 otherwise). PDF export (GET /quotes/:id/export-pdf) is called directly via
 // useDownloadPdfBlob from pages/crm/deals/[id]/quotes.vue, not through this
 // store — there's no local state it would update.
 const parseDates = (quote: Quote): Quote => ({
@@ -28,6 +28,9 @@ export interface QuoteUpdatePayload {
   internal_notes: string | null
 }
 
+// A GET /quotes row — the Quote plus its parent Deal's title.
+export type QuoteSearchResult = Quote & { deal_title: string }
+
 export const useQuotesStore = defineStore('quotes', {
   state: () => ({
     items: [] as Quote[],
@@ -36,11 +39,15 @@ export const useQuotesStore = defineStore('quotes', {
     forDeal: state => (dealId: number) => state.items.filter(q => q.deal_id === dealId),
   },
   actions: {
-    async fetchForDeal (dealId: number) {
+    // `keepId`: leave that Quote's already-loaded copy (same object) in place
+    // — the editor page's open Quote, whose form a fresh copy would reset.
+    async fetchForDeal (dealId: number, keepId?: number) {
       const { $api } = useNuxtApp()
       const response = await $api.get<ApiResponse<Quote[]>>(`/deals/${dealId}/quotes`)
       const fetched = response.data.data.map(parseDates)
-      this.items = [...this.items.filter(q => q.deal_id !== dealId), ...fetched]
+      const kept = keepId === undefined ? undefined : this.items.find(q => q.id === keepId)
+      const merged = kept ? fetched.map(q => q.id === kept.id ? kept : q) : fetched
+      this.items = [...this.items.filter(q => q.deal_id !== dealId), ...merged]
       return fetched
     },
     async add (dealId: number, quote: { items: QuoteItem[], scope_of_work: string, validity_date: Date | null, status: QuoteStatus }): Promise<Quote> {
@@ -83,9 +90,21 @@ export const useQuotesStore = defineStore('quotes', {
     // structured-items only), but PUT /quotes/:id still requires the full
     // payload, so this rebuilds it from the already-loaded Quote rather than
     // asking the caller to know every other field.
+    //
+    // An Accepted/Rejected quote is read-only: its PUT carries only
+    // `{ status }` (the API's documented status-only body) — resending the
+    // rest could read as a change (e.g. a date re-serialized differently)
+    // and be refused with a 409.
     async updateStatus (id: number, status: QuoteStatus): Promise<Quote> {
       const quote = this.items.find(q => q.id === id)
       if (!quote) throw new Error(`Quote ${id} not loaded`)
+      if (isQuoteLocked(quote.status)) {
+        const { $api } = useNuxtApp()
+        const response = await $api.put<ApiResponse<Quote>>(`/quotes/${id}`, { status })
+        const updated = parseDates(response.data.data)
+        this.items = [...this.items.filter(q => q.id !== id), updated]
+        return updated
+      }
       return this.update(id, {
         items: quote.items,
         scope_of_work: quote.scope_of_work,
@@ -114,12 +133,27 @@ export const useQuotesStore = defineStore('quotes', {
       this.items = [...this.items.filter(q => q.id !== created.id), created]
       return created
     },
+    // GET /quotes?search= (added 2026-10-01) — searches every Quote the
+    // caller can see by number / reference_number / parent Deal title, for
+    // the global search bar. Doesn't touch `items` (results span Deals).
+    async search (params: { search: string, per_page?: number, page?: number }) {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<QuoteSearchResult[]>>('/quotes', { params })
+      return {
+        items: response.data.data.map(q => ({ ...parseDates(q), deal_title: q.deal_title })),
+        total: response.data.total,
+        page: response.data.page,
+        totalPage: response.data.total_page,
+      }
+    },
     // Loads a single Quote by id directly (not scoped to a known Deal) —
     // used by pages/crm/quotes/[id].vue, reached by URL/link rather than
     // via a Deal's already-fetched quote list.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Quote> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Quote>>(`/quotes/${id}`)
+      const response = await $api.get<ApiResponse<Quote>>(`/quotes/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(q => q.id !== id), fetched]
       return fetched
