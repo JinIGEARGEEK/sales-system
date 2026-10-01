@@ -84,7 +84,7 @@
             <p class="mt-1 truncate text-xs text-(--color-gray)">{{ companyLabelById(item.company_id) }}</p>
           </div>
           <p class="mt-2 text-sm font-medium text-(--color-primary)">
-            {{ t('global.currencySymbol') }}{{ priceFormatCompact(item.value) }}
+            {{ currencyCompact(item.value) }}
           </p>
           <div class="mt-2 flex items-center gap-1.5 border-t border-(--color-light-gray-2) pt-2">
             <UIcon name="material-symbols:person" class="size-3.5 shrink-0 text-(--color-gray)" />
@@ -148,7 +148,7 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.deals.index.pageTitle') })
 
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const { companyLabelById } = useCompanyName()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()

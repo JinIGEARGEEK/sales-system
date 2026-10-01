@@ -11,38 +11,24 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.topReferrers.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
-            size="xs"
-            class="w-full sm:w-64"
-          />
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.topReferrers.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.topReferrers.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.topReferrers.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.topReferrers.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :label="t('crm.reports.topReferrers.filterSalesRep')"
+          name="salesRepFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -62,7 +48,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 
@@ -73,7 +58,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -128,7 +113,7 @@ watch([dateRange, salesRepFilter], fetchReport)
 const displayRows = computed(() => rows.value.map(row => ({
   ...row,
   referrerTypeLabel: row.referrer_type === 'company' ? t('crm.reports.topReferrers.typeCompany') : t('crm.reports.topReferrers.typeContact'),
-  wonRevenueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.won_revenue)}`,
+  wonRevenueDisplay: currencyCompact(row.won_revenue),
 })))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => displayRows.value.length)

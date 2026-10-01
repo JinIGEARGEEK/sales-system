@@ -19,7 +19,7 @@
     </div>
 
     <p v-if="zone === 'deal'" class="mt-2 text-sm font-medium text-(--color-primary) tabular-nums">
-      {{ t('global.currencySymbol') }}{{ priceFormatCompact(card.value) }}
+      {{ currencyCompact(card.value) }}
       <span v-if="card.probability !== null && !lane.terminal" class="text-xs font-normal text-(--color-gray)">· {{ card.probability }}%</span>
     </p>
     <p v-if="lostReasonLabel" class="mt-1 text-xs text-(--color-chart-lost)">{{ lostReasonLabel }}</p>
@@ -95,7 +95,7 @@ const props = defineProps<{
 const emit = defineEmits<{ select: [] }>()
 
 const { t } = useI18n()
-const { priceFormatCompact, dateFormat } = useFormatter()
+const { dateFormat, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 
 const days = computed(() => daysInStage(props.card))

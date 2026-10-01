@@ -142,7 +142,6 @@
 import { useI18n } from 'vue-i18n'
 import {
   BUSINESS_UNIT_FILTER_OPTIONS,
-  isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
@@ -217,7 +216,7 @@ const channelFilterOptions = computed(() => [
 ])
 
 const { $api } = useNuxtApp()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
@@ -425,11 +424,9 @@ const fetchUpcomingTasks = async () => {
 watch([canViewSalesPipelineWidgets, canViewProspectSummary], fetchUpcomingTasks, { immediate: true })
 
 const upcomingTasks = computed(() => {
-  const now = new Date()
   return upcomingTaskRows.value.map(task => ({
     ...task,
     ...resolveRelated(task.related_type, task.related_id),
-    isOverdue: isTaskOverdue(task, now),
     assignedToName: teamMembersStore.nameById(task.assigned_to),
   }))
 })
@@ -597,21 +594,21 @@ const outcomeDonutSegments = computed(() => [
   {
     label: t('crm.dashboard.outcomeWon'),
     value: wonValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(wonValue.value)}`,
+    valueLabel: currencyCompact(wonValue.value),
     colorVar: 'var(--color-success-toast)',
     icon: 'material-symbols:check-circle-outline',
   },
   {
     label: t('crm.dashboard.outcomeLost'),
     value: lostValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(lostValue.value)}`,
+    valueLabel: currencyCompact(lostValue.value),
     colorVar: 'var(--color-danger-toast)',
     icon: 'material-symbols:cancel-outline',
   },
   {
     label: t('crm.dashboard.outcomeOpen'),
     value: openPipelineValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(openPipelineValue.value)}`,
+    valueLabel: currencyCompact(openPipelineValue.value),
     colorVar: 'var(--color-gray)',
     icon: 'material-symbols:radio-button-unchecked',
   },
@@ -626,10 +623,10 @@ const outcomeDonutSegmentsPreview = computed(() => outcomeDonutSegments.value.ma
   return {
     ...seg,
     value: sampleValue,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(sampleValue)}`,
+    valueLabel: currencyCompact(sampleValue),
   }
 }))
-const outcomeTotalPreviewLabel = computed(() => `${t('global.currencySymbol')}${priceFormatCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0))}`)
+const outcomeTotalPreviewLabel = computed(() => currencyCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0)))
 
 const revenueTrend = computed(() => {
   const points = summary.value?.revenue_trend ?? []

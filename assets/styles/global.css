@@ -342,7 +342,20 @@ summary {
  * day cell was getting forced white text, even unselected ones. Exclude calendar
  * cells and let Nuxt UI's own conditional text classes (already correct) apply.
  */
+/*
+ * The `bg-(--color-x)` lines use `~=` (whole class token) rather than `*=`
+ * (substring): the codebase spells these utilities `bg-(--color-x)` (Tailwind
+ * v4's var shorthand), and a substring match would also catch the soft tint
+ * variants (`bg-(--color-primary)/10`, `bg-(--color-accent-green)/25`, …) and
+ * state-prefixed ones (`hover:bg-(--color-primary)`), which sit under dark
+ * text. A whole-token match hits only the bare, always-on solid background.
+ * The older `bg-[var(--color-x)]` spelling is kept for any stray usage.
+ */
 [class*="bg-primary"]:not([class*="bg-primary/10"]):not([class*="bg-primary/15"]):not([data-reka-calendar-cell-trigger]),
+[class~="bg-(--color-primary)"],
+[class~="bg-(--color-black)"],
+[class~="bg-(--color-dark-gray)"],
+[class~="bg-(--color-accent-green)"],
 [class*="bg-[var(--color-primary)]"],
 [class*="bg-[var(--color-black)]"],
 [class*="bg-[var(--color-dark-gray)]"],

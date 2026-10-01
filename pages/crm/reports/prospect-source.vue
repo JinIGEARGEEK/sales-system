@@ -11,38 +11,24 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReport" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.prospectSource.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
-            size="xs"
-            class="w-full sm:w-64"
-          />
-          <InputSelect
-            v-model="assigneeFilter"
-            :options="assigneeOptions"
-            :label="t('crm.reports.prospectSource.filterAssignee')"
-            name="assigneeFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.prospectSource.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.prospectSource.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.prospectSource.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <InputSelect
+          v-model="assigneeFilter"
+          :options="assigneeOptions"
+          :label="t('crm.reports.prospectSource.filterAssignee')"
+          name="assigneeFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+      </CrmReportFilterBar>
 
       <CrmSourceBreakdownReport
         :rows="rows"
@@ -63,7 +49,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { PROSPECT_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
 

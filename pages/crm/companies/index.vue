@@ -148,6 +148,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { lastContactInfo, CONTACT_STALE_TIER_DAYS } = useLastContact()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
@@ -265,9 +266,7 @@ const displayCompanies = computed(() => rows.value.map((company) => {
     ...company,
     name: companyName(company.name),
     tagsDisplay: company.tags?.join(', ') || '-',
-    statusBadge: company.status === 'active'
-      ? toBadge(t('crm.companies.index.statusActive'), 'success')
-      : toBadge(t('crm.companies.index.statusArchived')),
+    statusBadge: activeBadge(company.status === 'active', t('crm.companies.index.statusActive'), t('crm.companies.index.statusArchived')),
     createdDate: dateFormat(company.created_at.toISOString()),
     lastContactBadge: toBadge(contact.label, contact.color),
   }

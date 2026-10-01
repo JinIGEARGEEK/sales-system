@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="quote && deal">
       <PageHeader :title="quote.number || `#${quote.id}`" @back="navigateTo(`/crm/deals/${deal.id}/quotes`)">
-        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
         <template #actions>
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
@@ -124,7 +124,7 @@
 
               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <InputText v-model="form.reference_number" :label="t('crm.quotes.editor.referenceNumber')" :placeholder="t('crm.quotes.editor.referenceNumberPlaceholder')" name="reference_number" />
-                <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
+                <InputSelect v-model="form.status" :options="quoteStatusOptions" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
                 <InputDatePicker v-model="form.issue_date" :label="t('crm.quotes.editor.issueDate')" name="issue_date" />
                 <InputText v-model.number="form.credit_days" type="number" :label="t('crm.quotes.editor.creditDays')" name="credit_days" rules="min_value:0" />
                 <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
@@ -168,12 +168,12 @@
               </fieldset>
 
               <div class="mt-4 flex flex-col gap-1 border-t border-(--color-light-gray-2) pt-3 text-sm">
-                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.subtotal) }}</span></div>
-                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.discountTotal) }}</span></div>
-                <div v-if="vatIncluded" class="flex justify-between" data-cy="quote-pre-vat"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.amountBeforeVat') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.taxableAmount) }}</span></div>
-                <div v-if="form.vat_enabled" class="flex justify-between" data-cy="quote-vat"><span class="text-(--color-gray)">{{ vatIncluded ? t('crm.quotes.editor.vatIncluded') : t('crm.quotes.editor.vatEnabled') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.vat) }}</span></div>
-                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.wht) }}</span></div>
-                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</span></div>
+                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ currency(totals.subtotal) }}</span></div>
+                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ currency(totals.discountTotal) }}</span></div>
+                <div v-if="vatIncluded" class="flex justify-between" data-cy="quote-pre-vat"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.amountBeforeVat') }}</span><span>{{ currency(totals.taxableAmount) }}</span></div>
+                <div v-if="form.vat_enabled" class="flex justify-between" data-cy="quote-vat"><span class="text-(--color-gray)">{{ vatIncluded ? t('crm.quotes.editor.vatIncluded') : t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
+                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ currency(totals.wht) }}</span></div>
+                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
               </div>
 
               <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -185,19 +185,19 @@
         </div>
 
         <div class="lg:col-span-2">
-          <UCard>
-            <template #header>
-              <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.grandTotal') }}</h3>
-              </div>
-            </template>
-            <p class="text-2xl font-black text-(--color-primary)">{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</p>
-          </UCard>
+          <CrmStatCard
+            :label="t('crm.quotes.editor.grandTotal')"
+            icon="material-symbols:payments-outline"
+            icon-class="text-(--color-primary)"
+            value-class="text-(--color-primary)"
+          >
+            {{ currency(totals.grandTotal) }}
+          </CrmStatCard>
 
           <UCard class="mt-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.attachments') }}</h3>
+                <CardTitle>{{ t('crm.quotes.editor.attachments') }}</CardTitle>
                 <ButtonPrimary :label="t('crm.quotes.editor.addAttachment')" icon="material-symbols:add" small data-cy="quote-add-attachment" @click="addAttachmentOpen = true" />
               </div>
             </template>
@@ -231,7 +231,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
@@ -252,8 +251,8 @@ if (justCreated.value) {
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
-const { priceFormat } = useFormatter()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { currency } = useFormatter()
+const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptions } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
 
 const quotesStore = useQuotesStore()
