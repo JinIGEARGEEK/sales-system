@@ -111,4 +111,34 @@ describe('useWonDealGuard', () => {
     expect(fn).toHaveBeenCalledWith()
     expect(askReason).not.toHaveBeenCalled()
   })
+
+  it('updateStage is the guarded stage move: position and lost reason pass through, the override reason on retry', async () => {
+    const api = useNuxtApp().$api
+    const patchSpy = vi.spyOn(api, 'patch')
+      .mockRejectedValueOnce(reasonRequired())
+      .mockResolvedValueOnce(apiResponse(makeDeal({ id: 5, stage: 'Lost', status: 'lost' })) as never)
+
+    const { updateStage } = useWonDealGuard({ askReason: async () => 'Customer walked away' })
+    const result = await updateStage(5, 'Lost', { position: 2, lostReason: 'price' })
+
+    expect(result?.status).toBe('lost')
+    expect(patchSpy.mock.calls[1]).toEqual([
+      '/deals/5/stage',
+      { stage: 'Lost', position: 2, lost_reason: 'price' },
+      { params: { reason: 'Customer walked away' } },
+    ])
+  })
+
+  it('remove resolves true once deleted and null when the deal is protected', async () => {
+    const api = useNuxtApp().$api
+    vi.spyOn(api, 'delete')
+      .mockResolvedValueOnce({ data: {} } as never)
+      .mockRejectedValueOnce(protectedDeal())
+
+    const { remove } = useWonDealGuard({ askReason: vi.fn() })
+
+    expect(await remove(8)).toBe(true)
+    expect(await remove(9)).toBeNull()
+    expect(toastTitles()).toEqual(['crm.deals.wonDeal.protected.delete'])
+  })
 })

@@ -132,15 +132,10 @@
       @clear-filters="clearFilters"
     />
     <CrmLostReasonModal v-model:open="lostReasonOpen" @confirm="onConfirmLostReason" />
-    <!-- A Won/Lost deal dropped on an open stage is reopened (status open,
-         lost_reason cleared) — confirmed first; cancelling leaves the card. -->
-    <CrmConfirmDeleteModal
-      :open="pendingReopen !== null"
-      :title="t('crm.deals.index.reopenConfirmTitle')"
-      :body="pendingReopen ? t(pendingReopen.item.status === 'won' ? 'crm.deals.index.reopenConfirmBodyWon' : 'crm.deals.index.reopenConfirmBodyLost', { title: pendingReopen.item.title, stage: pendingReopen.newStage }) : ''"
-      :confirm-label="t('crm.deals.index.reopenConfirm')"
-      confirm-color="primary"
-      @update:open="(value: boolean) => { if (!value) pendingReopen = null }"
+    <CrmDealReopenConfirmModal
+      :deal="pendingReopen?.item"
+      :stage="pendingReopen?.newStage"
+      @cancel="pendingReopen = null"
       @confirm="onConfirmReopen"
     />
     <CrmWonHandoffProjectModal :handoff="wonHandoff" />
@@ -461,15 +456,6 @@ const onConfirmLostReason = (reason: LostReason) => {
   if (pending) moveDeal(pending.item, pending.newStage, pending.position, reason)
 }
 
-// Resolved through the stage row's flags (an Admin can rename or add stages),
-// falling back to the store's Lost stage name before the config has loaded.
-// By the stage row's is_lost_stage flag, like the Deal detail page.
-const isLostStageName = (stage: string) => pipelineStagesStore.isLostStage(stage)
-const isOpenStageName = (stage: string) => {
-  const row = pipelineStagesStore.byName(stage)
-  return row ? !row.is_won_stage && !row.is_lost_stage : stage !== pipelineStagesStore.lostStageName && stage !== pipelineStagesStore.wonStageName
-}
-
 // Dropping a Won/Lost deal on an open stage reopens it (the API sets status
 // open and clears lost_reason) — asked first, like the other hard-to-undo
 // moves on this board.
@@ -483,12 +469,13 @@ const onConfirmReopen = async () => {
 const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string, position?: number) => {
   if (item._type === 'deal') {
     const stageChanged = item.stage !== newStage
-    if (stageChanged && isLostStageName(newStage)) {
+    // Stages resolve by their row's Won/Lost flags (an Admin can rename them).
+    if (stageChanged && pipelineStagesStore.isLostStage(newStage)) {
       pendingLostMove.value = { item, newStage, position }
       lostReasonOpen.value = true
       return
     }
-    if (stageChanged && item.status !== 'open' && isOpenStageName(newStage)) {
+    if (stageChanged && item.status !== 'open' && pipelineStagesStore.statusForStage(newStage) === 'open') {
       pendingReopen.value = { item, newStage, position }
       return
     }
@@ -507,7 +494,7 @@ const moveDeal = async (item: Deal & { _type: 'deal' }, newStage: string, positi
   const stageChanged = originStage !== newStage
   if (!stageChanged && position === undefined) return
   try {
-    const updated = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(item.id, newStage as DealStage, position, lostReason, reason))
+    const updated = await wonDealGuard.updateStage(item.id, newStage as DealStage, { position, lostReason })
     // Explained or dismissed: nothing moved, the card stays where it was.
     if (!updated) return
     // A same-stage drop is just a within-lane reorder — no stage actually

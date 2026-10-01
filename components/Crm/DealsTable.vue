@@ -215,11 +215,7 @@ const confirmDelete = async () => {
     try {
       const { id, title } = target.value
       closeDelete()
-      const deleted = await wonDealGuard.run('delete', async (reason) => {
-        await dealsStore.remove(id, reason)
-        return true
-      })
-      if (!deleted) return
+      if (!(await wonDealGuard.remove(id))) return
       notifyDeletedWithUndo({ id, name: title, restore: restoreId => dealsStore.restore(restoreId), onRestored: () => fetch() })
       await fetch()
     } catch (err) {
