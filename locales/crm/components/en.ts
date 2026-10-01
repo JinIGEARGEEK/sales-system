@@ -406,8 +406,9 @@ export default {
     fields: {
       email: 'email',
       phone: 'phone',
-      email_or_phone: 'email or phone',
     },
+    // When the 409 named neither field.
+    emailOrPhone: 'email or phone',
     and: ' and ',
     entities: {
       lead: 'lead',
