@@ -85,6 +85,33 @@ export default defineAppConfig({
         description: 'mt-1 text-sm text-(--color-gray)',
       },
     },
+    // Nuxt UI's defaults set these titles and group labels in font-semibold;
+    // the app tops out at font-medium (design-system §3.4).
+    slideover: {
+      slots: {
+        title: 'font-medium',
+      },
+    },
+    dropdownMenu: {
+      slots: {
+        label: 'font-medium',
+      },
+    },
+    select: {
+      slots: {
+        label: 'font-medium',
+      },
+    },
+    selectMenu: {
+      slots: {
+        label: 'font-medium',
+      },
+    },
+    inputMenu: {
+      slots: {
+        label: 'font-medium',
+      },
+    },
     /*
      * Default unchecked box is just a faint `ring-accented` with no fill —
      * invisible against this app's translucent glass surfaces (modals,

@@ -28,7 +28,7 @@
           variant="ghost"
           color="neutral"
           size="xs"
-          @click="showPassword = !showPassword"
+          @click="() => { showPassword = !showPassword }"
         />
       </template>
     </UInput>

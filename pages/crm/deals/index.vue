@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-semibold">{{ t('crm.deals.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.deals.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.deals.index.viewKanban')" :list-label="t('crm.deals.index.viewList')" />
 
@@ -69,13 +69,13 @@
     >
       <template #column-footer="{ column }">
         <button
-          v-if="hasMoreDeals(column.value)"
+          v-if="hasMoreDeals(String(column.value))"
           type="button"
           class="mt-1 shrink-0 cursor-pointer rounded-md border border-dashed border-(--color-light-gray-2) py-1.5 text-xs text-(--color-gray) transition-colors hover:text-(--color-black) disabled:cursor-not-allowed disabled:opacity-60"
-          :disabled="loadingMoreStage === column.value"
-          @click="loadMoreDeals(column.value)"
+          :disabled="loadingMoreStage === String(column.value)"
+          @click="loadMoreDeals(String(column.value))"
         >
-          {{ loadingMoreStage === column.value ? t('global.loading') : t('crm.deals.index.loadMoreDeals', { count: remainingDealsCount(column.value) }) }}
+          {{ loadingMoreStage === String(column.value) ? t('global.loading') : t('crm.deals.index.loadMoreDeals', { count: remainingDealsCount(String(column.value)) }) }}
         </button>
       </template>
       <template #card="{ item }">

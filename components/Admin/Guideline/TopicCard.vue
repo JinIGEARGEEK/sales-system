@@ -8,7 +8,7 @@
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon :name="topic.flowIcons[0] ?? 'material-symbols:info-outline'" class="size-4 text-(--color-primary)" />
-        <h3 class="text-sm font-semibold">{{ topic.title }}</h3>
+        <h3 class="text-sm font-medium">{{ topic.title }}</h3>
       </div>
     </template>
 
@@ -17,7 +17,7 @@
       <template v-for="(step, index) in topic.flow" :key="step">
         <div class="flex items-center gap-1.5 rounded-full bg-(--color-primary-bg) px-3 py-1.5">
           <UIcon :name="topic.flowIcons[index] ?? 'material-symbols:circle'" class="size-4 text-(--color-primary)" />
-          <span class="text-xs font-semibold text-(--color-primary)">{{ step }}</span>
+          <span class="text-xs font-medium text-(--color-primary)">{{ step }}</span>
         </div>
         <UIcon
           v-if="index < topic.flow.length - 1"
@@ -32,7 +32,7 @@
     <div class="flex flex-col">
       <div v-for="(step, index) in topic.steps" :key="index" class="flex gap-3">
         <div class="flex flex-col items-center">
-          <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--color-primary) text-xs font-bold text-white">
+          <div class="flex size-6 shrink-0 items-center justify-center rounded-full bg-(--color-primary) text-xs font-medium text-white">
             {{ index + 1 }}
           </div>
           <div v-if="index < topic.steps.length - 1" class="my-1 w-px flex-1 bg-(--color-gray)/15" />

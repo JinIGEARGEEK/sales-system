@@ -36,6 +36,18 @@ body {
   font-weight: 400;
 }
 
+/*
+ * The app's heaviest text weight is 500 (Medium), the design tokens' title
+ * weight. The browser draws <b>/<strong>/<th> at 700 (bolder), which in
+ * Prompt reads far heavier than the rest of the UI (Thai glyphs most of
+ * all), so cap them here instead of per element (design-system §3.4).
+ */
+b,
+strong,
+th {
+  font-weight: 500;
+}
+
 button,
 a,
 [role="button"],

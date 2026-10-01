@@ -174,7 +174,7 @@
           size="sm"
           class="relative shrink-0 text-white hover:bg-white/10 md:hidden"
           :aria-label="t('layout.openMenu')"
-          @click="drawer = true"
+          @click="() => { drawer = true }"
         />
         <div class="relative w-full max-w-md">
           <CrmGlobalSearch />
@@ -193,7 +193,7 @@
                  already shows this same title, and there's no room to also
                  duplicate it in this narrower bar alongside the menu trigger
                  and search box. -->
-            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-semibold text-white md:block">
+            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-medium text-white md:block">
               {{ currentPageTitle }}
             </p>
           </Transition>
@@ -212,7 +212,7 @@
           size="xs"
           variant="link"
           color="neutral"
-          class="p-0 font-semibold text-amber-950 underline"
+          class="p-0 font-medium text-amber-950 underline"
           @click="userStore.setFocusRole(null)"
         >
           {{ t('layout.roleFocus.exit') }}
@@ -325,7 +325,7 @@ const isGroupChildActive = (group: MenuGroup) => group.children.some(child => is
 const isGroupExpanded = (group: MenuGroup) => !isGroupCollapsed(group.key) || isGroupChildActive(group)
 
 const footerActions = computed(() => [
-  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => navigateTo('/account/change-password'), danger: false },
+  { icon: 'material-symbols:lock-reset', ariaLabel: t('layout.changePassword'), onClick: () => { navigateTo('/account/change-password') }, danger: false },
   { icon: 'material-symbols:logout', ariaLabel: t('layout.logout'), onClick: logout, danger: true },
 ])
 

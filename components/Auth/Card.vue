@@ -14,7 +14,7 @@
       <div class="pointer-events-none absolute inset-x-6 top-0 h-px rounded-full bg-linear-to-r from-transparent via-white to-transparent shadow-[0_0_10px_1px_rgba(190,225,255,0.9)]" />
       <div class="pointer-events-none absolute inset-y-6 left-0 w-px rounded-full bg-linear-to-b from-transparent via-white to-transparent shadow-[0_0_10px_1px_rgba(190,225,255,0.9)]" />
 
-      <div class="relative z-10 flex items-center justify-center gap-2.5 text-center text-2xl font-semibold text-white" :class="subtitle ? 'mb-2' : 'mb-8'">
+      <div class="relative z-10 flex items-center justify-center gap-2.5 text-center text-2xl font-medium text-white" :class="subtitle ? 'mb-2' : 'mb-8'">
         <UIcon :name="icon" class="size-7" />
         {{ title }}
       </div>

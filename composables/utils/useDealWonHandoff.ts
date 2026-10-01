@@ -1,16 +1,6 @@
 import type { InjectionKey } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-type ProjectFormPayload = {
-  name: string
-  status: ProjectStatus
-  production_reference: string | null
-  target_end_date: Date | null
-  expected_proposal_date: Date | null
-  expected_start_date: Date | null
-  notes: string
-}
-
 // The one hand-off every path into Won runs (FR-CRM-068/048): the Deal detail
 // header's Mark Won, the Overview tab's Stage save, a drop into the Won lane on
 // the Kanban board (a Deal, or a Lead that converts on the way), a stage change
@@ -75,14 +65,23 @@ export const useDealWonHandoff = () => {
     return updated
   }
 
-  const onCreateProject = async (payload: ProjectFormPayload) => {
+  const onCreateProject = async (payload: ProjectModalPayload) => {
     const deal = handoffDeal.value
     if (!deal) return
     try {
+      // The hand-off opens CrmAddProjectModal in create mode, which sends
+      // every field; the defaults only satisfy the modal's wider emit type
+      // (same as useProjectModal's create path).
       await projectsStore.add(deal.company_id, {
         deal_id: deal.id,
         start_date: new Date(),
-        ...payload,
+        name: payload.name ?? deal.title,
+        target_end_date: payload.target_end_date ?? null,
+        expected_proposal_date: payload.expected_proposal_date ?? null,
+        expected_start_date: payload.expected_start_date ?? null,
+        notes: payload.notes ?? '',
+        status: payload.status,
+        production_reference: payload.production_reference,
       })
       success(t('crm.deals.detail.createProjectSuccess'))
     } catch (err) {

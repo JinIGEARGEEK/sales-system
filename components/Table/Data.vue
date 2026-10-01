@@ -93,7 +93,7 @@
                 v-for="col in prop.columns"
                 :key="col.field"
                 :class="[
-                  'text-(--color-black) px-2 text-sm font-semibold first:rounded-l-lg last:rounded-r-lg',
+                  'text-(--color-black) px-2 text-sm font-medium first:rounded-l-lg last:rounded-r-lg',
                   col.type === TABLE_CARD_TYPE.ACTION ? 'text-center' : 'text-left',
                 ]"
                 :style="columnStyle(col)"
@@ -114,10 +114,10 @@
                     :data-cy="`sort-${col.field}`"
                     @click="onSort(col.field)"
                   >
-                    <b>{{ col.label }}</b>
+                    <span>{{ col.label }}</span>
                     <UIcon :name="sortIcon(col.field)" class="inline size-4" aria-hidden="true" />
                   </button>
-                  <b v-else>{{ col.label }}</b>
+                  <span v-else>{{ col.label }}</span>
                   <!-- Nuxt UI's Tooltip defaults to a fixed-height, single-line
                   (`truncate`/`nowrap`) content box, sized for short labels —
                   a longer explanation (e.g. classificationTooltip's MQL/SQL

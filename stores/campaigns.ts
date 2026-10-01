@@ -33,7 +33,7 @@ export const useCampaignsStore = defineStore('campaigns', {
     // existing one already carrying Tasks (that's how "add to an existing
     // campaign" works, no separate action needed). The response isn't
     // surfaced here — a caller showing those Tasks refetches its own list.
-    async bulkCreateTasks (campaignId: number, payload: { targets: { related_type: TaskRelatedType, related_id: number }[], title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }): Promise<Task[]> {
+    async bulkCreateTasks (campaignId: number, payload: { targets: { related_type: TaskRelatedType, related_id: number }[], title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }): Promise<Task[]> {
       const { $api } = useNuxtApp()
       const response = await $api.post<ApiResponse<Task[]>>(`/campaigns/${campaignId}/tasks`, payload)
       return response.data.data

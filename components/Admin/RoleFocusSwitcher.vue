@@ -5,7 +5,7 @@
       :color="isFocused ? 'warning' : 'neutral'"
       size="md"
       trailing-icon="material-symbols:keyboard-arrow-down-rounded"
-      class="role-focus-trigger gap-2 rounded-full px-3 font-semibold transition-colors"
+      class="role-focus-trigger gap-2 rounded-full px-3 font-medium transition-colors"
       :class="isFocused
         ? 'role-focus-trigger-active'
         : 'role-focus-trigger-idle border border-white/20 bg-white/10 text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] backdrop-blur-md hover:bg-white/20'"

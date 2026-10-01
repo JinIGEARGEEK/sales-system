@@ -179,7 +179,7 @@ const emptyForm = () => ({
   campaignId: '',
   title: '',
   description: '',
-  priority: 'medium' as TaskPriority,
+  priority: 'medium' as CrmTaskPriority,
   due_date: props.dueDateDefault,
   assigned_to: props.assignedToDefault,
 })
@@ -207,7 +207,7 @@ const submit = () => {
       title: form.title,
       description: form.description,
       due_date: new Date(form.due_date),
-      priority: form.priority as TaskPriority,
+      priority: form.priority as CrmTaskPriority,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
     }
     emit('submit', form.mode === 'existing'

@@ -108,17 +108,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  submit: [payload: {
-    status: ProjectStatus
-    production_reference: string | null
-    name?: string
-    target_end_date?: Date | null
-    expected_proposal_date?: Date | null
-    expected_start_date?: Date | null
-    notes?: string
-    company_id?: number
-    deal_id?: number | null
-  }]
+  submit: [payload: ProjectModalPayload]
 }>()
 
 const { hasRole } = useRole()

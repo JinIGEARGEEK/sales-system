@@ -56,7 +56,7 @@
                   name="renewal_date"
                   data-cy="customer-product-renewal-date"
                 />
-                <UButton v-if="form.renewal_date" class="mt-1 px-0" variant="link" size="xs" @click="form.renewal_date = ''">
+                <UButton v-if="form.renewal_date" class="mt-1 px-0" variant="link" size="xs" @click="() => { form.renewal_date = '' }">
                   {{ t('crm.components.addCustomerProductModal.clearRenewalDate') }}
                 </UButton>
               </div>

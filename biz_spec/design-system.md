@@ -110,10 +110,10 @@ Two chart-only categorical tokens exist purely for multi-series charts (Pipeline
 Every page's main `<h2>` title uses the same exact class string:
 
 ```
-text-xl font-semibold
+text-xl font-medium
 ```
 
-**Changed 2026-10-01** from `text-xl font-black` (Prompt Black, 900): too heavy, especially on Thai glyphs, and well above the design tokens' title weight (500, `--font-text-*-title-*-weight` in `global.css`). Page titles now sit at 600 and card titles at 500, so the hierarchy comes from size plus one weight step. Don't reintroduce `font-black` on headings.
+**Changed 2026-10-01** from `text-xl font-black` (Prompt Black, 900): too heavy, especially on Thai glyphs, and well above the design tokens' title weight (500, `--font-text-*-title-*-weight` in `global.css`). Lowered again the same day to `font-medium` (500): page titles, card titles and every other heading or label now share the token weight, and the hierarchy comes from size alone. **500 is the app's heaviest text weight** — no `font-semibold`/`font-bold`/`font-black` in templates; `<b>`/`<strong>`/`<th>` are capped at 500 in `global.css`, and Nuxt UI's own semibold slots (slideover title, select/dropdown group labels) are overridden in `app.config.ts`.
 
 This is applied identically across all 28 pages (list, create, and detail views) — **when adding a new page, copy this exact string**, don't approximate it, so titles stay pixel-consistent site-wide.
 
@@ -132,19 +132,19 @@ A responsive title scale and static body/link/button scale exist as CSS custom p
 
 Static (non-responsive) utilities: `.static-body`, `.static-body-sm`, `.static-body-xs`, `.static-body-2xs`, `.static-link` (underlined), `.static-link-sm` (underlined), `.static-button`, `.static-button-sm`.
 
-**In practice, actual pages don't use these `.title-*`/`.static-*` classes** — they use plain Tailwind (`text-xl font-semibold`, `text-sm`, `text-xs text-(--color-gray)`, etc.) directly. The typography-scale classes exist and work, but aren't the established convention for page content. Don't mix the two systems on the same page; follow what neighboring pages already do (plain Tailwind, per §7). (They're used only inside the low-level `components/Table/Card/*` cell renderers.)
+**In practice, actual pages don't use these `.title-*`/`.static-*` classes** — they use plain Tailwind (`text-xl font-medium`, `text-sm`, `text-xs text-(--color-gray)`, etc.) directly. The typography-scale classes exist and work, but aren't the established convention for page content. Don't mix the two systems on the same page; follow what neighboring pages already do (plain Tailwind, per §7). (They're used only inside the low-level `components/Table/Card/*` cell renderers.)
 
 ### 3.4 Heading scale (added 2026-10-01)
 
 | Level | Where | Classes | How |
 |---|---|---|---|
-| Page title | the page's one `<h2>` | `text-xl font-semibold` | `PageHeader`'s `title`, or the list-page header row (§3.2) |
+| Page title | the page's one `<h2>` | `text-xl font-medium` | `PageHeader`'s `title`, or the list-page header row (§3.2) |
 | Modal title | `UModal`/`USlideover` | `text-lg font-medium` | the `title` prop — styled by `app.config.ts`'s `modal.slots.title` (§5.7) |
 | Card / section title | a `UCard`'s `#header`, a detail page's section | `text-base font-medium` | **`<CardTitle>`** (`components/CardTitle.vue`) |
 | Dashboard widget title | `components/Dashboard/*` cards | `text-lg font-medium` | `<CardTitle size="lg">` |
-| Item title inside a card | a row/tile inside a card (a report link tile, a guideline topic) | `text-sm font-medium`/`font-semibold` | plain classes on the element |
+| Item title inside a card | a row/tile inside a card (a report link tile, a guideline topic) | `text-sm font-medium` | plain classes on the element |
 
-Use `<CardTitle>` (renders an `<h3>`; `as="h4"` for a nested one) instead of hand-writing `<h3 class="text-base font-semibold">` — before this, card headings drifted between `text-base font-semibold` (39×), `text-lg font-medium` (18×, all on the Dashboard), and `text-sm font-semibold` (the Sales Cycle / Forecast Accuracy report cards). The Dashboard's larger title is kept as an explicit `size="lg"` rather than flattened, since those widgets sit in a denser multi-card grid with a section header above (`DashboardSectionHeader`). Spacing utilities (`mb-4`, `flex …`) on a heading stay on a wrapper or as a class on `<CardTitle>` — it passes classes through. A few deliberately special headings keep their own classes: the Overview Pipeline zone labels (`text-base font-semibold`) and side-panel card name.
+Use `<CardTitle>` (renders an `<h3>`; `as="h4"` for a nested one) instead of hand-writing `<h3 class="text-base font-medium">` — before this, card headings drifted between `text-base font-semibold` (39×), `text-lg font-medium` (18×, all on the Dashboard), and `text-sm font-semibold` (the Sales Cycle / Forecast Accuracy report cards). The Dashboard's larger title is kept as an explicit `size="lg"` rather than flattened, since those widgets sit in a denser multi-card grid with a section header above (`DashboardSectionHeader`). Spacing utilities (`mb-4`, `flex …`) on a heading stay on a wrapper or as a class on `<CardTitle>` — it passes classes through. A few deliberately special headings keep their own classes: the Overview Pipeline zone labels (`text-base font-medium`) and side-panel card name.
 
 ---
 
@@ -202,7 +202,7 @@ Every `pages/crm/*/index.vue` and `pages/admin/*/index.vue` follows this exact s
 ```
 <div class="p-5">
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-xl font-semibold">{{ pageTitle }}</h2>
+    <h2 class="text-xl font-medium">{{ pageTitle }}</h2>
     <ButtonPrimary :label="..." icon="material-symbols:add" @click="navigateTo('.../create')" />
   </div>
 
@@ -227,7 +227,7 @@ See `pages/crm/leads/create.vue`:
 ```
 <div class="p-5">
   <div class="mb-4">
-    <h2 class="text-xl font-semibold">{{ heading }}</h2>
+    <h2 class="text-xl font-medium">{{ heading }}</h2>
     <p class="text-sm text-(--color-gray)">{{ subheading }}</p>
   </div>
 

@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <div>
-        <h2 class="text-xl font-semibold">{{ t('crm.tasks.index.heading') }}</h2>
+        <h2 class="text-xl font-medium">{{ t('crm.tasks.index.heading') }}</h2>
         <p class="text-sm text-(--color-gray)">{{ t('crm.tasks.index.subheading') }}</p>
       </div>
       <div class="flex items-center gap-2">
@@ -87,7 +87,7 @@
         >
           <h3
             :id="`task-group-${group.key}`"
-            class="mb-2 flex items-center gap-2 border-l-4 pl-2 text-sm font-semibold"
+            class="mb-2 flex items-center gap-2 border-l-4 pl-2 text-sm font-medium"
             :class="GROUP_ACCENT[group.key].heading"
           >
             <UIcon :name="GROUP_ACCENT[group.key].icon" class="size-4" />
@@ -267,7 +267,7 @@ const openEditTask = (task: Task) => {
   addTaskOpen.value = true
 }
 
-const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
+const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
   try {
     await tasksStore.add(payload as Omit<Task, 'id' | 'status' | 'created_at'>)
     success(t('crm.tasks.index.addTaskSuccess'))
@@ -280,7 +280,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
   await refresh().catch(notifyApiError)
 }
 
-const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }) => {
   if (!editingTask.value) return
   try {
     await tasksStore.update(editingTask.value.id, payload)
