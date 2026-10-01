@@ -30,11 +30,16 @@ export const fullDealUpdatePayload = (deal: Deal, changes: Partial<DealUpdatePay
   ...changes,
 })
 
-// List responses don't carry value_quote_number (only single-deal ones do):
-// keep the one already loaded for the same Deal and quote, so a list refresh
-// doesn't blank the "From accepted quote Q-…" hint.
+// Only single-deal responses (GET/PUT/PATCH /deals/:id) carry
+// value_quote_number; a list row whose value follows a quote leaves it out.
+// True for such a row — the "From accepted quote Q-…" hint needs a re-read
+// (useCurrentDeal) unless keepValueQuoteNumber below can fill it in.
+export const lacksValueQuoteNumber = (deal: Deal) => Boolean(deal.value_quote_id) && deal.value_quote_number === undefined
+
+// Keeps the value_quote_number already loaded for the same Deal and quote,
+// so a list refresh doesn't blank the hint.
 const keepValueQuoteNumber = (deal: Deal, loaded: Deal[]): Deal => {
-  if (deal.value_quote_number !== undefined || !deal.value_quote_id) return deal
+  if (!lacksValueQuoteNumber(deal)) return deal
   const previous = loaded.find(d => d.id === deal.id && d.value_quote_id === deal.value_quote_id)
   return previous?.value_quote_number !== undefined ? { ...deal, value_quote_number: previous.value_quote_number } : deal
 }

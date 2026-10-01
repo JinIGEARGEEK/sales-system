@@ -54,6 +54,12 @@ describe('stores/deals', () => {
     expect(store.items.map(d => d.value_quote_number)).toEqual(['Q-012', undefined])
   })
 
+  it('lacksValueQuoteNumber flags only a quote-synced row without its number', () => {
+    expect(lacksValueQuoteNumber(makeDeal({ value_quote_id: 12 }))).toBe(true)
+    expect(lacksValueQuoteNumber(makeDeal({ value_quote_id: 12, value_quote_number: null }))).toBe(false)
+    expect(lacksValueQuoteNumber(makeDeal({ value_quote_id: null }))).toBe(false)
+  })
+
   it('fetchAll keeps a deal loaded by fetchOne that the newest-200 list leaves out', async () => {
     const store = useDealsStore()
     mockApi.get.mockResolvedValueOnce(apiResponse(makeDeal({ id: 900 })))
