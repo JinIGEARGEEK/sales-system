@@ -68,9 +68,11 @@ export const useContactsStore = defineStore('contacts', {
     // Loads a single Contact by id directly (GET /contacts/:id) — for the
     // Contact detail page and anything else that needs one specific Contact
     // regardless of whether it made fetchAll's capped 200-row cache.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Contact> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Contact>>(`/contacts/${id}`)
+      const response = await $api.get<ApiResponse<Contact>>(`/contacts/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(c => c.id !== id), fetched]
       return fetched

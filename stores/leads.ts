@@ -48,9 +48,11 @@ export const useLeadsStore = defineStore('leads', {
     // Loads a single Lead by id directly (GET /leads/:id) — for the Lead
     // detail page and anything else that needs one specific Lead regardless
     // of whether it made fetchAll's capped 200-row cache.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Lead> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`)
+      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(l => l.id !== id), fetched]
       return fetched

@@ -915,7 +915,17 @@ interface DashboardSummary {
   forecast_by_category: { commit: number, best_case: number, pipeline: number }
   avg_deal_size: number
   avg_sales_cycle_days: number
+  // quarter_pipeline_value ÷ quarterly_sales_target: only open deals expected
+  // to close this quarter (server-local), not the whole open pipeline.
   pipeline_coverage_ratio: number
+  quarter_pipeline_value: number
+  // Open deals whose expected_close_date is before today (any quarter).
+  overdue_pipeline_value: number
+  overdue_pipeline_count: number
+  // Open deals with no (readable) expected_close_date — left out of coverage
+  // and forecast_trend, reported here so they don't silently disappear.
+  undated_pipeline_value: number
+  undated_pipeline_count: number
   quarterly_sales_target: number
   // Company-wide annual revenue goal (FR-CRM-091), Admin-configurable via
   // AppSettings above — annual_revenue_actual is Won Deal value since Jan 1
@@ -931,10 +941,12 @@ interface DashboardSummary {
   annual_revenue_trend: { label: string, actual: number, goal_pace: number }[]
   revenue_trend: { label: string, value: number }[]
   // Forward-looking counterpart to revenue_trend: probability-weighted value of
-  // open deals bucketed by ExpectedCloseDate month (next 6 months). Deals with no
-  // expected_close_date are excluded from every point, so these points may sum to
-  // less than forecasted_revenue above — don't present this as the full forecast.
-  forecast_trend: { label: string, value: number }[]
+  // open deals bucketed by ExpectedCloseDate month (next 6 months), with the
+  // dashboard filters applied. Overdue open deals land in the first (current
+  // month) point; its `overdue` is that part of `value` (0 on the others).
+  // Undated deals are excluded, so the points may sum to less than
+  // forecasted_revenue above — don't present this as the full forecast.
+  forecast_trend: { label: string, value: number, overdue: number }[]
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number, activity_count: number }[]

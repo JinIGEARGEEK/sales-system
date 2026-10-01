@@ -72,9 +72,11 @@ export const useDealsStore = defineStore('deals', {
     // Deal regardless of whether it made fetchAll's capped 200-row cache.
     // Upserts into `items` so every getter/computed built over `items`
     // immediately picks it up too.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Deal> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Deal>>(`/deals/${id}`)
+      const response = await $api.get<ApiResponse<Deal>>(`/deals/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(d => d.id !== id), fetched]
       return fetched

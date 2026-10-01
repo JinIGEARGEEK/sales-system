@@ -137,9 +137,11 @@ export const useQuotesStore = defineStore('quotes', {
     // Loads a single Quote by id directly (not scoped to a known Deal) —
     // used by pages/crm/quotes/[id].vue, reached by URL/link rather than
     // via a Deal's already-fetched quote list.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Quote> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Quote>>(`/quotes/${id}`)
+      const response = await $api.get<ApiResponse<Quote>>(`/quotes/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(q => q.id !== id), fetched]
       return fetched

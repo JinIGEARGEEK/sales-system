@@ -53,7 +53,7 @@
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
               {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.value)}`">
+            <UTooltip :text="bucket.overdue > 0 ? `${bucket.label}: ${currencyCompact(bucket.value)} · ${t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) })}` : `${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -63,6 +63,9 @@
               </div>
             </UTooltip>
             <span class="text-xs text-(--color-gray)">{{ bucket.label }}</span>
+            <span v-if="bucket.overdue > 0" class="-mt-1 text-[11px] text-(--color-danger-text)">
+              {{ t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) }) }}
+            </span>
           </div>
         </div>
       </UCard>
@@ -114,7 +117,7 @@ const { currencyCompact } = useFormatter()
 
 defineProps<{
   revenueTrend: { label: string, value: number, percent: number }[]
-  forecastTrend: { label: string, value: number, percent: number }[]
+  forecastTrend: { label: string, value: number, overdue: number, percent: number }[]
   annualRevenueTrendChart: { label: string, actual: number, goal_pace: number, actualPercent: number, goalPacePercent: number }[]
 }>()
 </script>
