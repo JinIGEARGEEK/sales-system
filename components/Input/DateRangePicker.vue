@@ -19,6 +19,7 @@
         :size="size"
         :aria-invalid="errors.length > 0"
         :aria-describedby="errors.length ? errorId : undefined"
+        :aria-label="inputAriaLabel(props, placeholder || t('global.input.dateRangePlaceholder'))"
         :ui="{ base: 'truncate pr-8' }"
         class="w-full cursor-pointer"
         style="text-align: left"

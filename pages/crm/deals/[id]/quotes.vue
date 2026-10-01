@@ -44,6 +44,7 @@
               :key="`quote-status-${quote.id}-${statusSelectResetKey}`"
               :model-value="quote.status"
               :options="QUOTE_STATUS_OPTIONS"
+              :aria-label="t('crm.deals.detail.quoteStatus')"
               small
               class="w-36 shrink-0"
               :name="`quote-status-${quote.id}`"
