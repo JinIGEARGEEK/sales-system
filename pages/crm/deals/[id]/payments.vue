@@ -3,13 +3,27 @@
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
         <CardTitle>{{ t('crm.deals.detail.paymentsTitle') }}</CardTitle>
-        <ButtonPrimary
-          :label="t('crm.deals.detail.addPayment')"
-          icon="material-symbols:add"
-          small
-          data-cy="payment-add"
-          @click="openAddPayment"
-        />
+        <div class="flex flex-wrap gap-2">
+          <!-- This Deal's payments as CSV (GET /payments/export?deal_id=),
+               Admin/Sales Manager only, like every other export. -->
+          <ButtonPrimary
+            v-if="canExportPayments"
+            :label="t('crm.deals.detail.exportPayments')"
+            icon="material-symbols:download"
+            outline
+            small
+            :loading="exportingPayments"
+            data-cy="payments-export"
+            @click="onExportPayments"
+          />
+          <ButtonPrimary
+            :label="t('crm.deals.detail.addPayment')"
+            icon="material-symbols:add"
+            small
+            data-cy="payment-add"
+            @click="openAddPayment"
+          />
+        </div>
       </div>
 
       <!-- Cash received + WHT the customer withheld = settled. WHT counts
@@ -211,6 +225,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -222,6 +237,19 @@ const paymentInstallmentsStore = usePaymentInstallmentsStore()
 const quotesStore = useQuotesStore()
 
 const { dealId, deal } = useCurrentDeal()
+
+const { hasRole } = useRole()
+const canExportPayments = computed(() => hasRole(...MANAGER_ROLES))
+const exportPayments = usePaymentsExport()
+const exportingPayments = ref(false)
+const onExportPayments = async () => {
+  exportingPayments.value = true
+  try {
+    await exportPayments({ deal_id: dealId })
+  } finally {
+    exportingPayments.value = false
+  }
+}
 
 // Skeletons (not the empty states) until each first fetch settles.
 const paymentsLoading = ref(true)

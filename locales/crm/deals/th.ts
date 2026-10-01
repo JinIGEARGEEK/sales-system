@@ -85,11 +85,9 @@ export default {
     stageChangedKeptEdits: 'อัปเดตขั้นเป็น {stage} แล้ว — การแก้ไขอื่นที่ยังไม่บันทึกยังคงอยู่',
     markWonConfirmTitle: 'ปิด Deal นี้เป็น Won หรือไม่?',
     markWonConfirmBody: '"{title}" จะถูกย้ายไปสถานะ Won ระบบจะสร้างงานติดตาม Kickoff และเสนอให้สร้าง Project ต่อ',
-    dealValueUpdateTitle: 'อัปเดตมูลค่า Deal หรือไม่?',
-    dealValueUpdateBody: 'ใบเสนอราคาที่ลูกค้ายอมรับมียอด {to} (ก่อน VAT) ต้องการอัปเดตมูลค่า Deal จาก {from} เป็น {to} หรือไม่?',
-    dealValueUpdateConfirm: 'อัปเดตมูลค่า',
-    dealValueUpdateDecline: 'ใช้มูลค่าเดิม',
-    dealValueUpdated: 'อัปเดตมูลค่า Deal สำเร็จ',
+    // Deal value kept in step with its Accepted quote by the API (value_quote_id).
+    valueFromQuote: 'อ้างอิงจากใบเสนอราคาที่ยอมรับ {number}',
+    dealValueSyncedFromQuote: 'อัปเดตมูลค่า Deal เป็น {value} ตามใบเสนอราคา {number} สำเร็จ',
     tabs: {
       overview: 'ภาพรวม',
       quotes: 'ใบเสนอราคา',
@@ -147,6 +145,7 @@ export default {
     confirmQuoteStatusConfirm: 'เปลี่ยนสถานะ',
     paymentsTitle: 'การชำระเงิน',
     addPayment: 'เพิ่มการชำระเงิน',
+    exportPayments: 'ส่งออก CSV',
     noPayments: 'ยังไม่มีการชำระเงินสำหรับ Deal นี้',
     totalPaid: 'ยอดชำระแล้ว',
     totalWht: 'ภาษีหัก ณ ที่จ่าย',

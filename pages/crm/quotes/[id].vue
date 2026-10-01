@@ -256,7 +256,6 @@
         @confirm="onConfirmSend"
       />
 
-      <CrmDealValueSyncModal :sync="dealValueSync" />
 
       <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
     </div>
@@ -270,7 +269,8 @@
 import { useI18n } from 'vue-i18n'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
-const { t, te } = useI18n()
+const { t } = useI18n()
+const showFieldErrors = useApiFieldErrors()
 
 useHead({ title: t('crm.quotes.detail.pageTitle') })
 
@@ -286,7 +286,7 @@ if (justCreated.value) {
   router.replace({ query: rest })
 }
 const { success, error } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { currency } = useFormatter()
 const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
@@ -320,7 +320,7 @@ const loadQuoteAndDeal = async () => {
   try {
     if (!quote.value) await quotesStore.fetchOne(quoteId)
   } catch (err) {
-    notifyApiError(err)
+    notifyLoadError(err)
     return false
   }
   // Targeted fetchOne for this Quote's own Deal/Company/Contact, not a blanket
@@ -454,8 +454,7 @@ const reloadQuote = () => quotesStore.fetchOne(quoteId).catch(notifyApiError)
 // 409 in words with Reload, anything else as the API's message.
 const reportSaveError = (err: unknown) => {
   const setErrors = (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors
-  if (setErrors && applyFormApiFieldErrors(err, setErrors, t, te, {
-    fields: quoteFormFieldNames(items.value),
+  if (setErrors && showFieldErrors(err, setErrors, quoteFormFieldNames(items.value), {
     fieldMap: quoteItemFieldMap(items.value),
   })) return
   notifyQuoteError(err, reloadQuote)
@@ -478,9 +477,9 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
   internal_notes: form.internal_notes || null,
 })
 
-// Moving the Quote to Accepted offers to update the Deal's value to match it
-// (pre-VAT — see quoteRevenueAmount).
-const dealValueSync = useQuoteDealValueSync()
+// Moving the Quote into (or out of) Accepted re-syncs the Deal's value
+// server-side; re-read the Deal so it shows the new value.
+const dealValueRefresh = useQuoteDealValueRefresh()
 
 const supersede = useSupersedeAcceptedQuotes()
 
@@ -501,7 +500,7 @@ const onSave = guard(async () => {
       : await quotesStore.update(current.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
-    if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
+    await dealValueRefresh.afterQuoteStatusChange(updated.deal_id, current.status, updated.status)
   } catch (err) {
     reportSaveError(err)
   }

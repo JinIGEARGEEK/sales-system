@@ -16,7 +16,7 @@
           <InputTextarea v-model="form.description" :label="t('crm.components.addTaskModal.description')" name="description" />
           <InputSelect v-model="form.priority" :options="TASK_PRIORITY_OPTIONS" :label="t('crm.components.addTaskModal.priority')" name="priority" rules="required" />
           <InputDatePicker v-model="form.due_date" :label="t('crm.components.addTaskModal.dueDate')" name="due_date" rules="required" />
-          <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+          <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" for-task />
         </div>
       </Form>
     </template>

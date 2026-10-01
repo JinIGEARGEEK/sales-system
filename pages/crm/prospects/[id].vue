@@ -187,7 +187,7 @@ useHead({ title: t('crm.prospects.detail.pageTitle') })
 
 const route = useRoute()
 const { success, error, warning } = useNotify()
-const { notifyApiError } = useApiErrorNotifier()
+const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 // Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
 // /prospects* — same reasoning as pages/crm/prospects/index.vue.
@@ -213,7 +213,7 @@ const prospect = computed(() => prospectsStore.items.find(p => p.id === prospect
 guardMounted(() => {
   // fetchOne, not fetchAll: this page only ever needs this one Prospect, and
   // fetchAll's 200-row cache (newest-first) can miss an older one entirely.
-  trackRecord(prospectsStore.items.some(p => p.id === prospectId) ? undefined : prospectsStore.fetchOne(prospectId).catch(notifyApiError))
+  trackRecord(prospectsStore.items.some(p => p.id === prospectId) ? undefined : prospectsStore.fetchOne(prospectId).catch(notifyLoadError))
   if (prospectSourcesStore.items.length === 0) prospectSourcesStore.fetchAll().catch(notifyApiError)
   if (prospectStagesStore.items.length === 0) prospectStagesStore.fetchAll().catch(notifyApiError)
   attachmentsStore.fetchForRelated('prospect', prospectId).catch(notifyApiError)

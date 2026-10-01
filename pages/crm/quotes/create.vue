@@ -81,7 +81,8 @@ import { useI18n } from 'vue-i18n'
 import type { SubmissionContext } from 'vee-validate'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
-const { t, te } = useI18n()
+const { t } = useI18n()
+const showFieldErrors = useApiFieldErrors()
 const { quoteStatusOptions } = useQuoteStatusColor()
 
 useHead({ title: t('crm.quotes.create.pageTitle') })
@@ -237,8 +238,7 @@ const onSubmit = guard(async (_values?: unknown, actions?: SubmissionContext) =>
   } catch (err) {
     // A 422's fields (item qty/price/discount, validity_date) onto their
     // inputs; a 409 (e.g. another quote already Accepted) in words.
-    if (actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
-      fields: quoteFormFieldNames(items.value),
+    if (actions && showFieldErrors(err, actions.setErrors, quoteFormFieldNames(items.value), {
       fieldMap: quoteItemFieldMap(items.value),
     })) return
     notifyQuoteError(err)

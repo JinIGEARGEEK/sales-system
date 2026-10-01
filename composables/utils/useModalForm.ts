@@ -70,7 +70,7 @@ export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm:
   const showFieldErrors = useApiFieldErrors()
   const showApiFieldErrors = (err: unknown, fieldMap: Record<string, string> = {}) => {
     if (!formRef.value) return
-    showFieldErrors(err, formRef.value.setErrors, formRef.value.getValues(), fieldMap)
+    showFieldErrors(err, formRef.value.setErrors, formRef.value.getValues(), { fieldMap })
   }
 
   const validateThenSubmit = async (onValid: () => void) => {

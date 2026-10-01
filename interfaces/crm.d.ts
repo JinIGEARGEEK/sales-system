@@ -173,6 +173,26 @@ interface Contact {
   created_at: Date
 }
 
+// POST /companies/:id/merge and POST /contacts/:id/merge (Admin/Sales
+// Manager), body { source_ids } (1–20 ids of the same type, not the target):
+// the sources' linked records move to the target, the target's empty fields
+// are filled from them, and the sources go to Trash. `moved` counts what moved
+// per kind (e.g. deals, contacts, activities) plus `total`; `filled` names
+// the target fields that were empty and got a source's value; `conflicts` are
+// fields where a source had a different value — the target kept its own.
+interface MergeConflict {
+  field: string
+  source_id: number
+  value: unknown
+}
+
+interface MergeResult<T> {
+  target: T
+  moved: Record<string, number> & { total: number }
+  filled: string[]
+  conflicts: MergeConflict[]
+}
+
 // stores/companies.ts / stores/contacts.ts update() parameter types — same
 // reasoning as LeadUpdatePayload below: PUT /companies/:id and
 // PUT /contacts/:id overwrite these fields unconditionally, so they're
@@ -186,6 +206,9 @@ interface TeamMember {
   id: number
   name: string
   email: string
+  // Not sent by GET /team-members yet; when it is, a Production user is left
+  // out of task assignee pickers (the API's 422 on assigned_to otherwise).
+  role?: Role
 }
 
 interface Lead {
@@ -347,6 +370,13 @@ interface Deal {
   // every move into won, cleared on a reopen. What the dashboard counts "won
   // this period" by. Read-only, never sent.
   won_at?: string | null
+  // The Accepted Quote this Deal's value follows, and its number — server-set,
+  // read-only, never sent. While set, `value` is that quote's pre-VAT amount
+  // and PUT /deals/:id with a different value is 422 value
+  // ["synced_from_quote"]; null when no quote is Accepted. Optional only so
+  // create payloads (Omit<Deal, ...>) needn't carry them.
+  value_quote_id?: number | null
+  value_quote_number?: string | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date
@@ -842,6 +872,16 @@ interface PaymentPayload {
   // API's 422 amount ["exceeds_receivable"] otherwise) — sent only after the
   // user chose "Record anyway".
   allow_overpayment?: boolean
+}
+
+// Query for GET /payments/export (CSV, Admin/Sales Manager): paid-date range
+// as YYYY-MM-DD (inclusive), and the optional record/method filters.
+interface PaymentsExportParams {
+  date_from?: string
+  date_to?: string
+  deal_id?: number
+  company_id?: number
+  method?: PaymentMethod
 }
 
 // A planned installment on a Deal's payment schedule, defined before money

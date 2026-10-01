@@ -6,9 +6,23 @@
       @back="goBack()"
     >
       <template #actions>
-        <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+        <div class="flex flex-wrap gap-2">
+          <ButtonPrimary :label="t('crm.reports.exportCsv')" icon="material-symbols:download" outline @click="onExport" />
+          <!-- Every payment received in a date range (GET /payments/export) —
+               the cash side of this report, for accounting. -->
+          <ButtonPrimary
+            v-if="canViewReports"
+            :label="t('crm.reports.outstandingBalance.exportPayments')"
+            icon="material-symbols:download"
+            outline
+            data-cy="payments-export-open"
+            @click="paymentsExportOpen = true"
+          />
+        </div>
       </template>
     </PageHeader>
+
+    <CrmPaymentsExportModal v-model:open="paymentsExportOpen" />
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
       <CrmReportFilterBar :show-clear="hasActiveFilters || bucketFilter !== 'all'" :clear-label="t('crm.reports.outstandingBalance.clearFilters')" @clear="clearFilters">
@@ -151,6 +165,7 @@ watch(companyTagFilter, () => {
 })
 
 const onExport = () => downloadCsvBlob('/reports/outstanding-balance/export', 'outstanding-balance.csv', reportParams())
+const paymentsExportOpen = ref(false)
 
 const totalOutstanding = computed(() => results.value.reduce((sum, row) => sum + row.outstanding_amount, 0))
 const agingSummary = computed(() => summarizeAging(results.value))

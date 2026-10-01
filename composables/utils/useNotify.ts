@@ -27,15 +27,20 @@ const TOAST_UI: Record<NotifyColor, { root: string, title: string, icon: string,
 }
 
 type NotifyAction = { label: string, onClick: () => void }
+// Extra lines under the title (e.g. a merge's kept-value conflicts), and how
+// long the toast stays (ms) when it carries more than a glance can read.
+type NotifyDetails = { description?: string, duration?: number }
 
 export const useNotify = () => {
   const toast = useToast()
 
-  const show = (message: string, color: NotifyColor, action?: NotifyAction) => {
+  const show = (message: string, color: NotifyColor, action?: NotifyAction, details: NotifyDetails = {}) => {
     toast.add({
       title: message,
       color,
-      ui: TOAST_UI[color],
+      ui: { ...TOAST_UI[color], description: 'text-(--color-black) whitespace-pre-line' },
+      ...(details.description ? { description: details.description } : {}),
+      ...(details.duration ? { duration: details.duration } : {}),
       actions: action
         ? [{ label: action.label, color, variant: 'outline', onClick: action.onClick }]
         : undefined,
@@ -49,9 +54,9 @@ export const useNotify = () => {
     }) => {
       show(options.message, options.type ?? 'info')
     },
-    success: (message: string, action?: NotifyAction) => show(message, 'success', action),
-    error: (message: string, action?: NotifyAction) => show(message, 'error', action),
-    info: (message: string, action?: NotifyAction) => show(message, 'info', action),
-    warning: (message: string, action?: NotifyAction) => show(message, 'warning', action),
+    success: (message: string, action?: NotifyAction, details?: NotifyDetails) => show(message, 'success', action, details),
+    error: (message: string, action?: NotifyAction, details?: NotifyDetails) => show(message, 'error', action, details),
+    info: (message: string, action?: NotifyAction, details?: NotifyDetails) => show(message, 'info', action, details),
+    warning: (message: string, action?: NotifyAction, details?: NotifyDetails) => show(message, 'warning', action, details),
   }
 }

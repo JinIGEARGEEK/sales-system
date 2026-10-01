@@ -105,6 +105,26 @@
       :entity-label="t('crm.contacts.index.entityLabel')"
       @create-campaign="openCampaignModal(selected)"
       @cancel="clearSelection"
+    >
+      <!-- Two or more picked: fold them into one (Admin/Sales Manager). -->
+      <ButtonPrimary
+        v-if="canMerge && selectedIds.length >= 2"
+        outline
+        small
+        fit-content
+        icon="material-symbols:merge"
+        :label="t('crm.components.mergeDuplicates.bulkMerge')"
+        data-cy="bulk-merge-button"
+        @click="openBulkMerge"
+      />
+    </CrmCampaignBulkActionBar>
+
+    <CrmMergeDuplicatesModal
+      v-if="canMerge"
+      v-model:open="mergeOpen"
+      entity="contact"
+      :candidates="mergeCandidates"
+      @merged="onMerged"
     />
 
     <CrmConfirmDeleteModal
@@ -131,6 +151,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
+import type { MergeRecord } from '~/composables/utils/useMergeDuplicates'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -153,6 +174,8 @@ const contactsStore = useContactsStore()
 // Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const canDelete = computed(() => hasRole(...MANAGER_ROLES))
+// POST /contacts/:id/merge is Admin/Sales Manager only.
+const canMerge = computed(() => hasRole(...MANAGER_ROLES))
 
 onMounted(() => {
   fetch()
@@ -269,6 +292,20 @@ const displayContacts = computed(() => rows.value.map(contact => ({
 })))
 
 const { isSelectMode, selected, selectedIds, toggleSelectMode, clearSelection } = useBulkSelection<Contact>()
+
+// Bulk "Merge": the selected rows, the first one preselected to stay (the
+// dialog lets the user pick another). The list reloads after a merge — the
+// sources are in Trash now.
+const mergeOpen = ref(false)
+const mergeCandidates = ref<MergeRecord[]>([])
+const openBulkMerge = () => {
+  mergeCandidates.value = selected.value.map(row => contactMergeRecord(row))
+  mergeOpen.value = true
+}
+const onMerged = () => {
+  clearSelection()
+  fetch()
+}
 
 const columns = computed<TableDataColumn[]>(() => [
   ...(isSelectMode.value ? [{ label: '', align: 'left' as const, field: 'select', type: TABLE_CARD_TYPE.SELECTED }] : []),

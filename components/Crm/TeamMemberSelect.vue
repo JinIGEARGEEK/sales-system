@@ -35,6 +35,8 @@ const props = defineProps<{
   // narrow to those two. Admin/Sales Manager keep the full list. Leave it
   // unset on create forms and anywhere the rule doesn't apply (Tasks).
   currentAssignee?: number | null
+  // A Task's assignee: only roles that can own a task (no Production).
+  forTask?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -42,8 +44,9 @@ const emit = defineEmits<{
 }>()
 
 const options = computed(() => {
-  if (props.currentAssignee === undefined || hasRole(...MANAGER_ROLES)) return teamMembersStore.options
+  const all = props.forTask ? teamMembersStore.taskAssigneeOptions : teamMembersStore.options
+  if (props.currentAssignee === undefined || hasRole(...MANAGER_ROLES)) return all
   const allowed = new Set([String(userStore.id), ...(props.currentAssignee ? [String(props.currentAssignee)] : [])])
-  return teamMembersStore.options.filter(option => allowed.has(option.value))
+  return all.filter(option => allowed.has(option.value))
 })
 </script>

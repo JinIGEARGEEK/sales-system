@@ -56,7 +56,7 @@ export const useChangePasswordForm = (onSuccess?: () => unknown) => {
       // codes are prose ("must be different from current password"), so an
       // input only gets the generic "not valid" text and the reason lives in
       // the API's message.
-      if (values && context) showFieldErrors(err, context.setErrors, values, PASSWORD_FIELD_MAP)
+      if (values && context) showFieldErrors(err, context.setErrors, values, { fieldMap: PASSWORD_FIELD_MAP })
       const message = isAxiosError(err) ? err.response?.data?.error?.message : undefined
       error(message || t('global.auth.changePasswordFailed'))
     }

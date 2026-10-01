@@ -32,6 +32,19 @@
           data-cy="duplicate-conflict-create-anyway"
           @click="emit('createAnyway')"
         />
+        <!-- Contacts only (the one entity here with a merge endpoint), for
+             Admin/Sales Manager: open the first match with the merge dialog
+             up and the other matches already picked. -->
+        <ButtonPrimary
+          v-if="mergeLink"
+          small
+          fit-content
+          outline
+          icon="material-symbols:merge"
+          :label="t('crm.components.mergeDuplicates.reviewAndMerge')"
+          :to="mergeLink"
+          data-cy="duplicate-conflict-merge"
+        />
         <ButtonPrimary
           small
           fit-content
@@ -47,6 +60,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import type { DuplicateConflict } from '~/composables/utils/useDuplicateConflict'
+import { MANAGER_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
 
@@ -64,6 +78,13 @@ const emit = defineEmits<{
   createAnyway: []
   dismiss: []
 }>()
+
+const { hasRole } = useRole()
+const mergeLink = computed(() => {
+  const [first, ...others] = props.conflict.ids
+  if (props.entity !== 'contact' || first === undefined || !hasRole(...MANAGER_ROLES)) return null
+  return { path: `${props.basePath}/${first}`, query: { merge: others.join(',') } }
+})
 
 const entityLabel = computed(() => t(`crm.components.duplicateConflict.entities.${props.entity}`))
 const fieldsLabel = computed(() => {

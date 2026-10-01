@@ -163,7 +163,6 @@
       @confirm="confirmQuoteStatusChange"
     />
 
-    <CrmDealValueSyncModal :sync="dealValueSync" />
 
     <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
 
@@ -189,7 +188,7 @@ const downloadPdfBlob = useDownloadPdfBlob()
 const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
 const notifyQuoteError = useQuoteErrorNotifier()
 
-const { dealId, deal } = useCurrentDeal()
+const { dealId } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 
 // Skeletons (not the empty state) until the first fetch settles.
@@ -247,9 +246,9 @@ const confirmRemoveQuote = async () => {
 
 const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
 
-// Accepting a quote offers to update the Deal's value to match it (pre-VAT —
-// see quoteRevenueAmount).
-const dealValueSync = useQuoteDealValueSync()
+// Accepting a quote (or un-accepting one) re-syncs the Deal's value
+// server-side; re-read the Deal so the new value shows.
+const dealValueRefresh = useQuoteDealValueRefresh()
 
 const {
   pending: pendingStatusChange,
@@ -265,9 +264,10 @@ const {
 
 // updateStatus rebuilds the full PUT payload from the loaded Quote.
 const saveQuoteStatus = async (quote: Quote, status: QuoteStatus) => {
+  const before = quote.status
   const updated = await quotesStore.updateStatus(quote.id, status)
   success(t('crm.deals.detail.updateQuoteStatusSuccess'))
-  if (updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
+  await dealValueRefresh.afterQuoteStatusChange(updated.deal_id, before, updated.status)
 }
 
 // Accepting while another quote on this Deal is already Accepted asks

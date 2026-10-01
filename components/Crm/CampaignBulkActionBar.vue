@@ -6,6 +6,9 @@
 
     <ButtonPrimary outline small fit-content icon="material-symbols:campaign-outline" :label="t('crm.components.campaignBulkActionBar.createCampaign')" data-cy="create-campaign-button" @click="emit('createCampaign')" />
 
+    <!-- Page-specific extra actions (e.g. the managers' "Merge"). -->
+    <slot />
+
     <ButtonPrimary cancel small fit-content :label="t('crm.components.bulkActionBar.cancel')" @click="emit('cancel')" />
   </div>
 </template>
