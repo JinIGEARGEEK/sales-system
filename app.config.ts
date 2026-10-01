@@ -112,6 +112,13 @@ export default defineAppConfig({
         label: 'font-medium',
       },
     },
+    // The date picker marks today in font-semibold; the primary colour already
+    // marks it, so it stays at the app's font-medium cap.
+    calendar: {
+      slots: {
+        cellTrigger: 'data-today:font-medium',
+      },
+    },
     /*
      * Default unchecked box is just a faint `ring-accented` with no fill —
      * invisible against this app's translucent glass surfaces (modals,
