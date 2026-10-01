@@ -142,7 +142,6 @@
 import { useI18n } from 'vue-i18n'
 import {
   BUSINESS_UNIT_FILTER_OPTIONS,
-  isTaskOverdue,
 } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLORS, CHART_FALLBACK_COLOR } from '~/constants/ui'
 import { SALES_PIPELINE_ROLES, PROSPECT_ROLES, MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
@@ -425,11 +424,9 @@ const fetchUpcomingTasks = async () => {
 watch([canViewSalesPipelineWidgets, canViewProspectSummary], fetchUpcomingTasks, { immediate: true })
 
 const upcomingTasks = computed(() => {
-  const now = new Date()
   return upcomingTaskRows.value.map(task => ({
     ...task,
     ...resolveRelated(task.related_type, task.related_id),
-    isOverdue: isTaskOverdue(task, now),
     assignedToName: teamMembersStore.nameById(task.assigned_to),
   }))
 })

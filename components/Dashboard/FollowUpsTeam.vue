@@ -27,7 +27,7 @@
               <p class="truncate text-sm font-medium" :title="task.title">{{ task.title }}</p>
               <p class="truncate text-xs text-(--color-gray)" :title="`${task.relatedLabel} · ${task.assignedToName}`">{{ task.relatedLabel }} · {{ task.assignedToName }}</p>
             </div>
-            <UBadge :color="task.isOverdue ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
+            <UBadge :color="taskDueColor(task)" variant="subtle" class="shrink-0">
               {{ dateFormat(task.due_date) }}
             </UBadge>
           </NuxtLink>
@@ -145,7 +145,7 @@ defineProps<{
     id: number
     title: string
     due_date: Date
-    isOverdue: boolean
+    status: TaskStatus
     relatedLabel: string
     path: string
     assignedToName: string

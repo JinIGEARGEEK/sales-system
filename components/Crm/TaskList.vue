@@ -66,7 +66,7 @@
         </UBadge>
         <!-- Overdue carries an icon and the word too, not only the red colour. -->
         <UBadge
-          :color="dueBadgeColor(task)"
+          :color="taskDueColor(task)"
           variant="subtle"
           class="shrink-0"
           :icon="taskDueBucket(task) === 'overdue' ? 'material-symbols:schedule-outline' : undefined"
@@ -106,7 +106,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { taskPriorityColor } from '~/constants/mockData'
 import { taskDueBucket } from '~/composables/utils/useTaskGroups'
 
 const { t } = useI18n()
@@ -115,15 +114,6 @@ const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
 const tasksStore = useTasksStore()
-
-// Red only once a pending task is past its due DAY (the same boundary as the
-// Tasks page's Overdue group), primary for due today, neutral otherwise.
-const dueBadgeColor = (task: Task) => {
-  const bucket = taskDueBucket(task)
-  if (bucket === 'overdue') return 'error'
-  if (bucket === 'today') return 'primary'
-  return 'neutral'
-}
 
 onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)

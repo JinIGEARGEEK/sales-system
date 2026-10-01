@@ -35,7 +35,7 @@
               <p class="truncate text-sm font-medium" :title="task.title">{{ task.title }}</p>
               <p class="truncate text-xs text-(--color-gray)">{{ task.relatedLabel }}</p>
             </div>
-            <UBadge :color="task.isOverdue ? 'error' : 'primary'" variant="subtle" class="shrink-0">
+            <UBadge :color="taskDueColor(task)" variant="subtle" class="shrink-0">
               {{ task.isOverdue ? dateFormat(task.due_date) : t('crm.dashboard.dueToday') }}
             </UBadge>
           </NuxtLink>
@@ -99,7 +99,7 @@ const myTasksLink = computed(() => `/crm/tasks?assigned_to=${userStore.id}`)
 
 defineProps<{
   // The signed-in user's pending tasks due today or earlier, most overdue first.
-  tasks: { id: number, title: string, due_date: Date, isOverdue: boolean, relatedLabel: string, path: string }[]
+  tasks: { id: number, title: string, due_date: Date, status: TaskStatus, isOverdue: boolean, relatedLabel: string, path: string }[]
   overdueTotal: number
   todayTotal: number
   // Open deals assigned to the user that have sat in their stage past that
