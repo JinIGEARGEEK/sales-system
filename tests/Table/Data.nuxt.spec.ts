@@ -5,7 +5,8 @@ import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 // Same reasoning as tests/AccessGate: mountSuspended doesn't install the i18n
 // plugin, and these tests only care about selection, not labels.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

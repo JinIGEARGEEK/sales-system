@@ -6,7 +6,8 @@ import { makeDeal, makeContract } from '../factories'
 // same mocking approach as tests/AccessGate/AccessGate.nuxt.spec.ts and
 // tests/utils/usePageAccess.nuxt.spec.ts. The gate logic itself never calls
 // `t`, so the stub's return value doesn't matter here.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

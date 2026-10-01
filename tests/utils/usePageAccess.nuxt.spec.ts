@@ -9,7 +9,8 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 // other spec yet exercising an i18n-dependent component to have hit this" —
 // this is that other spec). useRole()'s `t` only backs `roleLabel`, which
 // none of these tests call, so the stub's return value doesn't matter here.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

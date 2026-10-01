@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { apiResponse } from '../factories'
 
-// No toast/notify usage in this store, so mocking useNuxtApp wholesale is
-// safe here (see CLAUDE.md's note on when it isn't).
+// Swap only useNuxtApp().$api for this spy, keeping the real nuxtApp
+// (see tests/stores/deals.nuxt.spec.ts and CLAUDE.md).
 const mockApi = { get: vi.fn() }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const makeOverview = (won: number): PipelineOverview => ({
   period: { date_from: '2026-09-21', date_to: '2026-09-23', prev_date_from: '2026-09-18', prev_date_to: '2026-09-20' },

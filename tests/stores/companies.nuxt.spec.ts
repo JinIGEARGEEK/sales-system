@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { apiResponse } from '../factories'
 
-// stores/companies.ts has no toast/notify usage, so mocking the whole
-// useNuxtApp auto-import is safe here (see tests/stores/deals.nuxt.spec.ts).
+// Swap only useNuxtApp().$api for these spies, keeping the real nuxtApp
+// (see tests/stores/deals.nuxt.spec.ts and CLAUDE.md).
 const mockApi = {
   get: vi.fn(),
   post: vi.fn(),
@@ -11,7 +11,9 @@ const mockApi = {
   patch: vi.fn(),
   delete: vi.fn(),
 }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const makeCompany = (overrides: Partial<Company> = {}): Company => ({
   id: 1,

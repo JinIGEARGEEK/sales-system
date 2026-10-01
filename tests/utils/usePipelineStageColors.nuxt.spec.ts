@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { DEAL_STAGE_COLORS } from '~/constants/mockData'
 import { CHART_CATEGORICAL_COLOR_VARS } from '~/constants/ui'
 
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

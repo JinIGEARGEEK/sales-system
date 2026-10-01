@@ -3,7 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 // useSubmitGuard -> useApiErrorNotifier() calls useI18n() — same mocking
 // approach as tests/utils/useContractGate.nuxt.spec.ts. Only the
 // no-own-try/catch fallback path below ever reaches `t`.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

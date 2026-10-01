@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 
-// stores/users.ts has no toast/notify usage, so mocking useNuxtApp wholesale
-// is fine here (CLAUDE.md test-mocking guidance; see tests/stores/deals.nuxt.spec.ts).
+// Swap only useNuxtApp().$api for these spies, keeping the real nuxtApp
+// (CLAUDE.md test-mocking guidance; see tests/stores/deals.nuxt.spec.ts).
 const mockApi = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const counts = (over: Partial<OpenRecordCounts> = {}): OpenRecordCounts => ({ deals: 0, leads: 0, prospects: 0, tasks: 0, total: 0, ...over })
 

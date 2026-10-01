@@ -5,7 +5,9 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 // audit-log fetch and, via teamMembersStore, the team-members fetch) — same
 // mocking approach as tests/stores/deals.nuxt.spec.ts.
 const mockApi = { get: vi.fn() }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const auditResponse = (entries: AuditLogEntry[]) => ({
   data: { data: entries, page: 1, per_page: 200, total: entries.length, total_page: 1, next: 0, prev: 0 },

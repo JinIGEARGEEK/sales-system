@@ -3,7 +3,8 @@ import { AxiosError } from 'axios'
 import type { AxiosResponse } from 'axios'
 
 // Echo i18n keys back; useApiFieldErrors itself reads the real $i18n table.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

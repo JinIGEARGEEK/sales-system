@@ -3,7 +3,8 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { AxiosError, type AxiosResponse } from 'axios'
 import { KEEP_RECORDS, updateLosesRecords } from '~/composables/utils/useUserRecordsReassign'
 
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({
     t: (key: string, params?: unknown) => (params === undefined ? key : `${key} ${JSON.stringify(params)}`),
     te: () => false,

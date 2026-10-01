@@ -1,19 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`InputText Component Test > should match with snapshot 1`] = `
-<div>
-  <div class="custom-input">
-    <!--v-if--><label class="q-field row no-wrap items-start q-field--outlined q-input" for="[NORMALIZED-FOR]">
-      <!---->
-      <div class="q-field__inner relative-position col self-stretch">
-        <div class="q-field__control relative-position row no-wrap" tabindex="-1">
-          <div class="q-field__control-container col relative-position row no-wrap q-anchor--skip"><input class="q-field__native q-placeholder" tabindex="0" data-cy="" placeholder="" autocomplete="off" id="[NORMALIZED-ID]" maxlength="" type="text" value=""></div>
-        </div>
-        <!---->
-      </div>
-      <!---->
-    </label>
+"<div>
+  <div>
+    <!--v-if-->
+    <!--v-if-->
+    <div class="relative inline-flex items-center w-full"><input id="input-v-0-0-0" type="text" name="" placeholder="" class="w-full rounded-md border-0 appearance-none placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm gap-1.5 text-highlighted bg-default ring ring-inset ring-accented focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary" autocomplete="off" data-cy="" maxlength="" aria-invalid="false" value="">
+      <!--v-if-->
+      <!--v-if-->
+    </div>
     <!--v-if-->
   </div>
-</div>
+</div>"
 `;

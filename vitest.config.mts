@@ -6,6 +6,9 @@ export default defineVitestConfig({
   test: {
     // globals: true,
     testTimeout: 30000,
+    // Each file boots the Nuxt app in a beforeAll (@nuxt/test-utils 4); with
+    // every worker booting at once that can outlast Vitest's 10s default.
+    hookTimeout: 60000,
     // Agent worktrees under .claude/ are full checkouts of other branches
     exclude: [...configDefaults.exclude, '.claude/**'],
     environment: 'nuxt',

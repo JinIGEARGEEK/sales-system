@@ -5,7 +5,8 @@ import RelatedList from '~/components/Crm/RelatedList.vue'
 
 // mountSuspended doesn't install the i18n plugin (TableEmpty/ButtonPrimary
 // call useI18n); same stub as tests/Table/Data.nuxt.spec.ts.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

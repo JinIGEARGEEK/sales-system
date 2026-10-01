@@ -7,7 +7,9 @@ import { makeDeal, apiResponse } from '../factories'
 // post/put/patch/delete call in the store resolves against these spies
 // instead of hitting a real backend. mockNuxtImport patches the same
 // auto-import the store itself resolves to, not just this test file's own
-// reference to it.
+// reference to it — and Nuxt's own internals too (useRouter() reads
+// useNuxtApp().$router while @nuxt/test-utils boots the app), so the mock
+// wraps the real nuxtApp and swaps out only `$api`.
 const mockApi = {
   get: vi.fn(),
   post: vi.fn(),
@@ -15,7 +17,9 @@ const mockApi = {
   patch: vi.fn(),
   delete: vi.fn(),
 }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 describe('stores/deals', () => {
   beforeEach(() => {

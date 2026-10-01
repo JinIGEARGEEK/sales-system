@@ -3,7 +3,8 @@ import { AxiosError } from 'axios'
 import { apiError } from '../factories'
 
 // Echo i18n keys back (useI18n needs a component setup); the real useToast; useToast queues additions to the next tick.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

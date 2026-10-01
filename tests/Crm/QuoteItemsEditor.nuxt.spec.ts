@@ -7,34 +7,28 @@ import QuoteItemsEditor from '~/components/Crm/QuoteItemsEditor.vue'
 // mountSuspended's isolated component-mount harness. Same mocking approach
 // as tests/AccessGate/AccessGate.nuxt.spec.ts; `t` just echoes the key back
 // since these tests only assert on structure/placeholders, not real copy.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 
-// Same pre-existing failure documented in tests/Input/Text.nuxt.spec.ts:
-// InputFormField's <Field v-slot="{ field, errors }"> renders its default
-// slot once with an undefined scope before vee-validate's Field resolves,
-// and InputText/InputTextarea's own field-destructuring throws on that first
-// render. With an empty `modelValue` (no item rows), QuoteItemsEditor never
-// renders an InputText/InputTextarea/InputSelect at all, so mounting itself
-// is fine — but the moment `modelValue` has at least one row (the only
-// interesting case, since that's when the Field-wrapped inputs actually
-// render), this hits the exact same crash, confirmed by reproducing it
-// directly against this component. Skipped rather than silently left
-// failing, same as the precedent file — needs the same vee-validate/Nuxt UI
-// test-harness fix to un-skip.
-it.skip('QuoteItemsEditor Component Test > renders an item row with its Field-wrapped inputs', async () => {
+// Mounts with one item row, so InputFormField's vee-validate <Field>-wrapped
+// inputs render. (Under @nuxt/test-utils 3 this crashed on Field's first,
+// undefined-scope slot render and was skipped; it renders since 4.x.)
+it('QuoteItemsEditor Component Test > renders an item row with its Field-wrapped inputs', async () => {
+  // Same as below: keep the onMounted productsStore.fetchAll() off the network.
+  vi.spyOn(useNuxtApp().$api, 'get').mockResolvedValue({
+    data: { data: [], page: 1, per_page: 200, total: 0, total_page: 1, next: 0, prev: 0 },
+  } as never)
   const component = await mountSuspended(QuoteItemsEditor, {
     props: {
       modelValue: [{ key: 1, description: '', qty: 1, price: 0, product_id: null, kind: 'scope', discount_percent: 0 }],
     },
   })
   expect(component.html()).toMatchSnapshot()
+  vi.restoreAllMocks()
 })
 
-// The empty-state render (no item rows, so no Field-wrapped input is ever
-// mounted) doesn't hit that issue, so it's covered directly instead of
-// skipped.
 describe('QuoteItemsEditor Component Test', () => {
   it('shows the "no items" placeholder and no rows when modelValue is empty', async () => {
     // Mounting triggers the onMounted productsStore.fetchAll() fire-and-forget
