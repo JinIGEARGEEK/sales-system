@@ -175,7 +175,7 @@
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
                 <p v-if="contract.end_date" class="text-xs text-(--color-gray)">{{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}</p>
               </div>
-              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contractStatusLabel(contract.status) }}</UBadge>
+              <UBadge :color="contractStatusBadgeColor(contract.effective_status ?? contract.status)" variant="subtle">{{ contractStatusLabel(contract.effective_status ?? contract.status) }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>

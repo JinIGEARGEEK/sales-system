@@ -32,7 +32,7 @@
         {{ t('crm.contracts.detail.noContracts') }}
       </div>
       <div v-else class="flex flex-col gap-3">
-        <div v-for="{ contract, expiry } in contractRows" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
+        <div v-for="{ contract, expiry, lapsed } in contractRows" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <!-- Wraps below ~400px: the status select + linked-quote text +
                download button don't fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -47,6 +47,18 @@
               :data-cy="`contract-status-${contract.id}`"
               @update:model-value="(value: string) => requestContractStatusChange(contract, value as ContractStatus)"
             />
+            <!-- The select edits the stored status; a Signed contract past its
+                 end date still reads "signed" there (it keeps satisfying the
+                 Won gate), so the server-derived Expired shows beside it. -->
+            <UBadge
+              v-if="lapsed"
+              size="sm"
+              :color="contractStatusBadgeColor('expired')"
+              variant="subtle"
+              :data-cy="`contract-effective-status-${contract.id}`"
+            >
+              {{ contractStatusLabel('expired') }}
+            </UBadge>
             <div class="flex min-w-0 items-center gap-3">
               <span class="min-w-0 text-xs text-(--color-gray)">
                 {{ contract.quote_id ? t('crm.contracts.detail.linkedQuote', { id: contract.quote_id }) : t('crm.contracts.detail.noLinkedQuote') }}
@@ -162,7 +174,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
-const { contractStatusLabel, contractStatusOptions } = useContractStatusColor()
+const { contractStatusBadgeColor, contractStatusLabel, contractStatusOptions } = useContractStatusColor()
 
 const { dealId, deal } = useCurrentDeal()
 const dealContracts = computed(() => contractsStore.forDeal(dealId))
@@ -199,6 +211,8 @@ const EXPIRY_LABEL_KEYS = { past: 'crm.contracts.detail.endedDaysAgo', today: 'c
 const contractRows = computed(() => dealContracts.value.map(contract => ({
   contract,
   expiry: contract.status === 'signed' ? countdownBadge(contract.end_date, EXPIRY_LABEL_KEYS, t) : null,
+  // Read-only, server-derived (Contract.effective_status) — never sent back.
+  lapsed: contract.status === 'signed' && contract.effective_status === 'expired',
 })))
 
 const onUpdateContract = async (changes: { quote_id?: number, end_date: string | null }) => {

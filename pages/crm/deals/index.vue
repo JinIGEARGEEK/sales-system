@@ -378,7 +378,7 @@ const leadLane = (lead: Lead): string => {
 }
 
 // Status a Lead should take when dropped directly on one of its own lanes.
-// Dropping past "Qualified" (Proposal Sent/Negotiation/Won) instead triggers
+// Dropping past "Qualified" (Proposal Sent/Negotiation) instead triggers
 // a real conversion — see the `else` branch of onMove below. Keyed by the
 // same lane values leadLane() returns, so the lost-flagged column's key must
 // also track pipelineStagesStore.lostStageName rather than a hardcoded "Lost".
@@ -444,7 +444,8 @@ const onConfirmLostReason = (reason: LostReason) => {
 
 const onMove = async (item: (Deal & { _type: 'deal' }) | (Lead & { _type: 'lead' }), newStage: string, position?: number) => {
   if (item._type === 'deal') {
-    if (item.stage !== newStage && newStage === pipelineStagesStore.lostStageName) {
+    // By the stage row's is_lost_stage flag, like the Deal detail page.
+    if (item.stage !== newStage && pipelineStagesStore.isLostStage(newStage)) {
       pendingLostMove.value = { item, newStage, position }
       lostReasonOpen.value = true
       return
@@ -510,6 +511,16 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     return
   }
 
+  // Dropped on the Won lane: a Won Deal needs a real value and counts as
+  // revenue the moment it exists, so don't auto-create one at value 0 —
+  // open the Deal create form prefilled from the Lead with the Won stage
+  // (the same ?lead_id= conversion the Lead's own "Convert to Deal" uses).
+  // Saving there converts the Lead and runs the Won hand-off.
+  if (pipelineStagesStore.isWonStage(newStage)) {
+    navigateTo({ path: '/crm/deals/create', query: { lead_id: String(lead.id), stage: newStage } })
+    return
+  }
+
   try {
     const { deal } = await leadsStore.convert(lead.id, {
       // company_id is deliberately omitted — the backend's Convert handler
@@ -541,13 +552,6 @@ const moveLead = async (item: Lead & { _type: 'lead' }, newStage: string, positi
     // the drag gesture. Land the rep straight on the new Deal's own edit page
     // right after, where value is a required field front and center, instead
     // of leaving a $0 Deal sitting unnoticed on the board.
-    // Dropped straight into Won: same hand-off as a Deal moved there — the
-    // follow-up task now, and Create Project on the Deal page it lands on.
-    if (deal.status === 'won') {
-      await onDealWon(deal, { promptProject: false })
-      navigateTo({ path: `/crm/deals/${deal.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
-      return
-    }
     navigateTo(`/crm/deals/${deal.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
