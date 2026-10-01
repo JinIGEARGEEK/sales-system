@@ -10,7 +10,7 @@
         :title="t('crm.deals.detail.contractRequiredWarning')"
       />
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-base font-semibold">{{ t('crm.contracts.detail.title') }}</h3>
+        <CardTitle>{{ t('crm.contracts.detail.title') }}</CardTitle>
         <div class="flex gap-2">
           <ButtonPrimary
             :label="t('crm.contracts.detail.createContract')"
@@ -39,7 +39,7 @@
             <InputSelect
               :key="`contract-status-${contract.id}-${statusSelectResetKey}`"
               :model-value="contract.status"
-              :options="CONTRACT_STATUS_OPTIONS"
+              :options="contractStatusOptions"
               :aria-label="t('crm.contracts.detail.contractStatus')"
               small
               class="w-32 shrink-0"
@@ -118,7 +118,7 @@
     <CrmConfirmDeleteModal
       :open="pendingStatusChange !== null"
       :title="t('crm.contracts.detail.confirmStatusTitle')"
-      :body="pendingStatusChange ? t('crm.contracts.detail.confirmStatusBody', { status: statusLabel(pendingStatusChange.status) }) : ''"
+      :body="pendingStatusChange ? t('crm.contracts.detail.confirmStatusBody', { status: contractStatusLabel(pendingStatusChange.status) }) : ''"
       :confirm-label="t('crm.contracts.detail.confirmStatusConfirm')"
       :confirm-color="pendingStatusChange?.status === 'expired' ? 'error' : 'primary'"
       @update:open="(value: boolean) => { if (!value) cancelContractStatusChange() }"
@@ -153,7 +153,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
-import { CONTRACT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
@@ -163,6 +162,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
+const { contractStatusLabel, contractStatusOptions } = useContractStatusColor()
 
 const { dealId, deal } = useCurrentDeal()
 const dealContracts = computed(() => contractsStore.forDeal(dealId))
@@ -292,7 +292,6 @@ const onContractFileSelected = async (event: Event) => {
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
 
 const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['signed', 'expired']
-const statusLabel = (status: ContractStatus) => CONTRACT_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
 
 const {
   pending: pendingStatusChange,

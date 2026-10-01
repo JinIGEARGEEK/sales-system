@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.tasksTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.tasksTitle') }}</CardTitle>
         <ButtonPrimary
           :label="t('crm.deals.detail.addTask')"
           icon="material-symbols:add"

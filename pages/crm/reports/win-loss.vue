@@ -11,48 +11,34 @@
     </PageHeader>
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputDateRangePicker
-            v-model="dateRange"
-            :label="t('crm.reports.winLoss.filterDateRange')"
-            :placeholder="t('crm.reports.dateRangePlaceholder')"
-            name="dateRange"
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.winLoss.clearFilters')" @clear="clearFilters">
+        <InputDateRangePicker
+          v-model="dateRange"
+          :label="t('crm.reports.winLoss.filterDateRange')"
+          :placeholder="t('crm.reports.dateRangePlaceholder')"
+          name="dateRange"
+          size="xs"
+          class="w-full sm:w-64"
+        />
+        <CrmMoreFilters :count="secondaryFilterCount">
+          <InputSelect
+            v-model="salesRepFilter"
+            :options="salesRepOptions"
+            :label="t('crm.reports.winLoss.filterSalesRep')"
+            name="salesRepFilter"
             size="xs"
-            class="w-full sm:w-64"
+            class="w-full sm:w-56"
           />
-          <CrmMoreFilters :count="secondaryFilterCount">
-            <InputSelect
-              v-model="salesRepFilter"
-              :options="salesRepOptions"
-              :label="t('crm.reports.winLoss.filterSalesRep')"
-              name="salesRepFilter"
-              size="xs"
-              class="w-full sm:w-56"
-            />
-            <InputText
-              v-model="companyTagFilter"
-              :label="t('crm.reports.winLoss.filterCompanyTag')"
-              :placeholder="t('crm.reports.winLoss.filterCompanyTagPlaceholder')"
-              name="companyTagFilter"
-              size="xs"
-              class="w-full sm:w-40"
-            />
-          </CrmMoreFilters>
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.winLoss.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+          <InputText
+            v-model="companyTagFilter"
+            :label="t('crm.reports.winLoss.filterCompanyTag')"
+            :placeholder="t('crm.reports.winLoss.filterCompanyTagPlaceholder')"
+            name="companyTagFilter"
+            size="xs"
+            class="w-full sm:w-40"
+          />
+        </CrmMoreFilters>
+      </CrmReportFilterBar>
 
       <UAlert
         v-if="!loading && rows.length === 0"
@@ -73,7 +59,7 @@
           :icon-class="row.reason === 'won' ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
           :icon-bg-class="row.reason === 'won' ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         >
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}
+          {{ currencyCompact(row.value) }}
           <template #hint>{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</template>
         </CrmStatCard>
       </div>
@@ -84,7 +70,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import { lostReasonLabel } from '~/constants/mockData'
 
 const { t } = useI18n()
@@ -96,7 +81,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 

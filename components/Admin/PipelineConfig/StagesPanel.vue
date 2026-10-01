@@ -2,7 +2,7 @@
   <UCard :ui="GLASS_PANEL_UI">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.stages.heading') }}</h3>
+        <CardTitle>{{ t('admin.pipelineConfig.stages.heading') }}</CardTitle>
         <ButtonPrimary
           :label="t('admin.pipelineConfig.stages.addStage')"
           icon="material-symbols:add"
@@ -53,7 +53,7 @@ defineProps<{
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const { toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const pipelineStagesStore = usePipelineStagesStore()
 
 // ── Pipeline stages ──────────────────────────────────────────────
@@ -110,9 +110,7 @@ const stageRows = computed(() => [...pipelineStagesStore.items]
       ? '—'
       : t('admin.pipelineConfig.staleDaysValue', { days: stage.stale_days ?? DEFAULT_STALE_DAYS })
         + (stage.stale_days ? '' : ` ${t('admin.pipelineConfig.staleDaysDefaultTag')}`),
-    statusBadge: stage.is_active
-      ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
-      : toBadge(t('admin.pipelineConfig.statusInactive')),
+    statusBadge: activeBadge(stage.is_active, t('admin.pipelineConfig.statusActive'), t('admin.pipelineConfig.statusInactive')),
   })))
 
 const stageColumns = computed<TableDataColumn[]>(() => [

@@ -100,6 +100,7 @@ useHead({ title: t('admin.users.index.pageTitle') })
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const { dateFormat, toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
@@ -159,7 +160,7 @@ const displayUsers = computed(() => rows.value.map((user) => {
   return {
     ...user,
     name: `${user.first_name} ${user.last_name}`,
-    status: toBadge(user.is_active ? t('admin.users.index.statusActive') : t('admin.users.index.statusInactive'), user.is_active ? 'success' : 'neutral'),
+    status: activeBadge(user.is_active, t('admin.users.index.statusActive'), t('admin.users.index.statusInactive')),
     roleBadge: toBadge(user.role),
     createdDate: user.created_at ? dateFormat(user.created_at.toISOString()) : '-',
     updatedAtCell: {

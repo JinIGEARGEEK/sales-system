@@ -9,7 +9,7 @@
     <UCard class="mb-4" :ui="GLASS_PANEL_UI">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-base font-semibold">{{ t('admin.pipelineConfig.relatedConfig.heading') }}</h3>
+          <CardTitle>{{ t('admin.pipelineConfig.relatedConfig.heading') }}</CardTitle>
           <p class="text-sm text-(--color-gray)">{{ t('admin.pipelineConfig.relatedConfig.tagsHint') }}</p>
         </div>
         <!-- open-in-new (not sell-outline) — this card sits above the tab bar

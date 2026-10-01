@@ -16,7 +16,7 @@
       </div>
 
       <ContainerTemplate class="mb-4">
-        <h3 class="mb-3 text-base font-semibold">{{ t('crm.campaigns.new.step1.heading') }}</h3>
+        <CardTitle class="mb-3">{{ t('crm.campaigns.new.step1.heading') }}</CardTitle>
         <div class="flex flex-col gap-4">
           <div>
             <p class="mb-2 text-sm font-medium">{{ t('crm.campaigns.new.step1.entityTypeLabel') }}</p>

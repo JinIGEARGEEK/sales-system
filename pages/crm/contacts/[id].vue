@@ -46,7 +46,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedDeals') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedDeals') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addDeal')"
@@ -69,7 +69,7 @@
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.linkedProjects') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.linkedProjects') }}</CardTitle>
                 <ButtonPrimary
                   v-if="canManageProjects"
                   :label="t('crm.contacts.detail.addProject')"
@@ -98,14 +98,14 @@
                     {{ project.target_end_date ? t('crm.contacts.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                   </p>
                 </div>
-                <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
+                <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
               </button>
             </div>
           </UCard>
           <UCard class="mb-4">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.activityTitle') }}</h3>
+                <CardTitle>{{ t('crm.contacts.detail.activityTitle') }}</CardTitle>
                 <ButtonPrimary
                   :label="t('crm.contacts.detail.addActivity')"
                   icon="material-symbols:add"
@@ -121,7 +121,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <h3 class="text-base font-semibold">{{ t('crm.contacts.detail.tasksTitle') }}</h3>
+                  <CardTitle>{{ t('crm.contacts.detail.tasksTitle') }}</CardTitle>
                   <UBadge v-if="contactOverdueTaskCount > 0" color="error" variant="subtle">
                     {{ t('crm.contacts.detail.overdueCount', { count: contactOverdueTaskCount }) }}
                   </UBadge>
@@ -190,7 +190,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { parseTags, dateFormat } = useFormatter()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const { hasRole } = useRole()
 const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()

@@ -12,7 +12,7 @@
         icon="material-symbols:engineering-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
         to="/crm/projects"
       >
         {{ openProjects.length }}
@@ -22,16 +22,16 @@
         icon="material-symbols:hourglass-empty"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
         :to="`/crm/projects?status=${encodeURIComponent('Not Started')}`"
       >
         {{ notStartedCount }}
       </CrmStatCard>
     </div>
 
-    <UCard class="mt-4 ring-[var(--color-card-border)]">
+    <UCard class="mt-4">
       <template #header>
-        <h3 class="text-lg font-medium">{{ t('crm.dashboard.projectsNeedingUpdate') }}</h3>
+        <CardTitle size="lg">{{ t('crm.dashboard.projectsNeedingUpdate') }}</CardTitle>
       </template>
       <div v-if="openProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
         {{ t('crm.dashboard.noOpenProjects') }}
@@ -47,7 +47,7 @@
             <p class="text-sm font-medium">{{ project.name }}</p>
             <p class="text-xs text-(--color-gray)">{{ project.company_name }}</p>
           </div>
-          <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+          <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
         </NuxtLink>
       </div>
     </UCard>
@@ -58,6 +58,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 
 const props = defineProps<{
   projects: Project[]

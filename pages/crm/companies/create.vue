@@ -90,7 +90,7 @@
 
         <div class="mt-4">
           <div class="mb-1 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.create.contactsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.create.contactsHeading') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.create.addContact')"
               icon="material-symbols:add"

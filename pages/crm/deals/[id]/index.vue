@@ -69,7 +69,7 @@
     <div class="lg:col-span-2">
       <UCard>
         <template #header>
-          <h3 class="text-base font-semibold">{{ t('crm.deals.detail.linkedRecords') }}</h3>
+          <CardTitle>{{ t('crm.deals.detail.linkedRecords') }}</CardTitle>
         </template>
         <div class="flex flex-col gap-1 text-sm">
           <NuxtLink
@@ -112,7 +112,7 @@
 
       <UCard v-if="canViewOwnerHistory" class="mt-4">
         <template #header>
-          <h3 class="text-base font-semibold">{{ t('crm.deals.detail.ownerHistory') }}</h3>
+          <CardTitle>{{ t('crm.deals.detail.ownerHistory') }}</CardTitle>
         </template>
         <div v-if="ownerHistory.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
           {{ t('crm.deals.detail.noOwnerHistory') }}

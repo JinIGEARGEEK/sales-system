@@ -7,13 +7,13 @@
     />
 
     <div class="grid grid-cols-1 gap-4" :class="{ 'lg:grid-cols-2': showStaleDeals }">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard>
         <template #header>
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-primary)/10">
               <UIcon name="material-symbols:today-outline" class="size-4 text-(--color-primary)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.myTasks') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.myTasks') }}</CardTitle>
             <UBadge v-if="overdueTotal > 0" color="error" variant="subtle" :label="t('crm.dashboard.myOverdueCount', { count: overdueTotal })" />
             <UBadge color="primary" variant="subtle" :label="t('crm.dashboard.myTodayCount', { count: todayTotal })" />
           </div>
@@ -35,7 +35,7 @@
               <p class="truncate text-sm font-medium" :title="task.title">{{ task.title }}</p>
               <p class="truncate text-xs text-(--color-gray)">{{ task.relatedLabel }}</p>
             </div>
-            <UBadge :color="task.isOverdue ? 'error' : 'primary'" variant="subtle" class="shrink-0">
+            <UBadge :color="taskDueColor(task)" variant="subtle" class="shrink-0">
               {{ task.isOverdue ? dateFormat(task.due_date) : t('crm.dashboard.dueToday') }}
             </UBadge>
           </NuxtLink>
@@ -49,13 +49,13 @@
         </div>
       </UCard>
 
-      <UCard v-if="showStaleDeals" class="ring-[var(--color-card-border)]">
+      <UCard v-if="showStaleDeals">
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
               <UIcon name="material-symbols:schedule-outline" class="size-4 text-(--color-warning-hover)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.myStaleDeals') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.myStaleDeals') }}</CardTitle>
             <UBadge v-if="staleDeals.length > 0" color="warning" variant="subtle" :label="String(staleDeals.length)" />
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.myStaleDealsHint') }}</p>
@@ -99,7 +99,7 @@ const myTasksLink = computed(() => `/crm/tasks?assigned_to=${userStore.id}`)
 
 defineProps<{
   // The signed-in user's pending tasks due today or earlier, most overdue first.
-  tasks: { id: number, title: string, due_date: Date, isOverdue: boolean, relatedLabel: string, path: string }[]
+  tasks: { id: number, title: string, due_date: Date, status: TaskStatus, isOverdue: boolean, relatedLabel: string, path: string }[]
   overdueTotal: number
   todayTotal: number
   // Open deals assigned to the user that have sat in their stage past that

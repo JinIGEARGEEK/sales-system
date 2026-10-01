@@ -2,7 +2,7 @@
   <UCard
     :id="`guideline-topic-${topic.key}`"
     class="transition-shadow duration-700"
-    :class="isHighlighted ? 'ring-2 ring-[var(--color-warning-toast)] shadow-[0_0_24px_rgba(248,196,14,0.45)]' : ''"
+    :class="isHighlighted ? 'ring-2 ring-(--color-warning-toast) shadow-[0_0_24px_rgba(248,196,14,0.45)]' : ''"
     :ui="GLASS_PANEL_UI"
   >
     <template #header>
@@ -151,6 +151,6 @@ const escapeHtml = (text: string) => text
 
 const highlightKeyTerms = (text: string) => escapeHtml(text).replace(
   KEY_TERMS_REGEX,
-  '<mark class="bg-transparent text-inherit underline decoration-[var(--color-warning-toast)] decoration-2 underline-offset-2">$1</mark>',
+  '<mark class="bg-transparent text-inherit underline decoration-(--color-warning-toast) decoration-2 underline-offset-2">$1</mark>',
 )
 </script>

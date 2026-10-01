@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.quotesTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.quotesTitle') }}</CardTitle>
         <div class="flex flex-wrap gap-2">
           <ButtonPrimary
             :label="t('crm.deals.detail.createQuote')"
@@ -35,7 +35,7 @@
           <!-- Wraps below ~400px: select + validity text + action icons don't
                fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+            <UBadge v-if="!quote.file_name" :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
             <!-- Uploaded (PDF) quotes have no structured-items editor page of
             their own (pages/crm/quotes/[id].vue is items-only), so this is
             the only place their status can move past Draft. -->
@@ -43,7 +43,7 @@
               v-else
               :key="`quote-status-${quote.id}-${statusSelectResetKey}`"
               :model-value="quote.status"
-              :options="QUOTE_STATUS_OPTIONS"
+              :options="quoteStatusOptions"
               :aria-label="t('crm.deals.detail.quoteStatus')"
               small
               class="w-36 shrink-0"
@@ -124,7 +124,7 @@
                   <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-(--color-light-gray-2)">
                     <td class="max-w-60 truncate py-1">{{ item.description }}</td>
                     <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
-                    <td class="py-1 text-right whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">{{ currency(item.price * item.qty) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -160,16 +160,15 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
-const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat, currency } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptions } = useQuoteStatusColor()
 
 const { dealId, deal } = useCurrentDeal()
 const dealQuotes = computed(() => quotesStore.forDeal(dealId))
@@ -225,7 +224,6 @@ const confirmRemoveQuote = async () => {
 }
 
 const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
-const quoteStatusLabel = (status: QuoteStatus) => QUOTE_STATUS_OPTIONS.find(o => o.value === status)?.label ?? status
 
 // Accepting a quote offers to update the Deal's value to match it (pre-VAT —
 // see quoteRevenueAmount).

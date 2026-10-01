@@ -60,6 +60,17 @@ export default defineAppConfig({
         body: 'p-3 sm:p-4',
         footer: 'p-3 sm:p-4',
       },
+      // Every outline (default) card gets the app's card border token instead
+      // of Nuxt UI's fainter ring-default — set once here rather than as an
+      // inline `ring-(--color-card-border)` on each UCard (design-system
+      // §2.5.1). GLASS_PANEL_UI cards keep their own `ring-0` + blue border.
+      variants: {
+        variant: {
+          outline: {
+            root: 'bg-default ring ring-(--color-card-border) divide-y divide-default',
+          },
+        },
+      },
     },
     modal: {
       slots: {

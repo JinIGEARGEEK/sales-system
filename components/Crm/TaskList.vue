@@ -81,7 +81,7 @@
             data-cy="task-snooze-trigger"
           >
             <UBadge
-              :color="dueBadgeColor(task)"
+              :color="taskDueColor(task)"
               variant="subtle"
               :icon="taskDueBucket(task) === 'overdue' ? 'material-symbols:schedule-outline' : undefined"
               trailing-icon="material-symbols:expand-more"
@@ -93,7 +93,7 @@
         </UDropdownMenu>
         <UBadge
           v-else
-          :color="dueBadgeColor(task)"
+          :color="taskDueColor(task)"
           variant="subtle"
           class="shrink-0"
           data-cy="task-due-badge"
@@ -123,7 +123,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { taskPriorityColor } from '~/constants/mockData'
 import { taskDueBucket } from '~/composables/utils/useTaskGroups'
 import { TASK_SNOOZE_OPTIONS } from '~/composables/utils/useTaskQuickActions'
 
@@ -133,15 +132,6 @@ const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const teamMembersStore = useTeamMembersStore()
 const tasksStore = useTasksStore()
-
-// Red only once a pending task is past its due DAY (the same boundary as the
-// Tasks page's Overdue group), primary for due today, neutral otherwise.
-const dueBadgeColor = (task: Task) => {
-  const bucket = taskDueBucket(task)
-  if (bucket === 'overdue') return 'error'
-  if (bucket === 'today') return 'primary'
-  return 'neutral'
-}
 
 onMounted(() => {
   if (teamMembersStore.items.length === 0) teamMembersStore.fetchAll().catch(notifyApiError)

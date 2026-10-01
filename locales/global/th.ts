@@ -78,4 +78,32 @@ export default {
   fewerFilters: 'ซ่อนตัวกรอง',
   draftFound: 'พบแบบร่างที่คุณยังทำไม่เสร็จ ต้องการกู้คืนหรือไม่?',
   draftRestore: 'กู้คืนแบบร่าง',
+  status: {
+    quote: {
+      draft: 'ฉบับร่าง',
+      sent: 'ส่งแล้ว',
+      accepted: 'ยอมรับแล้ว',
+      rejected: 'ถูกปฏิเสธ',
+      expired: 'หมดอายุ',
+    },
+    contract: {
+      draft: 'ฉบับร่าง',
+      sent: 'ส่งแล้ว',
+      signed: 'ลงนามแล้ว',
+      expired: 'หมดอายุ',
+    },
+    project: {
+      notStarted: 'ยังไม่เริ่ม',
+      inProgress: 'กำลังดำเนินการ',
+      onHold: 'พักไว้ชั่วคราว',
+      completed: 'เสร็จสิ้น',
+      cancelled: 'ยกเลิกแล้ว',
+    },
+    customerProduct: {
+      interested: 'สนใจ',
+      trial: 'ทดลองใช้',
+      active: 'ใช้งานอยู่',
+      churned: 'เลิกใช้',
+    },
+  },
 }

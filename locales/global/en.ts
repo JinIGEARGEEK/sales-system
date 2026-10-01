@@ -81,6 +81,37 @@ const lang = {
   fewerFilters: 'Fewer filters',
   draftFound: 'We found a draft you didn\'t finish. Restore it?',
   draftRestore: 'Restore draft',
+  // Display labels for record statuses, shared by every badge, select and
+  // table cell that shows one — read through the use*StatusColor composables'
+  // *StatusLabel()/*StatusOptions, never printed as the raw enum value.
+  status: {
+    quote: {
+      draft: 'Draft',
+      sent: 'Sent',
+      accepted: 'Accepted',
+      rejected: 'Rejected',
+      expired: 'Expired',
+    },
+    contract: {
+      draft: 'Draft',
+      sent: 'Sent',
+      signed: 'Signed',
+      expired: 'Expired',
+    },
+    project: {
+      notStarted: 'Not Started',
+      inProgress: 'In Progress',
+      onHold: 'On Hold',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
+    customerProduct: {
+      interested: 'Interested',
+      trial: 'Trial',
+      active: 'Active',
+      churned: 'Churned',
+    },
+  },
 }
 
 export default lang

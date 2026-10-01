@@ -2,7 +2,7 @@
   <UCard v-bind="$attrs" :ui="GLASS_PANEL_UI">
     <template #header>
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t(`${i18nPrefix}.heading`) }}</h3>
+        <CardTitle>{{ t(`${i18nPrefix}.heading`) }}</CardTitle>
         <ButtonPrimary
           :label="t(`${i18nPrefix}.${addLabelKey}`)"
           icon="material-symbols:add"
@@ -87,7 +87,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const { toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 
 const modalOpen = ref(false)
 const editing = ref<NamedOption | null>(null)
@@ -130,9 +130,7 @@ const confirmDeactivate = async () => {
 
 const rows = computed(() => props.store.items.map(item => ({
   ...item,
-  statusBadge: item.is_active
-    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
-    : toBadge(t('admin.pipelineConfig.statusInactive')),
+  statusBadge: activeBadge(item.is_active, t('admin.pipelineConfig.statusActive'), t('admin.pipelineConfig.statusInactive')),
 })))
 
 const columns = computed<TableDataColumn[]>(() => [

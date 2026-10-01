@@ -71,10 +71,13 @@ export default defineNuxtConfig({
     },
   },
 
-  colorMode: {
-    preference: 'light',
-    fallback: 'light',
-    storageKey: 'sales-system-color-mode',
+  // Light-only app (the forced-contrast rules in global.css assume it). With
+  // the color-mode module on, a stored 'dark'/'system' preference — or the
+  // OS setting via 'system' — could still put `.dark` on <html> and flip every
+  // Nuxt UI token. Turning Nuxt UI's colorMode integration off means the
+  // module is never registered, so nothing can ever add `.dark`.
+  ui: {
+    colorMode: false,
   },
 
   css: [

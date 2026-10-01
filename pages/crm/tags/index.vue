@@ -76,6 +76,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.tags.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const tagsStore = useTagsStore()
@@ -126,9 +127,7 @@ watch([categoryFilter, statusFilter], () => refetchFromStart())
 const displayTags = computed(() => rows.value.map(tag => ({
   ...tag,
   categoryBadge: toBadge(tag.category),
-  statusBadge: tag.status === 'active'
-    ? toBadge(t('crm.tags.index.statusActive'), 'success')
-    : toBadge(t('crm.tags.index.statusInactive')),
+  statusBadge: activeBadge(tag.status === 'active', t('crm.tags.index.statusActive'), t('crm.tags.index.statusInactive')),
   createdDate: dateFormat(tag.created_at.toISOString()),
 })))
 

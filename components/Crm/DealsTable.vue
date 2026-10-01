@@ -91,7 +91,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { priceFormatCompact, dateFormat, toBadge } = useFormatter()
+const { dateFormat, toBadge, currencyCompact } = useFormatter()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
 const { companyLabelById } = useCompanyName()
@@ -167,7 +167,7 @@ watch(rows, (visibleDeals) => {
 const displayRows = computed(() => rows.value.map(deal => ({
   ...deal,
   companyName: companyLabelById(deal.company_id),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(deal.value)}`,
+  valueDisplay: currencyCompact(deal.value),
   stageBadge: toBadge(deal.stage, stageBadgeColor(deal.stage)),
   assignedToName: teamMembersStore.nameById(deal.assigned_to),
   createdDate: dateFormat(deal.created_at.toISOString()),

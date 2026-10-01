@@ -16,56 +16,42 @@
           {{ rows.length }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.quotesExpiringSoon.summary.totalValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totalValue) }}
+          {{ currencyCompact(totalValue) }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.quotesExpiringSoon.summary.soonest')" icon="material-symbols:hourglass-empty">
           {{ soonestDaysLeftDisplay }}
         </CrmStatCard>
       </div>
 
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.quotesExpiringSoon.clearFilters')" @clear="clearFilters">
+        <InputText
+          :model-value="withinDaysParam"
+          type="number"
+          :label="t('crm.reports.quotesExpiringSoon.filterWithinDays')"
+          name="withinDays"
+          size="xs"
+          class="w-full sm:w-40"
+          @update:model-value="withinDaysParam = String($event ?? '')"
+        />
+        <CrmMoreFilters :count="secondaryFilterCount">
+          <InputSelect
+            v-model="salesRepFilter"
+            :options="salesRepOptions"
+            :label="t('crm.reports.quotesExpiringSoon.filterSalesRep')"
+            name="salesRepFilter"
+            size="xs"
+            class="w-full sm:w-56"
+          />
           <InputText
-            :model-value="withinDaysParam"
-            type="number"
-            :label="t('crm.reports.quotesExpiringSoon.filterWithinDays')"
-            name="withinDays"
+            v-model="companyTagFilter"
+            :label="t('crm.reports.quotesExpiringSoon.filterCompanyTag')"
+            :placeholder="t('crm.reports.quotesExpiringSoon.filterCompanyTagPlaceholder')"
+            name="companyTagFilter"
             size="xs"
             class="w-full sm:w-40"
-            @update:model-value="withinDaysParam = String($event ?? '')"
           />
-          <CrmMoreFilters :count="secondaryFilterCount">
-            <InputSelect
-              v-model="salesRepFilter"
-              :options="salesRepOptions"
-              :label="t('crm.reports.quotesExpiringSoon.filterSalesRep')"
-              name="salesRepFilter"
-              size="xs"
-              class="w-full sm:w-56"
-            />
-            <InputText
-              v-model="companyTagFilter"
-              :label="t('crm.reports.quotesExpiringSoon.filterCompanyTag')"
-              :placeholder="t('crm.reports.quotesExpiringSoon.filterCompanyTagPlaceholder')"
-              name="companyTagFilter"
-              size="xs"
-              class="w-full sm:w-40"
-            />
-          </CrmMoreFilters>
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.quotesExpiringSoon.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+        </CrmMoreFilters>
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -88,7 +74,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
@@ -100,7 +85,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, dateFormat, toBadge, severityColor } = useFormatter()
+const { dateFormat, toBadge, severityColor, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -184,7 +169,7 @@ const rows = computed(() => results.value.map((row) => {
     ...row,
     company_name: companyName(row.company_name),
     validityDateBadge: toBadge(dateFormat(row.validity_date), severityColor(elapsed, Math.ceil(withinDays.value / 2), withinDays.value - 2)),
-    totalValueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.total_value)}`,
+    totalValueDisplay: currencyCompact(row.total_value),
   }
 }))
 

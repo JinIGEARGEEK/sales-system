@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="company">
       <PageHeader :title="companyName(company.name)" @back="navigateTo('/crm/companies')">
-        <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
+        <UBadge :color="activeStatusColor(company.status === 'active')" variant="subtle">
           {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
         </UBadge>
         <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
@@ -63,12 +63,12 @@
         <div class="lg:col-span-2">
           <UCard>
             <template #header>
-              <h3 class="text-base font-semibold">{{ t('crm.companies.detail.summary') }}</h3>
+              <CardTitle>{{ t('crm.companies.detail.summary') }}</CardTitle>
             </template>
             <div class="flex flex-col gap-3 text-sm">
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
-              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ currencyCompact(openDealsValue) }}</span></div>
               <div class="flex justify-between gap-2">
                 <span class="text-(--color-gray)">{{ t('crm.companies.detail.lastContact') }}</span>
                 <UBadge :color="lastContact.color" variant="subtle" class="shrink-0 whitespace-nowrap">{{ lastContact.label }}</UBadge>
@@ -81,7 +81,7 @@
       <div v-else-if="activeTab === 'contacts'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.contactsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.contactsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addContact')" icon="material-symbols:add" small @click="navigateTo(`/crm/contacts/create?company_id=${company.id}`)" />
           </div>
           <div v-if="companyContacts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -110,7 +110,7 @@
       <div v-else-if="activeTab === 'deals'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.dealsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.dealsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addDeal')" icon="material-symbols:add" small @click="navigateTo(`/crm/deals/create?company_id=${company.id}`)" />
           </div>
           <div v-if="companyDeals.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -125,7 +125,7 @@
             >
               <div>
                 <p class="text-sm font-medium">{{ deal.title }}</p>
-                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
+                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ currencyCompact(deal.value) }}</p>
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
@@ -135,7 +135,7 @@
 
       <div v-else-if="activeTab === 'quotesContracts'">
         <ContainerTemplate>
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.quotesHeading') }}</h3>
+          <CardTitle class="mb-4">{{ t('crm.companies.detail.quotesHeading') }}</CardTitle>
           <div v-if="companyQuotes.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noQuotes') }}
           </div>
@@ -153,13 +153,13 @@
                   <template v-if="quote.validity_date"> · {{ t('crm.companies.detail.validUntil', { date: dateFormat(quote.validity_date.toISOString()) }) }}</template>
                 </p>
               </div>
-              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>
 
         <ContainerTemplate class="mt-4">
-          <h3 class="mb-4 text-base font-semibold">{{ t('crm.companies.detail.contractsHeading') }}</h3>
+          <CardTitle class="mb-4">{{ t('crm.companies.detail.contractsHeading') }}</CardTitle>
           <div v-if="companyContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
             {{ t('crm.companies.detail.noContracts') }}
           </div>
@@ -175,7 +175,7 @@
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
                 <p v-if="contract.end_date" class="text-xs text-(--color-gray)">{{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}</p>
               </div>
-              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contract.status }}</UBadge>
+              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contractStatusLabel(contract.status) }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -184,7 +184,7 @@
       <div v-else-if="activeTab === 'products'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.productsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.productsHeading') }}</CardTitle>
             <ButtonPrimary :label="t('crm.companies.detail.addProduct')" icon="material-symbols:add" small @click="openAddCustomerProduct" />
           </div>
           <div v-if="companyProducts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -220,7 +220,7 @@
                 >
                   {{ renewal.label }}
                 </UBadge>
-                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
+                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ customerProductStatusLabel(record.status) }}</UBadge>
               </div>
             </button>
           </div>
@@ -239,7 +239,7 @@
       <div v-else-if="activeTab === 'projects'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.projectsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.projectsHeading') }}</CardTitle>
             <ButtonPrimary v-if="canManageProjects" :label="t('crm.companies.detail.addProject')" icon="material-symbols:add" small @click="openAddProject" />
           </div>
           <div v-if="companyProjects.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
@@ -262,7 +262,7 @@
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
               </div>
-              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
+              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
             </button>
           </div>
         </ContainerTemplate>
@@ -278,7 +278,7 @@
       <div v-else-if="activeTab === 'activity'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.activityFeed') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.activityFeed') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.detail.addActivity')"
               icon="material-symbols:add"
@@ -298,7 +298,7 @@
       <div v-else-if="activeTab === 'tasks'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.tasksTitle') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.tasksTitle') }}</CardTitle>
             <ButtonPrimary
               :label="t('crm.companies.detail.addTask')"
               icon="material-symbols:add"
@@ -320,7 +320,7 @@
       <div v-else-if="activeTab === 'attachments'">
         <ContainerTemplate>
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold">{{ t('crm.companies.detail.attachmentsHeading') }}</h3>
+            <CardTitle>{{ t('crm.companies.detail.attachmentsHeading') }}</CardTitle>
             <ButtonPrimary
               v-if="canManageAttachments"
               :label="t('crm.companies.detail.addAttachment')"
@@ -362,10 +362,10 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat, priceFormatCompact, parseTags, dateFormat } = useFormatter()
-const { contractStatusBadgeColor } = useContractStatusColor()
-const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { parseTags, dateFormat, currency, currencyCompact } = useFormatter()
+const { contractStatusBadgeColor, contractStatusLabel } = useContractStatusColor()
+const { customerProductStatusBadgeColor, customerProductStatusLabel } = useCustomerProductStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -383,7 +383,7 @@ const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
 const contractsStore = useContractsStore()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel } = useQuoteStatusColor()
 const activitiesStore = useActivitiesStore()
 const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()
@@ -541,7 +541,7 @@ const companyProductRows = computed(() => companyProducts.value.map(record => ({
   renewal: record.status === 'Active' ? countdownBadge(record.renewal_date, RENEWAL_LABEL_KEYS, t) : null,
 })))
 const customerProductPriceLabel = (record: CustomerProduct) => {
-  const price = record.price !== null ? `${t('global.currencySymbol')}${priceFormat(record.price)}` : ''
+  const price = record.price !== null ? currency(record.price) : ''
   const cycle = record.billing_cycle ? t(`crm.components.addCustomerProductModal.billingCycleOptions.${record.billing_cycle}`) : ''
   return [price, cycle].filter(Boolean).join(' / ')
 }
