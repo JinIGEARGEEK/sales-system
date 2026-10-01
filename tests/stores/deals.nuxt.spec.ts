@@ -50,6 +50,17 @@ describe('stores/deals', () => {
     expect(store.items.map(d => d.value_quote_number)).toEqual(['Q-012', undefined])
   })
 
+  it('fetchAll keeps a deal loaded by fetchOne that the newest-200 list leaves out', async () => {
+    const store = useDealsStore()
+    mockApi.get.mockResolvedValueOnce(apiResponse(makeDeal({ id: 900 })))
+    await store.fetchOne(900)
+    mockApi.get.mockResolvedValueOnce(apiResponse([makeDeal({ id: 1 }), makeDeal({ id: 2 })]))
+
+    await store.fetchAll()
+
+    expect(store.items.map(d => d.id).sort((a, b) => a - b)).toEqual([1, 2, 900])
+  })
+
   it('fetchAll parses date fields on every returned deal', async () => {
     const deal = makeDeal({ expected_close_date: '2026-03-01T00:00:00.000Z' as unknown as Date })
     mockApi.get.mockResolvedValueOnce(apiResponse([deal]))

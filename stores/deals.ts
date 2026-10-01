@@ -54,6 +54,10 @@ export const useDealsStore = defineStore('deals', {
     trashItems: [] as Deal[],
     trashTotal: 0,
     trashPage: 1,
+    // Deals loaded one at a time (fetchOne, e.g. a detail page) that the
+    // newest-200 list may not include. fetchAll keeps them, so a list load
+    // that finishes after a detail page's own fetch doesn't drop its deal.
+    singleIds: [] as number[],
   }),
   actions: {
     async fetchAll (params?: Record<string, unknown>) {
@@ -61,7 +65,10 @@ export const useDealsStore = defineStore('deals', {
       const response = await $api.get<ApiResponse<Deal[]>>('/deals', {
         params: { per_page: 200, ...params },
       })
-      this.items = response.data.data.map(parseDates).map(deal => keepValueQuoteNumber(deal, this.items))
+      const listed = response.data.data.map(parseDates).map(deal => keepValueQuoteNumber(deal, this.items))
+      const listedIds = new Set(listed.map(d => d.id))
+      const singles = this.items.filter(d => this.singleIds.includes(d.id) && !listedIds.has(d.id))
+      this.items = [...listed, ...singles]
       this.total = response.data.total
       this.page = response.data.page
       return this.items
@@ -93,6 +100,7 @@ export const useDealsStore = defineStore('deals', {
       const response = await $api.get<ApiResponse<Deal>>(`/deals/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(d => d.id !== id), fetched]
+      if (!this.singleIds.includes(id)) this.singleIds.push(id)
       return fetched
     },
     async add (deal: Omit<Deal, 'id' | 'position'>): Promise<Deal> {
@@ -147,6 +155,7 @@ export const useDealsStore = defineStore('deals', {
       const { $api } = useNuxtApp()
       await $api.delete(`/deals/${id}`, ...reasonParams(reason))
       this.items = this.items.filter(d => d.id !== id)
+      this.singleIds = this.singleIds.filter(i => i !== id)
     },
     ...createBulkResourceActions<Deal>('/deals', parseDates),
   },
