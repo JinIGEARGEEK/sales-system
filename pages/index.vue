@@ -43,6 +43,7 @@
       alerts and the rest. -->
       <template v-if="canViewSalesPipelineWidgets">
         <DashboardPipelineOverview
+          :loading="summaryPending && !summary"
           :open-pipeline-value="openPipelineValue"
           :forecasted-revenue="forecastedRevenue"
           :win-rate="winRate"
@@ -51,6 +52,11 @@
           :avg-deal-size="avgDealSize"
           :avg-sales-cycle-days="avgSalesCycleDays"
           :pipeline-coverage-ratio="pipelineCoverageRatio"
+          :quarter-pipeline-value="summary?.quarter_pipeline_value ?? 0"
+          :overdue-pipeline-value="summary?.overdue_pipeline_value ?? 0"
+          :overdue-pipeline-count="summary?.overdue_pipeline_count ?? 0"
+          :undated-pipeline-value="summary?.undated_pipeline_value ?? 0"
+          :undated-pipeline-count="summary?.undated_pipeline_count ?? 0"
           :is-pipeline-healthy="isPipelineHealthy"
           :quarterly-sales-target="quarterlySalesTarget"
           :annual-goal-progress-percent="annualGoalProgressPercent"
@@ -313,8 +319,12 @@ const summary = ref<DashboardSummary | null>(null)
 // for an older filter set can't overwrite a newer one — the same sequence
 // guard as useScopedFetch.
 let summaryRequestId = 0
+// The KPI cards show skeletons while this is true and nothing has loaded
+// yet; a later refetch keeps the previous figures on screen instead.
+const summaryPending = ref(false)
 const fetchSummary = async () => {
   const requestId = ++summaryRequestId
+  summaryPending.value = true
   try {
     const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
       params: {
@@ -330,6 +340,8 @@ const fetchSummary = async () => {
     if (requestId === summaryRequestId) summary.value = response.data.data
   } catch (err) {
     if (requestId === summaryRequestId) notifyFetchError(err)
+  } finally {
+    if (requestId === summaryRequestId) summaryPending.value = false
   }
 }
 

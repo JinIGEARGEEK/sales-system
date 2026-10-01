@@ -233,9 +233,15 @@ watch(() => [props.open, props.selection?.zone, props.selection?.card.id] as con
 }, { immediate: true })
 
 const moving = ref(false)
-// Returns the moved Deal (for the Won hand-off below); Lead/Prospect moves return nothing.
-const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null> => {
-  if (zone === 'deal') return dealsStore.updateStage(id, stage as DealStage, undefined, lostReason)
+// Returns the moved Deal (for the Won hand-off below); Lead/Prospect moves
+// return null. `false`: a protected Won Deal didn't move (useWonDealGuard
+// explained why, or the manager dismissed the reason prompt).
+const wonDealGuard = useWonDealGuard()
+const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null | false> => {
+  if (zone === 'deal') {
+    const moved = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(id, stage as DealStage, undefined, lostReason, reason))
+    return moved ?? false
+  }
   if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)
   else await prospectsStore.updateStatus(id, stage)
   return null
@@ -278,6 +284,7 @@ const performMove = async (stage: string, reason?: LostReason) => {
   moving.value = true
   try {
     const moved = await moveTo(zone, card.id, stage, reason)
+    if (moved === false) return
     emit('changed')
     const wonHandoff = moved?.status === 'won' && current.lane.kind !== 'won'
     if (wonHandoff) onDealWon(moved)

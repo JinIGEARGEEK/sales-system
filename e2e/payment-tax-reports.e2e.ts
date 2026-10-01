@@ -42,6 +42,15 @@ test.describe('Payment tax, receivables, source performance, duplicate quote', (
       'POST /deals/41/payments': async (route) => {
         const body = route.request().postDataJSON()
         paymentPosts.push(body)
+        // The receivable is the Accepted quote's 107,000 incl. VAT.
+        if (body.amount + (body.wht_amount ?? 0) > 107000.005 && !body.allow_overpayment) {
+          await route.fulfill({
+            status: 422,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: { code: 'VALIDATION_ERROR', message: 'send allow_overpayment: true to record it anyway', fields: { amount: ['exceeds_receivable'] } } }),
+          })
+          return
+        }
         await json(route, { id: 90, deal_id: 41, created_at: now, updated_at: now, ...body }, 201)
       },
       'GET /reports/outstanding-balance': route => json(route, [
@@ -65,6 +74,27 @@ test.describe('Payment tax, receivables, source performance, duplicate quote', (
       'GET /quotes/6': route => json(route, { ...QUOTE, id: 6, number: 'QT2026090006', status: 'draft', issue_date: '2026-09-27' }),
       'POST /quotes/5/duplicate': route => json(route, { ...QUOTE, id: 6, number: 'QT2026090006', status: 'draft', issue_date: '2026-09-27' }, 201),
     })
+  })
+
+  test('a payment over what the customer owes warns, and "Record anyway" resends it with allow_overpayment', async ({ page }) => {
+    await page.goto('/crm/deals/41/payments')
+    await page.getByTestId('payment-add').click()
+    const dialog = page.getByRole('dialog', { name: 'Add Payment' })
+    await dialog.getByTestId('payment-amount').fill('150000')
+    await dialog.getByTestId('payment-save').click()
+
+    // Refused: the dialog stays open with the warning, and Save offers to force it.
+    await expect(dialog.getByTestId('payment-overpayment-warning')).toBeVisible()
+    await expect(dialog.getByText('This is more than the customer still owes.')).toBeVisible()
+    await expect(dialog.getByTestId('payment-save')).toHaveText('Record anyway')
+    expect(paymentPosts).toHaveLength(1)
+    expect(paymentPosts[0]).not.toHaveProperty('allow_overpayment')
+
+    await dialog.getByTestId('payment-save').click()
+    await expect(dialog).toBeHidden()
+    expect(paymentPosts).toHaveLength(2)
+    expect(paymentPosts[1]).toMatchObject({ amount: 150000, allow_overpayment: true })
+    await expect(page.getByTestId('payments-total-paid')).toContainText('150,000.00')
   })
 
   test('adding a payment with WHT and a document number updates the totals', async ({ page }) => {

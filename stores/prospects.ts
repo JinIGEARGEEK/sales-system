@@ -43,16 +43,20 @@ export const useProspectsStore = defineStore('prospects', {
     // Loads a single Prospect by id directly (GET /prospects/:id) — for the
     // Prospect detail page regardless of whether it made fetchAll's capped
     // 200-row cache.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Prospect> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Prospect>>(`/prospects/${id}`)
+      const response = await $api.get<ApiResponse<Prospect>>(`/prospects/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(p => p.id !== id), fetched]
       return fetched
     },
-    async add (prospect: Omit<Prospect, 'id' | 'position'>): Promise<Prospect> {
+    // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
+    // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
+    async add (prospect: Omit<Prospect, 'id' | 'position'>, options: CreateOptions = {}): Promise<Prospect> {
       const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<Prospect>>('/prospects', prospect)
+      const response = await $api.post<ApiResponse<Prospect>>('/prospects', prospect, createParams(options))
       const created = parseDates(response.data.data)
       this.items.push(created)
       return created

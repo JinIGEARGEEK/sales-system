@@ -36,9 +36,15 @@
         </CrmStatCard>
       </div>
 
-      <div v-if="dealPayments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.deals.detail.noPayments') }}
+      <div v-if="paymentsLoading && dealPayments.length === 0" class="flex flex-col gap-2" data-cy="payments-loading">
+        <USkeleton v-for="i in 3" :key="`payment-skeleton-${i}`" class="h-10 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealPayments.length === 0"
+        :title="t('crm.deals.detail.noPayments')"
+        icon="material-symbols:payments-outline"
+        data-cy-suffix="-payments"
+      />
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-200 text-sm" data-cy="payments-table">
           <thead>
@@ -50,7 +56,7 @@
               <th class="py-2 pr-3 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnInstallment') }}</th>
               <th class="py-2 pr-3 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnMethod') }}</th>
               <th class="py-2 pr-3 font-normal">{{ t('crm.deals.detail.columnNote') }}</th>
-              <th class="py-2" />
+              <th class="py-2"><span class="sr-only">{{ t('global.table.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -95,6 +101,7 @@
                   color="error"
                   size="xs"
                   :aria-label="t('crm.deals.detail.removePayment')"
+                  :data-cy="`payment-delete-${payment.id}`"
                   @click="requestDelete(payment)"
                 />
               </td>
@@ -124,9 +131,15 @@
         </div>
       </div>
 
-      <div v-if="dealInstallments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.deals.detail.noInstallments') }}
+      <div v-if="installmentsLoading && dealInstallments.length === 0" class="flex flex-col gap-2" data-cy="installments-loading">
+        <USkeleton v-for="i in 3" :key="`installment-skeleton-${i}`" class="h-10 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealInstallments.length === 0"
+        :title="t('crm.deals.detail.noInstallments')"
+        icon="material-symbols:calendar-month-outline"
+        data-cy-suffix="-installments"
+      />
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-120 text-sm">
           <thead>
@@ -135,7 +148,7 @@
               <th class="py-2 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnAmount') }}</th>
               <th class="py-2 font-normal whitespace-nowrap">{{ t('crm.deals.detail.columnStatus') }}</th>
               <th class="py-2 font-normal">{{ t('crm.deals.detail.columnNote') }}</th>
-              <th class="py-2" />
+              <th class="py-2"><span class="sr-only">{{ t('global.table.actions') }}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -202,7 +215,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const { currency, dateFormat } = useFormatter()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const paymentsStore = usePaymentsStore()
 const paymentInstallmentsStore = usePaymentInstallmentsStore()
@@ -210,9 +223,12 @@ const quotesStore = useQuotesStore()
 
 const { dealId, deal } = useCurrentDeal()
 
+// Skeletons (not the empty states) until each first fetch settles.
+const paymentsLoading = ref(true)
+const installmentsLoading = ref(true)
 onMounted(() => {
-  paymentsStore.fetchForDeal(dealId).catch(notifyApiError)
-  paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError)
+  paymentsStore.fetchForDeal(dealId).catch(notifyApiError).finally(() => { paymentsLoading.value = false })
+  paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError).finally(() => { installmentsLoading.value = false })
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
 })
 
@@ -243,7 +259,10 @@ const openEditPayment = (payment: Payment) => {
 // installment first), so they're re-read after every payment change.
 const refreshInstallments = () => paymentInstallmentsStore.fetchForDeal(dealId).catch(notifyApiError)
 
-const onSubmitPayment = async (payment: PaymentPayload) => {
+// `report` (from CrmAddPaymentModal) shows a 422/409 on the form itself —
+// e.g. the overpayment warning with "Record anyway" — so the dialog stays
+// open; anything it doesn't cover is toasted here.
+const onSubmitPayment = async (payment: PaymentPayload, report?: PaymentErrorReporter) => {
   try {
     if (editingPayment.value) {
       await paymentsStore.update(editingPayment.value.id, payment)
@@ -254,9 +273,22 @@ const onSubmitPayment = async (payment: PaymentPayload) => {
     }
     refreshInstallments()
   } catch (err) {
-    notifyApiError(err)
+    if (!report?.(err)) notifyApiError(err)
     return false
   }
+}
+
+// The API refuses a schedule that would add up to more than the receivable
+// (422 installments ["exceeds_receivable"]) — e.g. when an Accepted quote
+// changed since this page loaded. Said in words, and the totals re-read.
+const notifyInstallmentError = (err: unknown) => {
+  if (apiErrorHasFieldCode(err, 'installments', 'exceeds_receivable') || apiErrorHasFieldCode(err, 'amount', 'exceeds_receivable')) {
+    error(t('crm.deals.detail.scheduleExceedsReceivable'))
+    quotesStore.fetchForDeal(dealId).catch(notifyApiError)
+    refreshInstallments()
+    return
+  }
+  notifyApiError(err)
 }
 
 const { open, target, requestDelete, closeDelete } = useDeleteConfirm<Payment>()
@@ -293,7 +325,7 @@ const onAddInstallment = async (installment: { amount: number, due_date: Date, n
     await paymentInstallmentsStore.add(dealId, installment)
     success(t('crm.deals.detail.addInstallmentSuccess'))
   } catch (err) {
-    notifyApiError(err)
+    notifyInstallmentError(err)
     return false
   }
 }
@@ -312,7 +344,7 @@ const onGenerateSchedule = async (installments: { amount: number, due_date: Date
     await paymentInstallmentsStore.bulkAdd(dealId, installments)
     success(t('crm.deals.detail.generateScheduleSuccess', { count: installments.length }))
   } catch (err) {
-    notifyApiError(err)
+    notifyInstallmentError(err)
     return false
   }
 }

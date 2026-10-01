@@ -12,7 +12,7 @@ export const useActivityList = (relatedType: ActivityRelatedType, relatedId: num
   const addActivityOpen = ref(false)
   const openAddActivity = () => { addActivityOpen.value = true }
 
-  // Resolves false on failure so CrmAddActivityModal stays open.
+  // Resolves a submitFailure() on failure so CrmAddActivityModal stays open.
   const onSubmitActivity = (payload: ActivityFormSubmit) =>
     logActivity(relatedType, relatedId, payload, t(addedMessageKey))
 

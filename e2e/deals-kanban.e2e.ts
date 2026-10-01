@@ -6,7 +6,9 @@ import { ADMIN, json, mockApi, signIn } from './support'
 // leaves the Deal where it was. Dropping into Won runs the same hand-off as
 // the detail page's Mark Won: follow-up task + Create Project prompt. A Lead
 // dropped into Won opens the Deal create form (a Won Deal needs a real value)
-// and converts on save, with the same hand-off.
+// and converts on save, with the same hand-off. Dragging a Won deal back to an
+// open stage asks to reopen it first, and a protected Won deal (money
+// attached) asks a manager for a reason, then retries with ?reason=.
 const STAGES = ['Discovery', 'Qualified', 'Negotiation', 'Won', 'Lost'].map((name, i) => ({
   id: i + 1, name, sort_order: i, is_active: true, is_won_stage: name === 'Won', is_lost_stage: name === 'Lost', stale_days: null, created_at: null,
 }))
@@ -16,6 +18,9 @@ const DEAL = {
   probability: 75, lost_reason: null, forecast_category: 'Commit', expected_close_date: null, created_at: new Date().toISOString(),
 }
 
+// A Won deal with payments: the API wants a manager's reason to un-win it.
+const WON_DEAL = { ...DEAL, id: 33, title: 'Signed Deal', stage: 'Won', status: 'won', position: 1 }
+
 // What converting Lead 41 into Won from the create form returns.
 const WON_FROM_LEAD = { ...DEAL, id: 52, title: 'Walk-in Co — New Opportunity', value: 250000, stage: 'Won', status: 'won', contact_id: null }
 
@@ -23,8 +28,10 @@ test.describe('Deals Kanban', () => {
   let moves: Array<Record<string, unknown>>
   let tasks: Array<Record<string, unknown>>
   let converts: Array<Record<string, unknown>>
+  let wonMoves: Array<{ body: Record<string, unknown>, reason: string | null }>
 
   test.beforeEach(async ({ page }) => {
+    wonMoves = []
     moves = []
     tasks = []
     converts = []
@@ -32,7 +39,20 @@ test.describe('Deals Kanban', () => {
     await mockApi(page, {
       'GET /auth/me': route => json(route, ADMIN),
       'GET /admin/pipeline-stages': route => json(route, STAGES),
-      'GET /deals': (route, url) => json(route, url.searchParams.get('stage') === 'Negotiation' ? [DEAL] : []),
+      'GET /deals': (route, url) => {
+        const stage = url.searchParams.get('stage')
+        return json(route, stage === 'Negotiation' ? [DEAL] : stage === 'Won' ? [WON_DEAL] : [])
+      },
+      'PATCH /deals/33/stage': async (route, url) => {
+        const body = route.request().postDataJSON()
+        const reason = url.searchParams.get('reason')
+        wonMoves.push({ body, reason })
+        if (!reason) {
+          await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: { code: 'REASON_REQUIRED', message: 'pass ?reason= to move it out of Won' } }) })
+          return
+        }
+        await json(route, { ...WON_DEAL, stage: body.stage, status: 'open' })
+      },
       // An unconverted Lead lands in the first open stage — here renamed
       // "Discovery" — not in a lane literally named "Lead".
       'GET /leads': route => json(route, [{ id: 41, name: 'Walk-in Lead', status: 'New', source: 'Website', company_id: 1, assigned_to: null, tags: [], position: 1, classification: 'none', score: 0, created_at: new Date().toISOString() }]),
@@ -91,6 +111,32 @@ test.describe('Deals Kanban', () => {
     await expect.poll(() => tasks.length).toBe(1)
     expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 31, title: 'Schedule kickoff call' })
     await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
+  })
+
+  test('dragging a Won deal back to an open stage asks to reopen it; cancelling sends nothing', async ({ page }) => {
+    await page.getByTestId('pipeline-card-deal-33').dragTo(page.getByTestId('pipeline-column-Negotiation'))
+    const dialog = page.getByRole('dialog', { name: 'Reopen this deal?' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    await expect(dialog).toBeHidden()
+    expect(wonMoves).toHaveLength(0)
+    await expect(page.getByTestId('pipeline-column-Won').getByTestId('pipeline-card-deal-33')).toBeVisible()
+  })
+
+  test('un-winning a protected deal asks for a reason and retries with it', async ({ page }) => {
+    await page.getByTestId('pipeline-card-deal-33').dragTo(page.getByTestId('pipeline-column-Negotiation'))
+    await page.getByRole('dialog', { name: 'Reopen this deal?' }).getByRole('button', { name: 'Reopen deal' }).click()
+
+    const reasonDialog = page.getByRole('dialog', { name: 'Move a Won deal out of Won?' })
+    await expect(reasonDialog).toBeVisible()
+    await expect.poll(() => wonMoves.length).toBe(1)
+    expect(wonMoves[0]).toMatchObject({ body: { stage: 'Negotiation' }, reason: null })
+
+    await reasonDialog.locator('textarea').fill('Customer cancelled the contract')
+    await reasonDialog.getByTestId('won-deal-reason-confirm').click()
+    await expect.poll(() => wonMoves.length).toBe(2)
+    expect(wonMoves[1]).toMatchObject({ body: { stage: 'Negotiation' }, reason: 'Customer cancelled the contract' })
+    await expect(page.getByText('Deal moved to Negotiation')).toBeVisible()
   })
 
   test('a Lead dropped into Won opens the create form, then converts with its value and runs the Won hand-off', async ({ page }) => {

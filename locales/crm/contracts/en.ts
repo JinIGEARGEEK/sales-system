@@ -27,6 +27,13 @@ export default {
     downloadPdf: 'Download as PDF',
     linkedQuote: 'Linked to Quote #{id}',
     noLinkedQuote: 'No linked quote',
+    signedLocked: 'Signed — locked. Its status, linked quote and end date can\'t change; add further files as Attachments.',
+    lockedConflict: 'This contract is signed and locked, so it can\'t be changed. The list has been refreshed.',
+    signedViaUploadHint: 'A contract becomes Signed when you upload the signed document.',
+    endDateBeforeUploadTitle: 'Set the end date first?',
+    endDateBeforeUploadBody: 'Once the signed document is uploaded the contract is locked and its end date can\'t be added. Without one, nobody gets a reminder before it ends.',
+    setEndDate: 'Set end date',
+    uploadWithoutEndDate: 'Upload without it',
   },
   components: {
     addContractModal: {

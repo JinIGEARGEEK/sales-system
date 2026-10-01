@@ -87,7 +87,8 @@ const menuItems = computed<DropdownMenuItem[]>(() => [
 
 defineShortcuts(computed(() => extractShortcuts(menuItems.value)))
 
-// Resolving false keeps the modal open with the form intact (useAwaitableEmit).
+// Resolving false/submitFailure() keeps the modal open with the form intact
+// (useAwaitableSubmit); a submitFailure's 422 fields land on the inputs.
 const onSubmitActivity = (payload: ActivityFormSubmit) => {
   if (!payload.related_type || !payload.related_id) return false
   return logActivity(payload.related_type, payload.related_id, payload, t('layout.quickAdd.activityLogged'))
@@ -100,7 +101,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
     success(t('layout.quickAdd.taskAdded'))
   } catch (err) {
     notifyApiError(err)
-    return false
+    return submitFailure(err)
   }
 }
 </script>

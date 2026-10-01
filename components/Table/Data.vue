@@ -130,7 +130,15 @@
                     :text="col.tooltip"
                     :ui="{ content: 'h-auto max-w-[min(20rem,80vw)] px-2.5 py-1.5', text: 'whitespace-normal' }"
                   >
-                    <UIcon name="material-symbols:info-outline" class="inline size-4 text-(--color-gray)" />
+                    <!-- A real button so keyboard users can reach it (the
+                    tooltip opens on focus too) and it has a name. -->
+                    <button
+                      type="button"
+                      class="inline-flex rounded-full align-middle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+                      :aria-label="t('global.infoAbout', { name: col.label })"
+                    >
+                      <UIcon name="material-symbols:info-outline" class="size-4 text-(--color-gray)" aria-hidden="true" />
+                    </button>
                   </UTooltip>
                 </div>
               </th>

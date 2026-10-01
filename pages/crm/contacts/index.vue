@@ -152,6 +152,7 @@ const contactsStore = useContactsStore()
 
 // Matches the backend's /contacts/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
+const canDelete = computed(() => hasRole(...MANAGER_ROLES))
 
 onMounted(() => {
   fetch()
@@ -286,8 +287,9 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('crm.contacts.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       ...rowQuickActions.value,
-      { label: t('crm.contacts.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
-      { label: t('crm.contacts.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
+      { label: t('crm.contacts.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: canDelete.value },
+      // DELETE is Admin/Sales Manager only (403 for Sales Rep/Marketing).
+      ...(canDelete.value ? [{ label: t('crm.contacts.index.actions.delete'), emitName: 'delete', isBorderBottom: false }] : []),
     ],
   },
 ])

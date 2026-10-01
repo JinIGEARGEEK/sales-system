@@ -8,6 +8,7 @@
         size="md"
         icon="material-symbols:search"
         :placeholder="t('crm.components.globalSearch.placeholder')"
+        :aria-label="t('crm.components.globalSearch.ariaLabel')"
         class="w-full"
         :ui="{
           base: 'rounded-full bg-white/10 backdrop-blur-md text-white shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-all placeholder:text-white/55 hover:bg-white/15 focus-visible:bg-white/15 py-1.5',

@@ -679,6 +679,11 @@ interface Quote {
   // pre-filled. Added 2026-08-23.
   extraction_status?: 'ok' | 'partial' | 'failed' | null
   extraction_warnings?: string[] | null
+  // Revision chain (POST /quotes/:id/duplicate, Review round 2): a copy
+  // points at the chain's root quote and is numbered max + 1; an original
+  // has revision_no 0 and no revision_of_id. Shown as "Rev N".
+  revision_of_id?: number | null
+  revision_no?: number
 }
 
 // A named, deal-independent starting point for a new Quote — see the
@@ -718,6 +723,9 @@ interface Contract {
   // string, never a Date, so it can't shift a day through local time.
   // Feeds the contract_expiry notification rule (signed contracts only).
   end_date: string | null
+  // Read-only: 'expired' once a signed contract's end_date has passed
+  // (server-local day); `status` stays 'signed' (and locked).
+  effective_status?: ContractStatus
   created_at: Date
 }
 
@@ -807,6 +815,10 @@ interface PaymentPayload {
   wht_certificate_received: boolean
   document_number: string | null
   installment_id: number | null
+  // Record a payment that takes cash + WHT past the Deal's receivable (the
+  // API's 422 amount ["exceeds_receivable"] otherwise) — sent only after the
+  // user chose "Record anyway".
+  allow_overpayment?: boolean
 }
 
 // A planned installment on a Deal's payment schedule, defined before money
@@ -915,7 +927,17 @@ interface DashboardSummary {
   forecast_by_category: { commit: number, best_case: number, pipeline: number }
   avg_deal_size: number
   avg_sales_cycle_days: number
+  // quarter_pipeline_value ÷ quarterly_sales_target: only open deals expected
+  // to close this quarter (server-local), not the whole open pipeline.
   pipeline_coverage_ratio: number
+  quarter_pipeline_value: number
+  // Open deals whose expected_close_date is before today (any quarter).
+  overdue_pipeline_value: number
+  overdue_pipeline_count: number
+  // Open deals with no (readable) expected_close_date — left out of coverage
+  // and forecast_trend, reported here so they don't silently disappear.
+  undated_pipeline_value: number
+  undated_pipeline_count: number
   quarterly_sales_target: number
   // Company-wide annual revenue goal (FR-CRM-091), Admin-configurable via
   // AppSettings above — annual_revenue_actual is Won Deal value since Jan 1
@@ -931,10 +953,12 @@ interface DashboardSummary {
   annual_revenue_trend: { label: string, actual: number, goal_pace: number }[]
   revenue_trend: { label: string, value: number }[]
   // Forward-looking counterpart to revenue_trend: probability-weighted value of
-  // open deals bucketed by ExpectedCloseDate month (next 6 months). Deals with no
-  // expected_close_date are excluded from every point, so these points may sum to
-  // less than forecasted_revenue above — don't present this as the full forecast.
-  forecast_trend: { label: string, value: number }[]
+  // open deals bucketed by ExpectedCloseDate month (next 6 months), with the
+  // dashboard filters applied. Overdue open deals land in the first (current
+  // month) point; its `overdue` is that part of `value` (0 on the others).
+  // Undated deals are excluded, so the points may sum to less than
+  // forecasted_revenue above — don't present this as the full forecast.
+  forecast_trend: { label: string, value: number, overdue: number }[]
   stage_breakdown: { stage: DealStage, value: number, count: number }[]
   industry_breakdown: { industry: string, win_rate: number, won_count: number }[]
   team_performance: { user_id: number, name: string, won_count: number, won_value: number, win_rate: number, activity_count: number }[]
@@ -965,4 +989,18 @@ interface ForecastAccuracyQuarter {
   sales_target: number
   actual_won_to_date: number
   accuracy_ratio: number
+}
+
+// PATCH /deals/bulk-archive (Review round 2): 200 { archived, skipped }. A Won
+// Deal with money attached (a Payment, an installment or a signed Contract)
+// is skipped, not archived. Lead/Prospect bulk-archive still answer 204,
+// which stores/helpers.ts normalizes to "everything archived".
+type BulkArchiveSkipReason = 'won_deal_with_money'
+interface BulkArchiveSkip {
+  id: number
+  reason: BulkArchiveSkipReason | string
+}
+interface BulkArchiveResult {
+  archived: number[]
+  skipped: BulkArchiveSkip[]
 }

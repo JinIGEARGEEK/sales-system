@@ -73,15 +73,16 @@ const emptyForm = () => ({
   related_id: props.defaultRelatedId ? String(props.defaultRelatedId) : '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, showApiFieldErrors, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save, so `loading` spins Save until it lands, the
 // guard turns away a second click meanwhile, and a failed save (handler
-// resolves `false` or throws) keeps the dialog open.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
-const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update')
+// resolves `false`/submitFailure() or throws) keeps the dialog open — a
+// submitFailure's 422 fields also land on the matching inputs.
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'submit', showApiFieldErrors)
+const updateAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'update', showApiFieldErrors)
 const onSubmit = guard(async () => {
   const shared = {
     title: form.title,

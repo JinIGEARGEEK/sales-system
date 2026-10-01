@@ -38,12 +38,10 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
     open.value = true
   }
 
-  // Returns the created/updated Project so a caller that opened this modal
-  // to fill an unrelated "pick a Project" field elsewhere (e.g. Deal/Lead/
-  // Prospect's Business Unit item select) can select it immediately —
-  // `false` on failure (the toast already covers it), which also tells
-  // CrmAddProjectModal (via useAwaitableEmit) to stay open.
-  const onSave = async (payload: ProjectSavePayload): Promise<Project | false> => {
+  // Bind to CrmAddProjectModal's @submit: resolves the created/updated
+  // Project, or a submitFailure() (the toast already covers it) so the modal
+  // stays open with a 422's fields on its inputs (useAwaitableSubmit).
+  const onSubmit = async (payload: ProjectSavePayload): Promise<Project | SubmitFailure> => {
     try {
       if (editing.value) {
         // A Production-role edit only carries status/production_reference
@@ -70,9 +68,18 @@ export const useProjectModal = (defaultCompanyId: number | null | Ref<number | n
       }
     } catch (err) {
       error(getApiErrorMessage(err, t('global.genericError')))
-      return false
+      return submitFailure(err)
     }
   }
 
-  return { open, editing, openAdd, openEdit, onSave }
+  // The same save for a caller that opened this modal to fill an unrelated
+  // "pick a Project" field elsewhere (e.g. Deal/Lead/Prospect's Business Unit
+  // item select) and selects the Project immediately — `false` on failure,
+  // which also keeps the modal open.
+  const onSave = async (payload: ProjectSavePayload): Promise<Project | false> => {
+    const result = await onSubmit(payload)
+    return 'submitFailed' in result ? false : result
+  }
+
+  return { open, editing, openAdd, openEdit, onSubmit, onSave }
 }

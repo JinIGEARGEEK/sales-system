@@ -55,7 +55,14 @@ const ICON_COLOR_CLASS = {
 // Same palette as the icon variant above, just a darker neutral — a caption
 // is body text sitting on a light card background, where the icon's lighter
 // gray reads as too faint.
-const CAPTION_COLOR_CLASS = { ...ICON_COLOR_CLASS, neutral: 'text-(--color-dark-gray)' }
+// Success/error captions use the text-safe variants (global.css) — the toast
+// accents are under 4.5:1 as text.
+const CAPTION_COLOR_CLASS = {
+  ...ICON_COLOR_CLASS,
+  success: 'text-(--color-success-text)',
+  error: 'text-(--color-danger-text)',
+  neutral: 'text-(--color-dark-gray)',
+}
 
 const props = defineProps({
   items: {

@@ -76,6 +76,18 @@
 
     <CrmLostReasonModal v-model:open="markLostOpen" @confirm="onMarkLost" />
 
+    <!-- The stepper moving a Won/Lost deal to an open stage reopens it
+         (status open, lost_reason cleared) — same confirm as the board. -->
+    <CrmConfirmDeleteModal
+      :open="reopenTargetStage !== null"
+      :title="t('crm.deals.index.reopenConfirmTitle')"
+      :body="deal && reopenTargetStage ? t(deal.status === 'won' ? 'crm.deals.index.reopenConfirmBodyWon' : 'crm.deals.index.reopenConfirmBodyLost', { title: deal.title, stage: reopenTargetStage }) : ''"
+      :confirm-label="t('crm.deals.index.reopenConfirm')"
+      confirm-color="primary"
+      @update:open="(value: boolean) => { if (!value) reopenTargetStage = null }"
+      @confirm="onConfirmReopen"
+    />
+
     <!-- The one Create Project prompt for this Deal — the Overview save and
          the Contracts tab's signed-contract flow reach it through the
          injected useDealWonHandoff instance, so it never opens twice. -->
@@ -173,6 +185,9 @@ if (route.query[WON_HANDOFF_QUERY] === '1') {
   }
 }
 const notifyStageChangeError = useStageChangeErrorNotifier()
+// Moving a Won deal with money attached out of Won (stepper / Mark Lost):
+// explained, or a manager gives a reason and it's retried.
+const wonDealGuard = useWonDealGuard()
 
 const markWonConfirmOpen = ref(false)
 const onMarkWon = async () => {
@@ -197,8 +212,10 @@ const requestLost = (stage: string) => {
 const onMarkLost = async (reason: LostReason) => {
   if (!deal.value) return
   try {
-    await dealsStore.updateStage(deal.value.id, (lostTargetStage.value || pipelineStagesStore.lostStageName) as DealStage, undefined, reason)
-    success(t('crm.deals.detail.markLostSuccess'))
+    const id = deal.value.id
+    const stage = (lostTargetStage.value || pipelineStagesStore.lostStageName) as DealStage
+    const updated = await wonDealGuard.run('unwin', overrideReason => dealsStore.updateStage(id, stage, undefined, reason, overrideReason))
+    if (updated) success(t('crm.deals.detail.markLostSuccess'))
   } catch (err) {
     notifyStageChangeError(err)
   }
@@ -229,14 +246,31 @@ const onStepperSelect = async (stage: string) => {
     requestLost(stage)
     return
   }
+  if (deal.value.status !== 'open') {
+    reopenTargetStage.value = stage
+    return
+  }
+  await moveToStage(stage)
+}
+
+const moveToStage = async (stage: string) => {
+  if (!deal.value) return
+  const id = deal.value.id
   stageMoving.value = true
   try {
-    await dealsStore.updateStage(deal.value.id, stage as DealStage)
-    success(t('crm.deals.detail.stageChangeSuccess', { stage }))
+    const updated = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(id, stage as DealStage, undefined, undefined, reason))
+    if (updated) success(t('crm.deals.detail.stageChangeSuccess', { stage }))
   } catch (err) {
     notifyStageChangeError(err)
   } finally {
     stageMoving.value = false
   }
+}
+
+const reopenTargetStage = ref<string | null>(null)
+const onConfirmReopen = async () => {
+  const stage = reopenTargetStage.value
+  reopenTargetStage.value = null
+  if (stage) await moveToStage(stage)
 }
 </script>

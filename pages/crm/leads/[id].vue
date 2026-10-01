@@ -43,7 +43,7 @@
                         format (rather than always assuming/prefixing "+")
                         still reads correctly for a 0 or negative weight, should
                         one ever exist. -->
-                        <span class="shrink-0 font-medium text-(--color-success-toast)">{{ formatSignedWeight(criterion.weight) }}</span>
+                        <span class="shrink-0 font-medium text-(--color-success-text)">{{ formatSignedWeight(criterion.weight) }}</span>
                       </li>
                     </ul>
                     <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
@@ -247,6 +247,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { LEAD_STATUS_FORM_OPTIONS, BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
@@ -452,8 +453,9 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 )
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!lead.value) return
   try {
     await leadsStore.update(lead.value.id, {
@@ -472,7 +474,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.leads.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 

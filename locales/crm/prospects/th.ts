@@ -16,6 +16,7 @@ export default {
     assigneePlaceholder: 'ผู้รับผิดชอบ',
     prospectStatusUpdated: 'ย้าย Prospect ไปที่ {status}',
     prospectConvertedToLead: 'แปลง Prospect เป็น Lead สำเร็จ',
+    alreadyConverted: 'Prospect นี้ถูกแปลงเป็น Lead ไปแล้ว',
     entityLabel: 'Prospect',
     convertInfoBody: 'วิธีแปลง Prospect เป็น Lead: กด "แปลงเป็น Lead" ได้ทุกเมื่อที่พร้อม ยกเว้นสถานะ Disqualified',
     columns: {
@@ -92,6 +93,7 @@ export default {
     prospectNotFound: 'ไม่พบข้อมูล Prospect',
     updateSuccess: 'แก้ไข Prospect สำเร็จ',
     convertSuccess: 'แปลง Prospect เป็น Lead สำเร็จ',
+    alreadyConverted: 'Prospect นี้ถูกแปลงเป็น Lead ไปแล้ว',
     activityTitle: 'กิจกรรม',
     addActivity: 'เพิ่มกิจกรรม',
     addActivitySuccess: 'บันทึกกิจกรรมสำเร็จ',

@@ -156,6 +156,9 @@ const canManageProjects = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 // Matches the backend's /projects/export and /products/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
+// Production is 403 on /companies* (spec §1.7); the list already carries
+// company_name, so only the "View company" jump goes.
+const canViewCompany = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 const onExportProjects = () => downloadCsvBlob('/projects/export', 'projects.csv')
 const onExportProducts = () => downloadCsvBlob('/products/export', 'products.csv')
 
@@ -295,7 +298,8 @@ const projectColumns = computed<TableDataColumn[]>(() => [
     field: 'action',
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
-      { label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false },
+      // Production gets 403 on every /companies* route, so no company link.
+      ...(canViewCompany.value ? [{ label: t('crm.projects.index.viewCompany'), emitName: 'viewDetail', isBorderBottom: false }] : []),
       { label: t('crm.projects.index.edit'), emitName: 'edit', isBorderBottom: false },
     ],
   },
@@ -310,7 +314,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(null, 'crm.projects.index.addProjectSuccess', 'crm.projects.index.updateProjectSuccess')
 
 const {

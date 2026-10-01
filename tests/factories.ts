@@ -7,6 +7,9 @@
 // factory used by a single spec should stay local to it (e.g. `makePayment`,
 // `makeEntry` in their respective spec files today).
 
+import { AxiosError } from 'axios'
+import type { AxiosResponse } from 'axios'
+
 export const makeDeal = (overrides: Partial<Deal> = {}): Deal => ({
   id: 1,
   company_id: 1,
@@ -75,3 +78,15 @@ export const apiResponse = <T>(data: T, extra: Partial<ApiResponse<T>> = {}): { 
     ...extra,
   },
 })
+
+// A rejected API call as axios raises it: `status` plus the backend's
+// `{ error: { code, message, fields } }` envelope — what getApiErrorCode /
+// getApiErrorFields / isAxiosError read.
+export const apiError = (status: number, error: { code?: string, message?: string, fields?: Record<string, string[]> }): AxiosError =>
+  new AxiosError(error.message ?? 'Request failed', 'ERR_BAD_REQUEST', undefined, undefined, {
+    status,
+    statusText: '',
+    headers: {},
+    config: {} as AxiosResponse['config'],
+    data: { error: { code: 'ERROR', message: '', ...error } },
+  } as AxiosResponse)

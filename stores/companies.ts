@@ -96,9 +96,11 @@ export const useCompaniesStore = defineStore('companies', {
     // dropdowns still built from `items` can all miss a company past that
     // cutoff; this doesn't). Upserts into `items` so nameById and any
     // v-for over `items` immediately pick it up too.
+    // skipErrorRedirect: a missing record is the detail page's own
+    // NotFoundState, not the app-wide error page.
     async fetchOne (id: number): Promise<Company> {
       const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Company>>(`/companies/${id}`)
+      const response = await $api.get<ApiResponse<Company>>(`/companies/${id}`, { skipErrorRedirect: true })
       const fetched = parseDates(response.data.data)
       this.items = [...this.items.filter(c => c.id !== id), fetched]
       return fetched

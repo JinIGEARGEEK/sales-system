@@ -17,14 +17,16 @@
           />
           <!-- Status only on create: an existing contract's status moves via
                the card's confirmed status select (Signed/Expired ask first). -->
-          <InputSelect
-            v-if="!record"
-            v-model="form.status"
-            :options="contractStatusOptions"
-            :label="t('crm.contracts.components.addContractModal.status')"
-            name="status"
-            rules="required"
-          />
+          <div v-if="!record">
+            <InputSelect
+              v-model="form.status"
+              :options="contractEditableStatusOptions"
+              :label="t('crm.contracts.components.addContractModal.status')"
+              name="status"
+              rules="required"
+            />
+            <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.contracts.detail.signedViaUploadHint') }}</p>
+          </div>
           <div :class="{ 'sm:col-span-2': !record }">
             <InputDatePicker
               v-model="form.end_date"
@@ -56,7 +58,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { contractStatusOptions } = useContractStatusColor()
+const { contractEditableStatusOptions } = useContractStatusColor()
 
 const props = defineProps<{
   open: boolean
