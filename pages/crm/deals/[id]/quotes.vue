@@ -163,7 +163,6 @@
       @confirm="confirmQuoteStatusChange"
     />
 
-
     <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
 
     <CrmConfirmDeleteModal

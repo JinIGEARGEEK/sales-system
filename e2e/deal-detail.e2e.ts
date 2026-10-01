@@ -21,6 +21,8 @@ const SIGNED_CONTRACT = {
   id: 6, deal_id: 31, quote_id: null, status: 'signed', effective_status: 'signed', signed_file_url: '/uploads/signed.pdf',
   signed_date: new Date().toISOString(), end_date: '2027-12-31', created_at: new Date().toISOString(),
 }
+// Signed, but past its end date: still signed (and locked), shown Expired.
+const LAPSED_CONTRACT = { ...SIGNED_CONTRACT, id: 7, effective_status: 'expired', end_date: '2026-01-31' }
 
 test.describe('Deal detail', () => {
   let contractPuts: Array<Record<string, unknown>>
@@ -35,7 +37,7 @@ test.describe('Deal detail', () => {
       'GET /deals/31': route => json(route, DEAL),
       'GET /companies/1': route => json(route, COMPANY),
       'GET /contacts/1': route => json(route, CONTACT),
-      'GET /deals/31/contracts': route => json(route, [CONTRACT, SIGNED_CONTRACT]),
+      'GET /deals/31/contracts': route => json(route, [CONTRACT, SIGNED_CONTRACT, LAPSED_CONTRACT]),
       'PUT /contracts/5': async (route) => {
         contractPuts.push(route.request().postDataJSON())
         await json(route, { ...CONTRACT, ...route.request().postDataJSON() })
@@ -95,6 +97,9 @@ test.describe('Deal detail', () => {
     await expect(page.locator('[role="combobox"][data-cy="contract-status-6"]')).toHaveCount(0)
     await expect(page.getByTestId('contract-locked-6')).toBeVisible()
     await expect(page.getByTestId('contract-edit-6')).toHaveCount(0)
+    // A lapsed one reads Signed (locked) with Expired beside it — once.
+    await expect(page.getByTestId('contract-status-7')).toHaveText('Signed')
+    await expect(page.getByTestId('contract-effective-status-7')).toHaveText('Expired')
 
     await page.getByTestId('contract-upload-5').click()
     const prompt = page.getByRole('dialog', { name: 'Set the end date first?' })

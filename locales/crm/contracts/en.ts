@@ -44,7 +44,6 @@ export default {
       clearEndDate: 'Clear end date',
       quote: 'Linked Quote (optional)',
       quotePlaceholder: 'Select a quote to link',
-      noQuote: 'No quote',
       status: 'Status',
       cancel: 'Cancel',
       save: 'Save',

@@ -76,15 +76,12 @@
 
     <CrmLostReasonModal v-model:open="markLostOpen" @confirm="onMarkLost" />
 
-    <!-- The stepper moving a Won/Lost deal to an open stage reopens it
-         (status open, lost_reason cleared) — same confirm as the board. -->
-    <CrmConfirmDeleteModal
-      :open="reopenTargetStage !== null"
-      :title="t('crm.deals.index.reopenConfirmTitle')"
-      :body="deal && reopenTargetStage ? t(deal.status === 'won' ? 'crm.deals.index.reopenConfirmBodyWon' : 'crm.deals.index.reopenConfirmBodyLost', { title: deal.title, stage: reopenTargetStage }) : ''"
-      :confirm-label="t('crm.deals.index.reopenConfirm')"
-      confirm-color="primary"
-      @update:open="(value: boolean) => { if (!value) reopenTargetStage = null }"
+    <!-- The stepper moving a Won/Lost deal to an open stage: same confirm
+         as the board. -->
+    <CrmDealReopenConfirmModal
+      :deal="deal"
+      :stage="reopenTargetStage"
+      @cancel="reopenTargetStage = null"
       @confirm="onConfirmReopen"
     />
 
@@ -214,7 +211,7 @@ const onMarkLost = async (reason: LostReason) => {
   try {
     const id = deal.value.id
     const stage = (lostTargetStage.value || pipelineStagesStore.lostStageName) as DealStage
-    const updated = await wonDealGuard.run('unwin', overrideReason => dealsStore.updateStage(id, stage, undefined, reason, overrideReason))
+    const updated = await wonDealGuard.updateStage(id, stage, { lostReason: reason })
     if (updated) success(t('crm.deals.detail.markLostSuccess'))
   } catch (err) {
     notifyStageChangeError(err)
@@ -258,7 +255,7 @@ const moveToStage = async (stage: string) => {
   const id = deal.value.id
   stageMoving.value = true
   try {
-    const updated = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(id, stage as DealStage, undefined, undefined, reason))
+    const updated = await wonDealGuard.updateStage(id, stage as DealStage)
     if (updated) success(t('crm.deals.detail.stageChangeSuccess', { stage }))
   } catch (err) {
     notifyStageChangeError(err)

@@ -124,7 +124,6 @@ export default {
     noOwnerHistory: 'ยังไม่มีการเปลี่ยนผู้รับผิดชอบ',
     quotesTitle: 'ใบเสนอราคา',
     createQuote: 'สร้างใบเสนอราคา',
-    createQuoteSuccess: 'สร้างใบเสนอราคาสำเร็จ',
     noQuotes: 'ยังไม่มีใบเสนอราคาสำหรับ Deal นี้',
     validUntil: 'ใช้ได้ถึง {date}',
     quoteStatus: 'สถานะใบเสนอราคา',

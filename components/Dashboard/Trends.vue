@@ -53,7 +53,7 @@
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
               {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="bucket.overdue > 0 ? `${bucket.label}: ${currencyCompact(bucket.value)} · ${t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) })}` : `${bucket.label}: ${currencyCompact(bucket.value)}`">
+            <UTooltip :text="bucket.overdue > 0 ? `${bucket.label}: ${currencyCompact(bucket.value)} · ${forecastOverdueLabel(bucket)}` : `${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -64,7 +64,7 @@
             </UTooltip>
             <span class="text-xs text-(--color-gray)">{{ bucket.label }}</span>
             <span v-if="bucket.overdue > 0" class="-mt-1 text-[11px] text-(--color-danger-text)">
-              {{ t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) }) }}
+              {{ forecastOverdueLabel(bucket) }}
             </span>
           </div>
         </div>
@@ -115,9 +115,15 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const { currencyCompact } = useFormatter()
 
+type ForecastBucket = DashboardSummary['forecast_trend'][number] & { percent: number }
+
 defineProps<{
   revenueTrend: { label: string, value: number, percent: number }[]
-  forecastTrend: { label: string, value: number, overdue: number, percent: number }[]
+  // The current month's `overdue` is the part of its value already past its
+  // expected close date (0 on the other months).
+  forecastTrend: ForecastBucket[]
   annualRevenueTrendChart: { label: string, actual: number, goal_pace: number, actualPercent: number, goalPacePercent: number }[]
 }>()
+
+const forecastOverdueLabel = (bucket: ForecastBucket) => t('crm.dashboard.forecastOverdue', { value: currencyCompact(bucket.overdue) })
 </script>

@@ -169,7 +169,6 @@ const { logActivity } = useLogActivity()
 const teamMembersStore = useTeamMembersStore()
 const activitiesStore = useActivitiesStore()
 const tasksStore = useTasksStore()
-const dealsStore = useDealsStore()
 const leadsStore = useLeadsStore()
 const prospectsStore = useProspectsStore()
 
@@ -239,7 +238,7 @@ const moving = ref(false)
 const wonDealGuard = useWonDealGuard()
 const moveTo = async (zone: PipelineOverviewZoneKey, id: number, stage: string, lostReason?: LostReason): Promise<Deal | null | false> => {
   if (zone === 'deal') {
-    const moved = await wonDealGuard.run('unwin', reason => dealsStore.updateStage(id, stage as DealStage, undefined, lostReason, reason))
+    const moved = await wonDealGuard.updateStage(id, stage as DealStage, { lostReason })
     return moved ?? false
   }
   if (zone === 'lead') await leadsStore.updateStatus(id, stage as LeadStatus)

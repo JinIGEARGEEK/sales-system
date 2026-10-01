@@ -16,7 +16,7 @@ export const useContractStatusColor = () => {
   // signed only by uploading the signed document (the API answers 422 to
   // status "signed" otherwise).
   const contractEditableStatusOptions = computed<Select[]>(() =>
-    CONTRACT_STATUSES.filter(value => value !== 'signed').map(value => ({ value, label: contractStatusLabel(value) })))
+    contractStatusOptions.value.filter(option => option.value !== 'signed'))
 
   return { contractStatusBadgeColor, contractStatusLabel, contractStatusOptions, contractEditableStatusOptions }
 }

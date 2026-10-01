@@ -149,7 +149,7 @@ const emptyForm = () => ({
 const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 const { overpaymentPending, report, withOverpayment, reset: resetSaveErrors } = usePaymentSaveErrors(
-  () => (formRef.value as { setErrors?: (errors: Record<string, string>) => void } | null)?.setErrors,
+  () => formRef.value?.setErrors,
 )
 watch(() => props.open, (value) => { if (value) resetSaveErrors() })
 // A new amount/WHT needs checking again before it can be forced through.

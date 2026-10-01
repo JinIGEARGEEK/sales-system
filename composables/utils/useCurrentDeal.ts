@@ -1,10 +1,6 @@
-// Shared by the Deal detail layout (pages/crm/deals/[id].vue) and its child
-// routes — all independently resolved the same `:id` route param into a Deal
-// from the store; centralized here so that lookup only needs to be right
-// once. Quotes/Contracts now also pull `deal` from here (for the FR-CRM-046
-// quote pre-fill and FR-CRM-048 auto-create-Project-on-Signed flow) — only
-// Tasks/Activity/Attachments still read `route.params.id` directly since they
-// never need the Deal record itself.
+// The Deal behind the `:id` route param, shared by the Deal detail layout
+// (pages/crm/deals/[id].vue) and the child routes that need the record
+// itself (Overview, Quotes, Contracts, Payments).
 
 // Module-scoped (not inside the composable function), so it's shared across
 // every call to useCurrentDeal() for the life of the app, not just within
@@ -22,17 +18,12 @@ export const useCurrentDeal = () => {
   const dealId = Number(route.params.id)
   const deal = computed(() => dealsStore.items.find(d => d.id === dealId) ?? null)
 
-  // dealsStore.items only ever holds fetchAll's capped 200-row, newest-first
-  // cache (see stores/companies.ts's fetchAll for the full explanation) — a
-  // Deal reached by direct/bookmarked link past that cutoff would otherwise
-  // show "Deal not found" (pages/crm/deals/[id].vue) despite existing.
-  // fetchOne is harmless to call even when already cached elsewhere (e.g.
-  // from a list page) — it just re-fetches and upserts the same record.
-  //
-  // Also re-read a cached Deal whose value follows a quote but came from a
-  // list response: only single-deal responses carry value_quote_number (the
-  // "From accepted quote Q-…" hint needs it).
-  const needsFetch = !deal.value || (deal.value.value_quote_id && deal.value.value_quote_number === undefined)
+  // Fetched by id whenever it isn't cached: dealsStore.items is fetchAll's
+  // capped newest-200 list (see stores/companies.ts's fetchAll), so an older
+  // Deal reached by link would otherwise read "Deal not found". A cached list
+  // row whose value follows a quote is re-read too, for value_quote_number
+  // (lacksValueQuoteNumber). fetchOne upserts, so a re-read is harmless.
+  const needsFetch = !deal.value || lacksValueQuoteNumber(deal.value)
   if (needsFetch && !pendingDealFetches.has(dealId)) {
     pendingDealFetches.add(dealId)
     dealsStore.fetchOne(dealId).catch(notifyLoadError).finally(() => pendingDealFetches.delete(dealId))

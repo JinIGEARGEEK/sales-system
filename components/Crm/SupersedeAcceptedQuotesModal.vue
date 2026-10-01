@@ -1,7 +1,6 @@
 <template>
   <!-- Reject the others (then accept), or Cancel/✕/Esc to not accept at
-  all. The API allows one Accepted quote per Deal (409 otherwise), so
-  "keep them Accepted" is no longer offered. -->
+  all — the API allows one Accepted quote per Deal (409 otherwise). -->
   <UModal
     :open="pending !== null"
     :title="t('crm.quotes.supersede.title')"

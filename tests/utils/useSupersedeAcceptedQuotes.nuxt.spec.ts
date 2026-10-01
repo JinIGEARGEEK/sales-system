@@ -52,14 +52,10 @@ describe('useSupersedeAcceptedQuotes', () => {
     expect(supersede.pending.value).toBeNull()
   })
 
-  it('keeps them on "keep" (still resolving true), and resolves false on cancel', async () => {
+  it('resolves false on cancel without touching the others', async () => {
     const accepted = makeQuote({ id: 1, deal_id: 1, status: 'accepted' })
     const putSpy = vi.spyOn(useNuxtApp().$api, 'put')
     const supersede = useSupersedeAcceptedQuotes()
-
-    const kept = supersede.resolveOthers([accepted])
-    supersede.decide('keep')
-    expect(await kept).toBe(true)
 
     const cancelled = supersede.resolveOthers([accepted])
     supersede.decide('cancel')

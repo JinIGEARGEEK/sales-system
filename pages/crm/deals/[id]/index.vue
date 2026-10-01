@@ -66,7 +66,7 @@
               />
             </div>
             <InputSelect
-              v-if="isLostStage(form.stage)"
+              v-if="pipelineStagesStore.isLostStage(form.stage)"
               v-model="form.lost_reason"
               :options="LOST_REASON_OPTIONS"
               :label="t('crm.deals.detail.lostReason')"
@@ -172,7 +172,6 @@ const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateTimeFormat } = useFormatter()
 const { hasRole } = useRole()
-const dealsStore = useDealsStore()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
 const projectsStore = useProjectsStore()
@@ -188,12 +187,6 @@ const auditLogStore = useAuditLogStore()
 // reassigned/bulk_reassigned entries back anyway; this just avoids the
 // doomed request and hides the section for them.
 const canViewOwnerHistory = computed(() => hasRole('Admin', 'Sales Manager'))
-
-// Prefers the configured PipelineStage row's is_lost_stage flag (so a custom,
-// admin-renamed Lost stage still shows/requires lost_reason), falling back to
-// the literal "Lost" name if the store hasn't loaded that row yet — same
-// resolution useDealStageColor.stageBadgeColor uses.
-const isLostStage = (stage: string) => pipelineStagesStore.isLostStage(stage)
 
 // Colors the Probability progress bar by simple magnitude thresholds — not
 // stage-derived like forecastCategoryColor, since a rep can freely override
@@ -269,7 +262,7 @@ const actorName = (actorId: number) => {
   return member?.name ?? '-'
 }
 
-// Deal loads asynchronously (dealsStore.fetchAll, in the parent [id].vue), so
+// Deal loads asynchronously (useCurrentDeal), so
 // company_id isn't known yet at onMounted — fetch this company's projects once
 // the deal resolves.
 watch(deal, (value) => {
@@ -384,7 +377,7 @@ watch(() => form.stage, (newStage) => {
   // left empty when stages haven't loaded, and the API then applies it on save.
   form.probability = pipelineStagesStore.defaultProbability(newStage) ?? undefined
   form.forecast_category = stageDefaultForecastCategory(newStage)
-  if (!isLostStage(newStage)) form.lost_reason = ''
+  if (!pipelineStagesStore.isLostStage(newStage)) form.lost_reason = ''
 })
 
 const { loading, guard } = useSubmitGuard()
@@ -407,14 +400,14 @@ const onSave = guard(async (_values?: unknown, actions?: SubmissionContext) => {
       stage: form.stage as DealStage,
       status: pipelineStagesStore.statusForStage(form.stage),
       probability: typeof form.probability === 'number' ? form.probability : null,
-      lost_reason: isLostStage(form.stage) ? (form.lost_reason as LostReason || null) : null,
+      lost_reason: pipelineStagesStore.isLostStage(form.stage) ? (form.lost_reason as LostReason || null) : null,
       forecast_category: form.forecast_category as ForecastCategory || null,
       expected_close_date: form.expected_close_date ? new Date(form.expected_close_date) : null,
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
     })
-    const updated = await wonDealGuard.run('unwin', reason => dealsStore.update(id, payload, reason))
+    const updated = await wonDealGuard.update(id, payload)
     if (!updated) return
     markClean()
     success(t('crm.deals.detail.updateSuccess'))
