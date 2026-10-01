@@ -1,3 +1,10 @@
+// The bulk-archive response body, or (for a 204) every requested id archived.
+export const toBulkArchiveResult = (ids: number[], body: ApiResponse<BulkArchiveResult> | '' | null | undefined): BulkArchiveResult => {
+  const data = body && typeof body === 'object' ? body.data : undefined
+  if (!data || !Array.isArray(data.archived)) return { archived: [...ids], skipped: [] }
+  return { archived: data.archived, skipped: Array.isArray(data.skipped) ? data.skipped : [] }
+}
+
 export const nextId = <T extends { id: number }>(items: T[]): number => Math.max(0, ...items.map(item => item.id)) + 1
 
 // Shared by every resource that got a GET :resource/trash + POST :id/restore pair
@@ -52,10 +59,15 @@ export const createBulkResourceActions = <T extends { id: number, assigned_to: n
       item.tags = mode === 'set' ? [...tags] : [...new Set([...(item.tags || []), ...tags])]
     })
   },
-  async bulkArchive (this: { items: T[] }, ids: number[]) {
+  // PATCH /deals/bulk-archive answers 200 { archived, skipped } (a Won Deal
+  // with money attached is skipped, not archived); /leads and /prospects
+  // still answer 204, which normalizes to "all archived, none skipped".
+  async bulkArchive (this: { items: T[] }, ids: number[]): Promise<BulkArchiveResult> {
     const { $api } = useNuxtApp()
-    await $api.patch(`${resourcePath}/bulk-archive`, { ids })
-    this.items = this.items.filter(item => !ids.includes(item.id))
+    const response = await $api.patch<ApiResponse<BulkArchiveResult> | ''>(`${resourcePath}/bulk-archive`, { ids })
+    const result = toBulkArchiveResult(ids, response.data)
+    this.items = this.items.filter(item => !result.archived.includes(item.id))
+    return result
   },
   ...createTrashActions<T>(resourcePath, parseDates),
 })

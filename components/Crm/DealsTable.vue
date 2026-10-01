@@ -248,13 +248,22 @@ const { notifyArchivedWithUndo } = useBulkArchiveUndo()
 const onBulkArchive = async () => {
   const ids = [...selectedIds.value]
   try {
-    await dealsStore.bulkArchive(ids)
+    const titleById = new Map(rows.value.map(d => [d.id, d.title]))
+    const result = await dealsStore.bulkArchive(ids)
     // Notify (and clear selection) right after the archive itself succeeds —
     // matching onBulkReassign/onBulkTag above — rather than after the refetch
     // below, so a refetch failure can't misreport an already-successful
-    // archive as a generic error with no success/undo feedback.
+    // archive as a generic error with no success/undo feedback. Undo covers
+    // only what the server archived; protected Won deals come back as skipped.
     selected.value = []
-    notifyArchivedWithUndo({ ids, entity: t('crm.deals.index.entityLabel'), restore: dealsStore.restore, refetch: fetch })
+    notifyArchivedWithUndo({
+      ids: result.archived,
+      skipped: result.skipped,
+      nameOf: id => titleById.get(id),
+      entity: t('crm.deals.index.entityLabel'),
+      restore: dealsStore.restore,
+      refetch: fetch,
+    })
     await fetch()
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))

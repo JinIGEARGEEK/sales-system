@@ -946,3 +946,17 @@ interface ForecastAccuracyQuarter {
   actual_won_to_date: number
   accuracy_ratio: number
 }
+
+// PATCH /deals/bulk-archive (Review round 2): 200 { archived, skipped }. A Won
+// Deal with money attached (a Payment, an installment or a signed Contract)
+// is skipped, not archived. Lead/Prospect bulk-archive still answer 204,
+// which stores/helpers.ts normalizes to "everything archived".
+type BulkArchiveSkipReason = 'won_deal_with_money'
+interface BulkArchiveSkip {
+  id: number
+  reason: BulkArchiveSkipReason | string
+}
+interface BulkArchiveResult {
+  archived: number[]
+  skipped: BulkArchiveSkip[]
+}

@@ -366,6 +366,11 @@ export default {
     archiveSuccess: '{count} {entity} archived',
     archiveUndo: 'Undo',
     archiveRestoreSuccess: '{count} {entity} restored',
+    archiveSkipped: '{count} {entity} not archived: {names}',
+    archiveSkipReason: {
+      won_deal_with_money: 'A Won deal with a payment, installment or signed contract can\'t be archived in bulk. A manager can delete it on its own page, with a reason.',
+      unknown: 'The server kept it.',
+    },
     cancel: 'Cancel',
   },
 }

@@ -358,6 +358,11 @@ export default {
     archiveSuccess: 'ย้าย {entity} {count} รายการไปถังขยะสำเร็จ',
     archiveUndo: 'เลิกทำ',
     archiveRestoreSuccess: 'กู้คืน {entity} {count} รายการสำเร็จ',
+    archiveSkipped: '{entity} {count} รายการไม่ถูกเก็บถาวร: {names}',
+    archiveSkipReason: {
+      won_deal_with_money: 'ดีลที่ปิดการขายแล้วและมีการชำระเงิน งวดชำระ หรือสัญญาที่ลงนามแล้ว เก็บถาวรแบบกลุ่มไม่ได้ ผู้จัดการลบได้จากหน้าของดีลนั้นโดยระบุเหตุผล',
+      unknown: 'ระบบไม่ได้เก็บถาวรรายการนี้',
+    },
     cancel: 'ยกเลิก',
   },
 }

@@ -131,6 +131,29 @@ describe('stores/deals', () => {
     expect(store.items.map(d => d.id)).toEqual([2])
   })
 
+  it('bulkArchive drops only the archived ids and returns the skipped ones (200 body)', async () => {
+    const store = useDealsStore()
+    store.items = [makeDeal({ id: 1 }), makeDeal({ id: 2 }), makeDeal({ id: 3 })]
+    mockApi.patch.mockResolvedValueOnce({ data: { data: { archived: [1, 3], skipped: [{ id: 2, reason: 'won_deal_with_money' }] } } })
+
+    const result = await store.bulkArchive([1, 2, 3])
+
+    expect(mockApi.patch).toHaveBeenCalledWith('/deals/bulk-archive', { ids: [1, 2, 3] })
+    expect(result).toEqual({ archived: [1, 3], skipped: [{ id: 2, reason: 'won_deal_with_money' }] })
+    expect(store.items.map(d => d.id)).toEqual([2])
+  })
+
+  it('bulkArchive treats a 204 (no body) as every id archived', async () => {
+    const store = useDealsStore()
+    store.items = [makeDeal({ id: 1 }), makeDeal({ id: 2 })]
+    mockApi.patch.mockResolvedValueOnce({ data: '' })
+
+    const result = await store.bulkArchive([1, 2])
+
+    expect(result).toEqual({ archived: [1, 2], skipped: [] })
+    expect(store.items).toEqual([])
+  })
+
   it('receiveConverted parses dates and pushes a Deal from lead conversion into items without an API call', () => {
     const store = useDealsStore()
     const converted = makeDeal({ id: 3, expected_close_date: '2026-05-01T00:00:00.000Z' as unknown as Date })
