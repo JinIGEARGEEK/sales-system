@@ -11,7 +11,13 @@ export const useContractGate = (dealId: number, deal: Ref<Deal | null>) => {
   const appSettingsStore = useAppSettingsStore()
   const { notifyApiError } = useApiErrorNotifier()
 
-  if (contractsStore.forDeal(dealId).length === 0) contractsStore.fetchForDeal(dealId).catch(notifyApiError)
+  // True while this Deal's contracts are being fetched for the first time
+  // (the Contracts tab shows skeletons instead of its empty state).
+  const contractsPending = ref(false)
+  if (contractsStore.forDeal(dealId).length === 0) {
+    contractsPending.value = true
+    contractsStore.fetchForDeal(dealId).catch(notifyApiError).finally(() => { contractsPending.value = false })
+  }
   if (!appSettingsStore.settings) appSettingsStore.fetchAll().catch(notifyApiError)
 
   const hasSignedContract = computed(() => contractsStore.forDeal(dealId).some(c => c.status === 'signed'))
@@ -23,5 +29,5 @@ export const useContractGate = (dealId: number, deal: Ref<Deal | null>) => {
     && !hasSignedContract.value,
   )
 
-  return { showContractGateWarning }
+  return { showContractGateWarning, contractsPending }
 }

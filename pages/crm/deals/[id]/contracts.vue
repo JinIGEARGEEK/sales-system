@@ -28,18 +28,37 @@
         </div>
       </div>
 
-      <div v-if="dealContracts.length === 0" class="py-6 text-center text-sm text-(--color-gray)">
-        {{ t('crm.contracts.detail.noContracts') }}
+      <div v-if="contractsPending && dealContracts.length === 0" class="flex flex-col gap-3" data-cy="contracts-loading">
+        <USkeleton v-for="i in 2" :key="`contract-skeleton-${i}`" class="h-24 w-full rounded-lg" />
       </div>
+      <TableEmpty
+        v-else-if="dealContracts.length === 0"
+        :title="t('crm.contracts.detail.noContracts')"
+        icon="material-symbols:contract-outline"
+      />
       <div v-else class="flex flex-col gap-3">
-        <div v-for="{ contract, expiry } in contractRows" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
+        <div v-for="{ contract, expiry, signed } in contractRows" :key="contract.id" class="rounded-lg border border-(--color-light-gray-2) p-4">
           <!-- Wraps below ~400px: the status select + linked-quote text +
                download button don't fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <!-- A signed contract is locked (the API answers 409 to any
+                 status/quote/end-date change): a badge, not a select. -->
+            <UBadge
+              v-if="signed"
+              :color="contractStatusBadgeColor(contract.effective_status ?? contract.status)"
+              variant="subtle"
+              icon="material-symbols:lock-outline"
+              :data-cy="`contract-status-${contract.id}`"
+            >
+              {{ contractStatusLabel(contract.effective_status ?? contract.status) }}
+            </UBadge>
+            <!-- Signed isn't offered: it comes only from uploading the
+                 signed document. -->
             <InputSelect
+              v-else
               :key="`contract-status-${contract.id}-${statusSelectResetKey}`"
               :model-value="contract.status"
-              :options="contractStatusOptions"
+              :options="contractEditableStatusOptions"
               :aria-label="t('crm.contracts.detail.contractStatus')"
               small
               class="w-32 shrink-0"
@@ -64,6 +83,7 @@
                 {{ expiry.label }}
               </UBadge>
               <UButton
+                v-if="!signed"
                 icon="material-symbols:edit-outline"
                 variant="ghost"
                 color="neutral"
@@ -83,6 +103,7 @@
             </div>
           </div>
 
+          <p v-if="signed" class="mb-2 text-xs text-(--color-gray)" :data-cy="`contract-locked-${contract.id}`">{{ t('crm.contracts.detail.signedLocked') }}</p>
           <div v-if="contract.signed_file_url" class="flex items-center justify-between gap-3 rounded-lg bg-(--color-light-gray-1) p-3">
             <div class="flex min-w-0 items-center gap-3">
               <UIcon name="material-symbols:picture-as-pdf-outline" class="size-8 shrink-0 text-(--color-danger-toast)" />
@@ -101,12 +122,13 @@
             />
           </div>
           <ButtonPrimary
-            v-else
+            v-else-if="!signed"
             :label="t('crm.contracts.detail.uploadSignedDocument')"
             icon="material-symbols:upload-file-outline"
             outline
             small
-            @click="triggerContractUpload(contract.id)"
+            :data-cy="`contract-upload-${contract.id}`"
+            @click="requestContractUpload(contract)"
           />
         </div>
       </div>
@@ -124,6 +146,23 @@
       @update:open="(value: boolean) => { if (!value) cancelContractStatusChange() }"
       @confirm="confirmContractStatusChange"
     />
+
+    <!-- Uploading the signed document locks the contract, end date
+         included — offer to set one first when it's missing. Three
+         outcomes (set it / upload anyway / ✕), so not CrmConfirmDeleteModal. -->
+    <UModal
+      :open="endDatePromptContract !== null"
+      :title="t('crm.contracts.detail.endDateBeforeUploadTitle')"
+      :description="t('crm.contracts.detail.endDateBeforeUploadBody')"
+      @update:open="(value: boolean) => { if (!value) endDatePromptContract = null }"
+    >
+      <template #footer>
+        <div class="flex w-full flex-wrap justify-end gap-3" data-cy="contract-end-date-prompt">
+          <ButtonPrimary :label="t('crm.contracts.detail.uploadWithoutEndDate')" outline data-cy="contract-upload-without-end-date" @click="onUploadWithoutEndDate" />
+          <ButtonPrimary :label="t('crm.contracts.detail.setEndDate')" data-cy="contract-set-end-date" @click="onSetEndDateFirst" />
+        </div>
+      </template>
+    </UModal>
 
     <CrmAddContractModal
       v-model:open="addContractOpen"
@@ -152,6 +191,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { isAxiosError } from 'axios'
 import { MAX_QUOTATION_FILE_SIZE, useDownloadPdfBlob } from '~/composables/utils/usePdfExport'
 
 const { t } = useI18n()
@@ -162,7 +202,7 @@ const { notifyApiError } = useApiErrorNotifier()
 const contractsStore = useContractsStore()
 const quotesStore = useQuotesStore()
 const downloadPdfBlob = useDownloadPdfBlob()
-const { contractStatusLabel, contractStatusOptions } = useContractStatusColor()
+const { contractStatusLabel, contractStatusBadgeColor, contractEditableStatusOptions } = useContractStatusColor()
 
 const { dealId, deal } = useCurrentDeal()
 const dealContracts = computed(() => contractsStore.forDeal(dealId))
@@ -176,7 +216,18 @@ const dealQuotes = computed(() => quotesStore.forDeal(dealId))
 // useContractGate also owns the Contracts/AppSettings fetch-on-mount
 // (guarded on already-loaded), so there's nothing left to fetch here beyond
 // Quotes.
-const { showContractGateWarning } = useContractGate(dealId, deal)
+const { showContractGateWarning, contractsPending } = useContractGate(dealId, deal)
+
+// A 409 here means the contract is signed (locked) — likely signed in
+// another tab meanwhile: say so and re-read the list.
+const notifyContractError = (err: unknown) => {
+  if (isAxiosError(err) && err.response?.status === 409) {
+    error(t('crm.contracts.detail.lockedConflict'))
+    contractsStore.fetchForDeal(dealId).catch(notifyApiError)
+    return
+  }
+  error(getApiErrorMessage(err, t('global.genericError')))
+}
 
 onMounted(() => {
   quotesStore.fetchForDeal(dealId).catch(notifyApiError)
@@ -196,8 +247,11 @@ const openEditContract = (contract: Contract) => {
 // Only a signed contract "ends" (that's also all the contract_expiry rule
 // watches); an expired one already has its own status.
 const EXPIRY_LABEL_KEYS = { past: 'crm.contracts.detail.endedDaysAgo', today: 'crm.contracts.detail.endsToday', future: 'crm.contracts.detail.endsInDays' }
+// `signed` keys off the stored status (a signed contract past its end date
+// shows as Expired but stays signed and locked).
 const contractRows = computed(() => dealContracts.value.map(contract => ({
   contract,
+  signed: contract.status === 'signed',
   expiry: contract.status === 'signed' ? countdownBadge(contract.end_date, EXPIRY_LABEL_KEYS, t) : null,
 })))
 
@@ -208,7 +262,7 @@ const onUpdateContract = async (changes: { quote_id?: number, end_date: string |
     await contractsStore.update(editingContract.value.id, changes)
     success(t('crm.contracts.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    notifyContractError(err)
     return false
   }
 }
@@ -263,6 +317,24 @@ const triggerContractUpload = (contractId: number) => {
   contractFileInputRef.value?.click()
 }
 
+const endDatePromptContract = ref<Contract | null>(null)
+const requestContractUpload = (contract: Contract) => {
+  if (contract.end_date) triggerContractUpload(contract.id)
+  else endDatePromptContract.value = contract
+}
+const onSetEndDateFirst = () => {
+  const contract = endDatePromptContract.value
+  endDatePromptContract.value = null
+  if (contract) openEditContract(contract)
+}
+// Opens the file picker straight from this click (browsers only allow it
+// from a user gesture).
+const onUploadWithoutEndDate = () => {
+  const contract = endDatePromptContract.value
+  endDatePromptContract.value = null
+  if (contract) triggerContractUpload(contract.id)
+}
+
 const onContractFileSelected = async (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -285,13 +357,14 @@ const onContractFileSelected = async (event: Event) => {
     success(t('crm.contracts.detail.uploadSuccess'))
     promptProjectIfSigned(updated)
   } catch (err) {
-    notifyApiError(err)
+    notifyContractError(err)
   }
 }
 
 const onExportContractPdf = (contractId: number) => downloadPdfBlob(`/contracts/${contractId}/export-pdf`, `contract-${contractId}.pdf`)
 
-const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['signed', 'expired']
+// Signed isn't selectable (upload only), so Expired is the one to confirm.
+const CONFIRMED_CONTRACT_STATUSES: ContractStatus[] = ['expired']
 
 const {
   pending: pendingStatusChange,
@@ -301,6 +374,7 @@ const {
   confirm: confirmContractStatusChange,
 } = useConfirmedStatusChange<ContractStatus, Contract>({
   confirmStatuses: CONFIRMED_CONTRACT_STATUSES,
+  notifyError: notifyContractError,
   save: async (contract, status) => {
     // contractsStore.update is a real partial merge server-side (see
     // CLAUDE.md's full-record-PUT note), so a status-only body is safe here.
