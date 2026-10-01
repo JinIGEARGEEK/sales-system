@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-black">{{ t('crm.reports.heading') }}</h2>
+      <h2 class="text-xl font-semibold">{{ t('crm.reports.heading') }}</h2>
       <p class="text-sm text-(--color-gray)">{{ t('crm.reports.subheading') }}</p>
     </div>
 

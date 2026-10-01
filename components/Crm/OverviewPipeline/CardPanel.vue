@@ -19,7 +19,7 @@
           <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
             {{ t(`crm.overviewPipeline.panel.kind.${selection.zone}`) }} · #{{ selection.card.id }}
           </p>
-          <h3 class="mt-0.5 text-lg font-semibold text-balance">{{ selection.card.name || '—' }}</h3>
+          <h3 class="mt-0.5 text-lg font-medium text-balance">{{ selection.card.name || '—' }}</h3>
           <div class="mt-1.5 flex flex-wrap items-center gap-1 text-xs">
             <template v-for="(step, index) in lineage" :key="step">
               <UIcon v-if="index > 0" name="material-symbols:chevron-right" class="size-4 text-(--color-gray)" />

@@ -2,7 +2,7 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-xl font-black">{{ t('admin.users.index.heading') }}</h2>
+        <h2 class="text-xl font-semibold">{{ t('admin.users.index.heading') }}</h2>
         <div class="flex items-center gap-2">
           <ButtonPrimary
             outline

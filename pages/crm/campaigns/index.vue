@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 class="text-xl font-black">{{ t('crm.campaigns.index.heading') }}</h2>
+          <h2 class="text-xl font-semibold">{{ t('crm.campaigns.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('crm.campaigns.index.subheading') }}</p>
         </div>
         <ButtonPrimary

@@ -2,7 +2,7 @@
   <div class="p-5">
     <AccessGate :can-access="canAccess">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-xl font-black">{{ t('crm.prospects.index.heading') }}</h2>
+      <h2 class="text-xl font-semibold">{{ t('crm.prospects.index.heading') }}</h2>
       <div class="flex flex-wrap items-center gap-3">
         <!-- View switcher — shared component; see CrmViewModeToggle. -->
         <CrmViewModeToggle v-model="viewMode" :kanban-label="t('crm.prospects.index.viewKanban')" :list-label="t('crm.prospects.index.viewList')" />
