@@ -125,7 +125,7 @@
                   <p class="text-xs text-(--color-gray)">{{ t('crm.dashboard.dealsWon', { count: member.wonCount }) }} · {{ member.winRate }}% · {{ t('crm.dashboard.activitiesLogged', { count: member.activityCount }) }}</p>
                 </div>
               </div>
-              <span class="text-sm font-medium">{{ t('global.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
+              <span class="text-sm font-medium">{{ currencyCompact(member.wonValue) }}</span>
             </NuxtLink>
           </div>
         </UCard>
@@ -138,7 +138,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact, dateFormat, dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat, currencyCompact } = useFormatter()
 
 defineProps<{
   upcomingTasks: {

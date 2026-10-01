@@ -123,7 +123,7 @@
                   <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-(--color-light-gray-2)">
                     <td class="max-w-60 truncate py-1">{{ item.description }}</td>
                     <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
-                    <td class="py-1 text-right whitespace-nowrap">{{ t('global.currencySymbol') }}{{ priceFormat(item.price * item.qty) }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">{{ currency(item.price * item.qty) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -163,7 +163,7 @@ import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
 
-const { priceFormat, dateFormat, dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat, currency } = useFormatter()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const quotesStore = useQuotesStore()

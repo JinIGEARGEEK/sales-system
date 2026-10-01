@@ -68,7 +68,7 @@
             <div class="flex flex-col gap-3 text-sm">
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.contactsLabel') }}</span><span>{{ companyContacts.length }}</span></div>
               <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.openDeals') }}</span><span>{{ openDeals.length }}</span></div>
-              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormatCompact(openDealsValue) }}</span></div>
+              <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.companies.detail.pipelineValue') }}</span><span>{{ currencyCompact(openDealsValue) }}</span></div>
               <div class="flex justify-between gap-2">
                 <span class="text-(--color-gray)">{{ t('crm.companies.detail.lastContact') }}</span>
                 <UBadge :color="lastContact.color" variant="subtle" class="shrink-0 whitespace-nowrap">{{ lastContact.label }}</UBadge>
@@ -125,7 +125,7 @@
             >
               <div>
                 <p class="text-sm font-medium">{{ deal.title }}</p>
-                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ t('global.currencySymbol') }}{{ priceFormatCompact(deal.value) }}</p>
+                <p class="text-xs text-(--color-gray)">{{ deal.stage }} · {{ currencyCompact(deal.value) }}</p>
               </div>
               <UIcon name="material-symbols:chevron-right" class="size-5 text-(--color-gray)" />
             </NuxtLink>
@@ -362,7 +362,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
-const { priceFormat, priceFormatCompact, parseTags, dateFormat } = useFormatter()
+const { parseTags, dateFormat, currency, currencyCompact } = useFormatter()
 const { contractStatusBadgeColor } = useContractStatusColor()
 const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
 const { projectStatusBadgeColor } = useProjectStatusColor()
@@ -541,7 +541,7 @@ const companyProductRows = computed(() => companyProducts.value.map(record => ({
   renewal: record.status === 'Active' ? countdownBadge(record.renewal_date, RENEWAL_LABEL_KEYS, t) : null,
 })))
 const customerProductPriceLabel = (record: CustomerProduct) => {
-  const price = record.price !== null ? `${t('global.currencySymbol')}${priceFormat(record.price)}` : ''
+  const price = record.price !== null ? currency(record.price) : ''
   const cycle = record.billing_cycle ? t(`crm.components.addCustomerProductModal.billingCycleOptions.${record.billing_cycle}`) : ''
   return [price, cycle].filter(Boolean).join(' / ')
 }

@@ -54,7 +54,7 @@
             <CrmDonutChart
               v-else
               :segments="outcomeDonutSegments"
-              :total-label="`${t('global.currencySymbol')}${priceFormatCompact(outcomeTotal)}`"
+              :total-label="currencyCompact(outcomeTotal)"
               :total-sub-label="t('crm.dashboard.outcomeSplitTotal')"
             />
           </div>
@@ -112,7 +112,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   upsellCandidates: { company: Company, contact: { color: LastContactColor, label: string } }[]

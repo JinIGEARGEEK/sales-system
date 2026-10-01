@@ -153,11 +153,11 @@
               </div>
 
               <div class="mt-4 flex flex-col gap-1 border-t border-(--color-light-gray-2) pt-3 text-sm">
-                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.subtotal) }}</span></div>
-                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.discountTotal) }}</span></div>
-                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.vat) }}</span></div>
-                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ t('global.currencySymbol') }}{{ priceFormat(totals.wht) }}</span></div>
-                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</span></div>
+                <div class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.subtotal') }}</span><span>{{ currency(totals.subtotal) }}</span></div>
+                <div v-if="form.discount_total > 0" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.discountTotal') }}</span><span>-{{ currency(totals.discountTotal) }}</span></div>
+                <div v-if="form.vat_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.vatEnabled') }}</span><span>{{ currency(totals.vat) }}</span></div>
+                <div v-if="form.wht_enabled" class="flex justify-between"><span class="text-(--color-gray)">{{ t('crm.quotes.editor.whtEnabled') }}</span><span>-{{ currency(totals.wht) }}</span></div>
+                <div class="flex justify-between text-base font-semibold"><span>{{ t('crm.quotes.editor.grandTotal') }}</span><span>{{ currency(totals.grandTotal) }}</span></div>
               </div>
 
               <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -175,7 +175,7 @@
                 <h3 class="text-base font-semibold">{{ t('crm.quotes.editor.grandTotal') }}</h3>
               </div>
             </template>
-            <p class="text-2xl font-black text-(--color-primary)">{{ t('global.currencySymbol') }}{{ priceFormat(totals.grandTotal) }}</p>
+            <p class="text-2xl font-black text-(--color-primary)">{{ currency(totals.grandTotal) }}</p>
           </UCard>
 
           <UCard class="mt-4">
@@ -234,7 +234,7 @@ if (justCreated.value) {
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
-const { priceFormat } = useFormatter()
+const { currency } = useFormatter()
 const { quoteStatusBadgeColor } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
 

@@ -46,7 +46,7 @@
             />
             <div class="col-span-2 flex items-center justify-between gap-2 sm:col-span-1 sm:flex-col sm:items-end sm:pt-6">
               <span class="text-sm font-medium whitespace-nowrap" :data-cy="`milestone-amount-${index}`">
-                {{ t('global.currencySymbol') }}{{ priceFormat(percentagePreview[index]?.amount ?? 0) }}
+                {{ currency(percentagePreview[index]?.amount ?? 0) }}
               </span>
               <UButton
                 v-if="form.milestones.length > 1"
@@ -91,7 +91,7 @@
                 <tr v-for="(row, index) in equalPreview" :key="index" class="border-b border-(--color-light-gray-2) last:border-b-0">
                   <td class="p-2 text-(--color-gray)">{{ index + 1 }}</td>
                   <td class="p-2">{{ dateFormat(row.due_date) }}</td>
-                  <td class="p-2 text-right">{{ t('global.currencySymbol') }}{{ priceFormat(row.amount) }}</td>
+                  <td class="p-2 text-right">{{ currency(row.amount) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -112,7 +112,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormat, dateFormat, toDateInputValue } = useFormatter()
+const { dateFormat, toDateInputValue, currency } = useFormatter()
 
 const props = defineProps<{
   open: boolean

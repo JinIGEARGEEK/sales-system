@@ -80,7 +80,7 @@
         scroll to the quote-wide summary below to notice a qty/price/discount
         typo on a single line. -->
         <p class="text-right text-xs text-(--color-gray)">
-          {{ t('crm.quotes.editor.itemLineTotal') }}: {{ t('global.currencySymbol') }}{{ priceFormat(lineTotal(item)) }}
+          {{ t('crm.quotes.editor.itemLineTotal') }}: {{ currency(lineTotal(item)) }}
         </p>
       </div>
       <UButton
@@ -99,7 +99,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormat } = useFormatter()
+const { currency } = useFormatter()
 
 const items = defineModel<QuoteItemRow[]>({ required: true })
 

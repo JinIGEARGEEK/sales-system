@@ -217,7 +217,7 @@ const channelFilterOptions = computed(() => [
 ])
 
 const { $api } = useNuxtApp()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const { lastContactInfo } = useLastContact()
 const companiesStore = useCompaniesStore()
 const dealsStore = useDealsStore()
@@ -597,21 +597,21 @@ const outcomeDonutSegments = computed(() => [
   {
     label: t('crm.dashboard.outcomeWon'),
     value: wonValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(wonValue.value)}`,
+    valueLabel: currencyCompact(wonValue.value),
     colorVar: 'var(--color-success-toast)',
     icon: 'material-symbols:check-circle-outline',
   },
   {
     label: t('crm.dashboard.outcomeLost'),
     value: lostValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(lostValue.value)}`,
+    valueLabel: currencyCompact(lostValue.value),
     colorVar: 'var(--color-danger-toast)',
     icon: 'material-symbols:cancel-outline',
   },
   {
     label: t('crm.dashboard.outcomeOpen'),
     value: openPipelineValue.value,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(openPipelineValue.value)}`,
+    valueLabel: currencyCompact(openPipelineValue.value),
     colorVar: 'var(--color-gray)',
     icon: 'material-symbols:radio-button-unchecked',
   },
@@ -626,10 +626,10 @@ const outcomeDonutSegmentsPreview = computed(() => outcomeDonutSegments.value.ma
   return {
     ...seg,
     value: sampleValue,
-    valueLabel: `${t('global.currencySymbol')}${priceFormatCompact(sampleValue)}`,
+    valueLabel: currencyCompact(sampleValue),
   }
 }))
-const outcomeTotalPreviewLabel = computed(() => `${t('global.currencySymbol')}${priceFormatCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0))}`)
+const outcomeTotalPreviewLabel = computed(() => currencyCompact(OUTCOME_PREVIEW_SAMPLE_VALUES.reduce((sum, v) => sum + v, 0)))
 
 const revenueTrend = computed(() => {
   const points = summary.value?.revenue_trend ?? []

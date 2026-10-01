@@ -71,7 +71,7 @@
           :icon-class="row.reason === 'won' ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
           :icon-bg-class="row.reason === 'won' ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         >
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(row.value) }}
+          {{ currencyCompact(row.value) }}
           <template #hint>{{ row.count }} {{ t('crm.dashboard.dealsUnit') }}</template>
         </CrmStatCard>
       </div>
@@ -94,7 +94,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 

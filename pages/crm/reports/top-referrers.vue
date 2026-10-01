@@ -73,7 +73,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -128,7 +128,7 @@ watch([dateRange, salesRepFilter], fetchReport)
 const displayRows = computed(() => rows.value.map(row => ({
   ...row,
   referrerTypeLabel: row.referrer_type === 'company' ? t('crm.reports.topReferrers.typeCompany') : t('crm.reports.topReferrers.typeContact'),
-  wonRevenueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.won_revenue)}`,
+  wonRevenueDisplay: currencyCompact(row.won_revenue),
 })))
 
 const { page, perPage, totalPage, onChangePage, onChangePerPage } = useTablePagination(() => displayRows.value.length)

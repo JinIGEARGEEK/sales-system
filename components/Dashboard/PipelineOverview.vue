@@ -15,7 +15,7 @@
         icon-bg-class="bg-(--color-accent-green)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-accent-green)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(openPipelineValue) }}
+        {{ currencyCompact(openPipelineValue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -26,7 +26,7 @@
         icon-bg-class="bg-(--color-info-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(forecastedRevenue) }}
+        {{ currencyCompact(forecastedRevenue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -59,7 +59,7 @@
         icon-bg-class="bg-(--color-success-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(wonValue) }}
+        {{ currencyCompact(wonValue) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -70,7 +70,7 @@
         icon-bg-class="bg-(--color-chart-violet)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-chart-violet)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(avgDealSize) }}
+        {{ currencyCompact(avgDealSize) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -95,7 +95,7 @@
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
         <template #hint>
-          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: `${t('global.currencySymbol')}${priceFormatCompact(quarterlySalesTarget)}` }) }}
+          {{ t(isPipelineHealthy ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.pipelineCoverageHint', { target: currencyCompact(quarterlySalesTarget) }) }}
         </template>
       </CrmStatCard>
       <CrmStatCard
@@ -110,7 +110,7 @@
       >
         {{ annualGoalProgressPercent }}%
         <template #hint>
-          {{ t(isAnnualGoalOnTrack ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.annualRevenueGoalHint', { actual: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueActual)}`, goal: `${t('global.currencySymbol')}${priceFormatCompact(annualRevenueGoal)}` }) }}
+          {{ t(isAnnualGoalOnTrack ? 'crm.dashboard.onTrack' : 'crm.dashboard.belowTarget') }} · {{ t('crm.dashboard.annualRevenueGoalHint', { actual: currencyCompact(annualRevenueActual), goal: currencyCompact(annualRevenueGoal) }) }}
         </template>
       </CrmStatCard>
     </div>
@@ -121,7 +121,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   openPipelineValue: number

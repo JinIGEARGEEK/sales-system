@@ -16,7 +16,7 @@
           {{ displayRows.length }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.totalValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totalValueAtRisk) }}
+          {{ currencyCompact(totalValueAtRisk) }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.oldest')" icon="material-symbols:schedule-outline">
           {{ t('crm.reports.stalledDeals.daysStalled', { days: oldestDaysStalled }) }}
@@ -95,7 +95,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, dateFormat, toBadge, severityColor } = useFormatter()
+const { dateFormat, toBadge, severityColor, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -163,7 +163,7 @@ const { companyName } = useCompanyName()
 const displayRows = computed(() => results.value.map(row => ({
   ...row,
   company_name: companyName(row.company_name),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.value)}`,
+  valueDisplay: currencyCompact(row.value),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   lastActivityDisplay: dateFormat(row.last_activity_at),
   daysStalledBadge: toBadge(

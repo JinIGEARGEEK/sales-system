@@ -12,7 +12,7 @@
         icon-bg-class="bg-(--color-success-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(commit) }}
+        {{ currencyCompact(commit) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -23,7 +23,7 @@
         icon-bg-class="bg-(--color-warning-hover)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(bestCase) }}
+        {{ currencyCompact(bestCase) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -34,7 +34,7 @@
         icon-bg-class="bg-(--color-gray)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-gray)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(pipeline) }}
+        {{ currencyCompact(pipeline) }}
       </CrmStatCard>
       <CrmStatCard
         reserve-hint-space
@@ -45,7 +45,7 @@
         icon-bg-class="bg-(--color-info-toast)/25"
         accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
       >
-        {{ t('global.currencySymbol') }}{{ priceFormatCompact(commit + bestCase + pipeline) }}
+        {{ currencyCompact(commit + bestCase + pipeline) }}
       </CrmStatCard>
     </div>
   </div>
@@ -55,7 +55,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   commit: number

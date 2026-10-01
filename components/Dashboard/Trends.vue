@@ -19,9 +19,9 @@
           </div>
           <div v-for="bucket in revenueTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -51,9 +51,9 @@
           </div>
           <div v-for="bucket in forecastTrend" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
             <span class="text-xs font-medium" :class="bucket.value > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-              {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.value) }}
+              {{ currencyCompact(bucket.value) }}
             </span>
-            <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.value)}`">
+            <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.value)}`">
               <div class="flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
                 <div
                   class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -84,9 +84,9 @@
         </div>
         <div v-for="bucket in annualRevenueTrendChart" :key="bucket.label" class="flex flex-1 flex-col items-center gap-2">
           <span class="text-xs font-medium" :class="bucket.actual > 0 ? 'text-(--color-black)' : 'text-(--color-gray)'">
-            {{ t('global.currencySymbol') }}{{ priceFormatCompact(bucket.actual) }}
+            {{ currencyCompact(bucket.actual) }}
           </span>
-          <UTooltip :text="`${bucket.label}: ${t('global.currencySymbol')}${priceFormatCompact(bucket.actual)} (${t('crm.dashboard.annualRevenueTrendPaceLabel', { pace: `${t('global.currencySymbol')}${priceFormatCompact(bucket.goal_pace)}` })})`">
+          <UTooltip :text="`${bucket.label}: ${currencyCompact(bucket.actual)} (${t('crm.dashboard.annualRevenueTrendPaceLabel', { pace: currencyCompact(bucket.goal_pace) })})`">
             <div class="relative flex h-28 w-full items-end overflow-hidden rounded-t-md bg-(--color-light-gray-2)">
               <div
                 class="w-full rounded-t-md transition-[filter] duration-150 hover:brightness-110"
@@ -110,7 +110,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact } = useFormatter()
+const { currencyCompact } = useFormatter()
 
 defineProps<{
   revenueTrend: { label: string, value: number, percent: number }[]

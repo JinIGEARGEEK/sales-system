@@ -16,7 +16,7 @@
           {{ rows.length }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.quotesExpiringSoon.summary.totalValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totalValue) }}
+          {{ currencyCompact(totalValue) }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.quotesExpiringSoon.summary.soonest')" icon="material-symbols:hourglass-empty">
           {{ soonestDaysLeftDisplay }}
@@ -95,7 +95,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, dateFormat, toBadge, severityColor } = useFormatter()
+const { dateFormat, toBadge, severityColor, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -169,7 +169,7 @@ const rows = computed(() => results.value.map((row) => {
     ...row,
     company_name: companyName(row.company_name),
     validityDateBadge: toBadge(dateFormat(row.validity_date), severityColor(elapsed, Math.ceil(withinDays.value / 2), withinDays.value - 2)),
-    totalValueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.total_value)}`,
+    totalValueDisplay: currencyCompact(row.total_value),
   }
 }))
 
