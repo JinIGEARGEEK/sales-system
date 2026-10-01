@@ -53,7 +53,7 @@ defineProps<{
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const { toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const prospectStagesStore = useProspectStagesStore()
 
 const stageModalOpen = ref(false)
@@ -105,9 +105,7 @@ const stageRows = computed(() => [...prospectStagesStore.items]
       ? '—'
       : t('admin.pipelineConfig.staleDaysValue', { days: stage.stale_days ?? DEFAULT_STALE_DAYS })
         + (stage.stale_days ? '' : ` ${t('admin.pipelineConfig.staleDaysDefaultTag')}`),
-    statusBadge: stage.is_active
-      ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
-      : toBadge(t('admin.pipelineConfig.statusInactive')),
+    statusBadge: activeBadge(stage.is_active, t('admin.pipelineConfig.statusActive'), t('admin.pipelineConfig.statusInactive')),
   })))
 
 const stageColumns = computed<TableDataColumn[]>(() => [

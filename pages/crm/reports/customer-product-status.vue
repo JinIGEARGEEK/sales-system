@@ -72,7 +72,6 @@ import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { CUSTOMER_PRODUCT_STATUS_OPTIONS } from '~/constants/mockData/products'
 
 const { t } = useI18n()
 
@@ -85,7 +84,7 @@ const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { dateFormat, toBadge } = useFormatter()
 const { companyName } = useCompanyName()
-const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
+const { customerProductStatusBadgeColor, customerProductStatusLabel, customerProductStatusOptions } = useCustomerProductStatusColor()
 const productsStore = useProductsStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -102,7 +101,7 @@ const productOptions = computed(() => [
 
 const statusOptions = computed(() => [
   { label: t('crm.reports.customerProductStatus.allStatuses'), value: 'all' },
-  ...CUSTOMER_PRODUCT_STATUS_OPTIONS,
+  ...customerProductStatusOptions.value,
 ])
 
 const productFilter = ref('all')
@@ -159,7 +158,7 @@ const rows = computed(() => {
     ...row,
     company_name: companyName(row.company_name),
     productName: productName(row.product_id),
-    statusBadge: toBadge(row.status, customerProductStatusBadgeColor(row.status)),
+    statusBadge: toBadge(customerProductStatusLabel(row.status), customerProductStatusBadgeColor(row.status)),
     startDateDisplay: dateFormat(row.start_date),
   }))
 })

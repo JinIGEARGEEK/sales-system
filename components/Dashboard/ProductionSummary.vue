@@ -47,7 +47,7 @@
             <p class="text-sm font-medium">{{ project.name }}</p>
             <p class="text-xs text-(--color-gray)">{{ project.company_name }}</p>
           </div>
-          <UBadge color="neutral" variant="subtle">{{ project.status }}</UBadge>
+          <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
         </NuxtLink>
       </div>
     </UCard>
@@ -58,6 +58,7 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 
 const props = defineProps<{
   projects: Project[]

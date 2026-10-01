@@ -55,6 +55,7 @@ defineProps<{
 const { t } = useI18n()
 const { success, error } = useNotify()
 const { toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const notificationRulesStore = useNotificationRulesStore()
 
 // ── Workflow Notification Rules (FR-CRM-100/101/102) ──────────────
@@ -115,9 +116,7 @@ const ruleRows = computed(() => notificationRulesStore.items.map(rule => ({
     ? toBadge(t('admin.pipelineConfig.notificationRules.createTaskOn'), 'primary')
     : toBadge(t('admin.pipelineConfig.notificationRules.createTaskOff')),
   recipientRoleLabel: t(`admin.pipelineConfig.notificationRules.recipientRoleOptions.${RULE_RECIPIENT_ROLE_LABEL_KEY[rule.recipient_role]}`),
-  statusBadge: rule.is_active
-    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
-    : toBadge(t('admin.pipelineConfig.statusInactive')),
+  statusBadge: activeBadge(rule.is_active, t('admin.pipelineConfig.statusActive'), t('admin.pipelineConfig.statusInactive')),
 })))
 
 const ruleColumns = computed<TableDataColumn[]>(() => [

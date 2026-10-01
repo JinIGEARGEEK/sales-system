@@ -93,7 +93,7 @@ const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { toBadge, severityColor } = useFormatter()
-const { contractStatusBadgeColor } = useContractStatusColor()
+const { contractStatusBadgeColor, contractStatusLabel } = useContractStatusColor()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -157,7 +157,7 @@ const { companyName } = useCompanyName()
 const rows = computed(() => results.value.map(row => ({
   ...row,
   company_name: companyName(row.company_name),
-  statusBadge: toBadge(row.status, contractStatusBadgeColor(row.status)),
+  statusBadge: toBadge(contractStatusLabel(row.status), contractStatusBadgeColor(row.status)),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   daysInStatusBadge: toBadge(
     t('crm.reports.contractsStuck.daysInStatus', { days: row.days_in_status }),

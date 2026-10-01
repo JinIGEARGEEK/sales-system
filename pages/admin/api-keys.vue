@@ -71,7 +71,8 @@ useHead({ title: t('admin.apiKeys.index.pageTitle') })
 // /admin/api-keys' RequireRoles(Admin) on the backend.
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
-const { dateFormat, toBadge } = useFormatter()
+const { dateFormat } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const apiKeysStore = useApiKeysStore()
@@ -110,9 +111,7 @@ const displayKeys = computed(() => rows.value.map(key => ({
   ...key,
   ownerName: ownerNameById.value.get(key.owner_user_id) ?? '-',
   keyPrefixDisplay: `${key.key_prefix}···`,
-  statusBadge: key.is_active
-    ? toBadge(t('admin.apiKeys.index.statusActive'), 'success')
-    : toBadge(t('admin.apiKeys.index.statusRevoked')),
+  statusBadge: activeBadge(key.is_active, t('admin.apiKeys.index.statusActive'), t('admin.apiKeys.index.statusRevoked')),
   lastUsedDisplay: key.last_used_at ? dateFormat(key.last_used_at) : t('admin.apiKeys.index.neverUsed'),
   createdDate: dateFormat(key.created_at),
 })))

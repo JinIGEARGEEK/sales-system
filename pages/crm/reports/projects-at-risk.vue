@@ -68,7 +68,7 @@ const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { dateFormat, toBadge, severityColor } = useFormatter()
 const { companyName } = useCompanyName()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const downloadCsvBlob = useDownloadCsvBlob()
 
 const { canAccess: canViewReports, guardMounted } = usePageAccess(...MANAGER_ROLES)
@@ -112,7 +112,7 @@ const onExport = () => downloadCsvBlob('/reports/projects-at-risk/export', 'proj
 const rows = computed(() => results.value.map(row => ({
   ...row,
   company_name: companyName(row.company_name),
-  statusBadge: toBadge(row.status, projectStatusBadgeColor(row.status)),
+  statusBadge: toBadge(projectStatusLabel(row.status), projectStatusBadgeColor(row.status)),
   targetEndDateDisplay: dateFormat(row.target_end_date),
   daysOverdueBadge: toBadge(
     t('crm.reports.projectsAtRisk.daysOverdue', { days: row.days_overdue }),

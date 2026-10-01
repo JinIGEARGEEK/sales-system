@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="company">
       <PageHeader :title="companyName(company.name)" @back="navigateTo('/crm/companies')">
-        <UBadge :color="company.status === 'active' ? 'success' : 'neutral'" variant="subtle">
+        <UBadge :color="activeStatusColor(company.status === 'active')" variant="subtle">
           {{ company.status === 'active' ? t('crm.companies.detail.statusActive') : t('crm.companies.detail.statusArchived') }}
         </UBadge>
         <UBadge v-for="tag in company.tags" :key="tag" color="neutral" variant="outline">{{ tag }}</UBadge>
@@ -153,7 +153,7 @@
                   <template v-if="quote.validity_date"> · {{ t('crm.companies.detail.validUntil', { date: dateFormat(quote.validity_date.toISOString()) }) }}</template>
                 </p>
               </div>
-              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+              <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -175,7 +175,7 @@
                 <p v-if="contract.signed_date" class="text-xs text-(--color-gray)">{{ dateFormat(contract.signed_date.toISOString()) }}</p>
                 <p v-if="contract.end_date" class="text-xs text-(--color-gray)">{{ t('crm.contracts.detail.endsOn', { date: dateFormat(contract.end_date) }) }}</p>
               </div>
-              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contract.status }}</UBadge>
+              <UBadge :color="contractStatusBadgeColor(contract.status)" variant="subtle">{{ contractStatusLabel(contract.status) }}</UBadge>
             </NuxtLink>
           </div>
         </ContainerTemplate>
@@ -220,7 +220,7 @@
                 >
                   {{ renewal.label }}
                 </UBadge>
-                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ record.status }}</UBadge>
+                <UBadge :color="customerProductStatusBadgeColor(record.status)" variant="subtle">{{ customerProductStatusLabel(record.status) }}</UBadge>
               </div>
             </button>
           </div>
@@ -262,7 +262,7 @@
                   {{ project.target_end_date ? t('crm.companies.detail.projectTargetEndDate', { date: dateFormat(project.target_end_date.toISOString()) }) : '-' }}
                 </p>
               </div>
-              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ project.status }}</UBadge>
+              <UBadge :color="projectStatusBadgeColor(project.status)" variant="subtle">{{ projectStatusLabel(project.status) }}</UBadge>
             </button>
           </div>
         </ContainerTemplate>
@@ -363,9 +363,9 @@ useHead({ title: t('crm.companies.detail.pageTitle') })
 
 const route = useRoute()
 const { parseTags, dateFormat, currency, currencyCompact } = useFormatter()
-const { contractStatusBadgeColor } = useContractStatusColor()
-const { customerProductStatusBadgeColor } = useCustomerProductStatusColor()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { contractStatusBadgeColor, contractStatusLabel } = useContractStatusColor()
+const { customerProductStatusBadgeColor, customerProductStatusLabel } = useCustomerProductStatusColor()
+const { projectStatusBadgeColor, projectStatusLabel } = useProjectStatusColor()
 const { lastContactInfo } = useLastContact()
 const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
@@ -383,7 +383,7 @@ const contactsStore = useContactsStore()
 const dealsStore = useDealsStore()
 const quotesStore = useQuotesStore()
 const contractsStore = useContractsStore()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel } = useQuoteStatusColor()
 const activitiesStore = useActivitiesStore()
 const productsStore = useProductsStore()
 const customerProductsStore = useCustomerProductsStore()

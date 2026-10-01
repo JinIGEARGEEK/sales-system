@@ -2,7 +2,7 @@
   <div class="p-5">
     <div v-if="quote && deal">
       <PageHeader :title="quote.number || `#${quote.id}`" @back="navigateTo(`/crm/deals/${deal.id}/quotes`)">
-        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quote.status }}</UBadge>
+        <UBadge :color="quoteStatusBadgeColor(quote.status)" variant="subtle">{{ quoteStatusLabel(quote.status) }}</UBadge>
         <template #actions>
           <div class="flex flex-wrap gap-2">
             <ButtonPrimary :label="t('crm.quotes.detail.save')" outline icon="material-symbols:edit-outline" :loading="loading" data-cy="quote-save" @click="onSaveClick" />
@@ -112,7 +112,7 @@
 
               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <InputText v-model="form.reference_number" :label="t('crm.quotes.editor.referenceNumber')" :placeholder="t('crm.quotes.editor.referenceNumberPlaceholder')" name="reference_number" />
-                <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
+                <InputSelect v-model="form.status" :options="quoteStatusOptions" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
                 <InputDatePicker v-model="form.issue_date" :label="t('crm.quotes.editor.issueDate')" name="issue_date" />
                 <InputText v-model.number="form.credit_days" type="number" :label="t('crm.quotes.editor.creditDays')" name="credit_days" rules="min_value:0" />
                 <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
@@ -213,7 +213,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
@@ -235,7 +234,7 @@ const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const { currency } = useFormatter()
-const { quoteStatusBadgeColor } = useQuoteStatusColor()
+const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptions } = useQuoteStatusColor()
 const { companyName, isUnnamed } = useCompanyName()
 
 const quotesStore = useQuotesStore()

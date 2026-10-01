@@ -54,7 +54,7 @@ defineProps<{
 
 const { t } = useI18n()
 const { success, error } = useNotify()
-const { toBadge } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const leadScoringCriteriaStore = useLeadScoringCriteriaStore()
 
 // ── Lead Scoring Criteria (FR-CRM-006/007) ────────────────────────
@@ -107,9 +107,7 @@ const CRITERION_FIELD_LABEL_KEY: Record<LeadScoringCriterionField, string> = {
 const criterionRows = computed(() => leadScoringCriteriaStore.items.map(criterion => ({
   ...criterion,
   fieldLabel: t(`admin.pipelineConfig.leadScoring.fieldOptions.${CRITERION_FIELD_LABEL_KEY[criterion.field]}`),
-  statusBadge: criterion.is_active
-    ? toBadge(t('admin.pipelineConfig.statusActive'), 'success')
-    : toBadge(t('admin.pipelineConfig.statusInactive')),
+  statusBadge: activeBadge(criterion.is_active, t('admin.pipelineConfig.statusActive'), t('admin.pipelineConfig.statusInactive')),
 })))
 
 const criterionColumns = computed<TableDataColumn[]>(() => [
