@@ -287,7 +287,7 @@ if (justCreated.value) {
 const { success, error } = useNotify()
 const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
-const { currency } = useFormatter()
+const { currency, toDateInputValue } = useFormatter()
 const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
 const notifyQuoteError = useQuoteErrorNotifier()
 const { companyName, isUnnamed } = useCompanyName()
@@ -394,13 +394,13 @@ const { markClean } = useUnsavedChangesGuard(() => [form, items.value])
 watch(quote, (value) => {
   if (!value) return
   form.scope_of_work = value.scope_of_work
-  form.validity_date = value.validity_date ? value.validity_date.toISOString().slice(0, 10) : ''
+  form.validity_date = value.validity_date ? toDateInputValue(value.validity_date) : ''
   // 'expired' is read-derived (the API's EffectiveStatus: a Sent quote past
   // its validity date), never a value PUT accepts — edit it as the Sent it's
   // stored as. The header badge still shows Expired.
   form.status = storedQuoteStatus(value.status)
   form.reference_number = value.reference_number ?? ''
-  form.issue_date = value.issue_date ? value.issue_date.toISOString().slice(0, 10) : ''
+  form.issue_date = value.issue_date ? toDateInputValue(value.issue_date) : ''
   form.credit_days = value.credit_days
   form.price_type = value.price_type
   form.vat_enabled = value.vat_enabled
