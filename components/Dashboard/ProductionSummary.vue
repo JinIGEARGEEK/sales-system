@@ -29,7 +29,7 @@
       </CrmStatCard>
     </div>
 
-    <UCard class="mt-4 ring-(--color-card-border)">
+    <UCard class="mt-4">
       <template #header>
         <CardTitle size="lg">{{ t('crm.dashboard.projectsNeedingUpdate') }}</CardTitle>
       </template>

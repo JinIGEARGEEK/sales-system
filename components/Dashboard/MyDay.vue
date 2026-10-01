@@ -7,7 +7,7 @@
     />
 
     <div class="grid grid-cols-1 gap-4" :class="{ 'lg:grid-cols-2': showStaleDeals }">
-      <UCard class="ring-(--color-card-border)">
+      <UCard>
         <template #header>
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-primary)/10">
@@ -49,7 +49,7 @@
         </div>
       </UCard>
 
-      <UCard v-if="showStaleDeals" class="ring-(--color-card-border)">
+      <UCard v-if="showStaleDeals">
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">

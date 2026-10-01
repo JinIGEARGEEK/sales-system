@@ -169,14 +169,14 @@
         </div>
 
         <div class="lg:col-span-2">
-          <UCard>
-            <template #header>
-              <div class="flex items-center justify-between">
-                <CardTitle>{{ t('crm.quotes.editor.grandTotal') }}</CardTitle>
-              </div>
-            </template>
-            <p class="text-2xl font-black text-(--color-primary)">{{ currency(totals.grandTotal) }}</p>
-          </UCard>
+          <CrmStatCard
+            :label="t('crm.quotes.editor.grandTotal')"
+            icon="material-symbols:payments-outline"
+            icon-class="text-(--color-primary)"
+            value-class="text-(--color-primary)"
+          >
+            {{ currency(totals.grandTotal) }}
+          </CrmStatCard>
 
           <UCard class="mt-4">
             <template #header>

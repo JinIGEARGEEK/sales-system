@@ -3,7 +3,7 @@
     <DashboardSectionHeader :title="t('crm.dashboard.sectionTrends')" />
 
     <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <UCard class="ring-(--color-card-border)">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">
@@ -35,7 +35,7 @@
         </div>
       </UCard>
 
-      <UCard class="ring-(--color-card-border)">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-chart-violet)/15">
@@ -68,7 +68,7 @@
       </UCard>
     </div>
 
-    <UCard class="ring-(--color-card-border)">
+    <UCard>
       <template #header>
         <div class="flex items-center gap-2">
           <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">

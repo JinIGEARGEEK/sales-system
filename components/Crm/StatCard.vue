@@ -1,6 +1,15 @@
 <template>
-  <component :is="linkTag" :to="linkTo" :class="to ? 'block transition-shadow hover:shadow-md' : ''">
-    <UCard class="relative overflow-hidden ring-(--color-card-border)" :ui="{ body: 'p-3' }">
+  <!-- With `active` set (true/false) the card is a toggle button with
+  aria-pressed — e.g. the Outstanding Balance aging tiles that filter the
+  table below; the caller's @click falls through to the button. -->
+  <component
+    :is="isToggle ? 'button' : linkTag"
+    :to="isToggle ? undefined : linkTo"
+    :type="isToggle ? 'button' : undefined"
+    :aria-pressed="isToggle ? active : undefined"
+    :class="isToggle || to ? 'block w-full text-left transition-shadow hover:shadow-md' : ''"
+  >
+    <UCard class="relative h-full overflow-hidden" :class="active ? 'ring-2 ring-(--color-primary)' : ''" :ui="{ body: 'p-3' }">
       <div
         v-if="accentGlassClass"
         class="absolute inset-y-0 left-0 w-1/2 backdrop-blur-md"
@@ -9,7 +18,10 @@
       <div class="relative flex items-center justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-1">
-            <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
+            <!-- `#label` replaces the plain label text (e.g. a status badge). -->
+            <slot name="label">
+              <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
+            </slot>
             <UTooltip v-if="tooltip" :text="tooltip">
               <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
             </UTooltip>
@@ -42,9 +54,10 @@
 
 <script setup lang="ts">
 const props = defineProps({
+  // Required unless the `#label` slot is used instead.
   label: {
     type: String,
-    required: true,
+    default: '',
   },
   // Optional Material Symbols icon, shown as a colored chip — pairs a
   // color-only health signal (valueClass) with a shape, not just a hue.
@@ -105,7 +118,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Set (true/false) to render the card as a toggle button with
+  // aria-pressed and a primary ring while pressed; leave unset for a plain
+  // or link card.
+  active: {
+    type: Boolean,
+    default: undefined,
+  },
 })
+
+const isToggle = computed(() => props.active !== undefined)
 
 const { linkTag, linkTo } = useOptionalLink(toRef(props, 'to'))
 </script>

@@ -16,28 +16,24 @@
            toward the balance as soon as it's recorded, certificate (50 ทวิ)
            or not — the certificate flag is tracked separately, not a gate. -->
       <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalPaid') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-paid">{{ currency(totalPaid) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalWht') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-wht">{{ currency(totalWht) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.totalSettled') }}</p>
-          <p class="text-lg font-semibold" data-cy="payments-total-settled">{{ currency(totalSettled) }}</p>
-        </div>
-        <div class="rounded-lg border border-(--color-light-gray-2) p-4">
-          <p class="text-xs text-(--color-gray)">{{ t('crm.deals.detail.remainingBalance') }}</p>
-          <p class="text-lg font-semibold">
-            {{ remainingBalance > 0 ? currency(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
-          </p>
-          <p class="text-xs text-(--color-gray)" data-cy="payments-receivable-source">
-            {{ currency(receivable.amount) }} ·
-            {{ receivable.fromQuote ? t('crm.reports.outstandingBalance.receivableSource.quote') : t('crm.reports.outstandingBalance.receivableSource.dealValue') }}
-          </p>
-        </div>
+        <CrmStatCard :label="t('crm.deals.detail.totalPaid')" reserve-hint-space>
+          <span data-cy="payments-total-paid">{{ currency(totalPaid) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.totalWht')" reserve-hint-space>
+          <span data-cy="payments-total-wht">{{ currency(totalWht) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.totalSettled')" reserve-hint-space>
+          <span data-cy="payments-total-settled">{{ currency(totalSettled) }}</span>
+        </CrmStatCard>
+        <CrmStatCard :label="t('crm.deals.detail.remainingBalance')" reserve-hint-space>
+          {{ remainingBalance > 0 ? currency(remainingBalance) : t('crm.deals.detail.fullyPaid') }}
+          <template #hint>
+            <span data-cy="payments-receivable-source">
+              {{ currency(receivable.amount) }} ·
+              {{ receivable.fromQuote ? t('crm.reports.outstandingBalance.receivableSource.quote') : t('crm.reports.outstandingBalance.receivableSource.dealValue') }}
+            </span>
+          </template>
+        </CrmStatCard>
       </div>
 
       <div v-if="dealPayments.length === 0" class="py-6 text-center text-sm text-(--color-gray)">

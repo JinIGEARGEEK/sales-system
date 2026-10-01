@@ -41,7 +41,7 @@
     </div>
 
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <UCard class="ring-(--color-card-border)">
+      <UCard>
         <template #header>
           <CardTitle size="lg">{{ t('crm.dashboard.prospectsByStatus') }}</CardTitle>
         </template>
@@ -62,7 +62,7 @@
         </div>
       </UCard>
 
-      <UCard class="ring-(--color-card-border)">
+      <UCard>
         <template #header>
           <CardTitle size="lg">{{ t('crm.dashboard.prospectsBySource') }}</CardTitle>
         </template>

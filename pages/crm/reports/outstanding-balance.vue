@@ -50,22 +50,22 @@
       <!-- Aging summary: outstanding money by how long its oldest unpaid
            installment has been overdue. A tile filters the table below. -->
       <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" data-cy="aging-summary">
-        <button
+        <CrmStatCard
           v-for="bucket in agingSummary"
           :key="bucket.bucket"
-          type="button"
-          :aria-pressed="bucketFilter === bucket.bucket"
+          :active="bucketFilter === bucket.bucket"
           :data-cy="`aging-bucket-${bucket.bucket}`"
-          class="rounded-lg border bg-white p-3 text-left transition hover:bg-(--color-light-gray-1)"
-          :class="bucketFilter === bucket.bucket ? 'border-(--color-primary) ring-1 ring-(--color-primary)' : 'border-(--color-light-gray-2)'"
+          reserve-hint-space
           @click="toggleBucket(bucket.bucket)"
         >
-          <div class="flex items-center justify-between gap-2">
+          <template #label>
             <UBadge size="sm" :color="agingBucketColor(bucket.bucket)" variant="subtle">{{ t(`crm.reports.outstandingBalance.agingBucket.${bucket.bucket}`) }}</UBadge>
-            <span class="text-xs text-(--color-gray)">{{ t('crm.reports.outstandingBalance.dealCount', { count: bucket.count }) }}</span>
-          </div>
-          <p class="mt-2 text-lg font-semibold" :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ currencyCompact(bucket.outstanding) }}</p>
-        </button>
+          </template>
+          <span :data-cy="`aging-bucket-${bucket.bucket}-amount`">{{ currencyCompact(bucket.outstanding) }}</span>
+          <template #hint>
+            {{ t('crm.reports.outstandingBalance.dealCount', { count: bucket.count }) }}
+          </template>
+        </CrmStatCard>
       </div>
 
       <TableData
