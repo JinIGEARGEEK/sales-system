@@ -179,6 +179,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 
 const { t } = useI18n()
@@ -276,7 +277,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(
   computed(() => contact.value?.company_id ?? null),
   'crm.contacts.detail.addProjectSuccess',
@@ -315,8 +316,9 @@ watch(contact, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!contact.value) return
   try {
     await contactsStore.update(contact.value.id, {
@@ -331,7 +333,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.contacts.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 </script>

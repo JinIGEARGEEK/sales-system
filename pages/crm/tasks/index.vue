@@ -273,7 +273,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
     success(t('crm.tasks.index.addTaskSuccess'))
   } catch (err) {
     notifyApiError(err)
-    return false
+    return submitFailure(err)
   }
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).
@@ -287,7 +287,7 @@ const onUpdateTask = async (payload: { title: string, description: string, due_d
     success(t('crm.tasks.index.editTaskSuccess'))
   } catch (err) {
     notifyApiError(err)
-    return false
+    return submitFailure(err)
   }
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).

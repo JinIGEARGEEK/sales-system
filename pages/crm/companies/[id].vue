@@ -353,6 +353,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 import { SALES_PIPELINE_ROLES } from '~/constants/roles'
 import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
@@ -573,7 +574,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(companyId, 'crm.companies.detail.addProjectSuccess', 'crm.companies.detail.updateProjectSuccess')
 
 const { companyName } = useCompanyName()
@@ -622,8 +623,9 @@ watch(company, (value) => {
 }, { immediate: true })
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!company.value) return
   try {
     await companiesStore.update(company.value.id, {
@@ -644,7 +646,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.companies.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 

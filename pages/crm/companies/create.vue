@@ -156,6 +156,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { COMPANY_STATUS_FORM_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
@@ -208,8 +209,9 @@ const removeContactRow = (index: number) => {
 const { markClean } = useUnsavedChangesGuard(() => [form, contacts.value])
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSubmit = guard(async () => {
+const onSubmit = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   try {
     const company = await companiesStore.add({
       name: form.name,
@@ -252,7 +254,8 @@ const onSubmit = guard(async () => {
     markClean()
     navigateTo(`/crm/companies/${company.id}`)
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    // A 422 on the Company itself marks its inputs; anything else toasts.
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 </script>
