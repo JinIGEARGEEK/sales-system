@@ -69,6 +69,7 @@
       <AdminUserBulkActionBar
         v-if="selectedIds.length > 0"
         :selected-ids="selectedIds"
+        :self-selected="selectedIds.includes(userStore.id)"
         @activate="onBulkActivate"
         @deactivate="onBulkDeactivate"
         @cancel="selected = []"
@@ -78,7 +79,9 @@
         v-model:open="open"
         :name="target ? `${target.first_name} ${target.last_name}` : ''"
         @confirm="confirmDelete"
-      />
+      >
+        <AdminReassignRecordsSelect v-model="deleteReassignTo" :exclude-ids="target ? [target.id] : []" />
+      </CrmConfirmDeleteModal>
     </AccessGate>
   </div>
 </template>
@@ -88,6 +91,7 @@ import { useI18n } from 'vue-i18n'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { ROLE_OPTIONS, STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
+import { KEEP_RECORDS } from '~/composables/utils/useUserRecordsReassign'
 
 const { t } = useI18n()
 
@@ -104,6 +108,8 @@ const { activeBadge } = useActiveStatusBadge()
 const { success } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const usersStore = useUsersStore()
+const userStore = useUserStore()
+const { toReassignTo, notifyRecordsResult, notifyBulkRecordsResult, notifyUserError } = useUserRecordsReassign()
 
 // Kept as a full (up to 1000) background cache purely to resolve the
 // "updated by" column's name below — there's no per-row "updated by name"
@@ -188,7 +194,8 @@ const columns = computed<TableDataColumn[]>(() => [
     actions: [
       { label: t('admin.users.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
       { label: t('admin.users.index.actions.edit'), emitName: 'edit', isBorderBottom: true },
-      { label: t('admin.users.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
+      // You can't delete yourself (422 on `id`) — another Admin has to.
+      { label: t('admin.users.index.actions.delete'), emitName: 'delete', isBorderBottom: false, hideIf: row => row.id === userStore.id },
     ],
   },
 ])
@@ -201,34 +208,43 @@ const onEdit = (row: AdminUser) => {
   navigateTo(`/admin/users/${row.id}`)
 }
 
-const { open, target, requestDelete, closeDelete } = useDeleteConfirm<AdminUser>()
+const { open, target, requestDelete: openDelete, closeDelete } = useDeleteConfirm<AdminUser>()
+const deleteReassignTo = ref(KEEP_RECORDS)
+const requestDelete = (row: AdminUser) => {
+  deleteReassignTo.value = KEEP_RECORDS
+  openDelete(row)
+}
 
 const confirmDelete = async () => {
   try {
     if (target.value) {
-      await usersStore.remove(target.value.id)
+      const name = `${target.value.first_name} ${target.value.last_name}`.trim()
+      const result = await usersStore.remove(target.value.id, toReassignTo(deleteReassignTo.value))
       success(t('admin.users.index.deleteSuccess'))
+      notifyRecordsResult(name, result)
       await fetch()
     }
   } catch (err) {
-    notifyApiError(err)
+    // 422 self-delete / bad reassign_to, 409 last active Admin.
+    notifyUserError(err)
   } finally {
     closeDelete()
   }
 }
 
-const onBulkSetActive = async (active: boolean) => {
+const onBulkSetActive = async (active: boolean, reassignTo?: number) => {
   const count = selectedIds.value.length
   try {
-    await usersStore.bulkSetActive(selectedIds.value, active)
+    const result = await usersStore.bulkSetActive(selectedIds.value, active, reassignTo)
     success(t(active ? 'admin.users.index.bulkActionBar.activateSuccess' : 'admin.users.index.bulkActionBar.deactivateSuccess', { count }))
+    if (!active) notifyBulkRecordsResult(result)
     selected.value = []
     await fetch()
   } catch (err) {
-    notifyApiError(err)
+    notifyUserError(err)
   }
 }
 
 const onBulkActivate = () => onBulkSetActive(true)
-const onBulkDeactivate = () => onBulkSetActive(false)
+const onBulkDeactivate = (reassignTo?: number) => onBulkSetActive(false, reassignTo)
 </script>

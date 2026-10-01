@@ -5,7 +5,13 @@
 
       <ContainerTemplate v-if="user">
         <Form @submit="onSubmit">
-          <AdminUserForm v-model:form="form" />
+          <AdminUserForm v-model:form="form" :is-self="isSelf">
+            <AdminReassignRecordsSelect
+              v-if="losesRecords"
+              v-model="reassignTo"
+              :exclude-ids="[user.id]"
+            />
+          </AdminUserForm>
 
           <div class="mt-4 flex gap-3">
             <ButtonPrimary :label="t('admin.users.detail.saveChanges')" type="submit" :loading="loading" />
@@ -22,6 +28,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { KEEP_RECORDS, updateLosesRecords } from '~/composables/utils/useUserRecordsReassign'
 
 const { t } = useI18n()
 
@@ -31,10 +38,12 @@ useHead({ title: t('admin.users.detail.pageTitle') })
 const { canAccess, guardMounted } = usePageAccess('Admin')
 
 const route = useRoute()
-const { success } = useNotify()
+const { success, error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 const usersStore = useUsersStore()
+const userStore = useUserStore()
+const { toReassignTo, notifyRecordsResult, userGuardMessage, applyUserFieldErrors } = useUserRecordsReassign()
 const goBack = useBackNavigation('/admin/users')
 
 guardMounted(() => {
@@ -74,11 +83,22 @@ watch(user, (value) => {
   markClean()
 }, { immediate: true })
 
+// The API refuses an Admin changing their own role/status (422), and an
+// admin-side password reset of their own account would revoke their session.
+const isSelf = computed(() => user.value?.id === userStore.id)
+
+// Deactivating, or moving to Production, takes the user's open records away:
+// offer a new owner (optional — the result toast says what's left).
+const reassignTo = ref(KEEP_RECORDS)
+const losesRecords = computed(() => !!user.value && updateLosesRecords(user.value, form))
+
 const { loading, guard } = useSubmitGuard()
 
-const onSubmit = guard(async () => {
-  if (user.value) {
-    await usersStore.update(user.value.id, {
+const onSubmit = guard(async (_values?: unknown, ctx?: { setErrors: (errors: Record<string, string>) => void }) => {
+  if (!user.value) return
+  const name = `${form.first_name} ${form.last_name}`.trim()
+  try {
+    const result = await usersStore.update(user.value.id, {
       first_name: form.first_name,
       last_name: form.last_name,
       email: form.email,
@@ -86,10 +106,18 @@ const onSubmit = guard(async () => {
       role: form.role,
       status: form.status,
       notes: form.notes,
-      password: form.password,
+      password: isSelf.value ? '' : form.password,
+      reassign_to: losesRecords.value ? toReassignTo(reassignTo.value) : undefined,
     })
+    success(t('admin.users.detail.updateSuccess'))
+    notifyRecordsResult(name, result)
+  } catch (err) {
+    // 422 self-change / bad reassign_to / other fields → on the inputs;
+    // 409 last active Admin → toast.
+    if (ctx && applyUserFieldErrors(err, ctx.setErrors)) return
+    error(userGuardMessage(err) ?? getApiErrorMessage(err, t('global.genericError')))
+    return
   }
-  success(t('admin.users.detail.updateSuccess'))
   markClean()
   navigateTo('/admin/users')
 })

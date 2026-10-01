@@ -19,6 +19,14 @@ interface UserForm {
   role: string
   status: string
   notes: string
+  // Receives the user's open records when this update takes them away
+  // (deactivation, or a move to Production). The API ignores it otherwise.
+  reassign_to?: number
+}
+
+type UserWriteResponse = AdminUser & {
+  open_records?: OpenRecordCounts
+  reassigned?: ReassignedRecords
 }
 
 export const useUsersStore = defineStore('users', {
@@ -55,19 +63,26 @@ export const useUsersStore = defineStore('users', {
       this.items.push(created)
       return created
     },
-    async update (id: number, form: UserForm): Promise<AdminUser> {
+    async update (id: number, form: UserForm): Promise<AdminUserWriteResult> {
       const { $api } = useNuxtApp()
-      const response = await $api.put<ApiResponse<AdminUser>>(`/users/${id}`, form)
-      const updated = parseDates(response.data.data)
+      const response = await $api.put<ApiResponse<UserWriteResponse>>(`/users/${id}`, form)
+      const { open_records: openRecords, reassigned, ...user } = response.data.data
+      const updated = parseDates(user)
       const index = this.items.findIndex(u => u.id === id)
       if (index !== -1) this.items[index] = updated
-      return updated
+      return { user: updated, open_records: openRecords ?? null, reassigned: reassigned ?? null }
     },
-    async remove (id: number) {
+    // 200 { id, open_records, reassigned? }; `reassignTo` goes in the query
+    // string (the API also takes a JSON body, but some clients drop DELETE
+    // bodies).
+    async remove (id: number, reassignTo?: number): Promise<UserDeleteResult> {
       const { $api } = useNuxtApp()
-      await $api.delete(`/users/${id}`)
+      const response = await $api.delete<ApiResponse<UserDeleteResult>>(`/users/${id}`, {
+        params: reassignTo ? { reassign_to: reassignTo } : undefined,
+      })
       const user = this.items.find(u => u.id === id)
       if (user) user.is_active = false
+      return response.data?.data ?? { id, open_records: { deals: 0, leads: 0, prospects: 0, tasks: 0, total: 0 } }
     },
     // Shared implementation behind bulkActivate/bulkDeactivate below, mirroring
     // the backend's own UserHandler.bulkSetActive (Admin only, same route-group
@@ -75,19 +90,24 @@ export const useUsersStore = defineStore('users', {
     // tags concept like Leads/Companies do, so an is_active toggle is the
     // natural bulk action here instead of reusing CrmBulkActionBar's
     // reassign/tag/archive shape.
-    async bulkSetActive (ids: number[], active: boolean) {
+    // bulk-deactivate answers 200 { open_records, reassigned } and takes an
+    // optional reassign_to; bulk-activate still answers 204 (empty result).
+    async bulkSetActive (ids: number[], active: boolean, reassignTo?: number): Promise<UserBulkDeactivateResult> {
       const { $api } = useNuxtApp()
-      await $api.patch(`/users/bulk-${active ? 'activate' : 'deactivate'}`, { ids })
+      const body = !active && reassignTo ? { ids, reassign_to: reassignTo } : { ids }
+      const response = await $api.patch<ApiResponse<UserBulkDeactivateResult> | ''>(`/users/bulk-${active ? 'activate' : 'deactivate'}`, body)
       for (const id of ids) {
         const user = this.items.find(u => u.id === id)
         if (user) user.is_active = active
       }
+      const data = response.data && typeof response.data === 'object' ? response.data.data : undefined
+      return { open_records: data?.open_records ?? [], reassigned: data?.reassigned ?? [] }
     },
     bulkActivate (ids: number[]) {
       return this.bulkSetActive(ids, true)
     },
-    bulkDeactivate (ids: number[]) {
-      return this.bulkSetActive(ids, false)
+    bulkDeactivate (ids: number[], reassignTo?: number) {
+      return this.bulkSetActive(ids, false, reassignTo)
     },
   },
 })

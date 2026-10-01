@@ -18,6 +18,11 @@
         <UIcon name="material-symbols:restore-from-trash-outline" class="size-4 shrink-0" />
         {{ t('crm.components.confirmDeleteModal.trashHint') }}
       </p>
+      <!-- Extra inputs the confirmation needs (e.g. the Users list's
+      "Reassign open records to…" picker). -->
+      <div v-if="$slots.default" class="mt-4">
+        <slot />
+      </div>
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">

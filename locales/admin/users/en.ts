@@ -76,4 +76,30 @@ export default {
     staffNotFound: 'Staff not found.',
     updateSuccess: 'Staff updated',
   },
+  reassign: {
+    label: 'Reassign open records to',
+    keep: 'Don\'t reassign (keep with this user)',
+    hint: 'Their open deals, leads, prospects and pending tasks move to this person. Closed records keep their owner.',
+    counts: {
+      deals: '{n} open deal | {n} open deals',
+      leads: '{n} lead | {n} leads',
+      prospects: '{n} prospect | {n} prospects',
+      tasks: '{n} pending task | {n} pending tasks',
+    },
+    moved: 'Moved {records} to {to}',
+    remaining: '{name} still owns {records}. Hand them over with bulk reassign on the Deals, Leads, Prospects and Tasks lists',
+    remainingBulk: '{names} still own {records}. Hand them over with bulk reassign on the Deals, Leads, Prospects and Tasks lists',
+  },
+  errors: {
+    selfChange: 'You can\'t change your own role, or deactivate or delete your own account. Ask another Admin.',
+    lastAdmin: 'This is the last active Admin. Make someone else an Admin first.',
+    reassignInvalid: 'Pick an active Admin, Sales Rep, Sales Manager or Marketing user who isn\'t being removed.',
+    selfRowHint: 'This is your own account: another Admin has to change your role or status.',
+    selfInSelection: 'Your own account is selected. Deselect it to deactivate the others.',
+  },
+  ownPassword: {
+    label: 'Password',
+    body: 'Resetting your own password here would sign you out.',
+    link: 'Change your password',
+  },
 }
