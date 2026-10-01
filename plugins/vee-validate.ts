@@ -1,5 +1,6 @@
 import { configure, defineRule, Form, Field, ErrorMessage } from 'vee-validate'
-import AllRules from '@vee-validate/rules'
+// 4.15 dropped the default export; `all` is the same name → rule map.
+import { all as AllRules } from '@vee-validate/rules'
 import { parsePhoneNumber } from 'awesome-phonenumber'
 import { localize, setLocale } from '@vee-validate/i18n'
 import en from '@vee-validate/i18n/dist/locale/en.json'

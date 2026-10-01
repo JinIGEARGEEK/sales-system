@@ -319,7 +319,7 @@ const onSubmitActivity = (payload: ActivityFormSubmit) => {
 }
 
 const taskOpen = ref(false)
-const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }) => {
   if (!props.selection) return
   try {
     await tasksStore.add({ ...payload, related_type: props.selection.zone, related_id: props.selection.card.id })

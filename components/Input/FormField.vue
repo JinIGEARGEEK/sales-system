@@ -21,7 +21,7 @@
         </div>
         <p v-if="hint" class="mb-1 text-xs text-(--color-dark-gray)">{{ hint }}</p>
         <slot :field="field" :errors="errors" :field-id="fieldId" :error-id="errorId" />
-        <slot name="footer" :errors="errors">
+        <slot name="footer" :errors="errors" :error-id="errorId">
           <div v-if="errors.length" :id="errorId" class="text-xs text-(--color-danger-text) mt-1" :data-cy="`error-input-${dataCy}`">
             {{ errors[0] }}
           </div>

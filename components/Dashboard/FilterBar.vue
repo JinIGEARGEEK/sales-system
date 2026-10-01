@@ -79,7 +79,7 @@
               variant="subtle"
               color="primary"
               class="font-medium"
-              @click="showAdvancedFilters = !showAdvancedFilters"
+              @click="() => { showAdvancedFilters = !showAdvancedFilters }"
             >
               <template v-if="advancedFilterCount > 0" #trailing>
                 <UBadge :label="advancedFilterCount" size="xs" color="primary" variant="solid" />

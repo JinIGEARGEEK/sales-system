@@ -267,7 +267,7 @@ const openEditTask = (task: Task) => {
   addTaskOpen.value = true
 }
 
-const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
+const onSubmitTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null, related_type?: TaskRelatedType, related_id?: number }) => {
   try {
     await tasksStore.add(payload as Omit<Task, 'id' | 'status' | 'created_at'>)
     success(t('crm.tasks.index.addTaskSuccess'))
@@ -280,7 +280,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
   await refresh().catch(notifyApiError)
 }
 
-const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: TaskPriority, assigned_to: number | null }) => {
+const onUpdateTask = async (payload: { title: string, description: string, due_date: Date, priority: CrmTaskPriority, assigned_to: number | null }) => {
   if (!editingTask.value) return
   try {
     await tasksStore.update(editingTask.value.id, payload)

@@ -15,7 +15,7 @@
       class="font-medium"
       :aria-expanded="expanded"
       data-cy="more-filters-toggle"
-      @click="expanded = !expanded"
+      @click="() => { expanded = !expanded }"
     >
       <template v-if="count > 0" #trailing>
         <UBadge :label="count" size="xs" color="primary" variant="solid" />
