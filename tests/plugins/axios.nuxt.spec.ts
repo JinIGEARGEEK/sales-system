@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest'
 import { AxiosError } from 'axios'
 import type { AxiosAdapter, InternalAxiosRequestConfig } from 'axios'
 
@@ -11,8 +11,14 @@ const answerWith = (status: number): AxiosAdapter => (config: InternalAxiosReque
   }))
 
 describe('plugins/axios error redirects', () => {
-  const { $api } = useNuxtApp()
-  const originalAdapter = $api.defaults.adapter
+  // The Nuxt app boots in a beforeAll (@nuxt/test-utils 4), so it isn't
+  // there yet while this describe body is collected.
+  let $api: ReturnType<typeof useNuxtApp>['$api']
+  let originalAdapter: typeof $api.defaults.adapter
+  beforeAll(() => {
+    $api = useNuxtApp().$api
+    originalAdapter = $api.defaults.adapter
+  })
 
   afterEach(() => {
     $api.defaults.adapter = originalAdapter

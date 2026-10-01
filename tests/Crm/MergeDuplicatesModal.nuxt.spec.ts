@@ -5,7 +5,8 @@ import MergeDuplicatesModal from '~/components/Crm/MergeDuplicatesModal.vue'
 
 // mountSuspended doesn't install the i18n plugin; echo keys back. The real
 // useToast stays intact.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key, te: () => false }),
 }))
 

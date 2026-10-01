@@ -1,0 +1,108 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QuoteItemsEditor Component Test > renders an item row with its Field-wrapped inputs 1`] = `
+"<div>
+  <div class="mb-2 flex items-center justify-between"><span class="text-sm font-medium">crm.quotes.editor.items</span><button type="button" data-cy="" class="font-medium inline-flex items-center disabled:cursor-not-allowed aria-disabled:cursor-not-allowed disabled:opacity-75 aria-disabled:opacity-75 transition-colors gap-1.5 ring-inset text-primary hover:bg-primary/10 active:bg-primary/10 disabled:bg-transparent aria-disabled:bg-transparent dark:disabled:bg-transparent dark:aria-disabled:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-24 justify-center rounded-full px-6 disabled:pointer-events-none text-sm py-1 bg-white ring-2 ring-primary disabled:ring-(--color-gray)/30 disabled:text-(--color-gray)/40"><span class="iconify i-material-symbols:add shrink-0 size-5" aria-hidden="true"></span><span class="truncate">crm.quotes.editor.addItem</span>
+      <!--v-if-->
+    </button></div>
+  <!--v-if-->
+  <div class="mb-2 flex items-start gap-2">
+    <div class="grid flex-1 grid-cols-1 gap-2">
+      <!-- Explicit choice up front, not inferred from whether a product
+        happens to be picked: a rep decides what a row *is* before filling
+        it in, rather than the Product picker sitting above the
+        description on every row looking like a mandatory first step.
+        "scope" rows are a custom scope/feature of a Project, priced by
+        hand and never show the Product picker at all; "product" rows are
+        one of the company's own packaged Products, priced from the
+        Catalog. -->
+      <div id="v-0-0-0" class="relative" tabindex="0" data-orientation="horizontal" dir="ltr" style="outline-color: none; outline-style: none; outline-width: initial;" role="radiogroup" aria-orientation="horizontal" aria-required="false">
+        <fieldset class="flex gap-x-2 flex-row gap-y-0.5">
+          <!--v-if-->
+          <div class="flex items-start flex-row text-xs">
+            <div class="flex items-center h-4"><button data-reka-collection-item="" tabindex="-1" data-orientation="horizontal" data-active="" class="rounded-full ring-inset overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary size-3.5 ring-2 ring-(--color-gray)" id="v-0-0-0:scope" role="radio" type="button" aria-checked="true" data-state="checked" required="false" value="scope" aria-label="scope"><span data-state="checked" class="flex items-center justify-center size-full after:bg-default after:rounded-full bg-primary after:size-1"></span>
+                <!--v-if-->
+              </button></div>
+            <div class="w-full ms-2"><label for="v-0-0-0:scope" class="block font-medium text-default">crm.quotes.editor.itemKindScope</label>
+              <!--v-if-->
+            </div>
+          </div>
+          <div class="flex items-start flex-row text-xs">
+            <div class="flex items-center h-4"><button data-reka-collection-item="" tabindex="-1" data-orientation="horizontal" class="rounded-full ring-inset overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary size-3.5 ring-2 ring-(--color-gray)" id="v-0-0-0:product" role="radio" type="button" aria-checked="false" data-state="unchecked" required="false" value="product" aria-label="product">
+                <!---->
+                <!--v-if-->
+              </button></div>
+            <div class="w-full ms-2"><label for="v-0-0-0:product" class="block font-medium text-default">crm.quotes.editor.itemKindProduct</label>
+              <!--v-if-->
+            </div>
+          </div>
+        </fieldset>
+        <!--v-if-->
+      </div>
+      <!--v-if-->
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_5rem_7rem_5rem]">
+        <!-- Not required: a bare product-linked line item (no free-text
+          description) is still a valid row — a blank description just
+          renders as an empty cell in the exported PDF's line-items table,
+          a rep's own responsibility, not something worth blocking Save. -->
+        <div class="">
+          <div>
+            <div>
+              <!--v-if-->
+              <!--v-if-->
+              <div class="relative inline-flex items-center w-full"><textarea id="input-item-description-1" name="item-description-1" rows="2" placeholder="crm.quotes.editor.itemDescriptionPlaceholder" class="w-full rounded-md border-0 appearance-none placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 gap-1.5 text-highlighted bg-default ring ring-inset ring-accented focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary text-base" data-cy="" maxlength="" aria-invalid="false" aria-label="crm.quotes.editor.itemDescriptionPlaceholder" value=""></textarea>
+                <!--v-if-->
+                <!--v-if-->
+              </div>
+              <div class="flex items-center justify-end">
+                <!--v-if-->
+                <!--v-if-->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div modelmodifiers="[object Object]">
+          <div>
+            <!--v-if-->
+            <!--v-if-->
+            <div class="relative inline-flex items-center w-full"><input id="input-item-qty-1" type="number" name="item-qty-1" placeholder="crm.quotes.editor.itemQtyPlaceholder" class="w-full rounded-md border-0 appearance-none placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm gap-1.5 text-highlighted bg-default ring ring-inset ring-accented focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary" autocomplete="off" data-cy="" maxlength="" aria-invalid="false" aria-label="crm.quotes.editor.itemQtyPlaceholder" value="1">
+              <!--v-if-->
+              <!--v-if-->
+            </div>
+            <!--v-if-->
+          </div>
+        </div>
+        <div modelmodifiers="[object Object]">
+          <div>
+            <!--v-if-->
+            <!--v-if-->
+            <div class="relative inline-flex items-center w-full"><input id="input-item-price-1" type="number" name="item-price-1" placeholder="crm.quotes.editor.itemPricePlaceholder" class="w-full rounded-md border-0 appearance-none placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm gap-1.5 text-highlighted bg-default ring ring-inset ring-accented focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary" autocomplete="off" data-cy="" maxlength="" aria-invalid="false" aria-label="crm.quotes.editor.itemPricePlaceholder" value="0">
+              <!--v-if-->
+              <!--v-if-->
+            </div>
+            <!--v-if-->
+          </div>
+        </div>
+        <div modelmodifiers="[object Object]">
+          <div>
+            <!--v-if-->
+            <!--v-if-->
+            <div class="relative inline-flex items-center w-full"><input id="input-item-discount-1" type="number" name="item-discount-1" placeholder="crm.quotes.editor.itemDiscountPlaceholder" class="w-full rounded-md border-0 appearance-none placeholder:text-dimmed focus:outline-none disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 text-sm gap-1.5 text-highlighted bg-default ring ring-inset ring-accented focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary" autocomplete="off" data-cy="" maxlength="" aria-invalid="false" aria-label="crm.quotes.editor.itemDiscountPlaceholder" value="0">
+              <!--v-if-->
+              <!--v-if-->
+            </div>
+            <!--v-if-->
+          </div>
+        </div>
+      </div>
+      <!-- Sanity-check total for this one row — without it a rep has to
+        scroll to the quote-wide summary below to notice a qty/price/discount
+        typo on a single line. -->
+      <p class="text-right text-xs text-(--color-gray)">crm.quotes.editor.itemLineTotal: ฿0.00</p>
+    </div><button type="button" aria-label="crm.quotes.editor.removeItem" class="rounded-md font-medium inline-flex items-center disabled:cursor-not-allowed aria-disabled:cursor-not-allowed disabled:opacity-75 aria-disabled:opacity-75 transition-colors text-xs gap-1 text-error hover:bg-error/10 active:bg-error/10 focus:outline-none focus-visible:bg-error/10 disabled:bg-transparent aria-disabled:bg-transparent dark:disabled:bg-transparent dark:aria-disabled:bg-transparent p-1"><span class="iconify i-material-symbols:close shrink-0 size-4" aria-hidden="true"></span>
+      <!--v-if-->
+      <!--v-if-->
+    </button>
+  </div>
+</div>"
+`;

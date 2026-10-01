@@ -4,7 +4,8 @@ import { makeDeal, apiResponse } from '../factories'
 // Same approach as tests/utils/useWonFollowUpTask.nuxt.spec.ts: echo i18n keys
 // back, and spy on the real $api instance (useNotify needs the real
 // useNuxtApp/useToast machinery intact).
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

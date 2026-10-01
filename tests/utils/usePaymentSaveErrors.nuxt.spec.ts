@@ -4,7 +4,8 @@ import { apiResponse, apiError } from '../factories'
 // Echo i18n keys back for the composable's own messages. The field-code
 // text comes from useApiFieldErrors, which reads the real $i18n table. The
 // real useToast stays intact.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key, te: (key: string) => key === 'global.apiFieldError.exceeds_receivable' }),
 }))
 

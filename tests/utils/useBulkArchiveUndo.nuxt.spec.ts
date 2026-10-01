@@ -4,7 +4,8 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 // Echo the key plus its params so assertions can see what was interpolated;
 // `te` knows only the one real skip reason, so anything else hits the
 // `unknown` fallback.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({
     t: (key: string, params?: Record<string, unknown>) => (params ? `${key} ${JSON.stringify(params)}` : key),
     te: (key: string) => key.endsWith('archiveSkipReason.won_deal_with_money'),

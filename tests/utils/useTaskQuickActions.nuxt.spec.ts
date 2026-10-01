@@ -5,7 +5,8 @@ import { snoozedDueDate } from '~/composables/utils/useTaskQuickActions'
 
 // useTaskQuickActions / useApiErrorNotifier call useI18n() directly — same
 // mocking approach as tests/utils/useContractGate.nuxt.spec.ts.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

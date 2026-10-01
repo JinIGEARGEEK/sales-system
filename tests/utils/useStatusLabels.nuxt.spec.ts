@@ -1,11 +1,17 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach } from 'vitest'
 
 // The status-label half of the use*StatusColor composables: every badge,
 // select option and table cell reads its text from `global.status.*` instead
 // of printing the raw API enum value.
 describe('status labels', () => {
-  const i18n = useNuxtApp().$i18n
-  const initialLocale = i18n.locale.value
+  // The Nuxt app boots in a beforeAll (@nuxt/test-utils 4), so it isn't
+  // there yet while this describe body is collected.
+  let i18n: ReturnType<typeof useNuxtApp>['$i18n']
+  let initialLocale: typeof i18n.locale.value
+  beforeAll(() => {
+    i18n = useNuxtApp().$i18n
+    initialLocale = i18n.locale.value
+  })
 
   afterEach(async () => {
     await i18n.setLocale(initialLocale)

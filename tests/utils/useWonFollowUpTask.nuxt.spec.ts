@@ -4,7 +4,8 @@ import { makeDeal, apiResponse } from '../factories'
 // useWonFollowUpTask itself calls useI18n() directly, and useApiErrorNotifier
 // does too — same mocking approach as tests/utils/useContractGate.nuxt.spec.ts.
 // `t` just needs to echo the key back so wonFollowUpTaskTitle can be asserted.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({ t: (key: string) => key }),
 }))
 

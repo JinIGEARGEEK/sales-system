@@ -3,9 +3,12 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { apiResponse } from '../factories'
 import { compareCompanySizes } from '~/stores/companySizeOptions'
 
-// No toast/notify usage in this store, so mocking useNuxtApp wholesale is safe.
+// Swap only useNuxtApp().$api for this spy, keeping the real nuxtApp
+// (see tests/stores/deals.nuxt.spec.ts and CLAUDE.md).
 const mockApi = { get: vi.fn() }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const size = (id: number, name: string, is_active = true): CompanySizeOption => ({ id, name, is_active, created_at: new Date() })
 

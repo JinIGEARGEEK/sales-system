@@ -5,7 +5,8 @@ import { getDuplicateConflict } from '~/composables/utils/useDuplicateConflict'
 
 // `te` knows the apiFieldError codes the backend sends here, so
 // applyApiFieldErrors translates instead of falling back to "invalid".
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({
     t: (key: string) => key,
     te: (key: string) => ['global.apiFieldError.duplicate', 'global.apiFieldError.invalid'].includes(key),

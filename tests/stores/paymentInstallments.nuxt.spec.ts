@@ -9,7 +9,9 @@ const mockApi = {
   post: vi.fn(),
   delete: vi.fn(),
 }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const makeStatus = (overrides: Partial<PaymentInstallment> = {}, statusOverrides: Partial<PaymentInstallmentStatus> = {}): PaymentInstallmentStatus => ({
   installment: {

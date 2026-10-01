@@ -9,7 +9,9 @@ const mockApi = {
   post: vi.fn(),
   patch: vi.fn(),
 }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 const product: Product = { id: 5, name: 'CRM Cloud', category: 'SaaS', description: '', price: 1000, is_active: true }
 

@@ -10,7 +10,9 @@ const mockApi = {
   put: vi.fn(),
   delete: vi.fn(),
 }
-mockNuxtImport('useNuxtApp', () => () => ({ $api: mockApi }))
+mockNuxtImport('useNuxtApp', original => (...args: unknown[]) => new Proxy(original(...args), {
+  get: (nuxtApp, key) => (key === '$api' ? mockApi : Reflect.get(nuxtApp, key)),
+}))
 
 describe('stores/quotes', () => {
   beforeEach(() => {

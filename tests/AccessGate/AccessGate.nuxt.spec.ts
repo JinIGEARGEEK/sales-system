@@ -8,7 +8,8 @@ import AccessGate from '~/components/AccessGate.vue'
 // no other spec yet exercising an i18n-dependent component to have hit this).
 // Mocking here keeps this a focused unit test of AccessGate's own
 // canAccess/label/title logic rather than standing up the i18n plugin.
-vi.mock('vue-i18n', () => ({
+vi.mock('vue-i18n', async importOriginal => ({
+  ...await importOriginal<typeof import('vue-i18n')>(),
   useI18n: () => ({
     t: (key: string) => ({
       'global.noAccess': 'You do not have permission to view this page.',
