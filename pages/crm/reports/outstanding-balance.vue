@@ -25,7 +25,7 @@
     <CrmPaymentsExportModal v-model:open="paymentsExportOpen" />
 
     <AccessGate :can-access="canViewReports" :title="t('crm.reports.accessDeniedTitle')" :label="t('crm.reports.accessDeniedMessage')">
-      <CrmReportFilterBar :show-clear="hasActiveFilters || bucketFilter !== 'all'" :clear-label="t('crm.reports.outstandingBalance.clearFilters')" @clear="clearFilters">
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.outstandingBalance.clearFilters')" @clear="clearFilters">
         <InputSelect
           v-model="salesRepFilter"
           :options="salesRepOptions"
@@ -178,7 +178,6 @@ const agingBadge = (row: OutstandingBalanceRow) => {
   if (row.aging === 'upcoming') return toBadge(t('crm.reports.outstandingBalance.aging.upcoming'), 'warning')
   return toBadge(t('crm.reports.outstandingBalance.aging.none'), 'neutral')
 }
-
 
 const rows = computed(() => results.value
   .filter(row => bucketFilter.value === 'all' || row.aging_bucket === bucketFilter.value)

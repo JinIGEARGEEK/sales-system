@@ -256,7 +256,6 @@
         @confirm="onConfirmSend"
       />
 
-
       <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
     </div>
 

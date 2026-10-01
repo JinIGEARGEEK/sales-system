@@ -164,7 +164,6 @@ const totals = computed(() => results.value.reduce((sum, row) => ({
 // Same definition as the per-row win_rate: Lead-sourced Won Deals ÷ Leads.
 const overallWinRate = computed(() => (totals.value.leads > 0 ? (totals.value.dealsWon / totals.value.leads) * 100 : 0))
 
-
 const rows = computed(() => results.value.map(row => ({
   ...row,
   id: row.source,

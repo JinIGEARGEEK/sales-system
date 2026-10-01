@@ -341,12 +341,7 @@ const addInstallmentOpen = ref(false)
 const dealInstallments = computed(() => paymentInstallmentsStore.forDeal(dealId))
 const installmentNumberById = computed(() => installmentNumbers(dealInstallments.value))
 
-const installmentStatusColor = (status: PaymentInstallmentStatusValue) => {
-  if (status === 'paid') return 'success'
-  if (status === 'overdue') return 'error'
-  if (status === 'partial') return 'warning'
-  return 'neutral'
-}
+const { installmentStatusColor } = usePaymentInstallmentStatusColor()
 
 const onAddInstallment = async (installment: { amount: number, due_date: Date, note: string }) => {
   try {
