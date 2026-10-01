@@ -68,9 +68,8 @@
               :key="action.icon"
               :icon="action.icon"
               variant="ghost"
-              color="neutral"
+              :color="action.danger ? 'error' : 'neutral'"
               size="xs"
-              :class="action.danger ? 'text-red-500 hover:bg-red-50 hover:text-red-600' : ''"
               :aria-label="action.ariaLabel"
               @click="drawer = false; action.onClick()"
             />
