@@ -77,6 +77,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import * as XLSX from 'xlsx'
+import { duplicateFieldsLabel } from '~/composables/utils/useDuplicateConflict'
+import type { FlowAccountRow } from '~/composables/utils/flowAccountImport'
 
 const { t, te } = useI18n()
 const { notifyApiError } = useApiErrorNotifier()
@@ -92,63 +94,9 @@ const emit = defineEmits<{
   imported: [summary: { companies: number, contacts: number }]
 }>()
 
-// FlowAccount "สมุดรายชื่อ" (address book) export column headers, matched by
-// exact text rather than position — tolerant of columns being reordered or
-// extra ones being present, since this is a fixed third-party export format
-// we don't control.
-const HEADER_MAP: Record<string, string> = {
-  'ประเภท': 'recordType',
-  'รหัสผู้ติดต่อ': 'contactCode',
-  'ชื่อธุรกิจ/ชื่อบุคคล': 'name',
-  'ที่อยู่': 'address1',
-  'ที่อยู่ 2': 'address2',
-  'ที่อยู่ 3': 'address3',
-  'รหัสไปรษณีย์': 'postalCode',
-  'เลขผู้เสียภาษี': 'taxId',
-  'รหัสสาขา': 'branchCode',
-  'สำนักงาน/สาขา': 'branchName',
-  'ชื่อผู้ติดต่อ': 'contactName',
-  'อีเมล': 'email',
-  'เบอร์มือถือ': 'mobile',
-  'เครดิต (วัน)': 'creditDays',
-  'เบอร์สำนักงาน': 'officePhone',
-  'เบอร์โทรสาร': 'fax',
-}
-
-const RECORD_TYPE_TAG: Record<string, string> = {
-  'ผู้จำหน่าย': 'Vendor',
-  'ลูกค้า': 'Customer',
-}
-
-interface ParsedRow {
-  // 1-based spreadsheet row, for the per-row error list after an import.
-  sheetRow: number
-  recordType: string
-  name: string
-  address1: string
-  address2: string
-  address3: string
-  postalCode: string
-  taxId: string
-  branchCode: string
-  branchName: string
-  contactName: string
-  email: string
-  mobile: string
-  officePhone: string
-  fax: string
-  // Validated values for the Company's own tax_id/branch_code/postal_code
-  // columns ('' when the file's value is missing or malformed — that raw
-  // value then goes to notes instead, so nothing is lost and the API's
-  // 5-digit checks can't reject the whole row).
-  validTaxId: string
-  validBranchCode: string
-  validPostalCode: string
-}
-
 const fileName = ref('')
 const error = ref('')
-const parsedRows = ref<ParsedRow[]>([])
+const parsedRows = ref<FlowAccountRow[]>([])
 // Existing Company per normalized tax_id|branch_code key found on the
 // server at preview time (null = looked up, none found).
 const taxIdMatches = ref(new Map<string, Company | null>())
@@ -176,44 +124,15 @@ const onUpdateOpen = (value: boolean) => {
   emit('update:open', value)
 }
 
-const cell = (row: unknown[], headerIndex: Record<string, number>, key: string) => {
-  const index = headerIndex[key]
-  if (index === undefined) return ''
-  const value = row[index]
-  return value === undefined || value === null ? '' : String(value).trim()
-}
-
-const HEAD_OFFICE_LABEL = 'สำนักงานใหญ่'
-
-const taxFields = (row: unknown[], headerIndex: Record<string, number>) => {
-  const taxId = normalizeTaxId(cell(row, headerIndex, 'taxId'))
-  // Spreadsheets drop leading zeros from numeric-looking cells, so a head
-  // office "00000" can arrive as "0"; FlowAccount also leaves the code
-  // blank for a head office it only names.
-  let branchCode = cell(row, headerIndex, 'branchCode')
-  if (/^\d{1,5}$/.test(branchCode)) branchCode = branchCode.padStart(5, '0')
-  else if (!branchCode && cell(row, headerIndex, 'branchName').includes(HEAD_OFFICE_LABEL)) branchCode = HEAD_OFFICE_BRANCH_CODE
-  const postalCode = cell(row, headerIndex, 'postalCode')
-  const validTaxId = isValidThaiTaxId(taxId) ? taxId : ''
-  return {
-    validTaxId,
-    // A branch only means something alongside a tax ID.
-    validBranchCode: validTaxId && isFiveDigitCode(branchCode) ? branchCode : '',
-    validPostalCode: isFiveDigitCode(postalCode) ? postalCode : '',
-  }
-}
-
-const joinAddress = (row: ParsedRow) => [row.address1, row.address2, row.address3].filter(Boolean).join(' ')
-
-const taxIdKey = (row: ParsedRow) => `${row.validTaxId}|${row.validBranchCode}`
-const companyKey = (row: ParsedRow) => row.validTaxId ? `tax:${taxIdKey(row)}` : `name:${row.name.trim().toLowerCase()}`
+const taxIdKey = (row: FlowAccountRow) => `${row.validTaxId}|${row.validBranchCode}`
+const companyKey = (row: FlowAccountRow) => row.validTaxId ? `tax:${taxIdKey(row)}` : `name:${row.name.trim().toLowerCase()}`
 
 // Tax ID + branch identifies the buyer even when the name is spelled
 // differently ("บจก. …" vs "บริษัท … จำกัด"), so it wins over the name match.
-const findExistingCompany = (row: ParsedRow) =>
+const findExistingCompany = (row: FlowAccountRow) =>
   (row.validTaxId ? taxIdMatches.value.get(taxIdKey(row)) : null) ?? companiesStore.findByName(row.name) ?? null
 
-const lookupTaxIdMatches = async (rows: ParsedRow[]) => {
+const lookupTaxIdMatches = async (rows: FlowAccountRow[]) => {
   const matches = new Map<string, Company | null>()
   const pending = [...new Set(rows.filter(r => r.validTaxId).map(taxIdKey))]
   // A few requests at a time rather than one per row all at once.
@@ -233,9 +152,9 @@ const lookupTaxIdMatches = async (rows: ParsedRow[]) => {
 }
 
 // The Company fields an existing record is missing that this row can fill.
-const backfillFor = (company: Company, row: ParsedRow) => {
+const backfillFor = (company: Company, row: FlowAccountRow) => {
   const changes: Partial<CompanyUpdatePayload> = {}
-  const address = joinAddress(row)
+  const address = flowAccountAddress(row)
   if (!company.tax_id && row.validTaxId) changes.tax_id = row.validTaxId
   if (!company.branch_code && row.validBranchCode) changes.branch_code = row.validBranchCode
   if (!company.postal_code && row.validPostalCode) changes.postal_code = row.validPostalCode
@@ -264,57 +183,12 @@ const onFileChange = async (event: Event) => {
       error.value = t('crm.components.importModal.errorNoHeader')
       return
     }
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: '' })
-
-    // The FlowAccount export has a merged title row before the real header
-    // row, so find the header row by content rather than assuming row 0.
-    const headerRowIndex = rows.findIndex(row => row.some(c => String(c).trim() === 'ชื่อธุรกิจ/ชื่อบุคคล'))
-    if (headerRowIndex === -1) {
-      error.value = t('crm.components.importModal.errorNoHeader')
+    const parsed = parseFlowAccountRows(XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: '' }))
+    if (!parsed.ok) {
+      error.value = t(parsed.reason === 'noHeader' ? 'crm.components.importModal.errorNoHeader' : 'crm.components.importModal.errorNoRows')
       return
     }
-
-    const headerRow = rows[headerRowIndex]!
-    const headerIndex: Record<string, number> = {}
-    headerRow.forEach((label, index) => {
-      const key = HEADER_MAP[String(label).trim()]
-      if (key) headerIndex[key] = index
-    })
-
-    if (headerIndex.name === undefined) {
-      error.value = t('crm.components.importModal.errorNoHeader')
-      return
-    }
-
-    const dataRows = rows.slice(headerRowIndex + 1)
-    const result: ParsedRow[] = []
-    for (const [offset, row] of dataRows.entries()) {
-      const name = cell(row, headerIndex, 'name')
-      if (!name) continue
-      result.push({
-        sheetRow: headerRowIndex + 2 + offset,
-        recordType: cell(row, headerIndex, 'recordType'),
-        name,
-        address1: cell(row, headerIndex, 'address1'),
-        address2: cell(row, headerIndex, 'address2'),
-        address3: cell(row, headerIndex, 'address3'),
-        postalCode: cell(row, headerIndex, 'postalCode'),
-        taxId: cell(row, headerIndex, 'taxId'),
-        branchCode: cell(row, headerIndex, 'branchCode'),
-        branchName: cell(row, headerIndex, 'branchName'),
-        ...taxFields(row, headerIndex),
-        contactName: cell(row, headerIndex, 'contactName'),
-        email: cell(row, headerIndex, 'email'),
-        mobile: cell(row, headerIndex, 'mobile'),
-        officePhone: cell(row, headerIndex, 'officePhone'),
-        fax: cell(row, headerIndex, 'fax'),
-      })
-    }
-
-    if (result.length === 0) {
-      error.value = t('crm.components.importModal.errorNoRows')
-      return
-    }
+    const result = parsed.rows
 
     // Tax ID lookups hit the server (not the capped companies cache), so a
     // second file picked while they run must not overwrite this one's preview.
@@ -348,25 +222,11 @@ const onFileChange = async (event: Event) => {
       newCompanies,
       existingCompanies,
       newContacts,
-      skipped: dataRows.length - result.length,
+      skipped: parsed.skipped,
     }
   } catch {
     error.value = t('crm.components.importModal.errorParseFailed')
   }
-}
-
-const buildNotes = (row: ParsedRow) => {
-  const lines: string[] = []
-  // Only what didn't land in a Company field of its own.
-  if (row.postalCode && !row.validPostalCode) lines.push(`รหัสไปรษณีย์: ${row.postalCode}`)
-  if (row.taxId && !row.validTaxId) lines.push(`เลขผู้เสียภาษี: ${row.taxId}`)
-  if (row.branchName && !(row.validBranchCode === HEAD_OFFICE_BRANCH_CODE && row.branchName.includes(HEAD_OFFICE_LABEL))) {
-    lines.push(`สำนักงาน/สาขา: ${row.branchName}${row.branchCode ? ` (${row.branchCode})` : ''}`)
-  }
-  if (row.officePhone) lines.push(`เบอร์สำนักงาน: ${row.officePhone}`)
-  if (row.fax) lines.push(`เบอร์โทรสาร: ${row.fax}`)
-  lines.push('นำเข้าจาก FlowAccount')
-  return lines.join('\n')
 }
 
 // Re-entry guard for the sequential create loop below: without it, a double
@@ -386,14 +246,9 @@ const rowFailureText = (err: unknown): string | null => {
   if (!fields || Object.keys(fields).length === 0) return getApiErrorMessage(err, t('global.genericError'))
   return Object.entries(fields).map(([field, codes]) => {
     const labelKey = `crm.components.importModal.fields.${field}`
-    const codeKey = `global.apiFieldError.${codes?.[0] ?? 'invalid'}`
-    return `${te(labelKey) ? t(labelKey) : field}: ${te(codeKey) ? t(codeKey) : t('global.apiFieldError.invalid')}`
+    return `${te(labelKey) ? t(labelKey) : field}: ${apiFieldErrorMessage(codes?.[0], t, te)}`
   }).join(' ')
 }
-
-const duplicateFieldsText = (fields: string[]) => fields.length > 0
-  ? fields.map(f => t(`crm.components.duplicateConflict.fields.${f}`)).join(t('crm.components.duplicateConflict.and'))
-  : t('crm.components.duplicateConflict.fields.email_or_phone')
 
 const onConfirm = async () => {
   if (importing.value) return
@@ -401,11 +256,11 @@ const onConfirm = async () => {
   let companiesCreated = 0
   let contactsCreated = 0
   const rowErrors: ImportRowError[] = []
-  const fail = (row: ParsedRow, message: string) => rowErrors.push({ row: row.sheetRow, name: row.name, message })
+  const fail = (row: FlowAccountRow, message: string) => rowErrors.push({ row: row.sheetRow, name: row.name, message })
 
   try {
     for (const row of parsedRows.value) {
-      const tag = RECORD_TYPE_TAG[row.recordType] || row.recordType
+      const tag = flowAccountTag(row)
 
       let company = findExistingCompany(row)
       if (!company) {
@@ -417,10 +272,10 @@ const onConfirm = async () => {
             revenue_size: '',
             website: '',
             tags: tag ? [tag] : [],
-            notes: buildNotes(row),
+            notes: flowAccountNotes(row),
             status: 'active',
             legal_name: null,
-            address: joinAddress(row) || null,
+            address: flowAccountAddress(row) || null,
             tax_id: row.validTaxId || null,
             branch_code: row.validBranchCode || null,
             postal_code: row.validPostalCode || null,
@@ -476,7 +331,7 @@ const onConfirm = async () => {
             // the row is listed so the user can check the existing one.
             const duplicate = getDuplicateConflict(err)
             if (duplicate) {
-              fail(row, t('crm.components.importModal.rowDuplicateContact', { contact: row.contactName, fields: duplicateFieldsText(duplicate.fields) }))
+              fail(row, t('crm.components.importModal.rowDuplicateContact', { contact: row.contactName, fields: duplicateFieldsLabel(duplicate.fields, t) }))
               continue
             }
             const message = rowFailureText(err)
