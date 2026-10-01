@@ -828,6 +828,16 @@ interface PaymentPayload {
   allow_overpayment?: boolean
 }
 
+// Query for GET /payments/export (CSV, Admin/Sales Manager): paid-date range
+// as YYYY-MM-DD (inclusive), and the optional record/method filters.
+interface PaymentsExportParams {
+  date_from?: string
+  date_to?: string
+  deal_id?: number
+  company_id?: number
+  method?: PaymentMethod
+}
+
 // A planned installment on a Deal's payment schedule, defined before money
 // actually arrives — distinct from Payment above, which only records money
 // already received. No status is stored on the row itself; GET

@@ -145,6 +145,7 @@ export default {
     confirmQuoteStatusConfirm: 'Change status',
     paymentsTitle: 'Payments',
     addPayment: 'Add Payment',
+    exportPayments: 'Export CSV',
     noPayments: 'No payments recorded for this deal yet.',
     totalPaid: 'Total Paid',
     totalWht: 'Withholding Tax',

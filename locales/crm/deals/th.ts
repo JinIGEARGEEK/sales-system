@@ -145,6 +145,7 @@ export default {
     confirmQuoteStatusConfirm: 'เปลี่ยนสถานะ',
     paymentsTitle: 'การชำระเงิน',
     addPayment: 'เพิ่มการชำระเงิน',
+    exportPayments: 'ส่งออก CSV',
     noPayments: 'ยังไม่มีการชำระเงินสำหรับ Deal นี้',
     totalPaid: 'ยอดชำระแล้ว',
     totalWht: 'ภาษีหัก ณ ที่จ่าย',

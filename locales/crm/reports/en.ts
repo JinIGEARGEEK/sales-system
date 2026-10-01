@@ -181,6 +181,7 @@ export default {
     cardTitle: 'Outstanding Balance',
     cardDescription: 'Won deals that still owe money — who owes what.',
     pageTitle: 'Outstanding Balance',
+    exportPayments: 'Export payments (CSV)',
     heading: 'Outstanding Balance',
     subheading: 'Won deals that still owe money: the receivable (the accepted quote incl. VAT, else the deal value) less cash received and withholding tax.',
     filterSalesRep: 'Sales Rep',

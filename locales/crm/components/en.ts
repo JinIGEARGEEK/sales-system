@@ -418,4 +418,17 @@ export default {
     createAnyway: 'Create anyway',
     dismiss: 'Keep editing',
   },
+  // "Export payments (CSV)" — GET /payments/export.
+  paymentsExportModal: {
+    title: 'Export payments (CSV)',
+    description: 'Payments received in the date range (by paid date). Leave a date empty for no limit.',
+    dateFrom: 'Paid from',
+    dateTo: 'Paid to',
+    method: 'Method',
+    allMethods: 'All methods',
+    cancel: 'Cancel',
+    export: 'Export',
+    invalidRange: 'The end date must be on or after the start date.',
+    invalidFilters: 'These export filters are not valid.',
+  },
 }

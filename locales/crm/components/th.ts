@@ -410,4 +410,17 @@ export default {
     createAnyway: 'สร้างต่อไป',
     dismiss: 'แก้ไขต่อ',
   },
+  // "Export payments (CSV)" — GET /payments/export.
+  paymentsExportModal: {
+    title: 'ส่งออกรายการชำระเงิน (CSV)',
+    description: 'รายการชำระเงินที่ได้รับในช่วงวันที่ (ตามวันที่ชำระ) เว้นว่างไว้หากไม่ต้องการจำกัด',
+    dateFrom: 'ชำระตั้งแต่',
+    dateTo: 'ชำระถึง',
+    method: 'ช่องทางชำระ',
+    allMethods: 'ทุกช่องทาง',
+    cancel: 'ยกเลิก',
+    export: 'ส่งออก',
+    invalidRange: 'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น',
+    invalidFilters: 'ตัวกรองการส่งออกไม่ถูกต้อง',
+  },
 }
