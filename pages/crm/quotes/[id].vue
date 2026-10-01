@@ -256,7 +256,6 @@
         @confirm="onConfirmSend"
       />
 
-      <CrmDealValueSyncModal :sync="dealValueSync" />
 
       <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
     </div>
@@ -478,9 +477,9 @@ const buildUpdatePayload = (statusOverride?: QuoteStatus): QuoteUpdatePayload =>
   internal_notes: form.internal_notes || null,
 })
 
-// Moving the Quote to Accepted offers to update the Deal's value to match it
-// (pre-VAT — see quoteRevenueAmount).
-const dealValueSync = useQuoteDealValueSync()
+// Moving the Quote into (or out of) Accepted re-syncs the Deal's value
+// server-side; re-read the Deal so it shows the new value.
+const dealValueRefresh = useQuoteDealValueRefresh()
 
 const supersede = useSupersedeAcceptedQuotes()
 
@@ -501,7 +500,7 @@ const onSave = guard(async () => {
       : await quotesStore.update(current.id, buildUpdatePayload())
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
-    if (!wasAccepted && updated.status === 'accepted') dealValueSync.offer(updated, deal.value)
+    await dealValueRefresh.afterQuoteStatusChange(updated.deal_id, current.status, updated.status)
   } catch (err) {
     reportSaveError(err)
   }

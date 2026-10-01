@@ -324,6 +324,13 @@ interface Deal {
   // every move into won, cleared on a reopen. What the dashboard counts "won
   // this period" by. Read-only, never sent.
   won_at?: string | null
+  // The Accepted Quote this Deal's value follows, and its number — server-set,
+  // read-only, never sent. While set, `value` is that quote's pre-VAT amount
+  // and PUT /deals/:id with a different value is 422 value
+  // ["synced_from_quote"]; null when no quote is Accepted. Optional only so
+  // create payloads (Omit<Deal, ...>) needn't carry them.
+  value_quote_id?: number | null
+  value_quote_number?: string | null
   // Present only on trash-listing responses (GET /deals/trash) — absent (undefined) elsewhere.
   deleted_at?: Date | null
   created_at: Date

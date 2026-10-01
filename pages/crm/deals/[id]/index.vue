@@ -13,7 +13,21 @@
         <Form @submit="onSave">
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.title" :label="t('crm.deals.detail.dealTitle')" name="title" rules="required" />
-            <InputText v-model="form.value" :label="t('crm.deals.detail.dealValue')" thousands :decimals="2" name="value" rules="required" data-cy="deal-value-input" />
+            <!-- While an Accepted quote drives the value (value_quote_id), the
+                 API owns it: read-only here, with a link to that quote. -->
+            <div>
+              <InputText
+                v-model="form.value"
+                :label="t('crm.deals.detail.dealValue')"
+                thousands
+                :decimals="2"
+                name="value"
+                rules="required"
+                :disable="valueFromQuote"
+                data-cy="deal-value-input"
+              />
+              <CrmDealValueQuoteHint :deal="deal" class="mt-1" />
+            </div>
             <InputSelect v-model="form.stage" :options="pipelineStagesStore.activeOptions" :label="t('crm.deals.detail.stage')" name="stage" rules="required" />
             <div>
               <InputText
@@ -194,6 +208,8 @@ const probabilityColor = computed<'neutral' | 'info' | 'warning' | 'success'>(()
 })
 
 const { dealId, deal } = useCurrentDeal()
+// The value follows the Deal's Accepted quote (server-side sync): read-only.
+const valueFromQuote = computed(() => Boolean(deal.value?.value_quote_id))
 const linkedProject = computed(() => projectsStore.forDeal(dealId))
 
 // FR-CRM-045's Won gate — surfaced here proactively (instead of only as a
@@ -326,6 +342,8 @@ watch(deal, (value) => {
     form.probability = value.probability ?? pipelineStagesStore.defaultProbability(value.stage) ?? undefined
     form.lost_reason = value.lost_reason || ''
     form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
+    // A quote-synced value isn't the user's to keep: it follows the quote.
+    if (value.value_quote_id) form.value = value.value
     nextTick(() => { hydrating = false })
     if (stageChanged) info(t('crm.deals.detail.stageChangedKeptEdits', { stage: value.stage }))
     return

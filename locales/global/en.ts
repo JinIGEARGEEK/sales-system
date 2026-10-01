@@ -79,6 +79,7 @@ const lang = {
     duplicate: 'A record with this value already exists.',
     not_found: 'Not found.',
     exceeds_receivable: 'This is more than the customer still owes.',
+    synced_from_quote: 'The value follows the accepted quote. Change the quote instead.',
   },
   sessionExpired: 'Your session has expired. Please sign in again.',
   unsavedChangesConfirm: 'You have unsaved changes. Leave this page and discard them?',
