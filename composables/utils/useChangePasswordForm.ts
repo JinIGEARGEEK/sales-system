@@ -1,5 +1,4 @@
 import { useI18n } from 'vue-i18n'
-import { isAxiosError } from 'axios'
 import type { SubmissionContext } from 'vee-validate'
 
 interface ChangePasswordPayload {
@@ -57,8 +56,7 @@ export const useChangePasswordForm = (onSuccess?: () => unknown) => {
       // input only gets the generic "not valid" text and the reason lives in
       // the API's message.
       if (values && context) showFieldErrors(err, context.setErrors, values, { fieldMap: PASSWORD_FIELD_MAP })
-      const message = isAxiosError(err) ? err.response?.data?.error?.message : undefined
-      error(message || t('global.auth.changePasswordFailed'))
+      error(getApiErrorMessage(err, t('global.auth.changePasswordFailed')))
     }
   })
 
