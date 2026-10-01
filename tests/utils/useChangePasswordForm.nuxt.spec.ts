@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { SubmissionContext } from 'vee-validate'
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
@@ -60,5 +61,22 @@ describe('useChangePasswordForm', () => {
 
     expect(localStorage.getItem('access_token')).toBe('old-token')
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  it('puts a 422\'s fields on the matching camelCase inputs', async () => {
+    mockPost().mockRejectedValue(Object.assign(new Error('422'), {
+      isAxiosError: true,
+      response: {
+        status: 422,
+        data: { error: { code: 'VALIDATION_ERROR', message: 'new_password must be different from current password', fields: { new_password: ['must be different from current password'] } } },
+      },
+    }))
+    const { state, submit } = useChangePasswordForm()
+    fill(state)
+    const setErrors = vi.fn()
+
+    await submit({ ...state }, { setErrors } as unknown as SubmissionContext)
+
+    expect(setErrors).toHaveBeenCalledWith({ newPassword: expect.any(String) })
   })
 })

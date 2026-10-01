@@ -21,9 +21,19 @@
   }
 }
 
+/*
+ * 400 (Regular), not 300 (Light): Light Prompt at the app's 12–14px sizes
+ * renders thin enough to hurt legibility, on the gray secondary text most of
+ * all. Set on body (inherited) rather than `*`, so it no longer overrides
+ * the browser's own bold for <b>/<strong>/<th> and only applies where
+ * nothing else sets a weight.
+ */
 * {
   font-family: "Prompt", sans-serif;
-  font-weight: 300;
+}
+
+body {
+  font-weight: 400;
 }
 
 button,
@@ -119,7 +129,13 @@ summary {
   --color-white: #FFFFFF;
   --color-light-gray-1: #F4F7FD;
   --color-light-gray-2: #D7DEF0;
-  --color-gray: #7C89A8;
+  /*
+   * Secondary text color. #5F6B88 (was #7C89A8, ~3.5:1) keeps the same blue
+   * hue but reaches ~5.4:1 on white and ~4.9:1 on --color-content-bg — WCAG AA
+   * for body-size text. --color-card-border is mixed from this token, so card
+   * edges got slightly firmer with it.
+   */
+  --color-gray: #5F6B88;
   --color-dark-gray: #4B5875;
   --color-black: #1B2233;
 
@@ -201,9 +217,16 @@ summary {
   --ui-text: var(--color-black);
   --ui-text-highlighted: var(--color-black);
 
-  /* Focus/Hover Color Kit */
-  --color-focus: var(--color-warning-toast);
-  --color-focus-light: #FDE68A;
+  /*
+   * Focus/Hover Color Kit. The focus ring must reach 3:1 against what's
+   * around it (WCAG 1.4.11): the brand yellow is only ~1.6:1 on white, so
+   * light surfaces use the info blue (~5:1 on white, ~4.6:1 on
+   * --color-content-bg). The dark sidebar/topbar keep the yellow, which is
+   * what reads there — they opt in with the `.dark-surface` class below,
+   * which re-points these tokens for everything inside them.
+   */
+  --color-focus: var(--color-info-toast);
+  --color-focus-light: color-mix(in srgb, var(--color-info-toast) 45%, white);
 
   /* Toast Color Kit */
   --color-success-toast: #07B53B;
@@ -214,6 +237,16 @@ summary {
   --color-info-toast-bg: #EAF1F6;
   --color-warning-toast-bg: #FEF9E7;
   --color-danger-toast-bg: #FAEEEF;
+
+  /*
+   * Text-safe variants of the toast colors. The toast greens/reds are
+   * accents (icons, chips, bars) and fall short as text: #07B53B is ~2.9:1
+   * and #F17575 ~2.8:1 on white. Use these for any status-colored *text*
+   * (error messages, a healthy/below-target KPI value) — same hues, ≥4.5:1
+   * on white and --color-content-bg.
+   */
+  --color-success-text: #0A7A2F;
+  --color-danger-text: #C0392B;
 
   /** FONT SECTION **/
   /* Desktop Font Style */
@@ -301,8 +334,8 @@ summary {
  * `focus-visible:ring-{color}` / `focus-visible:outline-{color}`, and this
  * app's components default to `color="primary"` — a dark navy that barely
  * stands out against the light backgrounds used throughout. Retarget only
- * the primary-colored ring/outline utilities to the brighter --color-focus
- * yellow on focus, instead of touching every component file individually.
+ * the primary-colored ring/outline utilities to --color-focus (blue on
+ * light surfaces, yellow inside `.dark-surface`) on focus, instead of touching every component file individually.
  * Scoped to `ring-primary`/`outline-primary` specifically (substring match,
  * so it still catches opacity modifiers like `ring-primary/70`) so that
  * error/success/warning rings — form validation, destructive actions —
@@ -312,6 +345,17 @@ summary {
 [class*="focus-visible:outline-primary"]:focus-visible {
   --tw-ring-color: var(--color-focus) !important;
   outline-color: var(--color-focus) !important;
+}
+
+/*
+ * Dark chrome (layouts/default.vue's sidebar and topbar): the yellow focus
+ * ring reads best on the near-black background, so re-point the focus
+ * tokens for everything inside. Custom properties inherit, so every
+ * `ring-(--color-focus)` and the primary-ring retarget above follow it.
+ */
+.dark-surface {
+  --color-focus: var(--color-warning-toast);
+  --color-focus-light: #FDE68A;
 }
 
 /*

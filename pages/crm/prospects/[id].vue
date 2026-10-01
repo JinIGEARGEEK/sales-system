@@ -177,6 +177,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { BUSINESS_UNIT_OPTIONS } from '~/constants/mockData'
 import { PROSPECT_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 
@@ -185,7 +186,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.prospects.detail.pageTitle') })
 
 const route = useRoute()
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
 // Matches the backend's RequireRoles(Admin, Marketing, Sales Manager) gate on
@@ -300,8 +301,9 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 )
 
 const { loading, guard } = useSubmitGuard()
+const showFieldErrors = useApiFieldErrors()
 
-const onSave = guard(async () => {
+const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!prospect.value) return
   try {
     await prospectsStore.update(prospect.value.id, {
@@ -322,7 +324,7 @@ const onSave = guard(async () => {
     markClean()
     success(t('crm.prospects.detail.updateSuccess'))
   } catch (err) {
-    error(getApiErrorMessage(err, t('global.genericError')))
+    if (!showFieldErrors(err, setErrors, values)) error(getApiErrorMessage(err, t('global.genericError')))
   }
 })
 
@@ -341,9 +343,27 @@ const onConvert = async () => {
     markClean()
     navigateTo(`/crm/leads/${lead.id}`)
   } catch (err) {
+    if (getApiErrorCode(err) === 'CONFLICT' && await showAlreadyConverted()) return
     error(getApiErrorMessage(err, t('global.genericError')))
   } finally {
     closeConvertConfirm()
+  }
+}
+
+// A 409 means someone else converted it since this page loaded. Refetching
+// swaps the Convert button for View Lead; the toast links there too. Resolves
+// false when the refetch doesn't show a Lead, so the caller toasts as usual.
+const showAlreadyConverted = async (): Promise<boolean> => {
+  try {
+    const { converted_lead_id: leadId } = await prospectsStore.fetchOne(prospectId)
+    if (!leadId) return false
+    warning(t('crm.prospects.detail.alreadyConverted'), {
+      label: t('crm.prospects.detail.viewLead'),
+      onClick: () => navigateTo(`/crm/leads/${leadId}`),
+    })
+    return true
+  } catch {
+    return false
   }
 }
 

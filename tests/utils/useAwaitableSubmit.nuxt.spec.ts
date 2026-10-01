@@ -4,13 +4,13 @@ import { defineComponent, h } from 'vue'
 
 // Mounts a throwaway dialog-like component that wires useAwaitableSubmit the
 // way the modals do, with `onSubmit` bound as the caller's listener.
-const mountWith = (onSubmit: (...args: unknown[]) => unknown) => {
+const mountWith = (onSubmit: (...args: unknown[]) => unknown, onFailure?: (error: unknown) => void) => {
   const close = vi.fn()
   let submitAndClose!: (...args: unknown[]) => Promise<boolean>
   const Dialog = defineComponent({
     emits: ['submit'],
     setup() {
-      submitAndClose = useAwaitableSubmit(close)
+      submitAndClose = useAwaitableSubmit(close, 'submit', onFailure)
       return () => h('div')
     },
   })
@@ -42,5 +42,22 @@ describe('useAwaitableSubmit', () => {
     const { close, submit } = mountWith(async () => { throw new Error('boom') })
     await expect(submit()).rejects.toThrow('boom')
     expect(close).not.toHaveBeenCalled()
+  })
+
+  it('stays open and hands a submitFailure\'s error to onFailure (e.g. 422 field errors)', async () => {
+    const err = new Error('422')
+    const onFailure = vi.fn()
+    const { close, submit } = mountWith(() => submitFailure(err), onFailure)
+    await expect(submit()).resolves.toBe(false)
+    expect(onFailure).toHaveBeenCalledWith(err)
+    expect(close).not.toHaveBeenCalled()
+  })
+
+  it('still closes when a handler resolves some other value (e.g. the created record)', async () => {
+    const onFailure = vi.fn()
+    const { close, submit } = mountWith(() => ({ id: 1 }), onFailure)
+    await expect(submit()).resolves.toBe(true)
+    expect(close).toHaveBeenCalledOnce()
+    expect(onFailure).not.toHaveBeenCalled()
   })
 })

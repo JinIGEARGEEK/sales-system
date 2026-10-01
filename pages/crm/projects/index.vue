@@ -314,7 +314,7 @@ const {
   editing: editingProject,
   openAdd: openAddProject,
   openEdit: openEditProject,
-  onSave: onSaveProject,
+  onSubmit: onSaveProject,
 } = useProjectModal(null, 'crm.projects.index.addProjectSuccess', 'crm.projects.index.updateProjectSuccess')
 
 const {

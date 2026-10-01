@@ -49,13 +49,14 @@ describe('useLogActivity', () => {
     expect(useTasksStore().items).toHaveLength(1)
   })
 
-  it('resolves false (keep the modal open) when the activity fails, without creating the task', async () => {
-    const post = mockPost().mockRejectedValue(new Error('boom'))
+  it('resolves a submitFailure (keep the modal open, mark its fields) when the activity fails, without creating the task', async () => {
+    const failure = new Error('boom')
+    const post = mockPost().mockRejectedValue(failure)
     const { logActivity } = useLogActivity()
 
     const saved = await logActivity('deal', 7, { type: 'call', subject: 'Intro call', notes: '', followUp: { title: 'x', due_date: new Date() } }, 'Activity logged')
 
-    expect(saved).toBe(false)
+    expect(saved).toEqual(submitFailure(failure))
     expect(post).toHaveBeenCalledTimes(1)
   })
 

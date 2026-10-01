@@ -214,7 +214,7 @@ const shownGroups = computed(() => visibleGroups.value.filter(group => group.tot
 
 // Red only for Overdue; Today gets the primary accent; the rest stay neutral.
 const GROUP_ACCENT: Record<TaskGroupKey, { heading: string, badge: 'error' | 'primary' | 'neutral' | 'success', icon: string }> = {
-  overdue: { heading: 'border-(--color-danger-toast) text-(--color-danger-toast)', badge: 'error', icon: 'material-symbols:warning-outline' },
+  overdue: { heading: 'border-(--color-danger-toast) text-(--color-danger-text)', badge: 'error', icon: 'material-symbols:warning-outline' },
   today: { heading: 'border-(--color-primary) text-(--color-primary)', badge: 'primary', icon: 'material-symbols:today-outline' },
   upcoming: { heading: 'border-(--color-light-gray-2) text-(--color-black)', badge: 'neutral', icon: 'material-symbols:event-upcoming-outline' },
   done: { heading: 'border-(--color-light-gray-2) text-(--color-gray)', badge: 'neutral', icon: 'material-symbols:check-circle-outline' },
@@ -273,7 +273,7 @@ const onSubmitTask = async (payload: { title: string, description: string, due_d
     success(t('crm.tasks.index.addTaskSuccess'))
   } catch (err) {
     notifyApiError(err)
-    return false
+    return submitFailure(err)
   }
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).
@@ -287,7 +287,7 @@ const onUpdateTask = async (payload: { title: string, description: string, due_d
     success(t('crm.tasks.index.editTaskSuccess'))
   } catch (err) {
     notifyApiError(err)
-    return false
+    return submitFailure(err)
   }
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).

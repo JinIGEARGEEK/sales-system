@@ -23,7 +23,11 @@ interface UseModalFormOptions {
 // parent's handler resolved) is never asked about.
 export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm: () => T, options: UseModalFormOptions = {}) => {
   const form = reactive(emptyForm()) as T
-  const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
+  const formRef = ref<{
+    validate: () => Promise<{ valid: boolean }>
+    setErrors: (errors: Record<string, string>) => void
+    getValues: () => Record<string, unknown>
+  } | null>(null)
   const { loading, guard } = useSubmitGuard()
   const overlay = useOverlay()
 
@@ -60,6 +64,15 @@ export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm:
     if (await confirmDiscard()) emitOpen(false)
   }
 
+  // Pass as useAwaitableSubmit's `onFailure`: puts a 422's `error.fields`
+  // from the parent's submitFailure() onto this dialog's inputs (the parent
+  // has already toasted). `fieldMap` renames API fields to Field names.
+  const showFieldErrors = useApiFieldErrors()
+  const showApiFieldErrors = (err: unknown, fieldMap: Record<string, string> = {}) => {
+    if (!formRef.value) return
+    showFieldErrors(err, formRef.value.setErrors, formRef.value.getValues(), fieldMap)
+  }
+
   const validateThenSubmit = async (onValid: () => void) => {
     const result = await formRef.value?.validate()
     if (result?.valid) onValid()
@@ -71,5 +84,5 @@ export const useModalForm = <T extends object>(isOpen: () => boolean, emptyForm:
   // (and its click-only loadingAuto) entirely, so the guard has to live on
   // the submit function itself to cover both trigger paths with one `loading`
   // ref. Bind that `loading` to the footer button's `:loading` explicitly.
-  return { form, formRef, validateThenSubmit, loading, guard, guardDismiss, isDirty, markClean }
+  return { form, formRef, validateThenSubmit, showApiFieldErrors, loading, guard, guardDismiss, isDirty, markClean }
 }

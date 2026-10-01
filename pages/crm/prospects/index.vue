@@ -160,7 +160,7 @@ const { t } = useI18n()
 useHead({ title: t('crm.prospects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { success, error } = useNotify()
+const { success, error, warning } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
 const { companyLabelById } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
@@ -367,7 +367,28 @@ const onConvert = async (row: Prospect) => {
     success(t('crm.prospects.index.prospectConvertedToLead'))
     navigateTo(`/crm/leads/${lead.id}`)
   } catch (err) {
+    if (getApiErrorCode(err) === 'CONFLICT' && await showAlreadyConverted(row.id)) return
     error(getApiErrorMessage(err, t('global.genericError')))
+  }
+}
+
+// A 409 means someone else converted it since this list loaded. Refetching
+// swaps the row's Convert action for View Lead (and drops it from the
+// Kanban cache, which excludes converted Prospects); the toast links to the
+// Lead too. Resolves false when the refetch doesn't show a Lead, so the
+// caller toasts as usual.
+const showAlreadyConverted = async (id: number): Promise<boolean> => {
+  try {
+    const { converted_lead_id: leadId } = await prospectsStore.fetchOne(id)
+    if (!leadId) return false
+    warning(t('crm.prospects.index.alreadyConverted'), {
+      label: t('crm.prospects.index.actions.viewLead'),
+      onClick: () => navigateTo(`/crm/leads/${leadId}`),
+    })
+    Promise.all([fetch(), prospectsStore.fetchAll({ exclude_converted: true })]).catch(notifyApiError)
+    return true
+  } catch {
+    return false
   }
 }
 

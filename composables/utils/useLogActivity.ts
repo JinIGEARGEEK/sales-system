@@ -6,8 +6,9 @@ import { useI18n } from 'vue-i18n'
 // (useActivityList for the detail pages, /crm/activities, the Overview
 // Pipeline side panel) so the follow-up behaves the same everywhere.
 //
-// Resolves `false` only when the activity itself failed, which keeps the
-// modal open with the form intact (useAwaitableEmit). A follow-up that fails
+// Resolves a submitFailure() only when the activity itself failed, which
+// keeps the modal open with the form intact and its 422 fields on the inputs
+// (useAwaitableSubmit). A follow-up that fails
 // after the activity saved still resolves `true`: the activity exists, so a
 // second Save would log it twice — the error toast says the task is missing.
 export const useLogActivity = () => {
@@ -23,7 +24,7 @@ export const useLogActivity = () => {
     relatedId: number,
     payload: ActivityFormSubmit,
     successMessage: string,
-  ): Promise<boolean> => {
+  ): Promise<boolean | SubmitFailure> => {
     try {
       await activitiesStore.add({
         type: payload.type,
@@ -35,7 +36,7 @@ export const useLogActivity = () => {
       })
     } catch (err) {
       notifyApiError(err)
-      return false
+      return submitFailure(err)
     }
 
     if (!payload.followUp) {

@@ -34,7 +34,7 @@
         :tooltip="t('crm.dashboard.winRateTooltip')"
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
         :icon-bg-class="winRate >= 50 ? 'bg-(--color-success-toast)/25' : 'bg-(--color-gray)/25'"
-        :value-class="winRate >= 50 ? 'text-(--color-success-toast)' : 'text-(--color-black)'"
+        :value-class="winRate >= 50 ? 'text-(--color-success-text)' : 'text-(--color-black)'"
         :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-gray)/20 to-transparent'"
       >
         {{ winRate }}%
@@ -104,8 +104,8 @@
         :tooltip="t('crm.dashboard.annualRevenueGoalTooltip')"
         :icon="isAnnualGoalOnTrack ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
         :icon-bg-class="isAnnualGoalOnTrack ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
-        :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
+        :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
+        :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-text)' : 'text-(--color-danger-text)'"
         :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent'"
       >
         {{ annualGoalProgressPercent }}%
@@ -123,7 +123,10 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const { currencyCompact } = useFormatter()
 
-defineProps<{
+const props = defineProps<{
+  // GET /dashboard/summary still pending with nothing loaded yet — every
+  // card shows a skeleton instead of ฿0 / 0%.
+  loading?: boolean
   openPipelineValue: number
   forecastedRevenue: number
   winRate: number
@@ -139,4 +142,6 @@ defineProps<{
   annualRevenueActual: number
   annualRevenueGoal: number
 }>()
+
+provideStatCardLoading(computed(() => props.loading))
 </script>

@@ -87,7 +87,7 @@ const emptyForm = () => ({
   follow_up_due_date: toDateInputValue(addDays(new Date(), FOLLOW_UP_DUE_DAYS)),
 })
 
-const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, showApiFieldErrors, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 // The follow-up title tracks the subject ("Follow up: <subject>") until the
 // user types their own title.
@@ -106,8 +106,9 @@ const toCreatedAt = (value: string) =>
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler
-// resolves `false` or throws.
-const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false))
+// resolves `false`/submitFailure() or throws. The API validates the date as
+// `created_at` (not in the future), shown on this form's Date input.
+const submitAndClose = useAwaitableSubmit(() => onUpdateOpen(false), 'submit', (err: unknown) => showApiFieldErrors(err, { created_at: 'date' }))
 const onSubmit = guard(async () => {
   await submitAndClose({
     type: form.type,

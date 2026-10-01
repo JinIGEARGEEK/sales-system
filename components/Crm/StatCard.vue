@@ -9,7 +9,7 @@
     :aria-pressed="isToggle ? active : undefined"
     :class="isToggle || to ? 'block w-full text-left transition-shadow hover:shadow-md' : ''"
   >
-    <UCard class="relative h-full overflow-hidden" :class="active ? 'ring-2 ring-(--color-primary)' : ''" :ui="{ body: 'p-3' }">
+    <UCard class="relative h-full overflow-hidden" :class="active ? 'ring-2 ring-(--color-primary)' : ''" :ui="{ body: 'p-3' }" :aria-busy="isLoading || undefined">
       <div
         v-if="accentGlassClass"
         class="absolute inset-y-0 left-0 w-1/2 backdrop-blur-md"
@@ -23,10 +23,25 @@
               <p class="truncate text-xs font-medium text-(--color-dark-gray)" :title="label">{{ label }}</p>
             </slot>
             <UTooltip v-if="tooltip" :text="tooltip">
-              <UIcon name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
+              <!-- Focusable, so the explanation is reachable by keyboard. Not
+              inside a toggle/link card's own <button>/<a> — nested
+              interactive content is invalid there; the label's `title` and
+              the card itself carry the meaning. -->
+              <button
+                v-if="!isToggle && !to"
+                type="button"
+                class="inline-flex shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-focus)"
+                :aria-label="label ? t('global.infoAbout', { name: label }) : tooltip"
+              >
+                <UIcon name="material-symbols:info-outline" class="size-3 text-(--color-gray)" aria-hidden="true" />
+              </button>
+              <UIcon v-else name="material-symbols:info-outline" class="size-3 shrink-0 text-(--color-gray)" />
             </UTooltip>
           </div>
-          <p class="mt-0.5 text-xl font-medium" :class="valueClass">
+          <!-- While loading, a skeleton instead of the slot — a value computed
+          from not-yet-loaded data reads as a real ฿0 / 0%. -->
+          <USkeleton v-if="isLoading" class="mt-1.5 mb-1 h-5 w-20" />
+          <p v-else class="mt-0.5 text-xl font-medium" :class="valueClass">
             <slot />
           </p>
           <!-- `reserveHintSpace` (opt-in, not global): reserves this line's
@@ -41,7 +56,7 @@
             class="mt-0.5 text-[11px] leading-tight"
             :class="[hintClass, { 'min-h-3.5': reserveHintSpace }]"
           >
-            <slot name="hint" />
+            <slot v-if="!isLoading" name="hint" />
           </p>
         </div>
         <div v-if="icon" class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="iconBgClass">
@@ -53,6 +68,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   // Required unless the `#label` slot is used instead.
   label: {
@@ -125,7 +144,16 @@ const props = defineProps({
     type: Boolean,
     default: undefined,
   },
+  // Shows a skeleton in place of the value (and hides the hint). Also
+  // inherited from a parent grid's provideStatCardLoading().
+  loading: {
+    type: Boolean,
+    default: false,
+  },
 })
+
+const groupLoading = injectStatCardLoading()
+const isLoading = computed(() => props.loading || groupLoading.value)
 
 const isToggle = computed(() => props.active !== undefined)
 

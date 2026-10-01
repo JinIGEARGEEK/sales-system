@@ -11,13 +11,16 @@
   >
     <template #body>
       <div class="flex flex-col gap-4">
+        <!-- sr-only, not `hidden`: a display:none input can't take focus, so
+        the picker was mouse-only. The label stays the visible target and
+        shows the focus ring for it. -->
         <label
-          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1)"
+          class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-(--color-light-gray-2) p-6 text-center hover:bg-(--color-light-gray-1) has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-(--color-focus)"
         >
           <UIcon name="material-symbols:upload-file-outline" class="size-8 text-(--color-gray)" />
           <span class="text-sm font-medium">{{ fileName || t('crm.components.importModal.chooseFile') }}</span>
           <span class="text-xs text-(--color-gray)">{{ t('crm.components.importModal.acceptedFormats') }}</span>
-          <input type="file" accept=".csv,.xls,.xlsx" class="hidden" :disabled="importing" @change="onFileChange" >
+          <input type="file" accept=".csv,.xls,.xlsx" class="sr-only" :disabled="importing" @change="onFileChange" >
         </label>
 
         <UAlert

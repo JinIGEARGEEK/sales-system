@@ -32,6 +32,24 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
     firstOpenStageName: (state): string => [...state.items]
       .filter(s => s.is_active && !s.is_won_stage && !s.is_lost_stage)
       .sort((a, b) => a.sort_order - b.sort_order)[0]?.name ?? 'Lead',
+    // Won/Lost by the stage row's flag, so a renamed Won/Lost stage still
+    // counts; the seeded literal name only before the row has loaded.
+    isWonStage: state => (name: string): boolean => state.items.find(s => s.name === name)?.is_won_stage ?? name === 'Won',
+    isLostStage: state => (name: string): boolean => state.items.find(s => s.name === name)?.is_lost_stage ?? name === 'Lost',
+    // The status a Deal takes in this stage — mirrors the backend's
+    // resolveDealStatus for a Won/Lost-flagged stage.
+    statusForStage (): (name: string) => DealStatus {
+      return (name: string) => {
+        if (this.isWonStage(name)) return 'won'
+        if (this.isLostStage(name)) return 'lost'
+        return 'open'
+      }
+    },
+    // The server's default probability for this stage (PipelineStage.
+    // default_probability), or null when the row (or the field) isn't
+    // loaded — send null then and the API applies the same default itself.
+    defaultProbability: state => (name: string): number | null =>
+      state.items.find(s => s.name === name)?.default_probability ?? null,
   },
   actions: {
     async fetchAll () {
@@ -45,6 +63,7 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
       const response = await $api.post<ApiResponse<PipelineStage>>('/admin/pipeline-stages', stage)
       const created = parseDates(response.data.data)
       this.items.push(created)
+      await this.refreshDefaults()
       return created
     },
     async update (id: number, changes: PipelineStageUpdatePayload): Promise<PipelineStage> {
@@ -53,6 +72,7 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(s => s.id === id)
       if (index !== -1) this.items[index] = updated
+      await this.refreshDefaults()
       return updated
     },
     async remove (id: number) {
@@ -60,6 +80,19 @@ export const usePipelineStagesStore = defineStore('pipelineStages', {
       await $api.delete(`/admin/pipeline-stages/${id}`)
       const stage = this.items.find(s => s.id === id)
       if (stage) stage.is_active = false
+      await this.refreshDefaults()
+    },
+    // Adding, moving or (de)activating one open stage shifts every other
+    // open stage's default_probability (they interpolate across the funnel),
+    // so re-read the list after a write. Best effort: the write itself
+    // already succeeded, and a stale default only affects a form prefill the
+    // server would correct anyway.
+    async refreshDefaults () {
+      try {
+        await this.fetchAll()
+      } catch {
+        // keep the locally patched list
+      }
     },
   },
 })

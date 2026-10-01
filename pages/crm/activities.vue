@@ -220,7 +220,7 @@ const onSubmitActivity = async (payload: ActivityFormSubmit) => {
   const saved = await logActivity(payload.related_type, payload.related_id, payload, t('crm.activities.index.addActivitySuccess'))
   // Saved already — a failed reload must not keep the dialog open
   // (a second Save would create a duplicate).
-  if (saved) await fetch().catch(notifyApiError)
+  if (saved === true) await fetch().catch(notifyApiError)
   return saved
 }
 </script>

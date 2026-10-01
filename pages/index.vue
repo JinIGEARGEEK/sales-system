@@ -22,8 +22,8 @@
         :sales-rep-filter="salesRepFilter"
         :sales-rep-options="salesRepOptions"
         :company-tag-filter="companyTagFilter"
-        :filtered-count="filteredDeals.length"
-        :total-count="dealsStore.items.length"
+        :filtered-count="summary?.deals_count ?? 0"
+        :total-count="summary?.total_deals_count ?? 0"
         @update:date-range="dateRange = $event"
         @apply-preset="applyPeriodPreset"
         @update:business-unit-filter="businessUnitFilter = $event"
@@ -43,6 +43,7 @@
       alerts and the rest. -->
       <template v-if="canViewSalesPipelineWidgets">
         <DashboardPipelineOverview
+          :loading="summaryPending && !summary"
           :open-pipeline-value="openPipelineValue"
           :forecasted-revenue="forecastedRevenue"
           :win-rate="winRate"
@@ -263,7 +264,7 @@ const syncedDateRange = computed<{ start: string, end: string } | null>({
   },
 })
 
-const { dateRange, activePreset, applyPeriodPreset, isDealInRange } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES, syncedDateRange)
+const { dateRange, activePreset, applyPeriodPreset } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES, syncedDateRange)
 
 const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodAll'), value: 'all' },
@@ -302,20 +303,23 @@ const clearFilters = () => {
   companyTagFilter.value = ''
 }
 
-// Kept for the toolbar's "Showing X of Y deals" count and the "no deals match" alert
-// only — every metric widget below comes from GET /dashboard/summary instead.
-const filteredDeals = computed(() => {
-  return dealsStore.items.filter((deal) => {
-    if (!isDealInRange(deal)) return false
-    if (businessUnitFilter.value !== 'all' && deal.business_unit !== businessUnitFilter.value) return false
-    if (channelFilter.value !== 'all' && deal.channel !== channelFilter.value) return false
-    return true
-  })
-})
-
+// The toolbar's "Showing X of Y deals" comes from the summary too
+// (deals_count/total_deals_count), so it applies exactly the filters every
+// widget does — Sales Rep and Company tag included — instead of re-filtering
+// the capped deals cache client-side.
 const summary = ref<DashboardSummary | null>(null)
 
+// Filters can change faster than the summary answers (preset clicks, the
+// debounced tag box): only the latest request may land, so a slow response
+// for an older filter set can't overwrite a newer one — the same sequence
+// guard as useScopedFetch.
+let summaryRequestId = 0
+// The KPI cards show skeletons while this is true and nothing has loaded
+// yet; a later refetch keeps the previous figures on screen instead.
+const summaryPending = ref(false)
 const fetchSummary = async () => {
+  const requestId = ++summaryRequestId
+  summaryPending.value = true
   try {
     const response = await $api.get<ApiResponse<DashboardSummary>>('/dashboard/summary', {
       params: {
@@ -328,9 +332,11 @@ const fetchSummary = async () => {
         upsell_min_stale_days: upsellMinStaleDays.value,
       },
     })
-    summary.value = response.data.data
+    if (requestId === summaryRequestId) summary.value = response.data.data
   } catch (err) {
-    notifyFetchError(err)
+    if (requestId === summaryRequestId) notifyFetchError(err)
+  } finally {
+    if (requestId === summaryRequestId) summaryPending.value = false
   }
 }
 

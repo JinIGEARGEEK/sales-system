@@ -19,7 +19,7 @@
         <CrmStatCard
           :label="t('crm.reports.forecastAccuracy.accuracyLabel')"
           :icon="isAccurate(latestQuarter) ? 'material-symbols:check-circle-outline' : 'material-symbols:warning-outline'"
-          :value-class="isAccurate(latestQuarter) ? 'text-(--color-success-toast)' : 'text-(--color-warning-hover)'"
+          :value-class="isAccurate(latestQuarter) ? 'text-(--color-success-text)' : 'text-(--color-warning-hover)'"
         >
           {{ Math.round(latestQuarter.accuracy_ratio * 100) }}%
           <template #hint>{{ t('crm.reports.forecastAccuracy.accuracyHint') }}</template>

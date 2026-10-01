@@ -43,7 +43,7 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
       success(t(addedMessageKey))
     } catch (err) {
       notifyApiError(err)
-      return false
+      return submitFailure(err)
     }
   }
 
@@ -54,7 +54,7 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
       if (updatedMessageKey) success(t(updatedMessageKey))
     } catch (err) {
       notifyApiError(err)
-      return false
+      return submitFailure(err)
     }
   }
 
