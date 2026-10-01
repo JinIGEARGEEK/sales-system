@@ -43,7 +43,7 @@
                         format (rather than always assuming/prefixing "+")
                         still reads correctly for a 0 or negative weight, should
                         one ever exist. -->
-                        <span class="shrink-0 font-medium text-(--color-success-toast)">{{ formatSignedWeight(criterion.weight) }}</span>
+                        <span class="shrink-0 font-medium text-(--color-success-text)">{{ formatSignedWeight(criterion.weight) }}</span>
                       </li>
                     </ul>
                     <div class="mt-2 flex items-center justify-between border-t border-(--color-light-gray-2) pt-2 text-sm font-medium">
