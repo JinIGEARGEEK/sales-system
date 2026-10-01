@@ -16,53 +16,39 @@
           {{ displayRows.length }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.totalValue')" icon="material-symbols:payments-outline">
-          {{ t('global.currencySymbol') }}{{ priceFormatCompact(totalValueAtRisk) }}
+          {{ currencyCompact(totalValueAtRisk) }}
         </CrmStatCard>
         <CrmStatCard :label="t('crm.reports.stalledDeals.summary.oldest')" icon="material-symbols:schedule-outline">
           {{ t('crm.reports.stalledDeals.daysStalled', { days: oldestDaysStalled }) }}
         </CrmStatCard>
       </div>
 
-      <UCard class="mb-4" :ui="GLASS_PANEL_UI">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <InputText
-            v-model.number="minDays"
-            type="number"
-            :label="t('crm.reports.stalledDeals.filterMinDays')"
-            name="minDays"
-            size="xs"
-            class="w-full sm:w-80"
-          />
-          <InputSelect
-            v-model="salesRepFilter"
-            :options="salesRepOptions"
-            :label="t('crm.reports.stalledDeals.filterSalesRep')"
-            name="salesRepFilter"
-            size="xs"
-            class="w-full sm:w-56"
-          />
-          <InputText
-            v-model="companyTagFilter"
-            :label="t('crm.reports.stalledDeals.filterCompanyTag')"
-            :placeholder="t('crm.reports.stalledDeals.filterCompanyTagPlaceholder')"
-            name="companyTagFilter"
-            size="xs"
-            class="w-full sm:w-40"
-          />
-          <div v-if="hasActiveFilters" class="flex flex-col">
-            <span class="mb-1 text-sm invisible" aria-hidden="true">&nbsp;</span>
-            <UButton
-              icon="material-symbols:filter-alt-off-outline"
-              variant="outline"
-              color="neutral"
-              size="xs"
-              square
-              :aria-label="t('crm.reports.stalledDeals.clearFilters')"
-              @click="clearFilters"
-            />
-          </div>
-        </div>
-      </UCard>
+      <CrmReportFilterBar :show-clear="hasActiveFilters" :clear-label="t('crm.reports.stalledDeals.clearFilters')" @clear="clearFilters">
+        <InputText
+          v-model.number="minDays"
+          type="number"
+          :label="t('crm.reports.stalledDeals.filterMinDays')"
+          name="minDays"
+          size="xs"
+          class="w-full sm:w-80"
+        />
+        <InputSelect
+          v-model="salesRepFilter"
+          :options="salesRepOptions"
+          :label="t('crm.reports.stalledDeals.filterSalesRep')"
+          name="salesRepFilter"
+          size="xs"
+          class="w-full sm:w-56"
+        />
+        <InputText
+          v-model="companyTagFilter"
+          :label="t('crm.reports.stalledDeals.filterCompanyTag')"
+          :placeholder="t('crm.reports.stalledDeals.filterCompanyTagPlaceholder')"
+          name="companyTagFilter"
+          size="xs"
+          class="w-full sm:w-40"
+        />
+      </CrmReportFilterBar>
 
       <TableData
         v-model:page="page"
@@ -83,7 +69,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import { GLASS_PANEL_UI } from '~/constants/ui'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 
 const { t } = useI18n()
@@ -95,7 +80,7 @@ const goBack = useBackNavigation('/crm/reports')
 const { $api } = useNuxtApp()
 const { error } = useNotify()
 const { notifyApiError } = useApiErrorNotifier()
-const { priceFormatCompact, dateFormat, toBadge, severityColor } = useFormatter()
+const { dateFormat, toBadge, severityColor, currencyCompact } = useFormatter()
 const teamMembersStore = useTeamMembersStore()
 const downloadCsvBlob = useDownloadCsvBlob()
 
@@ -163,7 +148,7 @@ const { companyName } = useCompanyName()
 const displayRows = computed(() => results.value.map(row => ({
   ...row,
   company_name: companyName(row.company_name),
-  valueDisplay: `${t('global.currencySymbol')}${priceFormatCompact(row.value)}`,
+  valueDisplay: currencyCompact(row.value),
   assignedToName: teamMembersStore.nameById(row.assigned_to),
   lastActivityDisplay: dateFormat(row.last_activity_at),
   daysStalledBadge: toBadge(

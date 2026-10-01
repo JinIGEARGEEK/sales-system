@@ -83,7 +83,7 @@ import { useI18n } from 'vue-i18n'
 import { PAYMENT_METHOD_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
-const { dateFormat, priceFormat, toDateInputValue } = useFormatter()
+const { dateFormat, toDateInputValue, currency } = useFormatter()
 
 const props = defineProps<{
   open: boolean
@@ -126,7 +126,7 @@ const installmentOptions = computed<Select[]>(() => {
       label: t('crm.components.addPaymentModal.installmentOption', {
         number: numbers.get(s.installment.id),
         date: dateFormat(s.installment.due_date),
-        amount: `${t('global.currencySymbol')}${priceFormat(s.installment.amount)}`,
+        amount: currency(s.installment.amount),
       }),
       value: String(s.installment.id),
     })),

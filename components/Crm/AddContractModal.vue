@@ -20,7 +20,7 @@
           <InputSelect
             v-if="!record"
             v-model="form.status"
-            :options="CONTRACT_STATUS_OPTIONS"
+            :options="contractStatusOptions"
             :label="t('crm.contracts.components.addContractModal.status')"
             name="status"
             rules="required"
@@ -54,9 +54,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CONTRACT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { contractStatusOptions } = useContractStatusColor()
 
 const props = defineProps<{
   open: boolean

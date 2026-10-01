@@ -19,7 +19,7 @@
           </div>
           <InputSelect
             v-model="form.status"
-            :options="CUSTOMER_PRODUCT_STATUS_OPTIONS"
+            :options="customerProductStatusOptions"
             :label="t('crm.components.addCustomerProductModal.status')"
             name="status"
             rules="required"
@@ -91,10 +91,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CUSTOMER_PRODUCT_STATUS_OPTIONS } from '~/constants/mockData'
 import type { CustomerProductRenewalFields } from '~/stores/customerProducts'
 
 const { t } = useI18n()
+const { customerProductStatusOptions } = useCustomerProductStatusColor()
 const { toDateInputValue } = useFormatter()
 
 const props = defineProps<{

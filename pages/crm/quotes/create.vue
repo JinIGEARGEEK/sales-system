@@ -45,7 +45,7 @@
       <Form @submit="onSubmit">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
-          <InputSelect v-model="form.status" :options="QUOTE_STATUS_OPTIONS" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
+          <InputSelect v-model="form.status" :options="quoteStatusOptions" :label="t('crm.quotes.editor.status')" name="status" rules="required" />
         </div>
 
         <InputTextarea
@@ -78,10 +78,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { QUOTE_STATUS_OPTIONS } from '~/constants/mockData'
 import type { QuoteUpdatePayload } from '~/stores/quotes'
 
 const { t } = useI18n()
+const { quoteStatusOptions } = useQuoteStatusColor()
 
 useHead({ title: t('crm.quotes.create.pageTitle') })
 

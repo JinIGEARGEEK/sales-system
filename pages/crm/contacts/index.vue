@@ -136,7 +136,8 @@ const { t } = useI18n()
 
 useHead({ title: t('crm.contacts.index.pageTitle') })
 
-const { toBadge, phoneFormat } = useFormatter()
+const { phoneFormat } = useFormatter()
+const { activeBadge } = useActiveStatusBadge()
 const { success, error } = useNotify()
 const { notifyDeletedWithUndo } = useUndoDelete()
 const { companyName, companyLabelById } = useCompanyName()
@@ -257,9 +258,7 @@ const displayContacts = computed(() => rows.value.map(contact => ({
   ...contact,
   companyName: companyLabelById(contact.company_id),
   phone: contact.phone ? phoneFormat(contact.phone) : contact.phone,
-  statusBadge: contact.status === 'active'
-    ? toBadge(t('crm.contacts.index.statusActive'), 'success')
-    : toBadge(t('crm.contacts.index.statusArchived')),
+  statusBadge: activeBadge(contact.status === 'active', t('crm.contacts.index.statusActive'), t('crm.contacts.index.statusArchived')),
   // Compact star icon rather than a full text pill — scans faster in a dense
   // table column than "Primary" repeated down the page (see Status.vue's icon
   // branch). `title` isn't rendered visibly here, only as the icon's

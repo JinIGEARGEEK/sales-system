@@ -40,7 +40,7 @@
             name="name"
             rules="required"
           />
-          <InputSelect v-model="form.status" :options="PROJECT_STATUS_OPTIONS" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
+          <InputSelect v-model="form.status" :options="projectStatusOptions" :label="t('crm.components.addProjectModal.status')" name="status" rules="required" />
           <InputText v-if="!earlyStage" v-model="form.production_reference" :label="t('crm.components.addProjectModal.productionReference')" name="production_reference" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_proposal_date" :label="t('crm.components.addProjectModal.expectedProposalDate')" name="expected_proposal_date" />
           <InputDatePicker v-if="!productionEditor" v-model="form.expected_start_date" :label="t('crm.components.addProjectModal.expectedStartDate')" name="expected_start_date" />
@@ -60,9 +60,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 
 const { t } = useI18n()
+const { projectStatusOptions } = useProjectStatusColor()
 const { toDateInputValue } = useFormatter()
 
 const props = defineProps<{

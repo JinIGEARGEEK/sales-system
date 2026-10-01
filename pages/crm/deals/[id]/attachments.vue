@@ -2,7 +2,7 @@
   <div>
     <ContainerTemplate>
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-semibold">{{ t('crm.deals.detail.attachmentsTitle') }}</h3>
+        <CardTitle>{{ t('crm.deals.detail.attachmentsTitle') }}</CardTitle>
         <ButtonPrimary
           v-if="canManageAttachments"
           :label="t('crm.deals.detail.addAttachment')"
