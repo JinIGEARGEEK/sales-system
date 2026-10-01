@@ -13,7 +13,7 @@ const QUOTE_STATUS_COLOR: Partial<Record<QuoteStatus, BadgeColor>> = {
 
 // The statuses a user can pick in a status select (create/edit form, the
 // Deal's Quotes tab inline select). 'expired' is derived, not picked.
-export const QUOTE_SELECTABLE_STATUSES: QuoteStatus[] = ['draft', 'sent', 'accepted', 'rejected']
+const QUOTE_SELECTABLE_STATUSES: QuoteStatus[] = ['draft', 'sent', 'accepted', 'rejected']
 
 export const useQuoteStatusColor = () => {
   const quoteStatusBadgeColor = (status: QuoteStatus) => badgeColorFromMap(status, QUOTE_STATUS_COLOR)

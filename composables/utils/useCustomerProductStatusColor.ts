@@ -12,7 +12,7 @@ const CUSTOMER_PRODUCT_STATUS_KEY: Record<CustomerProductStatus, string> = {
   Churned: 'churned',
 }
 
-export const CUSTOMER_PRODUCT_STATUSES = Object.keys(CUSTOMER_PRODUCT_STATUS_KEY) as CustomerProductStatus[]
+const CUSTOMER_PRODUCT_STATUSES = Object.keys(CUSTOMER_PRODUCT_STATUS_KEY) as CustomerProductStatus[]
 
 export const useCustomerProductStatusColor = () => {
   const customerProductStatusBadgeColor = (status: CustomerProductStatus) => badgeColorFromMap(status, CUSTOMER_PRODUCT_STATUS_COLOR)

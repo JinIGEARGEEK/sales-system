@@ -52,20 +52,41 @@ describe('useSupersedeAcceptedQuotes', () => {
     expect(supersede.pending.value).toBeNull()
   })
 
-  it('keeps them on "keep" (still resolving true), and resolves false on cancel', async () => {
+  it('resolves false on cancel without rejecting anything', async () => {
     const accepted = makeQuote({ id: 1, deal_id: 1, status: 'accepted' })
     const putSpy = vi.spyOn(useNuxtApp().$api, 'put')
     const supersede = useSupersedeAcceptedQuotes()
-
-    const kept = supersede.resolveOthers([accepted])
-    supersede.decide('keep')
-    expect(await kept).toBe(true)
 
     const cancelled = supersede.resolveOthers([accepted])
     supersede.decide('cancel')
     expect(await cancelled).toBe(false)
 
     expect(putSpy).not.toHaveBeenCalled()
+  })
+
+  it('acceptAfterResolving returns the save\'s result, or null when cancelled', async () => {
+    const supersede = useSupersedeAcceptedQuotes()
+    expect(await supersede.acceptAfterResolving([], async () => 'saved')).toBe('saved')
+
+    const accept = vi.fn()
+    const cancelled = supersede.acceptAfterResolving([makeQuote({ id: 1, deal_id: 1, status: 'accepted' })], accept)
+    supersede.decide('cancel')
+    expect(await cancelled).toBeNull()
+    expect(accept).not.toHaveBeenCalled()
+  })
+
+  it('names the quotes it rejected when the acceptance then fails, and rethrows', async () => {
+    const accepted = makeQuote({ id: 1, deal_id: 1, number: 'QT-1', status: 'accepted' })
+    useQuotesStore().items = [accepted]
+    vi.spyOn(useNuxtApp().$api, 'put').mockResolvedValue(apiResponse({ ...accepted, status: 'rejected' }) as never)
+    const failure = new Error('boom')
+
+    const supersede = useSupersedeAcceptedQuotes()
+    const result = supersede.acceptAfterResolving([accepted], () => Promise.reject(failure))
+    supersede.decide('reject')
+
+    await expect(result).rejects.toBe(failure)
+    expect(useToast().toasts.value.some(toast => toast.color === 'warning' && String(toast.title).includes('QT-1'))).toBe(true)
   })
 
   it('does not ask when there are no others', async () => {

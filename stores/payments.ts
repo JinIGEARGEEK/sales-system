@@ -24,7 +24,8 @@ export const usePaymentsStore = defineStore('payments', {
     forDeal: state => (dealId: number) => state.items.filter(p => p.deal_id === dealId),
     totalForDeal: state => (dealId: number) => state.totalPaidByDeal[dealId] || 0,
     whtForDeal: state => (dealId: number) => state.totalWhtByDeal[dealId] || 0,
-    settledForDeal: state => (dealId: number) => (state.totalPaidByDeal[dealId] || 0) + (state.totalWhtByDeal[dealId] || 0),
+    // Satang-rounded: float residue (0.1 + 0.2) would otherwise hide "Fully paid".
+    settledForDeal: state => (dealId: number) => roundSatang((state.totalPaidByDeal[dealId] || 0) + (state.totalWhtByDeal[dealId] || 0)),
   },
   actions: {
     async fetchForDeal (dealId: number) {
@@ -68,8 +69,8 @@ export const usePaymentsStore = defineStore('payments', {
       if (payment) this.adjustTotals(payment.deal_id, -payment.amount, -(payment.wht_amount || 0))
     },
     adjustTotals (dealId: number, paidDelta: number, whtDelta: number) {
-      this.totalPaidByDeal[dealId] = (this.totalPaidByDeal[dealId] || 0) + paidDelta
-      this.totalWhtByDeal[dealId] = (this.totalWhtByDeal[dealId] || 0) + whtDelta
+      this.totalPaidByDeal[dealId] = roundSatang((this.totalPaidByDeal[dealId] || 0) + paidDelta)
+      this.totalWhtByDeal[dealId] = roundSatang((this.totalWhtByDeal[dealId] || 0) + whtDelta)
     },
   },
 })

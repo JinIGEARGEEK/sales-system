@@ -549,7 +549,6 @@ const UPSELL_STALE_DAYS_OPTIONS = computed(() => [
   { label: t('crm.dashboard.upsellStale365'), value: 365 },
 ])
 
-
 // Every stage always renders a bar (even at zero) — the backend only returns rows for
 // stages with at least one deal, so missing stages are filled in at zero here.
 const stageBreakdown = computed(() => {
@@ -610,7 +609,7 @@ const funnelStagesPreview = computed(() => {
 // is_lost_stage. Reduces a second query round-trip to zero: stage_breakdown
 // already has this, it just needed picking out.
 const lostValue = computed(() => stageBreakdown.value
-  .filter(row => pipelineStagesStore.byName(row.stage)?.is_lost_stage)
+  .filter(row => pipelineStagesStore.isLostStage(row.stage))
   .reduce((sum, row) => sum + row.value, 0))
 
 const outcomeTotal = computed(() => wonValue.value + lostValue.value + openPipelineValue.value)

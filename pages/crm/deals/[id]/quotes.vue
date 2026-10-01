@@ -140,7 +140,7 @@
                   <tr v-for="(item, index) in quote.items" :key="index" class="border-t border-(--color-light-gray-2)">
                     <td class="max-w-60 truncate py-1">{{ item.description }}</td>
                     <td class="py-1 text-right whitespace-nowrap">x{{ item.qty }}</td>
-                    <td class="py-1 text-right whitespace-nowrap">{{ currency(item.price * item.qty) }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">{{ currency(quoteLineTotal(item)) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -150,7 +150,7 @@
       </div>
     </ContainerTemplate>
 
-    <!-- Accepted/Rejected/Expired record the customer's decision and are hard
+    <!-- Accepted/Rejected record the customer's decision and are hard
          to walk back — confirmed first; cancelling re-renders the select back
          to the saved status. -->
     <CrmConfirmDeleteModal
@@ -162,7 +162,6 @@
       @update:open="(value: boolean) => { if (!value) cancelQuoteStatusChange() }"
       @confirm="confirmQuoteStatusChange"
     />
-
 
     <CrmSupersedeAcceptedQuotesModal :supersede="supersede" />
 
@@ -244,7 +243,8 @@ const confirmRemoveQuote = async () => {
   }
 }
 
-const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected', 'expired']
+// 'expired' is read-derived, never picked (QUOTE_STATUS_TRANSITIONS).
+const CONFIRMED_QUOTE_STATUSES: QuoteStatus[] = ['accepted', 'rejected']
 
 // Accepting a quote (or un-accepting one) re-syncs the Deal's value
 // server-side; re-read the Deal so the new value shows.
@@ -275,14 +275,12 @@ const saveQuoteStatus = async (quote: Quote, status: QuoteStatus) => {
 // confirm (it confirms the acceptance too); otherwise the usual flow.
 const supersede = useSupersedeAcceptedQuotes()
 const onQuoteStatusPick = async (quote: Quote, status: QuoteStatus) => {
+  // The select shows an expired quote's stored 'sent'; re-picking that is no change.
+  if (status === storedQuoteStatus(quote.status)) return
   const others = status === 'accepted' && quote.status !== 'accepted' ? supersede.otherAccepted(dealId, quote.id) : []
   if (others.length === 0) return requestQuoteStatusChange(quote, status)
   try {
-    if (!(await supersede.resolveOthers(others))) {
-      statusSelectResetKey.value++
-      return
-    }
-    await saveQuoteStatus(quote, status)
+    if (await supersede.acceptAfterResolving(others, () => saveQuoteStatus(quote, status)) === null) statusSelectResetKey.value++
   } catch (err) {
     notifyQuoteError(err, refetchQuotes)
     statusSelectResetKey.value++
