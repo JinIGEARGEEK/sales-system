@@ -11,7 +11,7 @@
       <UIcon name="material-symbols:view-kanban-outline" class="size-5" />
     </span>
     <span class="min-w-0 flex-1">
-      <span class="block text-sm font-semibold text-(--color-black)">{{ t('crm.dashboard.overviewPipelineLinkTitle') }}</span>
+      <span class="block text-sm font-medium text-(--color-black)">{{ t('crm.dashboard.overviewPipelineLinkTitle') }}</span>
       <span class="block text-xs text-(--color-gray)">{{ t('crm.dashboard.overviewPipelineLinkBody') }}</span>
     </span>
     <span class="hidden shrink-0 items-center gap-0.5 text-xs font-medium text-(--color-primary) sm:flex">

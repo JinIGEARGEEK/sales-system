@@ -21,7 +21,7 @@
         <span v-else-if="!counts[item.key]" class="text-sm text-(--color-gray)">0</span>
         <UBadge
           v-else
-          class="min-w-5 shrink-0 justify-center rounded-full font-semibold"
+          class="min-w-5 shrink-0 justify-center rounded-full font-medium"
           :color="badgeColor(counts[item.key])"
           variant="solid"
           size="sm"

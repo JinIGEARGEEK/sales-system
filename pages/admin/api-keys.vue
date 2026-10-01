@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-semibold">{{ t('admin.apiKeys.index.heading') }}</h2>
+          <h2 class="text-xl font-medium">{{ t('admin.apiKeys.index.heading') }}</h2>
           <p class="text-sm text-(--color-gray)">{{ t('admin.apiKeys.index.subheading') }}</p>
         </div>
         <ButtonPrimary

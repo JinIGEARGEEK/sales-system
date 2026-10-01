@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-xl font-semibold">{{ t('crm.tags.index.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.tags.index.heading') }}</h2>
       <ButtonPrimary
         :label="t('crm.tags.index.addTag')"
         icon="material-symbols:add"

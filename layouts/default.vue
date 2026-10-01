@@ -193,7 +193,7 @@
                  already shows this same title, and there's no room to also
                  duplicate it in this narrower bar alongside the menu trigger
                  and search box. -->
-            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-semibold text-white md:block">
+            <p v-if="showTitleInHeader" class="hidden truncate text-sm font-medium text-white md:block">
               {{ currentPageTitle }}
             </p>
           </Transition>
@@ -212,7 +212,7 @@
           size="xs"
           variant="link"
           color="neutral"
-          class="p-0 font-semibold text-amber-950 underline"
+          class="p-0 font-medium text-amber-950 underline"
           @click="userStore.setFocusRole(null)"
         >
           {{ t('layout.roleFocus.exit') }}

@@ -2,7 +2,7 @@
   <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
     <div class="relative flex size-32 shrink-0 items-center justify-center rounded-full" :style="{ background: conicGradient }">
       <div class="absolute inset-[16%] flex flex-col items-center justify-center rounded-full bg-white text-center">
-        <span class="text-base font-semibold">{{ totalLabel }}</span>
+        <span class="text-base font-medium">{{ totalLabel }}</span>
         <span v-if="totalSubLabel" class="text-[10px] text-(--color-gray)">{{ totalSubLabel }}</span>
       </div>
     </div>

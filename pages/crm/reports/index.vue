@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-semibold">{{ t('crm.reports.heading') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('crm.reports.heading') }}</h2>
       <p class="text-sm text-(--color-gray)">{{ t('crm.reports.subheading') }}</p>
     </div>
 
@@ -13,7 +13,7 @@
            names it. -->
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(198,158,82,0.35)] bg-[rgba(198,158,82,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-(--color-warning-hover)" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
+        <span class="text-xs font-medium tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionNeedsAttention') }}</span>
       </div>
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in attentionCards" :key="card.path" :to="card.path">
@@ -45,7 +45,7 @@
                   <USkeleton v-if="counts[card.key] === null" class="h-5 w-6 rounded-full" />
                   <UBadge
                     v-else
-                    class="min-w-6 shrink-0 justify-center font-semibold"
+                    class="min-w-6 shrink-0 justify-center font-medium"
                     :color="badgeColor(counts[card.key])"
                     :variant="counts[card.key] ? 'solid' : 'subtle'"
                     size="sm"
@@ -63,7 +63,7 @@
 
       <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[rgba(45,114,167,0.35)] bg-[rgba(45,114,167,0.12)] px-3 py-1 backdrop-blur-sm">
         <span class="size-2 rounded-full bg-(--color-info-toast)" aria-hidden="true" />
-        <span class="text-xs font-semibold tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
+        <span class="text-xs font-medium tracking-wide text-(--color-black) uppercase">{{ t('crm.reports.sectionAnalytics') }}</span>
       </div>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <NuxtLink v-for="card in analyticsCards" :key="card.path" :to="card.path">

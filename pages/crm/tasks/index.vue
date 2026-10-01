@@ -3,7 +3,7 @@
     <AccessGate :can-access="canAccess">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <div>
-        <h2 class="text-xl font-semibold">{{ t('crm.tasks.index.heading') }}</h2>
+        <h2 class="text-xl font-medium">{{ t('crm.tasks.index.heading') }}</h2>
         <p class="text-sm text-(--color-gray)">{{ t('crm.tasks.index.subheading') }}</p>
       </div>
       <div class="flex items-center gap-2">
@@ -87,7 +87,7 @@
         >
           <h3
             :id="`task-group-${group.key}`"
-            class="mb-2 flex items-center gap-2 border-l-4 pl-2 text-sm font-semibold"
+            class="mb-2 flex items-center gap-2 border-l-4 pl-2 text-sm font-medium"
             :class="GROUP_ACCENT[group.key].heading"
           >
             <UIcon :name="GROUP_ACCENT[group.key].icon" class="size-4" />

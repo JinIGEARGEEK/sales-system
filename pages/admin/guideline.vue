@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-semibold">{{ t('admin.guideline.title') }}</h2>
+      <h2 class="text-xl font-medium">{{ t('admin.guideline.title') }}</h2>
       <p class="text-sm text-(--color-gray)">{{ t('admin.guideline.subtitle') }}</p>
     </div>
 

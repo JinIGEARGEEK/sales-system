@@ -16,7 +16,7 @@
     <div class="flex min-h-16 items-center gap-1.5 p-4 sm:px-6">
       <div v-if="selection" class="flex min-w-0 flex-1 items-start gap-3">
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
+          <p class="text-xs font-medium tracking-wider uppercase" :style="{ color: OVERVIEW_ZONES[selection.zone].color }">
             {{ t(`crm.overviewPipeline.panel.kind.${selection.zone}`) }} · #{{ selection.card.id }}
           </p>
           <h3 class="mt-0.5 text-lg font-medium text-balance">{{ selection.card.name || '—' }}</h3>
@@ -62,7 +62,7 @@
           <template v-if="selection.zone === 'deal'">
             <dt class="text-(--color-gray)">{{ t('crm.overviewPipeline.panel.value') }}</dt>
             <dd class="tabular-nums">
-              <span class="font-semibold">{{ currency(selection.card.value) }}</span>
+              <span class="font-medium">{{ currency(selection.card.value) }}</span>
               <span v-if="selection.card.probability !== null" class="text-(--color-dark-gray)"> · {{ t('crm.overviewPipeline.panel.probability', { value: selection.card.probability }) }}</span>
             </dd>
           </template>
@@ -94,7 +94,7 @@
         </p>
 
         <div>
-          <p class="mb-2 text-xs font-semibold tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.panel.recentActivity') }}</p>
+          <p class="mb-2 text-xs font-medium tracking-wide text-(--color-dark-gray) uppercase">{{ t('crm.overviewPipeline.panel.recentActivity') }}</p>
           <ul v-if="recentActivities.length" class="flex flex-col gap-2.5">
             <li v-for="activity in recentActivities" :key="activity.id" class="grid grid-cols-[1.75rem_1fr] gap-2 text-sm">
               <span class="grid size-7 place-items-center rounded-full bg-(--color-light-gray-1) text-(--color-dark-gray)">
