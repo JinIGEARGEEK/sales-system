@@ -42,15 +42,15 @@
                download button don't fit one non-wrapping row on a phone. -->
           <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
             <!-- A signed contract is locked (the API answers 409 to any
-                 status/quote/end-date change): a badge, not a select. -->
+                 status/quote/end-date change): a Signed badge, not a select. -->
             <UBadge
               v-if="signed"
-              :color="contractStatusBadgeColor(contract.effective_status ?? contract.status)"
+              :color="contractStatusBadgeColor('signed')"
               variant="subtle"
               icon="material-symbols:lock-outline"
               :data-cy="`contract-status-${contract.id}`"
             >
-              {{ contractStatusLabel(contract.effective_status ?? contract.status) }}
+              {{ contractStatusLabel('signed') }}
             </UBadge>
             <!-- Signed isn't offered: it comes only from uploading the
                  signed document. -->
@@ -66,9 +66,9 @@
               :data-cy="`contract-status-${contract.id}`"
               @update:model-value="(value: string) => requestContractStatusChange(contract, value as ContractStatus)"
             />
-            <!-- The select edits the stored status; a Signed contract past its
-                 end date still reads "signed" there (it keeps satisfying the
-                 Won gate), so the server-derived Expired shows beside it. -->
+            <!-- A Signed contract past its end date stays signed (it keeps
+                 satisfying the Won gate), so the server-derived Expired shows
+                 beside its Signed badge. -->
             <UBadge
               v-if="lapsed"
               size="sm"
@@ -146,8 +146,7 @@
       </div>
     </ContainerTemplate>
 
-    <!-- Signed/Expired are the hard-to-reverse transitions (Signed feeds the
-         Deal's Won gate and the create-project prompt) — confirmed first;
+    <!-- Expired is the hard-to-reverse status move — confirmed first;
          cancelling re-renders the select back to the saved status. -->
     <CrmConfirmDeleteModal
       :open="pendingStatusChange !== null"
@@ -281,8 +280,8 @@ const onUpdateContract = async (changes: { quote_id?: number, end_date: string |
   }
 }
 
-// Signing a Contract is a real "we now have a customer engagement" moment
-// (FR-CRM-048). While the Deal is still open, ask to mark it Won first — the
+// Signing a Contract (uploading the signed document) is a real "we now have
+// a customer engagement" moment (FR-CRM-048). While the Deal is still open, ask to mark it Won first — the
 // Won hand-off (follow-up task + Create Project) is the layout's shared
 // instance, so its one Create Project modal is reused rather than a second
 // copy opening here. An already-Won (or Lost) Deal just gets Create Project.
@@ -311,9 +310,8 @@ const onDeclineMarkWon = () => {
 
 const onAddContract = async (contract: { status: ContractStatus, quote_id?: number, end_date: string | null }) => {
   try {
-    const created = await contractsStore.add(dealId, contract)
+    await contractsStore.add(dealId, contract)
     success(t('crm.contracts.detail.createSuccess'))
-    promptProjectIfSigned(created)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
     return false
@@ -392,9 +390,8 @@ const {
   save: async (contract, status) => {
     // contractsStore.update is a real partial merge server-side (see
     // CLAUDE.md's full-record-PUT note), so a status-only body is safe here.
-    const updated = await contractsStore.update(contract.id, { status })
+    await contractsStore.update(contract.id, { status })
     success(t('crm.contracts.detail.updateStatusSuccess'))
-    promptProjectIfSigned(updated)
   },
 })
 </script>
