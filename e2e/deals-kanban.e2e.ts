@@ -4,7 +4,9 @@ import { ADMIN, json, mockApi, signIn } from './support'
 // Deals Kanban: dragging a Deal into Lost asks for the loss reason first
 // (shared CrmLostReasonModal), sends it with the stage move, and cancelling
 // leaves the Deal where it was. Dropping into Won runs the same hand-off as
-// the detail page's Mark Won: follow-up task + Create Project prompt.
+// the detail page's Mark Won: follow-up task + Create Project prompt. A Lead
+// dropped into Won opens the Deal create form (a Won Deal needs a real value)
+// and converts on save, with the same hand-off.
 const STAGES = ['Discovery', 'Qualified', 'Negotiation', 'Won', 'Lost'].map((name, i) => ({
   id: i + 1, name, sort_order: i, is_active: true, is_won_stage: name === 'Won', is_lost_stage: name === 'Lost', stale_days: null, created_at: null,
 }))
@@ -14,8 +16,8 @@ const DEAL = {
   probability: 75, lost_reason: null, forecast_category: 'Commit', expected_close_date: null, created_at: new Date().toISOString(),
 }
 
-// What converting Lead 41 by a drop into Won returns.
-const WON_FROM_LEAD = { ...DEAL, id: 52, title: 'Walk-in Lead', value: 0, stage: 'Won', status: 'won', contact_id: null }
+// What converting Lead 41 into Won from the create form returns.
+const WON_FROM_LEAD = { ...DEAL, id: 52, title: 'Walk-in Co — New Opportunity', value: 250000, stage: 'Won', status: 'won', contact_id: null }
 
 test.describe('Deals Kanban', () => {
   let moves: Array<Record<string, unknown>>
@@ -33,7 +35,7 @@ test.describe('Deals Kanban', () => {
       'GET /deals': (route, url) => json(route, url.searchParams.get('stage') === 'Negotiation' ? [DEAL] : []),
       // An unconverted Lead lands in the first open stage — here renamed
       // "Discovery" — not in a lane literally named "Lead".
-      'GET /leads': route => json(route, [{ id: 41, name: 'Walk-in Lead', status: 'New', source: 'Website', company_id: null, assigned_to: null, tags: [], position: 1, classification: 'none', score: 0, created_at: new Date().toISOString() }]),
+      'GET /leads': route => json(route, [{ id: 41, name: 'Walk-in Lead', status: 'New', source: 'Website', company_id: 1, assigned_to: null, tags: [], position: 1, classification: 'none', score: 0, created_at: new Date().toISOString() }]),
       'PATCH /deals/31/stage': async (route) => {
         const body = route.request().postDataJSON()
         moves.push(body)
@@ -45,6 +47,7 @@ test.describe('Deals Kanban', () => {
         await json(route, { deal: WON_FROM_LEAD, company: { id: 1, name: 'Walk-in Co' }, contact: null })
       },
       'GET /deals/52': route => json(route, WON_FROM_LEAD),
+      'GET /companies/1': route => json(route, { id: 1, name: 'Walk-in Co', tags: [], status: 'active', created_at: new Date().toISOString() }),
       'POST /tasks': async (route) => {
         const body = route.request().postDataJSON()
         tasks.push(body)
@@ -90,10 +93,16 @@ test.describe('Deals Kanban', () => {
     await expect(page.getByRole('dialog', { name: 'Create Project from this Deal?' })).toBeVisible()
   })
 
-  test('a Lead dropped into Won converts, creates the follow-up task, and offers Create Project on the new Deal', async ({ page }) => {
+  test('a Lead dropped into Won opens the create form, then converts with its value and runs the Won hand-off', async ({ page }) => {
     await page.getByTestId('pipeline-card-lead-41').dragTo(page.getByTestId('pipeline-column-Won'))
+    // No zero-value auto-convert: the rep lands on the prefilled form first.
+    await expect(page).toHaveURL(/\/crm\/deals\/create\?lead_id=41&stage=Won$/)
+    expect(converts).toHaveLength(0)
+
+    await page.getByLabel('Deal Value (THB)').fill('250000')
+    await page.getByTestId('deal-create-submit').click()
     await expect.poll(() => converts.length).toBe(1)
-    expect(converts[0]).toMatchObject({ deal: { stage: 'Won' } })
+    expect(converts[0]).toMatchObject({ company_id: 1, deal: { stage: 'Won', value: 250000 } })
     await expect.poll(() => tasks.length).toBe(1)
     expect(tasks[0]).toMatchObject({ related_type: 'deal', related_id: 52, title: 'Schedule kickoff call' })
     await expect(page).toHaveURL(/\/crm\/deals\/52$/)
