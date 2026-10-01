@@ -7,6 +7,8 @@ export default {
     noTasksMatch: 'ไม่พบงานติดตามที่ตรงกับตัวกรอง',
     addTask: 'เพิ่มงานติดตาม',
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',
+    filterStatus: 'สถานะ',
+    filterAssignee: 'ผู้รับผิดชอบ',
     filterBusinessUnit: 'สายธุรกิจ',
     filterCampaign: 'แคมเปญ',
     allCampaigns: 'แคมเปญทั้งหมด',

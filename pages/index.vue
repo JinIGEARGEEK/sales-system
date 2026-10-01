@@ -211,7 +211,7 @@ onMounted(() => {
 // Admin-configurable stage/source lists (replaces the previously hardcoded
 // DEAL_STAGE_OPTIONS/CHANNEL_OPTIONS constants).
 const channelFilterOptions = computed(() => [
-  { label: 'All Channels', value: 'all' },
+  { label: t('global.allChannels'), value: 'all' },
   ...leadSourcesStore.activeOptions,
 ])
 
@@ -249,7 +249,21 @@ const recentAlerts = computed(() => notificationLogStore.items.filter(
 
 const PERIOD_PRESET_VALUES = ['all', 'month', 'quarter', 'year', 'last6', 'last12']
 
-const { dateRange, activePreset, applyPeriodPreset } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES)
+// Every Dashboard filter is URL-synced (design-system §5.4/§5.7), so a shared
+// link, a refresh or a back-button return from a drill-down reopens the same
+// view. The range travels as two YYYY-MM-DD strings straight from the picker /
+// presetRange(); numbers travel as strings and are converted at use.
+const dateFrom = useQuerySyncedRef('date_from', '')
+const dateTo = useQuerySyncedRef('date_to', '')
+const syncedDateRange = computed<{ start: string, end: string } | null>({
+  get: () => (dateFrom.value && dateTo.value ? { start: dateFrom.value, end: dateTo.value } : null),
+  set: (value) => {
+    dateFrom.value = value?.start ?? ''
+    dateTo.value = value?.end ?? ''
+  },
+})
+
+const { dateRange, activePreset, applyPeriodPreset } = useDatePeriodFilter(() => dealsStore.items, PERIOD_PRESET_VALUES, syncedDateRange)
 
 const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodAll'), value: 'all' },
@@ -260,15 +274,19 @@ const PERIOD_PRESETS = computed(() => [
   { label: t('crm.dashboard.periodLast12Months'), value: 'last12' },
 ])
 
-const businessUnitFilter = ref('all')
-const channelFilter = ref('all')
-const salesRepFilter = ref('all')
-const companyTagFilter = ref('')
+const businessUnitFilter = useQuerySyncedRef('business_unit')
+const channelFilter = useQuerySyncedRef('channel')
+const salesRepFilter = useQuerySyncedRef('assigned_to')
+const companyTagFilter = useQuerySyncedRef('company_tag', '', 400)
 // Upsell Opportunities widget's own filter (added 2026-09-09) — independent
 // of the Deal-side filters above (date range/business unit/channel/rep/tag),
 // same reasoning as the widget itself being Company-centric, not Deal-scoped.
 // Options mirror the request: 30/60/90/120 days, 6 months, 1 year+.
-const upsellMinStaleDays = ref(60)
+const upsellStaleDaysParam = useQuerySyncedRef('upsell_stale_days', '60', 0, ['30', '60', '90', '120', '180', '365'])
+const upsellMinStaleDays = computed({
+  get: () => Number(upsellStaleDaysParam.value),
+  set: (value: number) => { upsellStaleDaysParam.value = String(value) },
+})
 
 // teamMembersStore.filterOptions already provides a correct "All Team
 // Members" catch-all — reuse it instead of reimplementing it here (the

@@ -1,5 +1,6 @@
 export default {
   noData: 'ไม่มีข้อมูล',
+  allChannels: 'ทุกช่องทาง',
   loading: 'Loading...',
   genericError: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
   currencySymbol: '฿',
@@ -38,6 +39,8 @@ export default {
   },
   table: {
     selectAll: 'เลือกทั้งหมด',
+    selectAllRows: 'เลือกทุกแถว',
+    selectRow: 'เลือกแถวที่ {n}',
     actions: 'การจัดการ',
     empty: {
       filteredTitle: 'ไม่พบรายการที่ตรงกับตัวกรอง',

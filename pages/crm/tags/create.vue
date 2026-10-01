@@ -76,7 +76,7 @@ const { markClean } = useUnsavedChangesGuard(() => form)
 const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
-  await tagsStore.add({
+  const created = await tagsStore.add({
     name: form.name,
     category: form.category as TagCategory,
     status: form.status as TagStatus,
@@ -84,6 +84,6 @@ const onSubmit = guard(async () => {
   })
   success(t('crm.tags.create.createSuccess'))
   markClean()
-  navigateTo('/crm/tags')
+  navigateTo(`/crm/tags/${created.id}`)
 })
 </script>

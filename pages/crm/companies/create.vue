@@ -250,7 +250,7 @@ const onSubmit = guard(async () => {
       error(t('crm.companies.create.contactCreateFailed'))
     }
     markClean()
-    navigateTo('/crm/companies')
+    navigateTo(`/crm/companies/${company.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

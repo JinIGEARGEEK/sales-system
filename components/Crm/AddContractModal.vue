@@ -79,7 +79,7 @@ const emptyForm = () => ({
   end_date: props.record?.end_date ?? '',
 })
 
-const { form, formRef, validateThenSubmit, loading, guard } = useModalForm(() => props.open, emptyForm)
+const { form, formRef, validateThenSubmit, loading, guard, guardDismiss } = useModalForm(() => props.open, emptyForm)
 
 const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => ({
   label: t('crm.contracts.detail.linkedQuote', { id: quote.id }),
@@ -96,7 +96,7 @@ watch(() => props.open, (value) => {
   if (preferred) form.quote_id = preferred.id
 })
 
-const onUpdateOpen = (value: boolean) => emit('update:open', value)
+const onUpdateOpen = guardDismiss((value: boolean) => emit('update:open', value))
 
 // Awaits the caller's save: Save spins until it lands, the guard turns away
 // a second click, and the dialog stays open (form intact) if the handler

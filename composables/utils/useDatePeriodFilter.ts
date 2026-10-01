@@ -1,9 +1,16 @@
+import type { Ref } from 'vue'
+
 // Quick-select period presets (this month/quarter/year, last 6/12 months) backed by a single
 // `dateRange` value. Presets are computed on demand from `presetRange()` rather than stored,
 // so `activePreset` can be derived by comparing it to the current `dateRange` — there is no
 // separate "selected preset" state to fall out of sync when the range is edited manually.
-export const useDatePeriodFilter = (getDeals: () => Deal[], presetValues: string[]) => {
-  const dateRange = ref<{ start: string; end: string } | null>(null)
+// Pass `dateRange` to back it with a caller-owned ref (e.g. a URL-synced
+// computed, as the Dashboard does) instead of a fresh local one.
+export const useDatePeriodFilter = (
+  getDeals: () => Deal[],
+  presetValues: string[],
+  dateRange: Ref<{ start: string; end: string } | null> = ref(null),
+) => {
   // Local date parts, never toISOString() — see useFormatter.
   const { toDateInputValue } = useFormatter()
 

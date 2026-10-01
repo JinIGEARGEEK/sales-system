@@ -97,12 +97,15 @@
       :empty-action-label="t('crm.companies.index.addCompany')"
       empty-action-to="/crm/companies/create"
       :filtered="hasActiveFilters"
+      :sort-field="sortField"
+      :sort-dir="sortDir"
       @clear-filters="clearFilters"
       @change-page="onChangePage"
       @change-per-page="onChangePerPage"
       @sort="onSort"
       @view-detail="onViewDetail"
-      @edit="onEdit"
+      @log-activity="onLogActivity"
+      @add-task="onAddTask"
       @add-to-campaign="(row: Company) => openCampaignModal([row])"
       @delete="requestDelete"
     />
@@ -216,14 +219,8 @@ const tagOptions = computed(() => [...new Set(companiesStore.items.flatMap(c => 
 // understands (created_at/name/industry).
 const SORT_FIELD_MAP: Record<string, string> = { createdDate: 'created_at' }
 
-const sortField = ref('')
-const sortDir = ref<'asc' | 'desc'>('asc')
-
-const onSort = (field: string, direction: 'asc' | 'desc') => {
-  sortField.value = field
-  sortDir.value = direction
-  refetchFromStart()
-}
+// In the URL (`?sort=`), so a refresh or a back-button return keeps it.
+const { sortField, sortDir, onSort } = useQuerySyncedSort(() => refetchFromStart())
 
 const buildParams = () => ({
   search: search.value || undefined,
@@ -247,7 +244,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams)
+} = useServerListPage<Company>(params => companiesStore.fetchList(params), buildParams, 10, { syncQuery: true })
 
 watch(search, () => refetchDebounced())
 watch([industryFilter, statusFilter, tagFilter, staleDaysFilter, hasWonDealFilter], () => refetchFromStart())
@@ -296,7 +293,7 @@ const columns = computed<TableDataColumn[]>(() => [
     type: TABLE_CARD_TYPE.ACTION,
     actions: [
       { label: t('crm.companies.index.actions.viewDetail'), emitName: 'viewDetail', isBorderBottom: false },
-      { label: t('crm.companies.index.actions.edit'), emitName: 'edit', isBorderBottom: false },
+      ...rowQuickActions.value,
       { label: t('crm.companies.index.actions.addToCampaign'), emitName: 'addToCampaign', isBorderBottom: true },
       { label: t('crm.companies.index.actions.delete'), emitName: 'delete', isBorderBottom: false },
     ],
@@ -309,9 +306,7 @@ const onViewDetail = (row: Company) => {
   navigateTo(`/crm/companies/${row.id}`)
 }
 
-const onEdit = (row: Company) => {
-  navigateTo(`/crm/companies/${row.id}`)
-}
+const { rowQuickActions, onLogActivity, onAddTask } = useRowQuickActions('company')
 
 const confirmDelete = async () => {
   if (target.value) {

@@ -37,6 +37,8 @@
           variant="subtle"
           size="xs"
           class="shrink-0"
+          :loading="busyIds.includes(task.id)"
+          data-cy="task-toggle-done"
           @click="onToggleClick(task)"
         />
 
@@ -64,15 +66,39 @@
         <UBadge :color="taskPriorityColor(task.priority)" variant="subtle" class="shrink-0">
           {{ t(`crm.components.taskList.priority.${task.priority}`) }}
         </UBadge>
-        <!-- Overdue carries an icon and the word too, not only the red colour. -->
+        <!-- Overdue carries an icon and the word too, not only the red colour.
+        An open task that's overdue or due today gets a snooze menu on it. -->
+        <UDropdownMenu
+          v-if="isSnoozable(task)"
+          :items="snoozeItems(task)"
+          :content="{ align: 'end' }"
+        >
+          <button
+            type="button"
+            class="shrink-0 cursor-pointer rounded-md"
+            :aria-label="t('crm.components.taskList.snoozeLabel', { date: dateFormat(task.due_date) })"
+            :disabled="busyIds.includes(task.id)"
+            data-cy="task-snooze-trigger"
+          >
+            <UBadge
+              :color="taskDueColor(task)"
+              variant="subtle"
+              :icon="taskDueBucket(task) === 'overdue' ? 'material-symbols:schedule-outline' : undefined"
+              trailing-icon="material-symbols:expand-more"
+              data-cy="task-due-badge"
+            >
+              <template v-if="taskDueBucket(task) === 'overdue'">{{ t('crm.tasks.index.groups.overdue') }} · </template>{{ dateFormat(task.due_date) }}
+            </UBadge>
+          </button>
+        </UDropdownMenu>
         <UBadge
+          v-else
           :color="taskDueColor(task)"
           variant="subtle"
           class="shrink-0"
-          :icon="taskDueBucket(task) === 'overdue' ? 'material-symbols:schedule-outline' : undefined"
           data-cy="task-due-badge"
         >
-          <template v-if="taskDueBucket(task) === 'overdue'">{{ t('crm.tasks.index.groups.overdue') }} · </template>{{ dateFormat(task.due_date) }}
+          {{ dateFormat(task.due_date) }}
         </UBadge>
         <UTooltip :text="t('crm.components.taskList.removeTask')" class="shrink-0">
           <UButton
@@ -92,21 +118,13 @@
       :name="target?.title || ''"
       @confirm="onConfirmRemove"
     />
-
-    <CrmConfirmDeleteModal
-      v-model:open="confirmDoneOpen"
-      :title="t('crm.components.taskList.confirmDoneTitle')"
-      :body="t('crm.components.taskList.confirmDoneBody', { title: taskPendingDone?.title || '' })"
-      :confirm-label="t('crm.components.taskList.confirmDoneButton')"
-      confirm-color="success"
-      @confirm="onConfirmDone"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { taskDueBucket } from '~/composables/utils/useTaskGroups'
+import { TASK_SNOOZE_OPTIONS } from '~/composables/utils/useTaskQuickActions'
 
 const { t } = useI18n()
 const { dateFormat } = useFormatter()
@@ -140,7 +158,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  toggle: [id: number]
+  // Emitted after a saved done toggle (or its Undo) or snooze, for a caller
+  // that must refresh a server-paged list (the all-tasks page) — the store's
+  // cached `items` (the detail pages' Tasks tabs) are updated in place.
+  changed: [id: number]
   // Emitted after a successful delete, for a caller that must refresh a
   // server-paged list (the all-tasks page).
   removed: [id: number]
@@ -182,21 +203,33 @@ const onConfirmRemove = async () => {
   }
 }
 
-// Only confirm the pending -> done transition — reverting a done task back to
-// pending is low-stakes and shouldn't need a dialog in the way. Reuses the
-// same generic open/target confirm-flow as the delete flow above.
-const { open: confirmDoneOpen, target: taskPendingDone, requestDelete: requestDoneConfirm, closeDelete: closeDoneConfirm } = useDeleteConfirm<Task>()
+// Marking done saves at once and toasts an Undo (no confirm); the snooze
+// menu moves an open overdue/due-today task's due date (useTaskQuickActions).
+const { toggleDone, snooze } = useTaskQuickActions(id => emit('changed', id))
 
-const onToggleClick = (task: Task) => {
-  if (task.status === 'done') {
-    emit('toggle', task.id)
-    return
+// Rows with a save in flight — blocks a double-click from toggling twice.
+const busyIds = ref<number[]>([])
+
+const runBusy = async (id: number, action: () => Promise<unknown>) => {
+  if (busyIds.value.includes(id)) return
+  busyIds.value = [...busyIds.value, id]
+  try {
+    await action()
+  } finally {
+    busyIds.value = busyIds.value.filter(busyId => busyId !== id)
   }
-  requestDoneConfirm(task)
 }
 
-const onConfirmDone = () => {
-  if (taskPendingDone.value) emit('toggle', taskPendingDone.value.id)
-  closeDoneConfirm()
-}
+const onToggleClick = (task: Task) => runBusy(task.id, () => toggleDone(task))
+
+const isSnoozable = (task: Task) => ['overdue', 'today'].includes(taskDueBucket(task))
+
+const snoozeItems = (task: Task) => [
+  [{ type: 'label' as const, label: t('crm.components.taskList.snoozeMenuTitle') }],
+  TASK_SNOOZE_OPTIONS.map(option => ({
+    label: t(`crm.components.taskList.snooze.${option}`),
+    icon: 'material-symbols:snooze-outline',
+    onSelect: () => runBusy(task.id, () => snooze(task, option)),
+  })),
+]
 </script>

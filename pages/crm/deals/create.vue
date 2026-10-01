@@ -327,7 +327,9 @@ const onSubmit = guard(async () => {
       navigateTo({ path: `/crm/deals/${created.id}`, query: { [WON_HANDOFF_QUERY]: '1' } })
       return
     }
-    navigateTo('/crm/deals')
+    // Straight to the new Deal (also when opened from a Company/Contact's
+    // "Add Deal") — that's where the next actions (quote, task, activity) are.
+    navigateTo(`/crm/deals/${created.id}`)
   } catch (err) {
     notifyStageChangeError(err)
   }

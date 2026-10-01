@@ -202,7 +202,7 @@
               />
             </div>
           </template>
-          <CrmTaskList :tasks="leadTasks" @toggle="onToggleTask" @edit="openEditTask" />
+          <CrmTaskList :tasks="leadTasks" @edit="openEditTask" />
         </UCard>
       </div>
 
@@ -355,7 +355,7 @@ const leadAttachments = computed(() => attachmentsStore.forRelated('lead', leadI
 
 const leadActivity = computed(() => activitiesStore.forRelated('lead', leadId))
 const { addActivityOpen, openAddActivity, onSubmitActivity } = useActivityList('lead', leadId, 'crm.leads.detail.addActivitySuccess')
-const { tasks: leadTasks, overdueCount: leadOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
+const { tasks: leadTasks, overdueCount: leadOverdueTaskCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask } = useTaskList('lead', leadId, 'crm.leads.detail.addTaskSuccess', 'crm.leads.detail.editTaskSuccess')
 const addAttachmentOpen = ref(false)
 const { open: confirmConvertOpen, request: requestConvert, close: closeConvertConfirm } = useConfirmGate()
 

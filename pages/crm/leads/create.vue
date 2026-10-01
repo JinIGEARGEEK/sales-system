@@ -137,7 +137,7 @@ const { loading, guard } = useSubmitGuard()
 
 const onSubmit = guard(async () => {
   try {
-    await leadsStore.add({
+    const created = await leadsStore.add({
       name: form.name,
       company_id: form.company_id,
       email: form.email,
@@ -154,7 +154,7 @@ const onSubmit = guard(async () => {
     })
     success(t('crm.leads.create.createSuccess'))
     markClean()
-    navigateTo('/crm/leads')
+    navigateTo(`/crm/leads/${created.id}`)
   } catch (err) {
     error(getApiErrorMessage(err, t('global.genericError')))
   }

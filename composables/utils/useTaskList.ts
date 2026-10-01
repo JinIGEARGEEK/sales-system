@@ -58,7 +58,9 @@ export const useTaskList = (relatedType: TaskRelatedType, relatedId: number, add
     }
   }
 
-  const onToggleTask = (id: number) => tasksStore.toggleDone(id).catch(notifyApiError)
+  // The done toggle (with its Undo toast) and the snooze menu are saved by
+  // CrmTaskList itself (useTaskQuickActions); toggleDone/update refresh the
+  // store's `items`, which `tasks` above reads, so nothing to wire here.
 
-  return { tasks, overdueCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask, onToggleTask }
+  return { tasks, overdueCount, addTaskOpen, editingTask, openAddTask, openEditTask, onSubmitTask, onUpdateTask }
 }

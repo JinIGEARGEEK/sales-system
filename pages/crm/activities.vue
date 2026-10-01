@@ -160,7 +160,7 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<ActivityFeedItem>(params => activitiesStore.fetchFeed(params), buildParams)
+} = useServerListPage<ActivityFeedItem>(params => activitiesStore.fetchFeed(params), buildParams, 10, { syncQuery: true })
 
 watch(search, () => refetchDebounced())
 watch([typeFilter, relatedTypeFilter], () => refetchFromStart())

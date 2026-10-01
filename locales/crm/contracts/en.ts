@@ -4,6 +4,7 @@ export default {
     createContract: 'Create Contract',
     createSuccess: 'Contract created',
     noContracts: 'No contracts created for this deal yet.',
+    contractStatus: 'Contract status',
     uploadSignedDocument: 'Upload Signed Document',
     uploadSuccess: 'Signed document uploaded',
     updateStatusSuccess: 'Contract status updated',
