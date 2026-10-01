@@ -11,7 +11,7 @@
     </span>
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-(--color-black)">
-        {{ t('crm.overviewPipeline.attention.staleDeals', { count: numberFormat(count), value: `${t('global.currencySymbol')}${priceFormatCompact(value)}` }) }}
+        {{ t('crm.overviewPipeline.attention.staleDeals', { count: numberFormat(count), value: currencyCompact(value) }) }}
       </p>
       <p class="text-xs text-(--color-dark-gray)">{{ t('crm.overviewPipeline.attention.staleDealsHint') }}</p>
     </div>
@@ -32,5 +32,5 @@ defineProps<{
 const emit = defineEmits<{ highlight: [] }>()
 
 const { t } = useI18n()
-const { numberFormat, priceFormatCompact } = useFormatter()
+const { numberFormat, currencyCompact } = useFormatter()
 </script>

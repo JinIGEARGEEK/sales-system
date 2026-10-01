@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-linear-to-br from-[var(--color-app-shell-gradient-from)] via-[var(--color-app-shell-gradient-via)] to-[var(--color-app-shell-gradient-to)]">
+  <div class="flex h-screen bg-linear-to-br from-(--color-app-shell-gradient-from) via-(--color-app-shell-gradient-via) to-(--color-app-shell-gradient-to)">
     <!-- The logo goes in the #title slot (not a custom #header) so it renders
     inside Reka's DialogTitle and the drawer has an accessible name
     ("CRM System, Navigation menu") instead of an unnamed dialog. -->
@@ -68,9 +68,8 @@
               :key="action.icon"
               :icon="action.icon"
               variant="ghost"
-              color="neutral"
+              :color="action.danger ? 'error' : 'neutral'"
               size="xs"
-              :class="action.danger ? 'text-red-500 hover:bg-red-50 hover:text-red-600' : ''"
               :aria-label="action.ariaLabel"
               @click="drawer = false; action.onClick()"
             />

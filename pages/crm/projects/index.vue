@@ -128,7 +128,6 @@
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES, SALES_PIPELINE_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
-import { PROJECT_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
 
 const { t } = useI18n()
@@ -136,7 +135,8 @@ const { t } = useI18n()
 useHead({ title: t('crm.projects.index.pageTitle') })
 
 const { dateFormat, toBadge } = useFormatter()
-const { projectStatusBadgeColor } = useProjectStatusColor()
+const { activeBadge } = useActiveStatusBadge()
+const { projectStatusBadgeColor, projectStatusLabel, projectStatusOptions } = useProjectStatusColor()
 const { success, error } = useNotify()
 const { companyName } = useCompanyName()
 const { notifyApiError } = useApiErrorNotifier()
@@ -213,7 +213,7 @@ const { hasActive: hasActiveProjectFilters, clear: clearProjectFilters } = useLi
 
 const statusFilterOptions = computed(() => [
   { label: t('crm.projects.index.allStatuses'), value: 'all' },
-  ...PROJECT_STATUS_OPTIONS,
+  ...projectStatusOptions.value,
 ])
 
 const filteredProjects = computed(() => {
@@ -263,7 +263,7 @@ const projectRows = computed(() => {
     // the placeholder keeps the cell identifiable. (Absent entirely only
     // when the endpoint didn't join it — left alone then.)
     company_name: project.company_name === undefined ? undefined : companyName(project.company_name),
-    statusBadge: toBadge(project.status, projectStatusBadgeColor(project.status)),
+    statusBadge: toBadge(projectStatusLabel(project.status), projectStatusBadgeColor(project.status)),
     targetEndDateDisplay: project.target_end_date ? dateFormat(project.target_end_date.toISOString()) : '-',
     expectedProposalDateDisplay: project.expected_proposal_date ? dateFormat(project.expected_proposal_date.toISOString()) : '-',
     expectedStartDateDisplay: project.expected_start_date ? dateFormat(project.expected_start_date.toISOString()) : '-',
@@ -354,10 +354,7 @@ const filteredProducts = computed(() => {
 
 const productRows = computed(() => filteredProducts.value.map(product => ({
   ...product,
-  statusBadge: toBadge(
-    product.is_active ? t('admin.products.statusActive') : t('admin.products.statusInactive'),
-    product.is_active ? 'success' : 'neutral',
-  ),
+  statusBadge: activeBadge(product.is_active, t('admin.products.statusActive'), t('admin.products.statusInactive')),
 })))
 
 const productColumns = computed<TableDataColumn[]>(() => [

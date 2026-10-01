@@ -3,13 +3,13 @@
     <DashboardSectionHeader :title="t('crm.dashboard.sectionFollowUpsTeam')" />
 
     <div class="mb-6">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
               <UIcon name="material-symbols:event-upcoming-outline" class="size-4 text-(--color-warning-hover)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.upcomingFollowUps') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.upcomingFollowUps') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.upcomingFollowUpsHint') }}</p>
         </template>
@@ -27,7 +27,7 @@
               <p class="truncate text-sm font-medium" :title="task.title">{{ task.title }}</p>
               <p class="truncate text-xs text-(--color-gray)" :title="`${task.relatedLabel} · ${task.assignedToName}`">{{ task.relatedLabel }} · {{ task.assignedToName }}</p>
             </div>
-            <UBadge :color="task.isOverdue ? 'error' : 'neutral'" variant="subtle" class="shrink-0">
+            <UBadge :color="taskDueColor(task)" variant="subtle" class="shrink-0">
               {{ dateFormat(task.due_date) }}
             </UBadge>
           </NuxtLink>
@@ -36,13 +36,13 @@
     </div>
 
     <div v-if="canViewSalesPipelineWidgets" class="mb-6">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard>
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-danger-toast)/15">
               <UIcon name="material-symbols:notifications-outline" class="size-4 text-(--color-danger-toast)" />
             </div>
-            <h3 class="text-lg font-medium">{{ t('crm.dashboard.recentAlerts') }}</h3>
+            <CardTitle size="lg">{{ t('crm.dashboard.recentAlerts') }}</CardTitle>
           </div>
           <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.recentAlertsHint') }}</p>
         </template>
@@ -71,13 +71,13 @@
 
     <div v-if="canViewSalesPipelineWidgets" class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">
                 <UIcon name="material-symbols:leaderboard-outline" class="size-4 text-(--color-success-toast)" />
               </div>
-              <h3 class="text-lg font-medium">{{ t('crm.dashboard.winRateByIndustry') }}</h3>
+              <CardTitle size="lg">{{ t('crm.dashboard.winRateByIndustry') }}</CardTitle>
             </div>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.winRateByIndustryHint') }}</p>
           </template>
@@ -101,13 +101,13 @@
       </div>
 
       <div class="lg:col-span-2">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">
                 <UIcon name="material-symbols:groups-outline" class="size-4 text-(--color-info-toast)" />
               </div>
-              <h3 class="text-lg font-medium">{{ t('crm.dashboard.teamPerformance') }}</h3>
+              <CardTitle size="lg">{{ t('crm.dashboard.teamPerformance') }}</CardTitle>
             </div>
             <p class="mt-1 text-xs text-(--color-gray)">{{ t('crm.dashboard.teamPerformanceHint') }}</p>
           </template>
@@ -125,7 +125,7 @@
                   <p class="text-xs text-(--color-gray)">{{ t('crm.dashboard.dealsWon', { count: member.wonCount }) }} · {{ member.winRate }}% · {{ t('crm.dashboard.activitiesLogged', { count: member.activityCount }) }}</p>
                 </div>
               </div>
-              <span class="text-sm font-medium">{{ t('global.currencySymbol') }}{{ priceFormatCompact(member.wonValue) }}</span>
+              <span class="text-sm font-medium">{{ currencyCompact(member.wonValue) }}</span>
             </NuxtLink>
           </div>
         </UCard>
@@ -138,14 +138,14 @@
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { priceFormatCompact, dateFormat, dateTimeFormat } = useFormatter()
+const { dateFormat, dateTimeFormat, currencyCompact } = useFormatter()
 
 defineProps<{
   upcomingTasks: {
     id: number
     title: string
     due_date: Date
-    isOverdue: boolean
+    status: TaskStatus
     relatedLabel: string
     path: string
     assignedToName: string

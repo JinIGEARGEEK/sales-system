@@ -1,7 +1,7 @@
 <template>
   <ContainerTemplate>
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-base font-semibold">{{ t('crm.deals.detail.activityTitle') }}</h3>
+      <CardTitle>{{ t('crm.deals.detail.activityTitle') }}</CardTitle>
       <ButtonPrimary
         :label="t('crm.deals.detail.addActivity')"
         icon="material-symbols:add"
@@ -12,7 +12,7 @@
     <CrmActivityTimeline :items="dealActivity" />
 
     <div v-if="stageHistory.length > 0" class="mt-6">
-      <h3 class="mb-4 text-base font-semibold">{{ t('crm.deals.detail.stageHistoryTitle') }}</h3>
+      <CardTitle class="mb-4">{{ t('crm.deals.detail.stageHistoryTitle') }}</CardTitle>
       <div class="flex flex-col gap-3">
         <div v-for="entry in stageHistory" :key="entry.id" class="flex gap-3 border-b border-(--color-light-gray-2) pb-3 last:border-none">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-light-gray-1)">
