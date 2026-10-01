@@ -16,6 +16,10 @@ export default {
     viewKanban: 'Kanban',
     viewList: 'รายการ',
     entityLabel: 'Deal',
+    reopenConfirmTitle: 'เปิด Deal นี้อีกครั้ง?',
+    reopenConfirmBodyWon: '"{title}" ปิดการขายสำเร็จ (Won) แล้ว การย้ายไปที่ {stage} จะเปิด Deal นี้อีกครั้ง',
+    reopenConfirmBodyLost: '"{title}" อยู่ในสถานะ Lost การย้ายไปที่ {stage} จะเปิด Deal นี้อีกครั้งและล้างเหตุผลที่แพ้',
+    reopenConfirm: 'เปิด Deal อีกครั้ง',
     loadMoreDeals: 'โหลดเพิ่มเติม (อีก {count} รายการ)',
   },
   table: {
@@ -61,6 +65,11 @@ export default {
     createSuccess: 'สร้าง Deal สำเร็จ',
     duplicateWarningTitle: 'อาจมี Deal นี้อยู่แล้ว',
     duplicateWarningBody: 'บริษัทนี้มี Deal ที่เปิดอยู่แล้ว:',
+    assigneeInvalid: 'กรุณาเลือกผู้ใช้ฝ่ายขายที่ยังใช้งานอยู่',
+    alreadyConvertedTitle: 'Lead นี้ถูกแปลงไปแล้ว',
+    alreadyConvertedBody: 'Lead นี้ถูกแปลงเป็น Deal ไปแล้ว จึงแปลงซ้ำไม่ได้',
+    openExistingDeal: 'เปิด Deal',
+    alreadyConvertedToast: 'Lead นี้ถูกแปลงเป็น Deal ไปแล้ว',
   },
   detail: {
     pageTitle: 'รายละเอียด Deal',
@@ -178,6 +187,7 @@ export default {
     removeInstallmentSuccess: 'ลบงวดชำระสำเร็จ',
     generateSchedule: 'สร้างกำหนดการชำระ',
     generateScheduleSuccess: 'สร้างงวดชำระ {count} งวดสำเร็จ',
+    scheduleExceedsReceivable: 'ยอดรวมของงวดชำระจะเกินยอดที่ลูกค้าต้องชำระ กรุณาลดจำนวนเงินแล้วลองอีกครั้ง',
     tasksTitle: 'งานติดตาม',
     addTask: 'เพิ่มงานติดตาม',
     addTaskSuccess: 'เพิ่มงานติดตามสำเร็จ',
@@ -200,5 +210,22 @@ export default {
     markWonSuccess: 'ปิด Deal สำเร็จ',
     wonFollowUpTaskTitle: 'นัดหมาย Kickoff Call',
     wonFollowUpTaskCreated: 'เพิ่มงานติดตามนัดหมาย Kickoff Call สำเร็จ',
+  },
+  wonDeal: {
+    protected: {
+      delete: 'Deal นี้ปิดการขายสำเร็จแล้วและมีการชำระเงิน งวดชำระ หรือสัญญาที่เซ็นแล้ว เฉพาะ Admin หรือ Sales Manager เท่านั้นที่ลบได้',
+      unwin: 'Deal นี้ปิดการขายสำเร็จแล้วและมีการชำระเงิน งวดชำระ หรือสัญญาที่เซ็นแล้ว เฉพาะ Admin หรือ Sales Manager เท่านั้นที่ย้ายออกจาก Won ได้',
+    },
+    reasonModal: {
+      title: {
+        delete: 'ลบ Deal ที่ปิดการขายสำเร็จแล้ว?',
+        unwin: 'ย้าย Deal ออกจาก Won?',
+      },
+      description: 'Deal นี้มีการชำระเงิน งวดชำระ หรือสัญญาที่เซ็นแล้ว กรุณาระบุเหตุผล ระบบจะบันทึกไว้ในประวัติการใช้งาน',
+      label: 'เหตุผล',
+      placeholder: 'เช่น ลูกค้ายกเลิกสัญญา',
+      cancel: 'ยกเลิก',
+      confirm: 'ยืนยัน',
+    },
   },
 }

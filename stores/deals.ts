@@ -30,6 +30,11 @@ export const fullDealUpdatePayload = (deal: Deal, changes: Partial<DealUpdatePay
   ...changes,
 })
 
+// The trailing axios-config argument carrying the override reason as
+// ?reason=, or nothing at all — a call without one sends exactly what it
+// always did.
+const reasonParams = (reason?: string): [] | [{ params: { reason: string } }] => (reason ? [{ params: { reason } }] : [])
+
 export const useDealsStore = defineStore('deals', {
   state: () => ({
     items: [] as Deal[],
@@ -94,9 +99,12 @@ export const useDealsStore = defineStore('deals', {
       this.items.push(parsed)
       return parsed
     },
-    async update (id: number, changes: DealUpdatePayload): Promise<Deal> {
+    // `reason` (here, updateStage and remove): a manager's ?reason= for
+    // un-winning or deleting a Won Deal with money attached — the API
+    // answers 409 REASON_REQUIRED without it (useWonDealGuard asks for it).
+    async update (id: number, changes: DealUpdatePayload, reason?: string): Promise<Deal> {
       const { $api } = useNuxtApp()
-      const response = await $api.put<ApiResponse<Deal>>(`/deals/${id}`, changes)
+      const response = await $api.put<ApiResponse<Deal>>(`/deals/${id}`, changes, ...reasonParams(reason))
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(d => d.id === id)
       if (index !== -1) this.items[index] = updated
@@ -108,9 +116,9 @@ export const useDealsStore = defineStore('deals', {
     // backend then auto-appends to the end of the destination lane instead.
     // lostReason is optional (the Kanban drag doesn't collect one); when sent
     // with a move into a Lost stage the backend validates and saves it.
-    async updateStage (id: number, stage: DealStage, position?: number, lostReason?: LostReason): Promise<Deal> {
+    async updateStage (id: number, stage: DealStage, position?: number, lostReason?: LostReason, reason?: string): Promise<Deal> {
       const { $api } = useNuxtApp()
-      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage, position, lost_reason: lostReason })
+      const response = await $api.patch<ApiResponse<Deal>>(`/deals/${id}/stage`, { stage, position, lost_reason: lostReason }, ...reasonParams(reason))
       const updated = parseDates(response.data.data)
       const index = this.items.findIndex(d => d.id === id)
       if (index !== -1) this.items[index] = updated
@@ -124,9 +132,9 @@ export const useDealsStore = defineStore('deals', {
       if (index !== -1) this.items[index] = updated
       return updated
     },
-    async remove (id: number) {
+    async remove (id: number, reason?: string) {
       const { $api } = useNuxtApp()
-      await $api.delete(`/deals/${id}`)
+      await $api.delete(`/deals/${id}`, ...reasonParams(reason))
       this.items = this.items.filter(d => d.id !== id)
     },
     ...createBulkResourceActions<Deal>('/deals', parseDates),

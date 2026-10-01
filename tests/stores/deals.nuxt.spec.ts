@@ -131,6 +131,23 @@ describe('stores/deals', () => {
     expect(store.items.map(d => d.id)).toEqual([2])
   })
 
+  it('update, updateStage and remove pass a manager\'s override reason as ?reason=', async () => {
+    const store = useDealsStore()
+    const deal = makeDeal({ id: 1, status: 'won' })
+    store.items = [deal]
+    mockApi.put.mockResolvedValueOnce(apiResponse(makeDeal({ id: 1, status: 'open' })))
+    mockApi.patch.mockResolvedValueOnce(apiResponse(makeDeal({ id: 1, stage: 'Lost', status: 'lost' })))
+    mockApi.delete.mockResolvedValueOnce({})
+
+    await store.update(1, fullDealUpdatePayload(deal, { stage: 'Negotiation', status: 'open' }), 'Wrong stage')
+    await store.updateStage(1, 'Lost', undefined, 'price', 'Customer pulled out')
+    await store.remove(1, 'Duplicate')
+
+    expect(mockApi.put).toHaveBeenCalledWith('/deals/1', expect.objectContaining({ stage: 'Negotiation' }), { params: { reason: 'Wrong stage' } })
+    expect(mockApi.patch).toHaveBeenCalledWith('/deals/1/stage', { stage: 'Lost', lost_reason: 'price' }, { params: { reason: 'Customer pulled out' } })
+    expect(mockApi.delete).toHaveBeenCalledWith('/deals/1', { params: { reason: 'Duplicate' } })
+  })
+
   it('receiveConverted parses dates and pushes a Deal from lead conversion into items without an API call', () => {
     const store = useDealsStore()
     const converted = makeDeal({ id: 3, expected_close_date: '2026-05-01T00:00:00.000Z' as unknown as Date })

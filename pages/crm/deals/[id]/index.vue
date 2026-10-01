@@ -32,7 +32,9 @@
               <UBadge v-if="form.forecast_category" class="mt-1" :color="forecastCategoryColor(form.forecast_category)" variant="subtle">{{ form.forecast_category }}</UBadge>
             </div>
             <InputDatePicker v-model="form.expected_close_date" :label="t('crm.deals.detail.expectedCloseDate')" name="expected_close_date" />
-            <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" />
+            <!-- current-assignee: a Sales Rep/Marketing user may only keep the
+                 stored owner or claim the deal (PUT /deals/:id is 403 otherwise). -->
+            <CrmTeamMemberSelect v-model="form.assigned_to" name="assigned_to" :current-assignee="deal?.assigned_to ?? null" />
             <div class="grid grid-cols-1 gap-3 rounded-lg border border-sky-300 bg-sky-50 p-3 md:col-span-2 md:grid-cols-2">
               <InputSelect
                 v-model="form.business_unit"
@@ -145,9 +147,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { SubmissionContext } from 'vee-validate'
 import { BUSINESS_UNIT_OPTIONS, FORECAST_CATEGORY_OPTIONS, LOST_REASON_OPTIONS, dealStatusForStage, stageDefaultProbability, stageDefaultForecastCategory } from '~/constants/mockData'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 const { success } = useNotify()
 const notifyStageChangeError = useStageChangeErrorNotifier()
@@ -362,14 +365,20 @@ watch(() => form.stage, (newStage) => {
 })
 
 const { loading, guard } = useSubmitGuard()
+// The inputs above, by name — where a 422's `fields` can be shown.
+const DEAL_FORM_FIELDS = ['title', 'value', 'stage', 'probability', 'forecast_category', 'expected_close_date', 'assigned_to', 'business_unit', 'lost_reason']
+// Saving a Won deal with money attached into another stage: explained, or a
+// manager gives a reason and the save is retried (useWonDealGuard).
+const wonDealGuard = useWonDealGuard()
 
-const onSave = guard(async () => {
+const onSave = guard(async (_values?: unknown, actions?: SubmissionContext) => {
   if (!deal.value) return
   const wasWon = deal.value.status === 'won'
   try {
     // Company/Contact/Channel aren't editable here but the full-record PUT
     // needs them, so they come from the current record.
-    const updated = await dealsStore.update(deal.value.id, fullDealUpdatePayload(deal.value, {
+    const id = deal.value.id
+    const payload = fullDealUpdatePayload(deal.value, {
       title: form.title,
       value: Number(form.value) || 0,
       stage: form.stage as DealStage,
@@ -381,11 +390,20 @@ const onSave = guard(async () => {
       assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
       business_unit: form.business_unit || null,
       business_unit_item: form.business_unit_item || null,
-    }))
+    })
+    const updated = await wonDealGuard.run('unwin', reason => dealsStore.update(id, payload, reason))
+    if (!updated) return
     markClean()
     success(t('crm.deals.detail.updateSuccess'))
     if (!wasWon && updated.status === 'won') await onDealWon(updated)
   } catch (err) {
+    // A 422's fields (assigned_to no longer an active sales user, a missing
+    // lost_reason, …) go onto their inputs; the Won gate keeps its own toast.
+    if (!apiErrorHasFieldCode(err, 'stage', 'requires_signed_contract')
+      && actions && applyFormApiFieldErrors(err, actions.setErrors, t, te, {
+      fields: DEAL_FORM_FIELDS,
+      messages: { assigned_to: t('crm.deals.create.assigneeInvalid') },
+    })) return
     notifyStageChangeError(err)
   }
 })
