@@ -44,7 +44,6 @@ export default {
       clearEndDate: 'ล้างวันสิ้นสุด',
       quote: 'ใบเสนอราคาที่เชื่อมโยง (ไม่บังคับ)',
       quotePlaceholder: 'เลือกใบเสนอราคาที่จะเชื่อมโยง',
-      noQuote: 'ไม่มีใบเสนอราคา',
       status: 'สถานะ',
       cancel: 'ยกเลิก',
       save: 'บันทึก',
