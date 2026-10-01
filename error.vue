@@ -9,7 +9,7 @@
           <UIcon :name="icon" class="size-7 text-(--color-dark-gray)" aria-hidden="true" />
         </div>
         <p class="text-sm font-medium text-(--color-gray)">{{ statusCode }}</p>
-        <h1 class="text-xl font-black">{{ title }}</h1>
+        <h1 class="text-xl font-medium">{{ title }}</h1>
         <p class="text-sm text-(--color-dark-gray)">{{ message }}</p>
         <ButtonPrimary
           class="mt-2"
