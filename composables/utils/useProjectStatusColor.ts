@@ -16,7 +16,7 @@ const PROJECT_STATUS_KEY: Record<ProjectStatus, string> = {
   'Cancelled': 'cancelled',
 }
 
-export const PROJECT_STATUSES = Object.keys(PROJECT_STATUS_KEY) as ProjectStatus[]
+const PROJECT_STATUSES = Object.keys(PROJECT_STATUS_KEY) as ProjectStatus[]
 
 export const useProjectStatusColor = () => {
   const projectStatusBadgeColor = (status: ProjectStatus) => badgeColorFromMap(status, PROJECT_STATUS_COLOR)

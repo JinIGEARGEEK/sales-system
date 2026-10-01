@@ -64,6 +64,7 @@ export default {
     deleteTemplate: 'Delete this template',
     deleteTemplateSuccess: 'Quote template deleted',
     templateApplyFailed: 'Quote created, but applying the template\'s pricing/tax settings failed — please review them on the next screen.',
+    templateAndStatusFailed: 'Quote created as Draft, but applying the template\'s pricing/tax settings and the {status} status failed — please review them on the next screen.',
   },
   detail: {
     pageTitle: 'Edit Quote',
@@ -114,5 +115,6 @@ export default {
     description: 'A deal can have only one Accepted quote — the amount owed is based on it. Mark these as Rejected to accept this one?',
     cancel: 'Cancel',
     reject: 'Mark as Rejected',
+    rejectedButNotAccepted: '{numbers} marked as Rejected, but this quote couldn\'t be accepted',
   },
 }

@@ -95,7 +95,8 @@ const quoteOptions = computed<Select[]>(() => (props.quotes ?? []).map(quote => 
 watch(() => props.open, (value) => {
   if (!value || props.record) return
   const quotes = props.quotes ?? []
-  const preferred = quotes.findLast(q => q.status === 'accepted') ?? quotes[quotes.length - 1]
+  // By id, not array position — the store moves a quote on update.
+  const preferred = latestAcceptedQuote(quotes) ?? quotes.reduce<Quote | undefined>((latest, q) => (!latest || q.id > latest.id ? q : latest), undefined)
   if (preferred) form.quote_id = preferred.id
 })
 

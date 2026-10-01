@@ -4,11 +4,13 @@
 // data (a real risk here: nothing stops a slow request for the previously
 // selected Company from finishing after a fast one for the newly selected
 // Company). A falsy key resets `result` to `fallback` without fetching.
-export const useScopedFetch = <K, T>(
+// A function declaration, not `const x = <K, T>(…) =>`: unimport reads the
+// `, T` of an arrow's type parameters as a second exported name.
+export function useScopedFetch<K, T> (
   key: Ref<K | null | undefined>,
   fetcher: (key: K) => Promise<T>,
   fallback: T,
-) => {
+) {
   const { notifyApiError } = useApiErrorNotifier()
   const result = ref(fallback) as Ref<T>
   const loading = ref(false)

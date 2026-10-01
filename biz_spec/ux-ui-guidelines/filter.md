@@ -38,14 +38,14 @@ Filter ควรอยู่ **ใกล้กับปุ่มที่กด*
 ใช้ **เฉพาะ filter "สถานะ"** เท่านั้น เพราะตัวเลือกมีจำกัดและคงที่ (2–3 ค่า) กด 1 ครั้งได้เลยไม่ต้องเปิด dropdown
 
 - ความสูง: 32px (`h-8`)
-- ความโค้ง: เท่ากับปุ่มทั่วไปในระบบ (`rounded-[var(--radius)]`)
+- ความโค้ง: เท่ากับปุ่มทั่วไปในระบบ (`rounded-(--radius)`)
 - ตัวเลือกแรก: **"ทั้งหมด"** เสมอ (pill button ไม่ต้องระบุชื่อ field ซ้ำ เพราะ label กำกับอยู่ด้านบนแล้ว)
 - ค่าเริ่มต้น: "ทั้งหมด" active ไว้ก่อน
 - **แสดงบรรทัดเดียวเสมอ** (`flex` โดยไม่มี `flex-wrap`) — status pills เป็นตัวกำหนดความกว้าง popover
 
 **สี Active** (`var(--color-secondary)` = `#12243A` navy):
-- พื้นหลัง: `bg-[var(--color-secondary-bg)]`
-- border + text: `border-[var(--color-secondary)] text-[var(--color-secondary)]`
+- พื้นหลัง: `bg-(--color-secondary-bg)`
+- border + text: `border-(--color-secondary) text-(--color-secondary)`
 
 **สี Inactive:**
 - border: `border-border`

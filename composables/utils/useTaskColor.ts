@@ -1,7 +1,7 @@
 import { taskDueBucket } from '~/composables/utils/useTaskGroups'
 
-// Task badge colours, beside the other use*StatusColor composables, so every
-// task list (TaskList, the Dashboard's My day and Upcoming Follow-ups) agrees.
+// Task badge colours (plain auto-imported functions), beside the other
+// use*StatusColor composables, so every task list (TaskList, the Dashboard's My day and Upcoming Follow-ups) agrees.
 
 // Due-date badge: red only once a pending task is past its due DAY (the
 // Tasks page's Overdue group — taskDueBucket), the primary accent for due
@@ -18,5 +18,3 @@ export const taskDueColor = (task: Pick<Task, 'status' | 'due_date'>, now = new 
 // the due-date badge remains the primary flag for overdue-ness rather than
 // competing with priority for attention.
 export const taskPriorityColor = (priority: CrmTaskPriority): 'error' | 'neutral' => (priority === 'high' ? 'error' : 'neutral')
-
-export const useTaskDueColor = () => ({ taskDueColor, taskPriorityColor })

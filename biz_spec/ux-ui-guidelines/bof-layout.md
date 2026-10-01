@@ -42,11 +42,11 @@ Form ทั้งหมดอยู่ในกล่องขาว มีข�
 
 ภายใน form แบ่งเป็น section ย่อย แต่ละ section มีโครงสร้างดังนี้:
 
-- **ซ้าย (30%)**: ชื่อกลุ่ม field (semibold) + คำอธิบายสั้นๆ (สีเทา)
+- **ซ้าย (30%)**: ชื่อกลุ่ม field (`font-medium`) + คำอธิบายสั้นๆ (สีเทา)
 - **ขวา (70%)**: กลุ่ม input field จัดเป็น grid 2 คอลัมน์
 - แต่ละ section คั่นด้วยเส้นแนวนอน section สุดท้ายไม่มีเส้น
 
-> **หมายเหตุ:** ชื่อ section **ห้ามใช้** `text-static-body` เนื่องจาก class นั้น set `font-weight: var(--font-body-weight)` (400) ทำให้ `font-semibold` ถูก override เสมอ — ให้ใช้ `text-base font-semibold` แทน
+> **หมายเหตุ:** ชื่อ section ใช้ `<CardTitle>` (`text-base font-medium`) — **ห้ามใช้** `text-static-body` (set weight 400 ทับ) และห้ามใช้น้ำหนักเกิน 500 (`font-semibold`/`font-bold`) ดู design-system §3.2
 
 ### Field-level Hint
 

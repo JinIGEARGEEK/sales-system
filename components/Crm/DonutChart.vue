@@ -35,7 +35,7 @@
 // exactly 3 segments — this component doesn't scale past that without
 // revisiting the choice (5+ thin slices is exactly where a donut stops working).
 const props = defineProps<{
-  // valueLabel is caller-formatted (e.g. currency-compact via priceFormatCompact)
+  // valueLabel is caller-formatted (e.g. currencyCompact())
   // rather than derived here — segment values are often money, and this
   // component has no formatting opinion of its own. Falls back to a plain
   // toLocaleString() when omitted (e.g. a segment counted in plain units).

@@ -166,6 +166,7 @@ export default {
     percentTotal: 'Total: {total}%',
     percentMustTotal100: 'Percentages must add up to 100%, and each row must be more than 0%.',
     exceedsReceivable: 'More than the {amount} not yet scheduled — the whole schedule can\'t exceed what the customer owes.',
+    emptyInstallment: 'Too many installments for this amount — every installment needs at least ฿0.01.',
     cancel: 'Cancel',
     save: 'Create Schedule',
   },

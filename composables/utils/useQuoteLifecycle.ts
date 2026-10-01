@@ -38,7 +38,7 @@ export const quoteItemFieldMap = (items: { key: number }[]): Record<string, stri
 ]))
 
 // The editor's own inputs that a 422 can name directly.
-export const QUOTE_FORM_FIELDS = ['status', 'reference_number', 'issue_date', 'credit_days', 'validity_date', 'price_type', 'scope_of_work', 'discount_total', 'wht_rate', 'notes', 'internal_notes']
+const QUOTE_FORM_FIELDS = ['status', 'reference_number', 'issue_date', 'credit_days', 'validity_date', 'price_type', 'scope_of_work', 'discount_total', 'wht_rate', 'notes', 'internal_notes']
 
 // Every rendered field name for these item rows plus QUOTE_FORM_FIELDS.
 export const quoteFormFieldNames = (items: { key: number }[]) => [...QUOTE_FORM_FIELDS, ...Object.values(quoteItemFieldMap(items))]

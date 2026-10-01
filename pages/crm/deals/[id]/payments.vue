@@ -269,7 +269,7 @@ const totalSettled = computed(() => paymentsStore.settledForDeal(dealId))
 // What the customer owes — the Outstanding Balance report's rule (dealReceivable).
 const receivable = computed(() => dealReceivable(quotesStore.forDeal(dealId), deal.value?.value ?? 0))
 // WHT counts as settled, so it comes off the balance like cash does.
-const remainingBalance = computed(() => receivable.value.amount - totalSettled.value)
+const remainingBalance = computed(() => roundSatang(receivable.value.amount - totalSettled.value))
 // "Fill WHT" uses the latest Accepted Quote's WHT/VAT settings.
 const taxRates = computed(() => paymentTaxRates(quotesStore.forDeal(dealId)))
 
@@ -341,12 +341,7 @@ const addInstallmentOpen = ref(false)
 const dealInstallments = computed(() => paymentInstallmentsStore.forDeal(dealId))
 const installmentNumberById = computed(() => installmentNumbers(dealInstallments.value))
 
-const installmentStatusColor = (status: PaymentInstallmentStatusValue) => {
-  if (status === 'paid') return 'success'
-  if (status === 'overdue') return 'error'
-  if (status === 'partial') return 'warning'
-  return 'neutral'
-}
+const { installmentStatusColor } = usePaymentInstallmentStatusColor()
 
 const onAddInstallment = async (installment: { amount: number, due_date: Date, note: string }) => {
   try {

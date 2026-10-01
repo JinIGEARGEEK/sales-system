@@ -5,7 +5,7 @@ const CONTRACT_STATUS_COLOR: Partial<Record<ContractStatus, BadgeColor>> = {
   expired: 'warning',
 }
 
-export const CONTRACT_STATUSES: ContractStatus[] = ['draft', 'sent', 'signed', 'expired']
+const CONTRACT_STATUSES: ContractStatus[] = ['draft', 'sent', 'signed', 'expired']
 
 export const useContractStatusColor = () => {
   const contractStatusBadgeColor = (status: ContractStatus) => badgeColorFromMap(status, CONTRACT_STATUS_COLOR)

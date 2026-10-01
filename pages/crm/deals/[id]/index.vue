@@ -170,7 +170,7 @@ const showFieldErrors = useApiFieldErrors()
 const { success } = useNotify()
 const notifyStageChangeError = useStageChangeErrorNotifier()
 const { notifyApiError } = useApiErrorNotifier()
-const { dateTimeFormat } = useFormatter()
+const { dateTimeFormat, toDateInputValue } = useFormatter()
 const { hasRole } = useRole()
 const companiesStore = useCompaniesStore()
 const contactsStore = useContactsStore()
@@ -291,7 +291,7 @@ const form = reactive({
   probability: (deal.value?.probability ?? pipelineStagesStore.defaultProbability(deal.value?.stage || 'Lead') ?? undefined) as number | undefined,
   lost_reason: deal.value?.lost_reason || '',
   forecast_category: deal.value?.forecast_category || stageDefaultForecastCategory(deal.value?.stage || 'Lead'),
-  expected_close_date: deal.value?.expected_close_date ? deal.value.expected_close_date.toISOString().slice(0, 10) : '',
+  expected_close_date: deal.value?.expected_close_date ? toDateInputValue(deal.value.expected_close_date) : '',
   assigned_to: deal.value?.assigned_to ? String(deal.value.assigned_to) : '',
   business_unit: (deal.value?.business_unit || '') as BusinessUnit | '',
   business_unit_item: deal.value?.business_unit_item || '',
@@ -307,7 +307,7 @@ const { info } = useNotify()
 const nonStageFields = (value: Deal) => JSON.stringify([
   value.title,
   value.value,
-  value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : '',
+  value.expected_close_date ? toDateInputValue(value.expected_close_date) : '',
   value.assigned_to ? String(value.assigned_to) : '',
   value.business_unit || '',
   value.business_unit_item || '',
@@ -349,7 +349,7 @@ watch(deal, (value) => {
   form.probability = value.probability ?? pipelineStagesStore.defaultProbability(value.stage) ?? undefined
   form.lost_reason = value.lost_reason || ''
   form.forecast_category = value.forecast_category || stageDefaultForecastCategory(value.stage)
-  form.expected_close_date = value.expected_close_date ? value.expected_close_date.toISOString().slice(0, 10) : ''
+  form.expected_close_date = value.expected_close_date ? toDateInputValue(value.expected_close_date) : ''
   form.assigned_to = value.assigned_to ? String(value.assigned_to) : ''
   form.business_unit = value.business_unit || ''
   form.business_unit_item = value.business_unit_item || ''

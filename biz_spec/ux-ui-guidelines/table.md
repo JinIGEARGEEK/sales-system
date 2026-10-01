@@ -127,7 +127,7 @@ Table ควรประกอบด้วยองค์ประกอบด�
 | Body — Totals / Summary row | 500 | `font-medium` | เน้นแถวสรุปให้เด่นกว่า body ปกติ |
 
 **แนวทางปฏิบัติ**
-- ไม่ใช้ `font-semibold` (600) หรือ `font-bold` (700) ใน body cell ทั่วไป เพราะทำให้ visual weight ของ table หนักเกินไป
+- ไม่ใช้ `font-semibold` (600) / `font-bold` (700) ที่ใดเลย — 500 คือน้ำหนักสูงสุดของทั้งระบบ (design-system §3.2); `<th>`/`<b>`/`<strong>` ถูก cap ที่ 500 ใน `global.css`
 - ไม่ใช้ `font-mono` กับข้อมูลใน cell เพราะทำให้ font family ไม่สม่ำเสมอกับส่วนอื่นของระบบ ซึ่งใช้ Prompt เป็นฟอนต์หลัก
 - ข้อมูลตัวเลข (ราคา, จำนวน, เปอร์เซ็นต์) ให้เพิ่ม `tabular-nums` เพื่อให้ digit แต่ละตัวกว้างเท่ากัน อ่านง่ายเมื่อเรียงกันในคอลัมน์
 
@@ -731,6 +731,11 @@ status ต้องสแกนได้เร็วที่สุดภาย�
 | `useProjectStatusColor` | Project: Not Started/In Progress/On Hold/Completed/Cancelled | Not Started=neutral, In Progress=info, On Hold=warning, Completed=success, Cancelled=error |
 | `useCustomerProductStatusColor` | CustomerProduct: Interested/Trial/Active/Churned | Interested=neutral, Trial=info, Active=success, Churned=error |
 | `useLeadStatusColor` | Lead: New/Contacted/Qualified/Disqualified | New=neutral, Contacted=info, Qualified=success, Disqualified=error |
+| `usePaymentInstallmentStatusColor` | PaymentInstallment: paid/partial/overdue/upcoming | paid=success, partial=warning, overdue=error, upcoming=neutral |
+| `useActiveStatusBadge` (`activeStatusColor`) | on/off: active vs archived/inactive/revoked | active=success, อื่น=neutral (label ส่งเข้าไปเองต่อ entity) |
+| `taskDueColor` / `taskPriorityColor` (`useTaskColor.ts`) | Task due date / priority | overdue=error, due today=primary, อื่น=neutral; high=error, อื่น=neutral |
+
+**Label ของ status** มาจาก composable เดียวกัน (`quoteStatusLabel`, `contractStatusLabel`, `projectStatusLabel`, `customerProductStatusLabel`) ผ่าน `statusLabelFromGroup(group, status, keys?)` ใน `useBadgeColor.ts` ซึ่งอ่าน `global.status.<group>.*` (en + th) — ห้ามแสดงค่า raw จาก API ("accepted", "In Progress") หรือเขียน map label เองในหน้า; ค่าที่ frontend ยังไม่รู้จักจะ fallback เป็นค่า raw แทน i18n key path. ตัวเลือกของ status select ก็มาจาก composable เดียวกัน (`quoteStatusOptionsFor(status)` = เฉพาะการเปลี่ยนที่ API อนุญาต, `contractEditableStatusOptions` = ไม่มี Signed)
 
 `useDealStageColor`/`useProspectStageColor` ไม่ได้ใช้ `badgeColorFromMap` เพราะสีของ Deal/Prospect stage มาจาก flag ของแถว pipeline stage ใน store (`is_won_stage`/`is_lost_stage`/`is_disqualified_stage`, ดู admin pipeline config) ไม่ใช่ fixed map ของ string status — Admin เพิ่ม stage เองได้ ระบบต้องยัง infer สีถูกโดยไม่ต้องแก้ code
 

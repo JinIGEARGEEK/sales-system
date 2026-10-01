@@ -96,7 +96,12 @@ Modal ทุกหน้าแบ่งออกเป็น **3 ส่วนช
 
 - ปุ่ม action หลักจะ **กดไม่ได้** ระหว่างรอผล
 - แสดงไอคอน loading หมุนบนปุ่ม
+- ปุ่ม Save รอจนหน้าแม่บันทึกเสร็จ (`useAwaitableSubmit`)
 - ถ้าบันทึกไม่สำเร็จ modal **ยังเปิดอยู่** และข้อมูลที่กรอกไว้ยังอยู่ครบ: แสดง toast บอกสาเหตุ และถ้า API ตอบ 422 ให้แสดง error ใต้ช่องที่ผิดด้วย (`submitFailure(err)` → `useModalForm` `showApiFieldErrors`)
+
+## ป้องกันข้อมูลหายใน Modal
+
+- Modal ที่ใช้ `useModalForm` ห่อ `update:open` ด้วย `guardDismiss(...)`: ถ้าผู้ใช้กรอกข้อมูลไปแล้ว การปิดด้วย Esc / คลิกนอก modal / ✕ / ยกเลิก จะถามยืนยันผ่าน `CrmLeaveConfirmModal` ก่อนทิ้งข้อมูล (รายละเอียด: design-system §5.7)
 
 ---
 

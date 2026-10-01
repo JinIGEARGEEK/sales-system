@@ -126,6 +126,18 @@ describe('stores/payments', () => {
     expect(store.settledForDeal(1)).toBe(1070)
   })
 
+  it('rounds the running totals to satang so float residue never lingers', async () => {
+    const store = usePaymentsStore()
+    store.totalPaidByDeal[1] = 0.1
+    store.totalWhtByDeal[1] = 0
+    mockApi.post.mockResolvedValueOnce(apiResponse(makePayment({ id: 5, deal_id: 1, amount: 0.2, wht_amount: 0 })))
+
+    await store.add(1, { amount: 0.2, paid_at: new Date(), method: 'transfer', note: '' })
+
+    expect(store.totalForDeal(1)).toBe(0.3)
+    expect(store.settledForDeal(1)).toBe(0.3)
+  })
+
   it('fetchForDeal defaults the new tax fields on an older row', async () => {
     const store = usePaymentsStore()
     const legacy = { id: 3, deal_id: 1, amount: 10, paid_at: '2026-01-01T00:00:00Z', method: 'cash', note: '' }

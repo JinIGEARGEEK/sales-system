@@ -168,7 +168,7 @@
                 <InputDatePicker v-model="form.issue_date" :label="t('crm.quotes.editor.issueDate')" name="issue_date" />
                 <InputText v-model.number="form.credit_days" type="number" :label="t('crm.quotes.editor.creditDays')" name="credit_days" rules="min_value:0" />
                 <InputDatePicker v-model="form.validity_date" :label="t('crm.quotes.editor.dueDate')" name="validity_date" />
-                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" :disable="locked" />
+                <InputSelect v-model="form.price_type" :options="PRICE_TYPE_OPTIONS" :label="t('crm.quotes.editor.priceType')" name="price_type" />
               </fieldset>
 
               <fieldset class="min-w-0" :disabled="locked">
@@ -289,7 +289,7 @@ if (justCreated.value) {
 const { success, error } = useNotify()
 const { notifyApiError, notifyLoadError } = useApiErrorNotifier()
 const { pending: recordPending, track: trackRecord } = useRecordPending()
-const { currency } = useFormatter()
+const { currency, toDateInputValue } = useFormatter()
 const { quoteStatusBadgeColor, quoteStatusLabel, quoteStatusOptionsFor } = useQuoteStatusColor()
 const notifyQuoteError = useQuoteErrorNotifier()
 const { companyName, isUnnamed } = useCompanyName()
@@ -396,12 +396,13 @@ const { markClean } = useUnsavedChangesGuard(() => [form, items.value])
 watch(quote, (value) => {
   if (!value) return
   form.scope_of_work = value.scope_of_work
-  form.validity_date = value.validity_date ? value.validity_date.toISOString().slice(0, 10) : ''
-  // An expired quote is edited as the Sent it's stored as (the header
-  // badge still shows Expired).
+  form.validity_date = value.validity_date ? toDateInputValue(value.validity_date) : ''
+  // 'expired' is read-derived (the API's EffectiveStatus: a Sent quote past
+  // its validity date), never a value PUT accepts — edit it as the Sent it's
+  // stored as. The header badge still shows Expired.
   form.status = storedQuoteStatus(value.status)
   form.reference_number = value.reference_number ?? ''
-  form.issue_date = value.issue_date ? value.issue_date.toISOString().slice(0, 10) : ''
+  form.issue_date = value.issue_date ? toDateInputValue(value.issue_date) : ''
   form.credit_days = value.credit_days
   form.price_type = value.price_type
   form.vat_enabled = value.vat_enabled
@@ -490,14 +491,14 @@ const onSave = guard(async () => {
   try {
     // Accepting while another quote on the Deal is Accepted: offer to reject
     // those first (then accept this one).
-    if (!wasAccepted && form.status === 'accepted') {
-      const others = await supersede.loadOtherAccepted(current.deal_id, current.id)
-      if (!(await supersede.resolveOthers(others))) return
-    }
+    const others = !wasAccepted && form.status === 'accepted'
+      ? await supersede.loadOtherAccepted(current.deal_id, current.id)
+      : []
     // Read-only quotes send their status alone (quotesStore.updateStatus).
-    const updated = isQuoteLocked(current.status)
-      ? await quotesStore.updateStatus(current.id, form.status)
-      : await quotesStore.update(current.id, buildUpdatePayload())
+    const updated = await supersede.acceptAfterResolving(others, () => isQuoteLocked(current.status)
+      ? quotesStore.updateStatus(current.id, form.status)
+      : quotesStore.update(current.id, buildUpdatePayload()))
+    if (!updated) return
     markClean()
     success(t('crm.quotes.detail.saveSuccess'))
     await dealValueRefresh.afterQuoteStatusChange(updated.deal_id, current.status, updated.status)
