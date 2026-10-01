@@ -162,7 +162,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { MANAGER_ROLES } from '~/constants/roles'
-import type { MergeRecord } from '~/composables/utils/useMergeDuplicates'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { COMPANY_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -186,8 +185,6 @@ const industryOptionsStore = useIndustryOptionsStore()
 // Matches the backend's /companies/export RBAC (Admin/Sales Manager).
 const canExport = computed(() => hasRole(...MANAGER_ROLES))
 const canDelete = computed(() => hasRole(...MANAGER_ROLES))
-// POST /companies/:id/merge is Admin/Sales Manager only.
-const canMerge = computed(() => hasRole(...MANAGER_ROLES))
 
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
@@ -301,15 +298,8 @@ const { createCampaignOpen, campaignTargets, openCampaignModal: openCampaignModa
 )
 const openCampaignModal = (companies: Company[]) => openCampaignModalFor(companies.map(company => ({ type: 'company', id: company.id, name: companyName(company.name) })))
 
-// Bulk "Merge": the selected rows, the first one preselected to stay (the
-// dialog lets the user pick another). The list reloads after a merge — the
-// sources are in Trash now.
-const mergeOpen = ref(false)
-const mergeCandidates = ref<MergeRecord[]>([])
-const openBulkMerge = () => {
-  mergeCandidates.value = selected.value.map(row => companyMergeRecord(row, t('global.unnamedCompany')))
-  mergeOpen.value = true
-}
+// Bulk "Merge" (Admin/Sales Manager); the list reloads after a merge.
+const { canMerge, mergeOpen, mergeCandidates, openBulkMerge } = useBulkMerge(selected, row => companyMergeRecord(row, t('global.unnamedCompany')))
 const onMerged = () => {
   clearSelection()
   fetch()

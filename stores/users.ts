@@ -84,13 +84,8 @@ export const useUsersStore = defineStore('users', {
       if (user) user.is_active = false
       return response.data?.data ?? { id, open_records: { deals: 0, leads: 0, prospects: 0, tasks: 0, total: 0 } }
     },
-    // Shared implementation behind bulkActivate/bulkDeactivate below, mirroring
-    // the backend's own UserHandler.bulkSetActive (Admin only, same route-group
-    // gate as every other /users endpoint) — the Users list has no assignee/
-    // tags concept like Leads/Companies do, so an is_active toggle is the
-    // natural bulk action here instead of reusing CrmBulkActionBar's
-    // reassign/tag/archive shape.
-    // bulk-deactivate answers 200 { open_records, reassigned } and takes an
+    // Behind bulkActivate/bulkDeactivate below, mirroring the backend's
+    // UserHandler.bulkSetActive (Admin only). bulk-deactivate answers 200 { open_records, reassigned } and takes an
     // optional reassign_to; bulk-activate still answers 204 (empty result).
     async bulkSetActive (ids: number[], active: boolean, reassignTo?: number): Promise<UserBulkDeactivateResult> {
       const { $api } = useNuxtApp()
@@ -100,7 +95,7 @@ export const useUsersStore = defineStore('users', {
         const user = this.items.find(u => u.id === id)
         if (user) user.is_active = active
       }
-      const data = response.data && typeof response.data === 'object' ? response.data.data : undefined
+      const data = optionalResponseData(response.data)
       return { open_records: data?.open_records ?? [], reassigned: data?.reassigned ?? [] }
     },
     bulkActivate (ids: number[]) {

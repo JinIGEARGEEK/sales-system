@@ -45,18 +45,6 @@ export const useLeadsStore = defineStore('leads', {
         totalPage: response.data.total_page,
       }
     },
-    // Loads a single Lead by id directly (GET /leads/:id) — for the Lead
-    // detail page and anything else that needs one specific Lead regardless
-    // of whether it made fetchAll's capped 200-row cache.
-    // skipErrorRedirect: a missing record is the detail page's own
-    // NotFoundState, not the app-wide error page.
-    async fetchOne (id: number): Promise<Lead> {
-      const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Lead>>(`/leads/${id}`, { skipErrorRedirect: true })
-      const fetched = parseDates(response.data.data)
-      this.items = [...this.items.filter(l => l.id !== id), fetched]
-      return fetched
-    },
     // score/classification are server-computed (FR-CRM-006/007's
     // computeAndClassify runs on every Create/Update) — excluded from the
     // create payload type since the client never supplies them, only reads
@@ -99,6 +87,7 @@ export const useLeadsStore = defineStore('leads', {
       await $api.delete(`/leads/${id}`)
       this.items = this.items.filter(l => l.id !== id)
     },
+    ...createFetchOneAction<Lead>('/leads', parseDates),
     ...createBulkResourceActions<Lead>('/leads', parseDates),
     async convert (id: number, payload: { company_id?: number, contact_id?: number, deal: Partial<Deal> & { title: string, value: number, stage: DealStage } }): Promise<{ deal: Deal, company: Company, contact: Contact }> {
       const { $api } = useNuxtApp()

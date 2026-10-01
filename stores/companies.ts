@@ -90,21 +90,6 @@ export const useCompaniesStore = defineStore('companies', {
         totalPage: response.data.total_page,
       }
     },
-    // Loads a single Company by id directly (GET /companies/:id) — for
-    // anything that needs one specific Company regardless of whether it
-    // made fetchAll's capped 200-row cache (nameById/findByName/the
-    // dropdowns still built from `items` can all miss a company past that
-    // cutoff; this doesn't). Upserts into `items` so nameById and any
-    // v-for over `items` immediately pick it up too.
-    // skipErrorRedirect: a missing record is the detail page's own
-    // NotFoundState, not the app-wide error page.
-    async fetchOne (id: number): Promise<Company> {
-      const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Company>>(`/companies/${id}`, { skipErrorRedirect: true })
-      const fetched = parseDates(response.data.data)
-      this.items = [...this.items.filter(c => c.id !== id), fetched]
-      return fetched
-    },
     // Exact tax_id (+ branch_code, when given) match on the server — not the
     // capped `items` cache — for duplicate warnings and the import's dedupe.
     // excludeId skips one Company (the one being edited). With no branch, a
@@ -143,17 +128,8 @@ export const useCompaniesStore = defineStore('companies', {
       await $api.delete(`/companies/${id}`)
       this.items = this.items.filter(c => c.id !== id)
     },
-    // Folds duplicates into this record (POST /companies/:id/merge): the target comes
-    // back updated (filled fields), and the sources — now in Trash — leave
-    // `items`. Linked lists elsewhere are stale; callers refetch them.
-    async merge (id: number, sourceIds: number[]): Promise<MergeResult<Company>> {
-      const { $api } = useNuxtApp()
-      const response = await $api.post<ApiResponse<MergeResult<Company>>>(`/companies/${id}/merge`, { source_ids: sourceIds })
-      const result = response.data.data
-      const target = parseDates(result.target)
-      this.items = [...this.items.filter(c => c.id !== id && !sourceIds.includes(c.id)), target]
-      return { ...result, target }
-    },
+    ...createFetchOneAction<Company>('/companies', parseDates),
+    ...createMergeAction<Company>('/companies', parseDates),
     ...createTrashActions<Company>('/companies', parseDates),
   },
 })

@@ -1,5 +1,4 @@
 import { useI18n } from 'vue-i18n'
-import { isAxiosError } from 'axios'
 import { MANAGER_ROLES } from '~/constants/roles'
 
 export type MergeEntity = 'company' | 'contact'
@@ -26,7 +25,16 @@ export const contactMergeRecord = (contact: Pick<Contact, 'id' | 'name' | 'email
   detail: [contact.email, contact.phone].filter(Boolean).join(' · ') || undefined,
 })
 
-// The merge itself plus its result/error reporting, shared by the dialog's
+// The store calls behind CrmMergeDuplicatesModal, per entity: one record by
+// id (the duplicate-conflict alert's pre-picked matches), a server-side
+// search (the stores' `items` caches are capped at 200 rows), and the merge.
+interface MergeSource {
+  fetchRecord: (id: number) => Promise<MergeRecord>
+  searchRecords: (search: string, limit: number) => Promise<MergeRecord[]>
+  merge: (targetId: number, sourceIds: number[]) => Promise<MergeResult<Company | Contact>>
+}
+
+// The dialog's data and the merge's result/error reporting, shared by its
 // three entry points (a detail page's "Merge duplicates…", the list's bulk
 // "Merge", the duplicate-conflict alert). `merge()` resolves the result, or
 // null after it has toasted why it failed:
@@ -42,6 +50,19 @@ export const useMergeDuplicates = (entity: MergeEntity) => {
   const companiesStore = useCompaniesStore()
   const contactsStore = useContactsStore()
   const prefix = 'crm.components.mergeDuplicates'
+
+  const source: MergeSource = entity === 'company'
+    ? {
+        fetchRecord: async id => companyMergeRecord(await companiesStore.fetchOne(id), t('global.unnamedCompany')),
+        searchRecords: async (search, limit) => (await companiesStore.fetchList({ search, per_page: limit })).items
+          .map(company => companyMergeRecord(company, t('global.unnamedCompany'))),
+        merge: (targetId, sourceIds) => companiesStore.merge(targetId, sourceIds),
+      }
+    : {
+        fetchRecord: async id => contactMergeRecord(await contactsStore.fetchOne(id)),
+        searchRecords: async (search, limit) => (await contactsStore.fetchList({ search, per_page: limit })).items.map(contactMergeRecord),
+        merge: (targetId, sourceIds) => contactsStore.merge(targetId, sourceIds),
+      }
 
   const fieldLabel = (field: string) => (te(`${prefix}.fields.${field}`) ? t(`${prefix}.fields.${field}`) : field.replace(/_/g, ' '))
 
@@ -83,13 +104,13 @@ export const useMergeDuplicates = (entity: MergeEntity) => {
   // A 404 names the missing ids ("Company not found: 3, 9") — shown by the
   // names the dialog already has, in words.
   const missingIds = (err: unknown) => {
-    const message = isAxiosError(err) ? String(err.response?.data?.error?.message ?? '') : ''
+    const message = getApiErrorMessage(err, '')
     const list = message.includes(':') ? message.slice(message.lastIndexOf(':') + 1) : ''
     return (list.match(/\d+/g) ?? []).map(Number)
   }
 
   const errorMessage = (err: unknown, nameOf: (id: number) => string) => {
-    const status = isAxiosError(err) ? err.response?.status : undefined
+    const status = getApiErrorStatus(err)
     if (status === 403) return t(`${prefix}.errors.forbidden`)
     if (status === 404) {
       const ids = missingIds(err)
@@ -107,9 +128,7 @@ export const useMergeDuplicates = (entity: MergeEntity) => {
 
   const merge = async (targetId: number, sourceIds: number[], nameOf: (id: number) => string = id => `#${id}`) => {
     try {
-      const result = entity === 'company'
-        ? await companiesStore.merge(targetId, sourceIds)
-        : await contactsStore.merge(targetId, sourceIds)
+      const result = await source.merge(targetId, sourceIds)
       reportResult(result, sourceIds.length, nameOf)
       return result
     } catch (err) {
@@ -118,18 +137,36 @@ export const useMergeDuplicates = (entity: MergeEntity) => {
     }
   }
 
-  return { merge }
+  return { merge, fetchRecord: source.fetchRecord, searchRecords: source.searchRecords }
 }
 
-// A detail page's "Merge duplicates…" entry: Admin/Sales Manager only (the
-// API's 403 otherwise). `?merge=` on the URL opens the dialog on arrival —
+// POST /<entity>/:id/merge is Admin/Sales Manager only (403 otherwise).
+const useCanMerge = () => {
+  const { hasRole } = useRole()
+  return computed(() => hasRole(...MANAGER_ROLES))
+}
+
+// A list's bulk "Merge": the selected rows, the first one preselected to stay
+// (the dialog lets the user pick another). `onMerged` reloads the list — the
+// sources are in Trash now.
+export const useBulkMerge = <T>(selected: Ref<T[]>, toRecord: (row: T) => MergeRecord) => {
+  const canMerge = useCanMerge()
+  const mergeOpen = ref(false)
+  const mergeCandidates = ref<MergeRecord[]>([])
+  const openBulkMerge = () => {
+    mergeCandidates.value = selected.value.map(toRecord)
+    mergeOpen.value = true
+  }
+  return { canMerge, mergeOpen, mergeCandidates, openBulkMerge }
+}
+
+// A detail page's "Merge duplicates…" entry. `?merge=` on the URL opens the dialog on arrival —
 // `?merge=4,9` with those records already picked (the duplicate-conflict
 // alert links here that way) — and is then dropped from the URL.
 export const useDetailMerge = () => {
   const route = useRoute()
   const router = useRouter()
-  const { hasRole } = useRole()
-  const canMerge = computed(() => hasRole(...MANAGER_ROLES))
+  const canMerge = useCanMerge()
   const mergeOpen = ref(false)
   const mergeInitialIds = ref<number[]>([])
 

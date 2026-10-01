@@ -40,18 +40,6 @@ export const useProspectsStore = defineStore('prospects', {
         totalPage: response.data.total_page,
       }
     },
-    // Loads a single Prospect by id directly (GET /prospects/:id) — for the
-    // Prospect detail page regardless of whether it made fetchAll's capped
-    // 200-row cache.
-    // skipErrorRedirect: a missing record is the detail page's own
-    // NotFoundState, not the app-wide error page.
-    async fetchOne (id: number): Promise<Prospect> {
-      const { $api } = useNuxtApp()
-      const response = await $api.get<ApiResponse<Prospect>>(`/prospects/${id}`, { skipErrorRedirect: true })
-      const fetched = parseDates(response.data.data)
-      this.items = [...this.items.filter(p => p.id !== id), fetched]
-      return fetched
-    },
     // POST answers 409 on a same-email/phone duplicate (useDuplicateConflict);
     // `allowDuplicate` resends with ?allow_duplicate=true to create it anyway.
     async add (prospect: Omit<Prospect, 'id' | 'position'>, options: CreateOptions = {}): Promise<Prospect> {
@@ -89,6 +77,7 @@ export const useProspectsStore = defineStore('prospects', {
       await $api.delete(`/prospects/${id}`)
       this.items = this.items.filter(p => p.id !== id)
     },
+    ...createFetchOneAction<Prospect>('/prospects', parseDates),
     ...createBulkResourceActions<Prospect>('/prospects', parseDates),
     async convert (id: number, payload: { company_id?: number, contact_id?: number, lead?: { assigned_to?: number | null } }): Promise<{ lead: Lead, company: Company, contact: Contact }> {
       const { $api } = useNuxtApp()
