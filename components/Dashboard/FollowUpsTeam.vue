@@ -3,7 +3,7 @@
     <DashboardSectionHeader :title="t('crm.dashboard.sectionFollowUpsTeam')" />
 
     <div class="mb-6">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-warning-hover)/15">
@@ -36,7 +36,7 @@
     </div>
 
     <div v-if="canViewSalesPipelineWidgets" class="mb-6">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <div class="flex items-center gap-2">
             <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-danger-toast)/15">
@@ -71,7 +71,7 @@
 
     <div v-if="canViewSalesPipelineWidgets" class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
       <div class="lg:col-span-3">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full ring-(--color-card-border)" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-success-toast)/15">
@@ -101,7 +101,7 @@
       </div>
 
       <div class="lg:col-span-2">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full ring-(--color-card-border)" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center gap-2">
               <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--color-info-toast)/15">

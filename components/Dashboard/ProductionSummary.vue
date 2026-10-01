@@ -12,7 +12,7 @@
         icon="material-symbols:engineering-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
         to="/crm/projects"
       >
         {{ openProjects.length }}
@@ -22,14 +22,14 @@
         icon="material-symbols:hourglass-empty"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
         :to="`/crm/projects?status=${encodeURIComponent('Not Started')}`"
       >
         {{ notStartedCount }}
       </CrmStatCard>
     </div>
 
-    <UCard class="mt-4 ring-[var(--color-card-border)]">
+    <UCard class="mt-4 ring-(--color-card-border)">
       <template #header>
         <h3 class="text-lg font-medium">{{ t('crm.dashboard.projectsNeedingUpdate') }}</h3>
       </template>

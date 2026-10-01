@@ -13,7 +13,7 @@
         icon="material-symbols:account-balance-wallet-outline"
         icon-class="text-(--color-accent-green)"
         icon-bg-class="bg-(--color-accent-green)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-accent-green)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-accent-green)/20 to-transparent"
       >
         {{ currencyCompact(openPipelineValue) }}
       </CrmStatCard>
@@ -24,7 +24,7 @@
         icon="material-symbols:query-stats"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
       >
         {{ currencyCompact(forecastedRevenue) }}
       </CrmStatCard>
@@ -35,7 +35,7 @@
         :icon="winRate >= 50 ? 'material-symbols:trending-up' : 'material-symbols:trending-down'"
         :icon-bg-class="winRate >= 50 ? 'bg-(--color-success-toast)/25' : 'bg-(--color-gray)/25'"
         :value-class="winRate >= 50 ? 'text-(--color-success-toast)' : 'text-(--color-black)'"
-        :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-gray)]/20 to-transparent'"
+        :accent-glass-class="winRate >= 50 ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-gray)/20 to-transparent'"
       >
         {{ winRate }}%
       </CrmStatCard>
@@ -46,7 +46,7 @@
         icon="material-symbols:work-outline"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
       >
         {{ openDealsCount }} <span class="text-sm font-normal text-(--color-gray)">{{ t('crm.dashboard.dealsUnit') }}</span>
       </CrmStatCard>
@@ -57,7 +57,7 @@
         icon="material-symbols:workspace-premium-outline"
         icon-class="text-(--color-success-toast)"
         icon-bg-class="bg-(--color-success-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-success-toast)/20 to-transparent"
       >
         {{ currencyCompact(wonValue) }}
       </CrmStatCard>
@@ -68,7 +68,7 @@
         icon="material-symbols:payments-outline"
         icon-class="text-(--color-chart-violet)"
         icon-bg-class="bg-(--color-chart-violet)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-chart-violet)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-chart-violet)/20 to-transparent"
       >
         {{ currencyCompact(avgDealSize) }}
       </CrmStatCard>
@@ -79,7 +79,7 @@
         icon="material-symbols:schedule-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
       >
         {{ t('crm.dashboard.avgSalesCycleDays', { days: avgSalesCycleDays }) }}
       </CrmStatCard>
@@ -91,7 +91,7 @@
         :icon-bg-class="isPipelineHealthy ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         :value-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
         :hint-class="isPipelineHealthy ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :accent-glass-class="isPipelineHealthy ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
+        :accent-glass-class="isPipelineHealthy ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent'"
       >
         {{ pipelineCoverageRatio.toFixed(1) }}x
         <template #hint>
@@ -106,7 +106,7 @@
         :icon-bg-class="isAnnualGoalOnTrack ? 'bg-(--color-success-toast)/25' : 'bg-(--color-danger-toast)/25'"
         :value-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
         :hint-class="isAnnualGoalOnTrack ? 'text-(--color-success-toast)' : 'text-(--color-danger-toast)'"
-        :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent' : 'bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent'"
+        :accent-glass-class="isAnnualGoalOnTrack ? 'bg-gradient-to-r from-(--color-success-toast)/20 to-transparent' : 'bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent'"
       >
         {{ annualGoalProgressPercent }}%
         <template #hint>

@@ -108,7 +108,7 @@
       class="mb-6"
       :title="t('crm.dashboard.noDealsMatch')"
       :ui="{
-        root: 'items-center gap-2 border-l-4 border-l-[var(--color-warning-hover)] bg-(--color-warning-toast)/20 p-2 shadow-sm ring-0',
+        root: 'items-center gap-2 border-l-4 border-l-(--color-warning-hover) bg-(--color-warning-toast)/20 p-2 shadow-sm ring-0',
         title: 'text-sm font-semibold text-(--color-black)',
       }"
     >

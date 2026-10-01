@@ -1,6 +1,6 @@
 <template>
   <component :is="linkTag" :to="linkTo" :class="to ? 'block transition-shadow hover:shadow-md' : ''">
-    <UCard class="relative overflow-hidden ring-[var(--color-card-border)]" :ui="{ body: 'p-3' }">
+    <UCard class="relative overflow-hidden ring-(--color-card-border)" :ui="{ body: 'p-3' }">
       <div
         v-if="accentGlassClass"
         class="absolute inset-y-0 left-0 w-1/2 backdrop-blur-md"
@@ -65,7 +65,7 @@ const props = defineProps({
     default: 'bg-(--color-light-gray-1)',
   },
   // A frosted-glass gradient panel covering the card's left ~50% width,
-  // e.g. 'bg-gradient-to-r from-[var(--color-accent-green)]/40 to-transparent'.
+  // e.g. 'bg-gradient-to-r from-(--color-accent-green)/40 to-transparent'.
   // UCard's own `overflow-hidden` clips it to the card's rounded corners.
   accentGlassClass: {
     type: String,

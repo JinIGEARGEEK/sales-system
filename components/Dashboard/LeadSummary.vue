@@ -12,7 +12,7 @@
         icon="material-symbols:person-add-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
         to="/crm/leads"
       >
         {{ summary?.total_leads ?? 0 }}
@@ -22,7 +22,7 @@
         icon="material-symbols:fiber-new-outline"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
         to="/crm/leads?status=New"
       >
         {{ summary?.new_leads ?? 0 }}
@@ -32,7 +32,7 @@
         icon="material-symbols:check-circle-outline"
         icon-class="text-(--color-success-toast)"
         icon-bg-class="bg-(--color-success-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-success-toast)/20 to-transparent"
         to="/crm/leads?status=Qualified"
       >
         {{ summary?.qualified_leads ?? 0 }}
@@ -42,7 +42,7 @@
         icon="material-symbols:cancel-outline"
         icon-class="text-(--color-danger-toast)"
         icon-bg-class="bg-(--color-danger-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-danger-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-danger-toast)/20 to-transparent"
         to="/crm/leads?status=Disqualified"
       >
         {{ summary?.disqualified_leads ?? 0 }}
@@ -50,7 +50,7 @@
     </div>
 
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.leadsByStatus') }}</h3>
         </template>
@@ -71,7 +71,7 @@
         </div>
       </UCard>
 
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.leadsBySource') }}</h3>
         </template>

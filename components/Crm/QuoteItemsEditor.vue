@@ -27,7 +27,7 @@
           :model-value="item.kind"
           orientation="horizontal"
           size="sm"
-          :ui="{ base: 'ring-2 ring-[var(--color-gray)]' }"
+          :ui="{ base: 'ring-2 ring-(--color-gray)' }"
           :items="[
             { label: t('crm.quotes.editor.itemKindScope'), value: 'scope' },
             { label: t('crm.quotes.editor.itemKindProduct'), value: 'product' },

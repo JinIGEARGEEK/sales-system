@@ -12,7 +12,7 @@
         icon="material-symbols:contact-mail-outline"
         icon-class="text-(--color-info-toast)"
         icon-bg-class="bg-(--color-info-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-info-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-info-toast)/20 to-transparent"
         to="/crm/prospects"
       >
         {{ summary?.total_prospects ?? 0 }}
@@ -22,7 +22,7 @@
         icon="material-symbols:person-search-outline"
         icon-class="text-(--color-warning-hover)"
         icon-bg-class="bg-(--color-warning-hover)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-warning-hover)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-warning-hover)/20 to-transparent"
         to="/crm/prospects"
       >
         {{ summary?.open_prospects ?? 0 }}
@@ -33,7 +33,7 @@
         icon="material-symbols:trending-up"
         icon-class="text-(--color-success-toast)"
         icon-bg-class="bg-(--color-success-toast)/25"
-        accent-glass-class="bg-gradient-to-r from-[var(--color-success-toast)]/20 to-transparent"
+        accent-glass-class="bg-gradient-to-r from-(--color-success-toast)/20 to-transparent"
         to="/crm/reports/prospect-source"
       >
         {{ (summary?.conversion_rate ?? 0).toFixed(1) }}%
@@ -41,7 +41,7 @@
     </div>
 
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsByStatus') }}</h3>
         </template>
@@ -62,7 +62,7 @@
         </div>
       </UCard>
 
-      <UCard class="ring-[var(--color-card-border)]">
+      <UCard class="ring-(--color-card-border)">
         <template #header>
           <h3 class="text-lg font-medium">{{ t('crm.dashboard.prospectsBySource') }}</h3>
         </template>

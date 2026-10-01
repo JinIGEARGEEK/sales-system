@@ -10,7 +10,7 @@
         different views of the same stage_breakdown data, and a rep only
         ever looks at one view at a time. Cuts this section from 4 cards
         across 2 rows down to 2 cards in 1 row. -->
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full ring-(--color-card-border)" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div class="flex items-center gap-2">
@@ -62,7 +62,7 @@
       </div>
 
       <div class="lg:col-span-2">
-        <UCard class="h-full ring-[var(--color-card-border)]" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
+        <UCard class="h-full ring-(--color-card-border)" :ui="{ root: 'flex h-full flex-col', body: 'flex-1' }">
           <template #header>
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
