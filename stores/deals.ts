@@ -30,6 +30,15 @@ export const fullDealUpdatePayload = (deal: Deal, changes: Partial<DealUpdatePay
   ...changes,
 })
 
+// List responses don't carry value_quote_number (only single-deal ones do):
+// keep the one already loaded for the same Deal and quote, so a list refresh
+// doesn't blank the "From accepted quote Q-…" hint.
+const keepValueQuoteNumber = (deal: Deal, loaded: Deal[]): Deal => {
+  if (deal.value_quote_number !== undefined || !deal.value_quote_id) return deal
+  const previous = loaded.find(d => d.id === deal.id && d.value_quote_id === deal.value_quote_id)
+  return previous?.value_quote_number !== undefined ? { ...deal, value_quote_number: previous.value_quote_number } : deal
+}
+
 // The trailing axios-config argument carrying the override reason as
 // ?reason=, or nothing at all — a call without one sends exactly what it
 // always did.
@@ -52,7 +61,7 @@ export const useDealsStore = defineStore('deals', {
       const response = await $api.get<ApiResponse<Deal[]>>('/deals', {
         params: { per_page: 200, ...params },
       })
-      this.items = response.data.data.map(parseDates)
+      this.items = response.data.data.map(parseDates).map(deal => keepValueQuoteNumber(deal, this.items))
       this.total = response.data.total
       this.page = response.data.page
       return this.items
