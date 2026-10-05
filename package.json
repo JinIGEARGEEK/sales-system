@@ -27,16 +27,16 @@
     "eslint": "10.11.0",
     "happy-dom": "20.14.5",
     "tailwindcss": "4.3.3",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vitest": "5.0.3",
-    "vue-tsc": "3.3.11"
+    "vue-tsc": "3.3.12"
   },
   "dependencies": {
     "@internationalized/date": "3.12.4",
     "@nuxt/ui": "3.3.7",
     "@nuxtjs/i18n": "10.6.0",
     "@pinia/nuxt": "1.0.2",
-    "@sentry/vue": "11.0.0",
+    "@sentry/vue": "11.2.0",
     "@vee-validate/i18n": "4.15.1",
     "@vee-validate/rules": "4.15.1",
     "awesome-phonenumber": "7.8.0",
