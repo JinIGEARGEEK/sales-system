@@ -45,6 +45,14 @@ export const useLeadsStore = defineStore('leads', {
         totalPage: response.data.total_page,
       }
     },
+    // GET /leads/status-counts: Lead counts per status under the same
+    // filters as fetchList (its `status` is ignored). A status with no Leads
+    // is absent from the result. Not cached — it follows the list's filters.
+    async fetchStatusCounts (params?: Record<string, unknown>): Promise<Partial<Record<LeadStatus, number>>> {
+      const { $api } = useNuxtApp()
+      const response = await $api.get<ApiResponse<Partial<Record<LeadStatus, number>>>>('/leads/status-counts', { params })
+      return response.data.data
+    },
     // score/classification are server-computed (FR-CRM-006/007's
     // computeAndClassify runs on every Create/Update) — excluded from the
     // create payload type since the client never supplies them, only reads
