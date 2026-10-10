@@ -19,6 +19,11 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@nuxt/ui"
         update-types: ["version-update:semver-major"]
+      # vue-tsc (pnpm typecheck, run in CI) loads TypeScript's JS API, which
+      # TypeScript 7 no longer exports — typecheck crashes on 7.x. Upgrade
+      # by hand once vue-tsc supports it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
