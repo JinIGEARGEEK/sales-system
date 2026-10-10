@@ -99,6 +99,22 @@
 
       <ContainerTemplate>
         <Form @submit="onSave">
+          <!-- Save heads its own section, inside the <Form> so every field's
+          rules run before the PUT. Hidden (not left to 403 on submit) for a
+          read-only viewer (Production, via a direct link) — same
+          canManageLead gate as Mark SQL/Convert to Deal above. -->
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <CardTitle>{{ t('crm.leads.detail.infoHeading') }}</CardTitle>
+            <ButtonPrimary
+              v-if="canManageLead"
+              :label="t('crm.leads.detail.saveChanges')"
+              icon="material-symbols:save-outline"
+              type="submit"
+              small
+              :loading="loading"
+              data-cy="lead-save"
+            />
+          </div>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <InputText v-model="form.name" :label="t('crm.leads.detail.fullName')" name="name" rules="required" />
             <InputCompanySelect v-model="form.company_id" :label="t('crm.leads.detail.companyName')" name="company_id" />
@@ -139,13 +155,6 @@
             <div class="md:col-span-2">
               <InputTextarea v-model="form.notes" :label="t('crm.leads.detail.notes')" name="notes" />
             </div>
-          </div>
-          <!-- Hidden (not just left to 403 on submit) for a read-only viewer
-          (Production, via a direct link) — same
-          canManageLead gate as Mark SQL/Convert to Deal above, now that
-          PUT /leads/:id is backend-restricted to SALES_PIPELINE_ROLES too. -->
-          <div v-if="canManageLead" class="mt-4 flex gap-3">
-            <ButtonPrimary :label="t('crm.leads.detail.saveChanges')" type="submit" :loading="loading" />
           </div>
         </Form>
       </ContainerTemplate>
@@ -455,22 +464,26 @@ const businessUnitItemOptions = useBusinessUnitItemOptions(
 const { loading, guard } = useSubmitGuard()
 const showFormErrors = useApiFormErrors()
 
+// PUT /leads/:id overwrites every field (not a partial update), so both
+// Save and Mark SQL send the whole form.
+const formPayload = (): LeadUpdatePayload => ({
+  name: form.name,
+  company_id: form.company_id,
+  email: form.email,
+  phone: form.phone,
+  source: form.source as LeadSource,
+  status: form.status as LeadStatus,
+  assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
+  business_unit: form.business_unit || null,
+  business_unit_item: form.business_unit_item || null,
+  notes: form.notes,
+  ...toReferredByPayload(form),
+})
+
 const onSave = guard(async (values: Record<string, unknown>, { setErrors }: SubmissionContext) => {
   if (!lead.value) return
   try {
-    await leadsStore.update(lead.value.id, {
-      name: form.name,
-      company_id: form.company_id,
-      email: form.email,
-      phone: form.phone,
-      source: form.source as LeadSource,
-      status: form.status as LeadStatus,
-      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      business_unit: form.business_unit || null,
-      business_unit_item: form.business_unit_item || null,
-      notes: form.notes,
-      ...toReferredByPayload(form),
-    })
+    await leadsStore.update(lead.value.id, formPayload())
     markClean()
     success(t('crm.leads.detail.updateSuccess'))
   } catch (err) {
@@ -478,27 +491,10 @@ const onSave = guard(async (values: Record<string, unknown>, { setErrors }: Subm
   }
 })
 
-// The Update endpoint replaces every field from the request body (it isn't a
-// true partial-update — see leadForm on the backend), so marking a Lead "sql"
-// still has to resend the rest of the form's current values alongside it,
-// not just `classification` on its own.
 const onMarkSql = async () => {
   if (!lead.value) return
   try {
-    await leadsStore.update(lead.value.id, {
-      name: form.name,
-      company_id: form.company_id,
-      email: form.email,
-      phone: form.phone,
-      source: form.source as LeadSource,
-      status: form.status as LeadStatus,
-      assigned_to: form.assigned_to ? Number(form.assigned_to) : null,
-      business_unit: form.business_unit || null,
-      business_unit_item: form.business_unit_item || null,
-      notes: form.notes,
-      ...toReferredByPayload(form),
-      classification: 'sql',
-    })
+    await leadsStore.update(lead.value.id, { ...formPayload(), classification: 'sql' })
     markClean()
     success(t('crm.leads.detail.markSqlSuccess'))
   } catch (err) {
