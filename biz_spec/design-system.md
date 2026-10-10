@@ -17,7 +17,7 @@ This document describes what the code **actually does today** (verified against 
 - **Forms**: Vee-Validate, via the `<Field v-slot>` pattern wrapped in `components/Input/*`
 - **i18n**: `@nuxtjs/i18n`, Thai (`th`, default) and English (`en`)
 - **Icons**: Material Symbols via Iconify (`material-symbols:icon-name`)
-- **Font**: "Prompt", at 400 and 500 only (500 is the heaviest weight — §3)
+- **Font**: "Prompt", at 400 (Regular) only — `font-medium` draws Regular too (§3.2)
 
 ---
 
@@ -111,7 +111,7 @@ Every page's main `<h2>` title uses the same exact class string:
 text-xl font-medium
 ```
 
-**Changed 2026-10-01** from `text-xl font-black` (Prompt Black, 900): too heavy, especially on Thai glyphs, and well above the design tokens' title weight (500, `--font-text-*-title-*-weight` in `global.css`). Lowered again the same day to `font-medium` (500): page titles, card titles and every other heading or label now share the token weight, and the hierarchy comes from size alone. **500 is the app's heaviest text weight** — no `font-semibold`/`font-bold`/`font-black` in templates; `<b>`/`<strong>`/`<th>` are capped at 500 in `global.css`, and Nuxt UI's own semibold slots (slideover title, select/dropdown group labels) are overridden in `app.config.ts`.
+**Changed 2026-10-01** from `text-xl font-black` (Prompt Black, 900): too heavy, especially on Thai glyphs, and well above the design tokens' title weight (500, `--font-text-*-title-*-weight` in `global.css`). Lowered again the same day to `font-medium` (500): page titles, card titles and every other heading or label now share the token weight, and the hierarchy comes from size alone. **500 is the app's heaviest text weight** — no `font-semibold`/`font-bold`/`font-black` in templates; `<b>`/`<strong>`/`<th>` are capped at 500 in `global.css`, and Nuxt UI's own semibold slots (slideover title, select/dropdown group labels) are overridden in `app.config.ts`. **Changed 2026-10-10:** Prompt Medium still read too heavy, so `font-medium` now draws **Prompt Regular (400)**, the body weight — `--font-weight-medium: 400` in `global.css`'s `@theme`, which every `font-medium` (ours and Nuxt UI's), the `<b>`/`<strong>`/`<th>` cap and the title/link tokens follow. Prompt ships only static weights, so there's nothing between 400 and 500 (a 450 still draws Medium); headings and labels stand apart by size and colour. Keep writing `font-medium` for headings/labels — it marks intent, and that one variable is the knob if the weight changes again.
 
 This is applied identically across all 28 pages (list, create, and detail views) — **when adding a new page, copy this exact string**, don't approximate it, so titles stay pixel-consistent site-wide.
 
@@ -121,12 +121,12 @@ A responsive title scale and static body/link/button scale exist as CSS custom p
 
 | Class | Mobile size/lh | Desktop size/lh (≥768px) | Weight |
 |---|---|---|---|
-| `.title-1` | 26px/40px | 34px/50px | 500 |
-| `.title-2` | 24px/36px | 26px/40px | 500 |
-| `.title-3` | 20px/30px | 22px/32px | 500 |
-| `.title-4` | 18px/28px | 20px/30px | 500 |
-| `.title-5` | 16px/24px | 18px/28px | 500 |
-| `.title-6` | 14px/20px | 16px/24px | 500 |
+| `.title-1` | 26px/40px | 34px/50px | 400 (`--font-weight-medium`) |
+| `.title-2` | 24px/36px | 26px/40px | 400 (`--font-weight-medium`) |
+| `.title-3` | 20px/30px | 22px/32px | 400 (`--font-weight-medium`) |
+| `.title-4` | 18px/28px | 20px/30px | 400 (`--font-weight-medium`) |
+| `.title-5` | 16px/24px | 18px/28px | 400 (`--font-weight-medium`) |
+| `.title-6` | 14px/20px | 16px/24px | 400 (`--font-weight-medium`) |
 
 Static (non-responsive) utilities: `.static-body`, `.static-body-sm`, `.static-body-xs`, `.static-body-2xs`, `.static-link` (underlined), `.static-link-sm` (underlined), `.static-button`, `.static-button-sm`.
 
