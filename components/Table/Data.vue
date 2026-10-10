@@ -42,11 +42,15 @@
             >
               <dt class="truncate text-xs text-(--color-gray)">{{ column.label }}</dt>
               <dd class="min-w-0 break-words text-sm text-(--color-black)">
-                <TableCardType
-                  is-mobile
-                  :type="column.type"
-                  :item="row[column.field]"
-                />
+                <!-- `#cell-<field>` replaces a column's default renderer
+                (e.g. an inline status select); see the desktop cell below. -->
+                <slot :name="`cell-${column.field}`" :row="row" :is-mobile="true">
+                  <TableCardType
+                    is-mobile
+                    :type="column.type"
+                    :item="row[column.field]"
+                  />
+                </slot>
               </dd>
             </div>
           </dl>
@@ -182,7 +186,9 @@
                     />
                   </div>
                   <div v-else>
-                    <TableCardType :type="col.type" :item="row[col.field]" />
+                    <slot :name="`cell-${col.field}`" :row="row" :is-mobile="false">
+                      <TableCardType :type="col.type" :item="row[col.field]" />
+                    </slot>
                   </div>
                 </td>
               </tr>

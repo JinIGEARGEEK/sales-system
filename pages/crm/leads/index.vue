@@ -31,7 +31,17 @@
         the Active scope — a converted Lead's status is frozen at conversion
         (see leadStatusColor's own note) so it's not a useful filter once
         you're looking at the Converted tab. -->
-        <CrmStatusPill v-if="scopeFilter === 'active'" v-model="statusFilter" :options="LEAD_STATUS_OPTIONS" />
+        <!-- Each pill shows its status's count under the other filters
+        (search/source/assignee), so the backlog per status is visible
+        without clicking through each one. -->
+        <CrmStatusPill v-if="scopeFilter === 'active'" v-model="statusFilter" :options="LEAD_STATUS_OPTIONS">
+          <template #option="{ option }">
+            {{ option.label }}
+            <span v-if="statusCounts" class="text-xs tabular-nums opacity-70" data-cy="lead-status-count">
+              {{ statusCountOf(String(option.value)) }}
+            </span>
+          </template>
+        </CrmStatusPill>
         <div class="flex flex-col gap-3 sm:flex-row">
           <div class="flex-1">
             <InputText v-model="search" :placeholder="t('crm.leads.index.searchPlaceholder')" name="search" />
@@ -78,7 +88,18 @@
       @view-deal="onViewDeal"
       @add-to-campaign="(row: Lead) => openCampaignModal([row])"
       @delete="requestDelete"
-    />
+    >
+      <!-- Status changes inline instead of opening each Lead. A converted
+      Lead's status is frozen at conversion, so it keeps the plain badge. -->
+      <template #cell-statusBadge="{ row, isMobile }">
+        <CrmLeadStatusSelect
+          v-if="canManageLead && !row.converted_deal_id"
+          :lead="row as unknown as Lead"
+          @updated="onStatusUpdated"
+        />
+        <TableCardType v-else :type="TABLE_CARD_TYPE.STATUS" :item="row.statusBadge" :is-mobile="isMobile" />
+      </template>
+    </TableData>
 
     <CrmBulkActionBar
       v-if="canBulkManage && selectedIds.length > 0"
@@ -118,7 +139,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { MANAGER_ROLES, TASK_ROLES } from '~/constants/roles'
+import { MANAGER_ROLES, SALES_PIPELINE_ROLES, TASK_ROLES } from '~/constants/roles'
 import TABLE_CARD_TYPE from '~/constants/tableCardType'
 import { LEAD_STATUS_OPTIONS } from '~/constants/mockData'
 import { GLASS_PANEL_UI } from '~/constants/ui'
@@ -158,6 +179,10 @@ const canBulkManage = computed(() => hasRole(...MANAGER_ROLES))
 // Campaigns (FR-CRM-112) have no backend role gate — same TASK_ROLES set as
 // the Campaigns/Tasks nav entries, not MANAGER_ROLES.
 const canCreateCampaign = computed(() => hasRole(...TASK_ROLES))
+// PATCH /leads/:id/status is SALES_PIPELINE_ROLES on the backend, same as
+// the detail page's Save; a Sales Rep changing another rep's Lead gets the
+// API's 403, said in CrmLeadStatusSelect's toast.
+const canManageLead = computed(() => hasRole(...SALES_PIPELINE_ROLES))
 
 // Query-synced (not a plain ref) so a search/filter set by hand survives a
 // back-button return to this list — see useQuerySyncedRef's own doc comment.
@@ -214,7 +239,12 @@ const {
   refetchDebounced,
   onChangePage,
   onChangePerPage,
-} = useServerListPage<Lead>(params => leadsStore.fetchList(params), buildParams, 10, { syncQuery: true })
+} = useServerListPage<Lead>((params) => {
+  // The pill counts follow every list fetch — filter changes (debounced
+  // with the search like the list), deletes and archives alike.
+  fetchStatusCounts()
+  return leadsStore.fetchList(params)
+}, buildParams, 10, { syncQuery: true })
 
 onMounted(() => {
   fetch()
@@ -254,6 +284,41 @@ watch(rows, (visibleLeads) => {
 
 watch(search, () => refetchDebounced())
 watch([scopeFilter, statusFilter, sourceFilter, assigneeFilter], () => refetchFromStart())
+
+// Status-pill counts (GET /leads/status-counts) under the list's filters,
+// `null` until loaded or on the Converted tab (no pills there). A newer
+// request supersedes one still in flight; a failure just hides the counts,
+// since the list's own fetch reports errors.
+const statusCounts = ref<Partial<Record<LeadStatus, number>> | null>(null)
+let statusCountsRequest = 0
+const fetchStatusCounts = async () => {
+  const request = ++statusCountsRequest
+  if (scopeFilter.value !== 'active') {
+    statusCounts.value = null
+    return
+  }
+  try {
+    const counts = await leadsStore.fetchStatusCounts({ ...buildParams(), status: undefined, sort: undefined })
+    if (request === statusCountsRequest) statusCounts.value = counts
+  } catch {
+    if (request === statusCountsRequest) statusCounts.value = null
+  }
+}
+// 'all' is the total; a status with no Leads is absent from the response.
+const statusCountOf = (value: string) => {
+  const counts = statusCounts.value ?? {}
+  if (value === 'all') return Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0)
+  return counts[value as LeadStatus] ?? 0
+}
+
+// Swapped in place rather than refetched, so a row that no longer matches
+// the status filter doesn't vanish from under the pointer; the next fetch
+// drops it.
+const onStatusUpdated = (updated: Lead) => {
+  rows.value = rows.value.map(row => (row.id === updated.id ? updated : row))
+  fetchStatusCounts()
+}
+
 // Selection is scoped to the currently visible page — a page/filter/sort
 // change invalidates whatever was selected before it.
 watch([page, () => buildParams()], () => { selected.value = [] })
