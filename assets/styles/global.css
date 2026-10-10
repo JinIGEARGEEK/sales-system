@@ -37,15 +37,15 @@ body {
 }
 
 /*
- * The app's heaviest text weight is 500 (Medium), the design tokens' title
- * weight. The browser draws <b>/<strong>/<th> at 700 (bolder), which in
+ * The app's heaviest text weight is `--font-weight-medium` (see @theme
+ * below). The browser draws <b>/<strong>/<th> at 700 (bolder), which in
  * Prompt reads far heavier than the rest of the UI (Thai glyphs most of
  * all), so cap them here instead of per element (design-system §3.4).
  */
 b,
 strong,
 th {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 button,
@@ -61,6 +61,16 @@ summary {
 
 @theme {
   --font-family-prompt: "Prompt", sans-serif;
+
+  /*
+   * `font-medium` (titles, labels, buttons — ours and Nuxt UI's own) draws
+   * Prompt Regular, the same weight as body text: Prompt Medium (500) read
+   * too heavy, and Prompt ships only static weights, so there is nothing
+   * between 400 and 500 (a 450 would still pick the Medium file).
+   * Emphasis comes from size and colour instead. This one value sets the
+   * app's heaviest weight — the title/link tokens in :root follow it.
+   */
+  --font-weight-medium: 400;
 
   --color-primary-bg: color-mix(in srgb, color-mix(in oklab, #1B2233 93%, #A9B9EE 7%) 10%, transparent);
   --color-secondary-bg: color-mix(in srgb, #1F9D6B 10%, transparent);
@@ -264,42 +274,42 @@ summary {
   /* Desktop Font Style */
   --font-text-dt-title-1-size: 34px;
   --font-text-dt-title-1-line-height: 50px;
-  --font-text-dt-title-1-weight: 500;
+  --font-text-dt-title-1-weight: var(--font-weight-medium);
   --font-text-dt-title-2-size: 26px;
   --font-text-dt-title-2-line-height: 40px;
-  --font-text-dt-title-2-weight: 500;
+  --font-text-dt-title-2-weight: var(--font-weight-medium);
   --font-text-dt-title-3-size: 22px;
   --font-text-dt-title-3-line-height: 32px;
-  --font-text-dt-title-3-weight: 500;
+  --font-text-dt-title-3-weight: var(--font-weight-medium);
   --font-text-dt-title-4-size: 20px;
   --font-text-dt-title-4-line-height: 30px;
-  --font-text-dt-title-4-weight: 500;
+  --font-text-dt-title-4-weight: var(--font-weight-medium);
   --font-text-dt-title-5-size: 18px;
   --font-text-dt-title-5-line-height: 28px;
-  --font-text-dt-title-5-weight: 500;
+  --font-text-dt-title-5-weight: var(--font-weight-medium);
   --font-text-dt-title-6-size: 16px;
   --font-text-dt-title-6-line-height: 24px;
-  --font-text-dt-title-6-weight: 500;
+  --font-text-dt-title-6-weight: var(--font-weight-medium);
 
   /* Mobile Font Style */
   --font-text-mb-title-1-size: 26px;
   --font-text-mb-title-1-line-height: 40px;
-  --font-text-mb-title-1-weight: 500;
+  --font-text-mb-title-1-weight: var(--font-weight-medium);
   --font-text-mb-title-2-size: 24px;
   --font-text-mb-title-2-line-height: 36px;
-  --font-text-mb-title-2-weight: 500;
+  --font-text-mb-title-2-weight: var(--font-weight-medium);
   --font-text-mb-title-3-size: 20px;
   --font-text-mb-title-3-line-height: 30px;
-  --font-text-mb-title-3-weight: 500;
+  --font-text-mb-title-3-weight: var(--font-weight-medium);
   --font-text-mb-title-4-size: 18px;
   --font-text-mb-title-4-line-height: 28px;
-  --font-text-mb-title-4-weight: 500;
+  --font-text-mb-title-4-weight: var(--font-weight-medium);
   --font-text-mb-title-5-size: 16px;
   --font-text-mb-title-5-line-height: 24px;
-  --font-text-mb-title-5-weight: 500;
+  --font-text-mb-title-5-weight: var(--font-weight-medium);
   --font-text-mb-title-6-size: 14px;
   --font-text-mb-title-6-line-height: 20px;
-  --font-text-mb-title-6-weight: 500;
+  --font-text-mb-title-6-weight: var(--font-weight-medium);
 
   /* Static Font Style */
   --font-text-static-body-size: 16px;
@@ -316,10 +326,10 @@ summary {
   --font-text-static-body-2xs-weight: 400;
   --font-text-static-link-size: 16px;
   --font-text-static-link-line-height: 24px;
-  --font-text-static-link-weight: 500;
+  --font-text-static-link-weight: var(--font-weight-medium);
   --font-text-static-link-sm-size: 14px;
   --font-text-static-link-sm-line-height: 20px;
-  --font-text-static-link-sm-weight: 500;
+  --font-text-static-link-sm-weight: var(--font-weight-medium);
   --font-text-static-button-size: 16px;
   --font-text-static-button-line-height: 24px;
   --font-text-static-button-weight: 400;
